@@ -1,6 +1,6 @@
 # Skemik™
 
-The database that ships its own data model: 30 curated schema.org types, binding, their fields named and typed before you start — no empty tool, no `Datum2`.
+The database that ships its own data model: 30 curated schema.org types, binding, their fields named and typed before you start — no empty tool, no `Date2`.
 
 [skemik.de](https://skemik.de) in German, [skemik.com](https://skemik.com) in English.
 
