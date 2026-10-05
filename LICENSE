@@ -8,21 +8,17 @@ Parameters
 
 Licensor: plue GmbH
 
-Licensed Work: Skemik {VERSION}, and every state of its source repository that follows this version and precedes the next released one. The Licensed Work is (c) {YEAR} plue GmbH
+Licensed Work: Skemik {VERSION}, as published at its release tag. The Licensed Work is (c) {YEAR} plue GmbH
 
-Additional Use Grant: You may make production use of the Licensed Work without limitation, including installing, hosting, operating and maintaining it for any number of clients, on their infrastructure or on yours, whether or not you charge them for it.
+Additional Use Grant: You may make production use of the Licensed Work, including installing, hosting, operating and maintaining it for any number of clients, on their infrastructure or on yours, whether or not you charge them for it.
 
-This Additional Use Grant does not extend to:
-
-(a) offering to operate the Licensed Work, or a product that includes it, for others in any form, including as hosting, managed service or software-as-a-service, other than as an individual offer to an individual client. A public offer, a newsletter or mailing, a price list or any other offer addressed to many clients at once, whether made by you or through an intermediary, reseller, distributor, marketplace or other third party, however individually each copy is worded or generated, is not permitted; or
-
-(b) making the Licensed Work available as part of a hosting, server, cloud or device product, such as a one-click installation, an application catalogue, a marketplace listing, a pre-installed image or a device shipped with it, regardless of who then operates the installation.
+This Additional Use Grant does not extend to production use in which you operate the Licensed Work, or a product that includes it, for others in any form, including as hosting, managed service or software-as-a-service, where that operation is offered or advertised to many at once, in whatever way, for example by a public offer or advertisement, a newsletter or mailing, a price list, or a one-click installation, an application catalogue, a marketplace listing or a pre-installed image of a hosting, server or cloud product. This applies whether you offer or advertise it yourself or through an intermediary, reseller, distributor, marketplace or other third party, however individually each message is worded or generated, whether or not an individual offer follows, and whoever then administers the installation.
 
 Change Date: {RELEASE_DATE+3y}
 
 Change License: GNU Affero General Public License, Version 3.0 or later
 
-For information about alternative licensing arrangements for the Licensed Work, including licences to offer it as hosting, managed service or software-as-a-service, or as part of a hosting, server, cloud or device product, please contact message@skemik.de.
+For a commercial license, or information about alternative licensing arrangements for the Licensed Work, please contact message@skemik.de.
 
 -----------------------------------------------------------------------------
 
