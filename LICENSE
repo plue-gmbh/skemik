@@ -1,6 +1,6 @@
 Business Source License 1.1
 
-License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved. "Business Source License" is a trademark of MariaDB Corporation Ab.
+License text copyright (c) 2024 MariaDB plc, All Rights Reserved. "Business Source License" is a trademark of MariaDB plc.
 
 -----------------------------------------------------------------------------
 
@@ -21,8 +21,6 @@ Change License: GNU Affero General Public License, Version 3.0 or later
 For a commercial license, or information about alternative licensing arrangements for the Licensed Work, please contact message@skemik.org.
 
 -----------------------------------------------------------------------------
-
-Notice
 
 Business Source License 1.1
 
@@ -57,3 +55,9 @@ In consideration of the right to use this License's text and the "Business Sourc
 3. To specify a Change Date.
 
 4. Not to modify this License in any other way.
+
+-----------------------------------------------------------------------------
+
+Notice
+
+The Business Source License (this document, or the "License") is not an Open Source license. However, the Licensed Work will eventually be made available under an Open Source License, as stated in this License.
