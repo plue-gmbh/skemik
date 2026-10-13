@@ -1,0 +1,30 @@
+# Every request reaches index.php but for view/'s static files, and no other
+# .php runs: a direct request for one is refused before any rewrite, so
+# config.php answers 403 and never its values. A request rather than a guarantee:
+# under nginx or without AllowOverride it does nothing, so it only reduces
+# execution surface and the holdings never depend on it. The Authorization line
+# is there because a FastCGI PHP otherwise never sees a feed token. RewriteBase
+# and L rather than END because a host that reaches a domain's folder through a
+# rewrite of its own, Uberspace among them, cannot map a relative index.php back
+# to an address, and END would keep its rewrite from running on the redirect, so
+# PHP is handed a file that is not there. An update replaces what stands between
+# BEGIN Skemik and END Skemik and keeps every line outside, so a line a hoster
+# has a house add, the one picking its PHP version, goes outside them.
+
+# BEGIN Skemik
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
+<Files "index.php">
+  Require all granted
+</Files>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+  RewriteRule ^view/[\w/.-]+\.(css|js|woff2|ico|png|webmanifest)$ - [L]
+  RewriteRule ^(?!index\.php$) index.php [L]
+</IfModule>
+# END Skemik

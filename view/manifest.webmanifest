@@ -1,0 +1,12 @@
+{
+  "id": "/",
+  "name": "Skemik",
+  "short_name": "Skemik",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#161d19",
+  "icons": [
+    { "src": "/view/icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/view/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

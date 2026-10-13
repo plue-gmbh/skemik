@@ -1,0 +1,300 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Feed;
+
+use Domain\Entity;
+use Domain\EntityId;
+use Domain\Exceptions\EntityNotFound;
+use Domain\Locale;
+use Domain\LocalisedText;
+use Domain\Relation;
+use Domain\TranslationGroup;
+use Profile\Cardinality;
+use Profile\Derived;
+use Profile\FieldDefinition;
+use Profile\FieldKind;
+use Profile\Profile;
+use Profile\Seed\Media;
+use Profile\SchemaOrg;
+use Profile\TypeDefinition;
+use Storage\Collection;
+use Storage\CollectionField;
+use Storage\EntityRepository;
+use Storage\RelationRepository;
+use Support\Json;
+use Support\Markup;
+use Support\Rendered;
+
+/* JSON-LD straight from `props`, the payoff of the whole storage model, built for
+   one caller's reading, so no document can be rendered for somebody else. A list
+   is named by its type, the same in every house. A member is wrapped whatever it
+   carries, so the wire shape never follows the content. Edge depth is 1 and
+   there is no `expand` parameter: a nested object is a rendering of a record and
+   not the record, so only a document fetched at its own address may be cached
+   under that address. A dump hands it `$built` for a page, whose records it
+   writes in four formats and again as the listing, so each is built once. */
+final readonly class JsonLd
+{
+  public const CONTENT_TYPE = 'application/ld+json; charset=utf-8';
+  private const CONTEXT = 'https://schema.org';
+  private const SPINE = ['inLanguage', 'translationOfWork', 'workTranslation'];
+
+  private Properties $properties;
+
+  public function __construct(
+    private Profile $profile,
+    private SchemaOrg $schema,
+    private EntityRepository $entities,
+    private RelationRepository $relations,
+    private PublicFilter $filter,
+    private Locale $locale,
+    private string $origin,
+    private Addresses $addresses,
+    private Derivations $derived,
+    private Json $json = new Json(),
+    ?Markup $markup = null,
+    private ?\ArrayObject $built = null,
+  ) {
+    $this->properties = new Properties($profile, $schema, $markup);
+  }
+
+  public function rendering(Markup $markup): self
+  {
+    return clone($this, ['properties' => new Properties($this->profile, $this->schema, $markup), 'built' => null]);
+  }
+
+  public function contentType(): string
+  {
+    return self::CONTENT_TYPE;
+  }
+
+  public function record(Entity $entity, Collection $collection): string
+  {
+    return $this->json->encode($this->recordDocument($entity, $collection));
+  }
+
+  /** @param list<Entity> $members this page; $total every record the query matches */
+  public function listing(array $members, Collection $collection, int $total, string $address): string
+  {
+    return $this->json->encode($this->listDocument($members, $collection, $total, $address));
+  }
+
+  /* The flat formats are this document in another syntax, so the gates run once
+     and no serialiser can be the one that forgets them. @return array<string, mixed> */
+  public function recordDocument(Entity $entity, Collection $collection): array
+  {
+    return ['@context' => self::CONTEXT, ...$this->document($entity, $collection, Depth::Addressed)];
+  }
+
+  /** @return array<string, mixed> */
+  public function listDocument(array $members, Collection $collection, int $total, string $address): array
+  {
+    $items = array_map(fn (Entity $member, int $index): array => ['@type' => 'ListItem', 'position' => $index + 1,
+      'item' => $this->document($member, $collection, Depth::Addressed)], $members, array_keys($members));
+
+    return ['@context' => self::CONTEXT, '@id' => $address, '@type' => 'ItemList',
+      'name' => basename($collection->type), 'numberOfItems' => $total, 'itemListElement' => $items];
+  }
+
+  /** @return array<string, mixed> */
+  private function document(Entity $entity, Collection $collection, Depth $depth): array
+  {
+    $key = implode(' ', [$entity->id->value, $entity->version, $collection->slug->value, $depth->name]);
+
+    return $this->built === null ? $this->build($entity, $collection, $depth)
+      : ($this->built[$key] ??= $this->build($entity, $collection, $depth));
+  }
+
+  /** @return array<string, mixed> */
+  private function build(Entity $entity, Collection $collection, Depth $depth): array
+  {
+    $type = $this->profile->byType($entity->type);
+    $below = $depth->below($entity->typeName() === 'ItemList');
+    $edges = $this->relations->outboundByPredicate($entity->id);
+    $shown = (new LocalisedText($type))->shown($entity, $this->locale);
+    $values = [];
+    foreach ($this->filter->fields($collection) as $held) {
+      $field = $type->field($held->key);
+      $values[$held->key] = match (true) {
+        $field === null => null,
+        $field->derivation?->function === Derived::Range => $this->derived->offerRanges($entity, $field),
+        $this->derived->derives($entity, $field) => $this->derived->value($entity, $field),
+        $field->cardinality->isEdge() => $this->edge($field, $edges, $below),
+        $field->kind === FieldKind::Markdown => $this->addresses->linked($shown->props->string($field->key)),
+        default => $this->scalar($shown, $field, $below),
+      };
+    }
+
+    return ['@id' => $this->addresses->in($collection, $entity), '@type' => Media::emittedType($entity),
+      ...$this->properties->of($type, $values), ...$this->spine($entity, $type)];
+  }
+
+  /* What each property is called in the content's language, for a page that
+     shows a person the values; a document itself carries no label.
+     @return array<string, string> */
+  public function labels(Collection $collection): array
+  {
+    return $this->properties->labels($collection->type);
+  }
+
+  /* Every property a document of this reading may carry, in its order, so a
+     table has the same columns on every page whatever its rows hold.
+     @return list<string> */
+  public function columns(Collection $collection): array
+  {
+    $keys = array_map(fn (CollectionField $held): string => $held->key, $this->filter->fields($collection));
+    $spine = $this->profile->byType($collection->type)->locale->forks() ? self::SPINE : [];
+
+    return ['@id', ...$this->properties->names($collection->type, $keys), ...$spine];
+  }
+
+  /* A link under the origin the documents carry is held as its path, which
+     `scalar` emits whole again: a house that moves its domain keeps every link,
+     and the spelling a document shows finds its row. The two doors and
+     `FeedRequest` ask here, so a link is one spelling wherever it enters.
+     @param string|int|float|bool|array<array-key, mixed>|null $value
+     @return string|int|float|bool|array<array-key, mixed>|null */
+  public static function held(?FieldDefinition $field, string|int|float|bool|array|null $value,
+    string $origin): string|int|float|bool|array|null
+  {
+    $path = fn (string|int|float|bool|array|null $link): string|int|float|bool|array|null
+      => !is_string($link) ? $link : (str_starts_with($link = \Profile\Kinds::spelled($link), $origin . '/')
+        ? substr($link, strlen($origin)) : $link);
+    if ($field?->kind !== FieldKind::Link) {
+      return $value;
+    }
+
+    return is_array($value) ? array_map($path, $value) : $path($value);
+  }
+
+  /* A link held as a path is of this house, served under the origin its `@id`s
+     carry, one or a list of them: the inverse of `held`.
+     @return string|int|float|bool|array<array-key, mixed>|null */
+  private function scalar(Entity $entity, FieldDefinition $field, ?Depth $below): string|int|float|bool|array|null
+  {
+    $value = $entity->props->document()[$field->key] ?? null;
+    $key = (string) $this->profile->referring($field)?->reference;
+    if ($field->valueObject !== null && $key !== '' && $value !== null) {
+      return $this->referring($field, [$key => $value], $below)[$key] ?? null;
+    }
+    $whole = fn (string|int|float|bool|array|null $link): string|int|float|bool|array|null
+      => is_string($link) && str_starts_with($link, '/') ? $this->origin . $link : $link;
+    if ($field->kind !== FieldKind::Objects) {
+      return $field->kind !== FieldKind::Link ? $value
+        : (is_array($value) ? array_map($whole, $value) : $whole($value));
+    }
+    /** @param array<string, mixed> $row */
+    $typed = fn (array $row): array => ['@type' => (string) $field->ref,
+      ...$this->referring($field, $row, $below)];
+
+    return array_map($typed, array_filter($entity->props->list($field->key), is_array(...)));
+  }
+
+  /* A row's reference, or a flattened key's, leaves as any target does, through
+     the same gates and at the same depth, or not at all; a word leaves as a
+     thing of that name, so a consumer reads `name` either way.
+     @param array<string, mixed> $row
+     @return array<string, mixed> */
+  private function referring(FieldDefinition $field, array $row, ?Depth $below): array
+  {
+    $object = $this->profile->referring($field);
+    $key = $object?->reference;
+    if ($object === null || $key === null || !isset($row[$key])) {
+      return $row;
+    }
+    $id = $object->referredBy($row);
+    $row[$key] = $id === null ? ['@type' => $object->wordType(), 'name' => $row[$key]]
+      : $this->target(new EntityId($id), $below);
+
+    return array_filter($row, fn (mixed $value): bool => $value !== null);
+  }
+
+  /* @param array<string, list<Relation>> $edges the record's, by predicate, in their stored order
+     @return array<array-key, mixed>|string|Rendered|null */
+  private function edge(FieldDefinition $field, array $edges, ?Depth $below): array|string|Rendered|null
+  {
+    $values = [];
+    foreach ($edges[(string) $this->schema->propertyName($field->key)] ?? [] as $relation) {
+      $target = $this->targetOf($field, $relation, $below);
+      if ($target !== null) {
+        $values[] = $this->wrapped($relation, $target);
+      }
+    }
+
+    return $field->holdsMany() ? $values : ($values[0] ?? null);
+  }
+
+  /* A term by its code and any other record as its own document one level down
+     — or nothing at all where it fails the gates, since an `@id` carries the
+     slug and a slug is a name.
+     @return array<string, mixed>|string|Rendered|null */
+  private function targetOf(FieldDefinition $field, Relation $edge, ?Depth $below): array|string|Rendered|null
+  {
+    $target = $this->target($edge->object, $below);
+
+    return $target !== null && $field->cardinality === Cardinality::T
+      ? $this->properties->code((string) $edge->objectTerm) : $target;
+  }
+
+  /** @return ?array<string, mixed> */
+  private function target(EntityId $id, ?Depth $below): ?array
+  {
+    try {
+      $target = $this->addresses->inReadersLocale($this->entities->find($id));
+    } catch (EntityNotFound) {
+      return null;
+    }
+    $collection = $this->addresses->collectionOf($target);
+    if ($collection === null) {
+      return null;
+    }
+
+    return $below === null ? ['@id' => $this->addresses->in($collection, $target)]
+      : $this->document($target, $collection, $below);
+  }
+
+  /* An edge's qualifiers are what this surface says about the target, so they are
+     emitted in the wrapper schema.org keeps for that, in the reader's language.
+     @param array<string, mixed>|string|Rendered $target
+     @return array<string, mixed>|string|Rendered */
+  private function wrapped(Relation $edge, array|string|Rendered $target): array|string|Rendered
+  {
+    $qualifiers = $this->properties->qualified($edge->qualifiersIn($this->locale));
+    if ($edge->predicate === 'itemListElement') {
+      $position = $edge->position === null ? [] : ['position' => $edge->position];
+
+      return ['@type' => 'ListItem', ...$position, ...$qualifiers, 'item' => $target];
+    }
+    if ($qualifiers === []) {
+      return $target;
+    }
+    if ($edge->predicate === 'memberOf' && $edge->objectType === 'MemberProgram') {
+      return ['@type' => 'ProgramMembership', ...$qualifiers, 'program' => $target];
+    }
+
+    return ['@type' => 'Role', ...$qualifiers, $edge->predicate => $target];
+  }
+
+  /* The spine's content columns, which survive a copy of the holdings, in
+     schema.org's vocabulary and never under spine names. A labelled thing emits
+     no `inLanguage`: a price written in German would announce who typed it
+     first. @return array<string, mixed> */
+  private function spine(Entity $entity, TypeDefinition $type): array
+  {
+    if (!$type->locale->forks()) {
+      return [];
+    }
+    $root = TranslationGroup::rootOf($entity)->value;
+    $translations = [];
+    foreach ($this->entities->group($entity)->others($entity) as $other) {
+      $address = $this->addresses->of($other);
+      if ($address !== null) {
+        $translations[$other->id->value === $root ? 'translationOfWork' : 'workTranslation'][] = ['@id' => $address];
+      }
+    }
+
+    return ['inLanguage' => $entity->locale->tag, ...$translations];
+  }
+}
