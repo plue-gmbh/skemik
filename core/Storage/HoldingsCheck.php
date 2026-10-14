@@ -181,7 +181,7 @@ final readonly class HoldingsCheck
     if ($stored['sort_keys'] !== $this->sortKeys->of($type, $entity->props)) {
       $found[] = new Violation('sort_keys', 'disagrees with props', $entity->id);
     }
-    if ($stored['words'] !== $this->search->words($type, $entity->props)) {
+    if ($stored['words'] !== $this->search->words($type, $entity->props, $entity->slug)) {
       $found[] = new Violation('words', 'disagrees with props', $entity->id);
     }
 

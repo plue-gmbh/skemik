@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Storage;
 
 use Domain\Props;
+use Domain\Slug;
 use Profile\Profile;
 use Support\Json;
 
@@ -28,7 +29,7 @@ final readonly class Rewrite
   public function all(): void
   {
     $ids = $this->db->query('select id from entity')->fetchAll(\PDO::FETCH_COLUMN);
-    $read = $this->db->prepare('select type, props from entity where id = :id');
+    $read = $this->db->prepare('select type, props, slug from entity where id = :id');
     $write = $this->db->prepare('update entity set sort_keys = :sort_keys, words = :words where id = :id');
     $this->db->beginTransaction();
     try {
@@ -38,7 +39,7 @@ final readonly class Rewrite
         $type = $this->profile->byType((string) $row['type']);
         $props = new Props($this->json->decode((string) $row['props']));
         $write->execute(['id' => $id, 'sort_keys' => $this->sortKeys->of($type, $props),
-          'words' => $this->search->words($type, $props)]);
+          'words' => $this->search->words($type, $props, new Slug((string) $row['slug']))]);
       }
       $this->db->commit();
     } catch (\Throwable $failure) {

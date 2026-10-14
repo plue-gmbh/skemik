@@ -192,7 +192,7 @@ final readonly class EntityRepository
       'id' => $entity->id->value,
       'props' => $this->json->encode((object) $entity->props->document()),
       'sort_keys' => $this->sortKeys->of($type, $entity->props),
-      'words' => $this->search->words($type, $entity->props),
+      'words' => $this->search->words($type, $entity->props, $entity->slug),
       'status' => $entity->status->value,
       'locale' => $entity->locale->tag,
       'translation_of' => $entity->translationOf?->value,

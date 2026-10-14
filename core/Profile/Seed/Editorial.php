@@ -171,7 +171,7 @@ final readonly class Editorial
 
     return [
       $f->objects('distribution', 'Distribution', 'DataDownload')->starter(),
-      $f->objects('variable_measured', 'Variable measured', 'PropertyValue'),
+      $f->objects('variable_measured', 'Variable measured', 'PropertyValue')->words(),
       $f->text('measurement_technique', 'Measurement technique'),
       $f->text('temporal_coverage', 'Period covered'),
       $f->ref('spatial_coverage', 'Area covered', 'Place'),

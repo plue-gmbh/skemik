@@ -39,7 +39,7 @@ final readonly class Sheet
     'cell.yes', 'cell.no', 'duration.unit.Y', 'duration.unit.M', 'duration.unit.W', 'duration.unit.D',
     'duration.unit.H', 'duration.unit.m', 'duration.unit.S', 'duration.years', 'duration.months', 'duration.weeks',
     'duration.days', 'duration.hours', 'duration.minutes', 'duration.seconds', 'record.link_insert',
-    'record.link_search',
+    'record.link_search', 'record.link', 'record.link_address',
     'record.link_none', 'record.link_done', 'sheet.new', 'cell.gone', 'cell.entries', 'picker.search',
     'picker.add_search', 'picker.none', 'picker.type', 'picker.remove_relation', 'picker.up', 'picker.down',
     'picker.add_term',

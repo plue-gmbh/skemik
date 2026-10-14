@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace Admin;
 
-use Support\Fetch;
-use Support\Fetched;
-use Support\FetchFailed;
 use Support\Words;
 
 /* Where the holdings live, named by the operator and proven rather than assumed.
    The folder is theirs: made beforehand, taken only while empty, never
    created or removed here, so a mistyped path can reach nothing that holds
    something. Inside the domain root it is accepted only when a fetch of the
-   marker from outside answers 403 or 404. The deny rules go into it wherever it
-   is: hosts that nest one domain's root inside another's make a folder above one
-   domain somebody else's served one. `config.php` is proven the same way, since a
-   host where PHP quietly stops running serves it as text; one that leaks is
-   removed with what was made inside the folder, so the next run starts clean. */
+   marker from outside is refused (`Proofs`). The deny rules go into it wherever
+   it is: hosts that nest one domain's root inside another's make a folder above
+   one domain somebody else's served one. `config.php` is proven the same way,
+   since a host where PHP quietly stops running serves it as text; one that leaks
+   is removed with what was made inside the folder, so the next run starts clean. */
 final readonly class DataLayout
 {
   private const FOLDERS = ['holdings', 'sessions', 'login', 'log'];
@@ -27,10 +24,11 @@ final readonly class DataLayout
   private const SQLITE = '3.38';
   private const MARKER_TEXT = "Skemik fetches this file from outside to prove the folder is not served.\n";
 
-  public function __construct(private string $root, private Fetch $fetch, private Words $words) {}
+  public function __construct(private string $root, private Proofs $proofs, private Words $words) {}
 
-  /** @return list<Requirement> */
-  public function requirements(?Premises $configured): array
+  /* The host's lines, free ones but for the `PATCH` of the address this run came under.
+     @return list<Requirement> */
+  public function requirements(?Premises $configured, string $origin): array
   {
     [$free, $writable] = [self::free($configured?->data ?? $this->root), is_writable($this->root)];
 
@@ -47,6 +45,7 @@ final readonly class DataLayout
         ['free' => $free === null ? '–' : (string) intdiv($free, 1_000_000)]),
         ($free ?? self::FREE_BYTES) >= self::FREE_BYTES),
       ...$this->workers(),
+      $this->proofs->patched($origin),
     ];
   }
 
@@ -83,7 +82,8 @@ final readonly class DataLayout
   /* The named folder, checked, furnished and proven; the database is not touched. */
   public function settle(string $origin, string $typed): string
   {
-    $unmet = array_filter($this->requirements(null), fn (Requirement $requirement): bool => !$requirement->met);
+    $unmet = array_filter($this->requirements(null, $origin),
+      fn (Requirement $requirement): bool => !$requirement->met);
     if ($unmet !== []) {
       throw InstallRefused::because($this->words->get('install.refused.unmet'));
     }
@@ -237,11 +237,7 @@ final readonly class DataLayout
   private function proveRefused(string $url, string $data): void
   {
     try {
-      $status = $this->fetched($url)->status;
-      if ($status !== 403 && $status !== 404) {
-        throw InstallRefused::because($this->words->get($status === 200 ? 'install.refused.served'
-          : 'install.refused.unproven', ['status' => (string) $status]));
-      }
+      $this->proofs->refused($url);
     } catch (InstallRefused $refused) {
       $this->unfurnish($data);
       throw $refused;
@@ -251,23 +247,11 @@ final readonly class DataLayout
   private function proveHidden(string $url, string $sentinel, string $data): void
   {
     try {
-      if (str_contains($this->fetched($url)->body, $sentinel)) {
-        throw InstallRefused::because($this->words->get('install.refused.config_served'));
-      }
+      $this->proofs->hidden($url, $sentinel);
     } catch (InstallRefused $refused) {
       unlink($this->root . '/config.php');
       $this->unfurnish($data);
       throw $refused;
-    }
-  }
-
-  private function fetched(string $url): Fetched
-  {
-    try {
-      return $this->fetch->get($url);
-    } catch (FetchFailed $failure) {
-      throw InstallRefused::because($this->words->get('install.refused.unreachable',
-        ['reason' => $failure->getMessage()]));
     }
   }
 

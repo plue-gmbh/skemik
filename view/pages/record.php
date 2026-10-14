@@ -203,20 +203,26 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
       <h2 class="record-label record-block-heading"><?= $template->escape($block->heading) ?></h2>
 <?php endif ?>
 <?php foreach ($block->columns as $column): $key = $column->field->key; $kind = $column->field->kind->value ?>
-<?php if ($column->editable && $column->prose()): ?>
-      <section class="record-prose-edit" data-field="<?= $template->escape($key) ?>"
-        id="edit-<?= $template->escape($key) ?>">
+<?php if ($column->editable && $column->prose()): $markdown = $column->field->kind === FieldKind::Markdown ?>
+      <section class="record-prose-edit<?= $markdown ? ' is-markdown' : '' ?>"
+        data-field="<?= $template->escape($key) ?>" id="edit-<?= $template->escape($key) ?>">
         <label class="record-label"
-          for="prose-<?= $template->escape($key) ?>"><?= $template->escape($column->label) ?><?= $column->field->kind
-          === FieldKind::Markdown ? ' · Markdown' : '' ?></label>
+          for="prose-<?= $template->escape($key) ?>"><?= $template->escape($column->label) ?><?= $markdown
+          ? ' · Markdown' : '' ?></label>
         <textarea id="prose-<?= $template->escape($key) ?>" class="record-textarea"
           lang="<?= $template->escape($shownIn) ?>" data-prose<?= $locale === null ? '' : ' placeholder="'
           . $template->escape((string) $authored->props->string($key))
           . '"' ?>><?= $template->escape((string) $edit->entity->props->string($key)) ?></textarea>
-<?php if ($column->field->kind === FieldKind::Markdown): ?>
-        <div class="record-prose-tools"><button type="button" class="button-quiet"
-          data-link-insert><?= $template->render('partials/icon', ['name' => 'link'])
-          ?><?= $template->escape($words->get('record.link_insert')) ?></button></div>
+<?php if ($markdown): ?>
+        <div class="record-prose-tools"><?php foreach (['heading' => 'data-mark="heading"',
+          'bold' => 'data-mark="bold"', 'italic' => 'data-mark="italic"', 'quote' => 'data-mark="quote"',
+          'code' => 'data-mark="code"', 'link' => 'data-link', 'link_insert' => 'data-link-insert']
+          as $word => $marked): $icon = ['link' => 'open', 'link_insert' => 'link'][$word] ?? $word;
+          $said = $template->escape($words->get('record.' . $word)) ?><button type="button" class="button-quiet"
+          title="<?= $said ?>" <?= $marked ?>><?= $template->render('partials/icon', ['name' => $icon]) ?><span
+          class="visually-hidden"><?= $said ?></span></button><?php endforeach ?></div>
+        <div class="record-preview record-prose" lang="<?= $template->escape($shownIn) ?>" data-preview role="group"
+          aria-label="<?= $template->escape($words->get('record.preview')) ?>"><?= $prose[$key] ?? '' ?></div>
 <?php endif ?>
       </section>
 <?php else: ?>

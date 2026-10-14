@@ -108,7 +108,8 @@ $premises = new Admin\Premises($data, $address, (bool) ($config['daily_backups']
   (bool) ($config['updates'] ?? true), ($config['updates'] ?? true) === 'early',
   (string) ($config['security_contact'] ?? '') !== '' ? (string) $config['security_contact'] : null);
 /* Before the database opens, where a folder that takes no write fails as a 500 naming nothing. */
-$halt = (new Admin\Probes($data, new Admin\DataLayout(__DIR__, new Support\Fetch(), $words),
+$halt = (new Admin\Probes($data,
+  new Admin\DataLayout(__DIR__, new Admin\Proofs(new Support\Fetch(), $words), $words),
   new Support\Fetch(), $utc, $words, new Update\UpdateCheck($data, new Support\Fetch(), $utc)))
   ->halt($premises->address);
 if ($halt !== null) {

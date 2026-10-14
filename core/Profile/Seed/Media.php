@@ -83,7 +83,7 @@ final readonly class Media
       $f->text('video_frame_size', 'Frame size'),
       $f->text('bitrate', 'Bitrate'),
       /* Clip value objects, not edges — this type's own reading of hasPart. */
-      $f->objects('has_part', 'Clips', 'Clip'),
+      $f->objects('has_part', 'Clips', 'Clip')->words(),
       $f->term('regions_allowed', 'Regions allowed', 'region')->repeatable(),
       $f->term('ineligible_region', 'Regions excluded', 'region')->repeatable(),
       $f->boolean('requires_subscription', 'Requires subscription'),

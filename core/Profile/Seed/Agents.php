@@ -63,7 +63,7 @@ final readonly class Agents
       $f->listed('knows_language', 'Languages', ClosedList::Language)->repeatable(),
       $f->term('knows_about', 'Areas of knowledge')->repeatable(),
       $f->text('award', 'Award')->repeatable()->words(),
-      $f->objects('contact_point', 'Contact point', 'ContactPoint'),
+      $f->objects('contact_point', 'Contact point', 'ContactPoint')->words(),
       $f->term('has_occupation', 'Occupation', 'occupation')->repeatable(),
       $f->refs('works_for', 'Works for', 'Organization'),
       $f->refs('affiliation', 'Affiliation', 'Organization'),
@@ -110,13 +110,14 @@ final readonly class Agents
       $f->term('keywords', 'Keywords')->repeatable(),
       $f->term('knows_about', 'Areas of knowledge')->repeatable(),
       $f->refs('area_served', 'Area served', 'Place'),
-      $f->objects('contact_point', 'Contact point', 'ContactPoint'),
+      /* What it is for and which languages it answers in are words a reader reads. */
+      $f->objects('contact_point', 'Contact point', 'ContactPoint')->words(),
       $f->refs('founder', 'Founder', 'Person'),
       /* A relation is held at the child's end only — `memberOf`, `worksFor`,
          `parentOrganization`, `containedInPlace` — because the inverse is the same
          fact typed a second time, and nothing would keep the two agreeing. */
       $f->refs('member_of', 'Member of', 'Organization', 'MemberProgram'),
-      $f->objects('has_certification', 'Certification', 'Certification'),
+      $f->objects('has_certification', 'Certification', 'Certification')->words(),
       $f->ref('parent_organization', 'Parent organization', 'Organization'),
       $f->refs('location', 'Location', 'Place', 'LocalBusiness'),
       $f->refs('brand', 'Brands', 'Brand')->starter(),

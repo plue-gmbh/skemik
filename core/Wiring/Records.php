@@ -9,6 +9,7 @@ use Admin\EdgeEdits;
 use Admin\FieldController;
 use Admin\FieldEdits;
 use Admin\MediaController;
+use Admin\PreviewController;
 use Admin\Prose;
 use Admin\QueryBar;
 use Admin\RecordController;
@@ -42,6 +43,8 @@ final readonly class Records
         $common->request, $segment('collection')),
       Endpoint::Search => (new SearchController($common->search, $common->entities, $common->collections,
         $common->rows, $common->profile, $common->schema, $common->targets))->hits($account(), $common->request),
+      Endpoint::Preview => (new PreviewController($this->prose(), $common->csrf))->render($account(),
+        $common->request),
       Endpoint::Record => $this->recordController()->show($account(), $common->requirePerson(),
         $common->request, $segment('collection'), $segment('slug')),
       Endpoint::RecordCreate => $this->recordController()->create($account(), $common->request,
@@ -144,10 +147,15 @@ final readonly class Records
   {
     $common = $this->common;
     return new RecordPage($common->entities, $this->showing(), $common->collections, $common->settings,
-      $this->bar(), $common->sheet(), $common->rows,
-      new Prose($common->entities, $common->collections, $common->rows, $common->profile), $this->dialog(),
+      $this->bar(), $common->sheet(), $common->rows, $this->prose(), $this->dialog(),
       $this->recordWords(), $common->accounts, $common->named, $common->schema, $common->csrf,
       $common->template, $common->words, $common->reviews(), $common->keys());
+  }
+
+  private function prose(): Prose
+  {
+    $common = $this->common;
+    return new Prose($common->entities, $common->collections, $common->rows, $common->profile);
   }
 
   private function trashController(): TrashController

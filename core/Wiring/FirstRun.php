@@ -8,6 +8,7 @@ use Admin\DataLayout;
 use Admin\Founding;
 use Admin\InstallController;
 use Admin\Premises;
+use Admin\Proofs;
 use Auth\AccountRepository;
 use Auth\CodeDelivery;
 use Auth\LoginCode;
@@ -68,7 +69,7 @@ final readonly class FirstRun
   private function install(bool $firstRun, ?Premises $premises): InstallController
   {
     return new InstallController($firstRun, $premises,
-      new DataLayout($this->root, new Fetch(), $this->words), $this->founding(...),
+      new DataLayout($this->root, new Proofs(new Fetch(), $this->words), $this->words), $this->founding(...),
       $this->template, $this->words);
   }
 

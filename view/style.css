@@ -2203,13 +2203,57 @@ a.chip {
 }
 
 .record-prose-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
   margin-top: 6px;
 }
 
 .record-prose-tools .button-quiet {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  padding: 6px;
+  background: var(--surface-sunken);
+}
+
+@media (hover: hover) {
+  .record-prose-tools .button-quiet:hover {
+    background: var(--surface-sunken-strong);
+  }
+}
+
+.record-preview > :first-child {
+  margin-top: 0;
+}
+
+.record-prose-edit.is-markdown {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "label label" "area preview" "tools preview";
+  align-items: start;
+  column-gap: 18px;
+}
+
+.record-prose-edit.is-markdown > .record-label {
+  grid-area: label;
+}
+
+.record-prose-edit.is-markdown > .record-textarea {
+  grid-area: area;
+}
+
+.record-prose-edit.is-markdown > .record-prose-tools {
+  grid-area: tools;
+}
+
+.record-preview {
+  grid-area: preview;
+  max-width: none;
+  min-height: 120px;
+  margin-bottom: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--border-field);
+  border-radius: var(--radius-large);
 }
 
 .side-card-title {
@@ -3193,6 +3237,15 @@ a.cell {
 @container paper (max-width: 820px) {
   .shape-public {
     display: none;
+  }
+
+  .record-prose-edit.is-markdown {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "label" "area" "tools" "preview";
+  }
+
+  .record-preview {
+    margin-top: 12px;
   }
 
   .view-menu {

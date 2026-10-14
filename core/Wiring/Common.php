@@ -14,6 +14,7 @@ use Admin\KeyFacts;
 use Admin\LocaleController;
 use Admin\Premises;
 use Admin\Probes;
+use Admin\Proofs;
 use Admin\Rows;
 use Admin\Sheet;
 use Admin\Sidebar;
@@ -155,7 +156,8 @@ final readonly class Common
 
   public function probes(): Probes
   {
-    return new Probes($this->premises->data, new DataLayout($this->root, new Fetch(), $this->words),
+    return new Probes($this->premises->data,
+      new DataLayout($this->root, new Proofs(new Fetch(), $this->words), $this->words),
       new Fetch(), $this->utc, $this->words, $this->updates());
   }
 

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-1f6feb)
+![Version 1.0.1](https://img.shields.io/badge/version-1.0.1-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -171,7 +171,8 @@ Ask the host for these before you copy anything.
   the same rules, as *Install* sets them out.
 
 - **A host that reaches its own address**: `/install` fetches `config.php` from
-  outside to prove it is not served as text, which over HTTPS needs `openssl`.
+  outside to prove it is not served as text, and asks a `PATCH` of itself,
+  which the host's front must let through; over HTTPS both need `openssl`.
 
 - **The data folder on a disk of the one machine that serves the install**,
   never on a file system several web servers mount.
@@ -239,7 +240,9 @@ SECURITY.md   where to report a vulnerability
 ```
 
 The installer checks the server first and stores nothing until every check
-passes. PHP writes in two places, the data folder and the folder holding
+passes. One check is a `PATCH` of its own address: every save is one, and a
+front that refuses the method would otherwise be learnt at the house's first
+save. PHP writes in two places, the data folder and the folder holding
 `index.php`: `config.php` at the first run, the whole tree when a release
 installs itself. Where it cannot, the check's line says so, with the user PHP
 runs as where the host lets that be asked. Then it asks for the data folder,
@@ -456,7 +459,7 @@ feed* says in full:
 | Parameter | Asks for |
 |---|---|
 | `?{field}=` | records whose field matches: a text from its start, a link whole, a range `a..b`, a month `2026-10`, any of `a,b`, an edge by its address `organizations/acme` |
-| `?q=` | records holding the words, in the fields this reader reads |
+| `?q=` | records holding the words, in the fields this reader reads or in their slug |
 | `?sort=` | the order by a field, `-` before it for the other way |
 | `?page=` | a page of 50 records, from `1` |
 | `?per_page=` | up to 200 records a page |
@@ -566,7 +569,10 @@ its members, but a list among those brings its own as addresses, to be read at
 its address. A listing's member is the record's own document, to the same depth,
 so a page drawn from a listing reads no member a second time. `EventScheduled`
 is a value from schema.org's fixed list, whose words in each language the
-catalogue holds. `remainingAttendeeCapacity` and `offers` are computed as the
+catalogue holds. An order, an invoice, a reservation, an event and an action
+each say how they stand in such a list of their own, `orderStatus`,
+`paymentStatus`, `reservationStatus`, `eventStatus` and `actionStatus`.
+`remainingAttendeeCapacity` and `offers` are computed as the
 document is written and never stored. A time leaves in UTC, as `startDate` does
 here, and a date as the day it is. No answer names the house's timezone, so a
 frontend that shows a time is configured with it once.
@@ -604,7 +610,8 @@ link a key posts to an address of the house is held the same way.
 Past a site's home page, `url` is the address of a thing that lives on somebody
 else's domain and stays empty for one held here: where a page is published is
 the frontend's route, as *How to build a website* says. `workTranslation` says
-which record is the translation of which. An edge to a work names its
+which record is the translation of which, and purging an original leaves its
+translations one group, naming each other. An edge to a work names its
 translation in the reader's language where there is one to read, and where not
 the work itself, or another translation where that may not be read either: a
 product pointing at its German screenshot shows the English one on an English
@@ -625,7 +632,9 @@ record here, and a record the reader may not read leaves the key out.
 
 A term leaves as its code, `"keywords": ["gluten-free"]`, and its word in each
 language is its record in `defined-terms`, where the house publishes those:
-the catalogue holds words for schema.org's own fixed values only.
+the catalogue holds words for schema.org's own fixed values only. A word typed
+into a term field in the admin becomes a term of that field's set, made with it,
+and the same word typed again is that term.
 
 A record's kind is its `additionalType`, beside an `@type` that stays one of
 the thirty: a product group is a `Product` whose `additionalType` is
@@ -637,7 +646,10 @@ A record states its price range and never its offers: `offers` holds one
 `AggregateOffer` per currency, its `lowPrice`, `highPrice` and `offerCount`
 computed from the offers anyone may read, none past its `validThrough`, so a
 card says *from €129* without opening a single date, and a course states the
-range of its runs. The offers themselves are asked for by what they offer,
+range of its runs. An offer's own `price` is one number beside `priceCurrency`;
+where it recurs, its `priceSpecification` repeats both and adds the billing
+period and whether tax is included, and `?sort=price` orders by it.
+The offers themselves are asked for by what they offer,
 `/feed/{locale}/offers?itemOffered=events/test-exercise`, where the house
 publishes `itemOffered`.
 
@@ -679,15 +691,16 @@ it by either spelling.
 
 `?q=` finds the records holding every word typed, each as the start of a word
 in a field the reader reads: a text in any of its languages, a link, so a
-customer is found by an email address, and the code of a public term a record
-is tagged with, so `?q=bakery` finds what carries `Bakery`. Case and
-accents do not count, `ca` finding *Café*, and *Müller* is found as `muller`
-and as `mueller`. A field holding a number or a date is a filter's, and what
-holds no letter or digit, a stray quote, finds nothing rather than failing. The
-most matching words come first unless `?sort=` says otherwise. A search takes
-twenty words at most: each word, like each value of a filter, is weighed
-against the records, so a question asking more is refused with `400` naming its
-parameter rather than costing more than a page of 200 does.
+customer is found by an email address, the code of a public term a record is
+tagged with, so `?q=bakery` finds what carries `Bakery`, and its slug, which
+every address shows, so `?q=imprint` finds `web-pages/imprint` whatever the
+page is named. Case and accents do not count, `ca` finding *Café*, and *Müller*
+is found as `muller` and as `mueller`. A field holding a number or a date is a
+filter's, and what holds no letter or digit, a stray quote, finds nothing rather
+than failing. The most matching words come first unless `?sort=` says otherwise.
+A search takes twenty words at most: each word, like each value of a filter, is
+weighed against the records, so a question asking more is refused with `400`
+naming its parameter rather than costing more than a page of 200 does.
 
 A key reads what a stranger reads, plus the fields its rule names, and one bound
 to a record reads that record and no other of its collection, at any depth,
@@ -792,7 +805,9 @@ an equal record, one locale's tree at a time: a person is in every tree, and
 her other language is a `PATCH` on its route. An asset is posted beside its
 file, as `multipart/form-data` with the document in a `document` part and the
 bytes in a `file` part: the file says its own address, format, size and pixels,
-so the copy's `contentUrl` names the new file.
+so the copy's `contentUrl` names the new file. A person's `name` is made from
+`givenName` and `familyName` where those are sent and no name is, and follows a
+new `familyName` until a name is typed, which then stands.
 
 - **Nothing to learn but the feed's own shapes.** A nested record, a bare
   `{"@id": …}` and a term's code in the field's set all name a target, and
@@ -846,6 +861,7 @@ so the copy's `contentUrl` names the new file.
   under the same `seller` answers that order as held and writes nothing, `200`
   and not `201`, so a retry cannot undo the house's correction; changing it is
   a `PATCH`. One the house has put in the trash answers `422` and stays there.
+  The `seller` is an organisation or a branch, since a `LocalBusiness` is one.
   An invoice number under its `provider` and a term's code in its set are held
   once too, and a second is refused with `422` naming the field.
 
@@ -915,7 +931,8 @@ function fetching(string $address, string $file, array $headers): CurlHandle
     return strlen($line);
   };
   curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers,
-    CURLOPT_TIMEOUT => 5, CURLOPT_HEADERFUNCTION => $etag]);
+    CURLOPT_TIMEOUT => 5, CURLOPT_HEADERFUNCTION => $etag,
+    CURLOPT_USERAGENT => $_SERVER['HTTP_HOST'] ?? 'php']);
   return $curl;
 }
 
@@ -1007,7 +1024,8 @@ before the site's name elsewhere. Its other languages are the page's
 `translationOfWork` and `workTranslation`, addresses read together for their
 language and their site. Where there are any, the page lists every version,
 itself among them, since a search engine trusts an alternate only where each
-version names every other.
+version names every other, and the English one again as `x-default`, the
+version shown to a reader of none of these languages.
 
 ```php
 function address(array $site, array $page): string
@@ -1024,8 +1042,11 @@ function head(array $site, array $page): string
     '<link rel="canonical" href="' . htmlspecialchars(address($site, $page)) . '">'];
   $others = array_column([...$page['translationOfWork'] ?? [], ...$page['workTranslation'] ?? []], '@id');
   $versions = array_filter([$page, ...reads($others)]);
-  foreach (count($versions) > 1 ? $versions : [] as $version) {
-    $lines[] = '<link rel="alternate" hreflang="' . htmlspecialchars($version['inLanguage']) . '" href="'
+  $tagged = count($versions) > 1 ? array_column($versions, null, 'inLanguage') : [];
+  $english = preg_grep('/^en/', array_keys($tagged));
+  $tagged += $english === [] ? [] : ['x-default' => $tagged[reset($english)]];
+  foreach ($tagged as $tag => $version) {
+    $lines[] = '<link rel="alternate" hreflang="' . htmlspecialchars($tag) . '" href="'
       . htmlspecialchars(address($version['isPartOf'] ?? $site, $version)) . '">';
   }
   return implode("\n", $lines);
@@ -1284,7 +1305,8 @@ what it spends.
   can leave*, and it is strongest when the box holds the graph for a machine, a
   table for a spreadsheet, prose for a reader or an assistant, and pages that
   open by double-clicking. A dump is not a backup: it restores nothing, and
-  posted back it gives equal content without its history.
+  posted back it gives equal content without its history. Each dump is a line
+  of the owner's log: who took it, how much and under which types.
 
 ### People and keys
 

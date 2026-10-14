@@ -25,6 +25,7 @@ final readonly class Router
     'POST /logout' => Endpoint::Logout,
     'GET /c/{collection}' => Endpoint::Collection,
     'GET /search' => Endpoint::Search,
+    'POST /preview' => Endpoint::Preview,
     'GET /changes' => Endpoint::Activity,
     'POST /changes/{id}/redact' => Endpoint::ActivityRedact,
     'GET /trash/{collection}' => Endpoint::Trash,

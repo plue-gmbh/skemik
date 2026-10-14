@@ -8,6 +8,7 @@ use Domain\EntityId;
 use Domain\Exceptions\AskedTooMuch;
 use Domain\LocalisedText;
 use Domain\Props;
+use Domain\Slug;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
 use Profile\Profile;
@@ -19,14 +20,14 @@ use Support\Json;
 /* A word table of our own, `entity_word`, and not FTS5, which a webspace's
    SQLite may be built without. A search is asked of the fields its reader reads,
    as a filter is, so a `?q=` cannot find a record by a word the reading
-   withholds. The words are derived from `props` alone, each translation's too,
-   which is why a tag is matched through its edge when asked and never copied
-   into the tagged record: a renamed code would leave every copy stale. A tag
-   counts by its code, the one word of it the record's document shows, and only
-   where the term is public, the reading every reader shares, so a draft term
-   finds nothing for anybody. What is typed matches as prefixes through an
-   indexed range and never `like`, so a stray quote finds nothing rather than
-   failing. */
+   withholds. The words are derived from `props`, each translation's too, and
+   the slug, which every reading's address shows. A tag is matched through its
+   edge when asked and never copied into the tagged record, since a renamed
+   code would leave every copy stale. A tag counts by its code, the one word of
+   it the record's document shows, and only where the term is public, the
+   reading every reader shares, so a draft term finds nothing for anybody. What
+   is typed matches as prefixes through an indexed range and never `like`, so a
+   stray quote finds nothing rather than failing. */
 final readonly class Search
 {
   private const LIMIT = 200;
@@ -59,8 +60,8 @@ final readonly class Search
       . " having count(distinct term) = json_array_length($placeholder, '\$.terms')";
   }
 
-  /* The authored words and every translation of them, per field. */
-  public function words(TypeDefinition $type, Props $props): string
+  /* The authored words and every translation of them, per field, and the slug's. */
+  public function words(TypeDefinition $type, Props $props, Slug $slug): string
   {
     $document = $props->document();
     $translations = array_filter((array) ($document[LocalisedText::KEY] ?? []), is_array(...));
@@ -72,7 +73,7 @@ final readonly class Search
       $words = $tokens === [] ? $words : [...$words, $field->key => $tokens];
     }
 
-    return $this->json->encode((object) $words);
+    return $this->json->encode((object) [...$words, 'slug' => $this->indexed($slug->value)]);
   }
 
   /**
@@ -110,7 +111,7 @@ final readonly class Search
     }
 
     return $this->json->encode(['terms' => $terms,
-      'fields' => array_values(array_intersect($this->profile->searchedKeys(), $read)),
+      'fields' => ['slug', ...array_values(array_intersect($this->profile->searchedKeys(), $read))],
       'tags' => $this->tags($read)]);
   }
 

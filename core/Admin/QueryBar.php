@@ -16,6 +16,7 @@ use Feed\FeedRequest;
 use Feed\PublicFilter;
 use Feed\Targets;
 use Http\Request;
+use Profile\Cardinality;
 use Profile\FieldKind;
 use Profile\LocaleMode;
 use Profile\Profile;
@@ -163,7 +164,7 @@ final readonly class QueryBar
       $target = $this->readableTarget($account, $id);
       if ($target !== null) {
         $label = $this->label->of($target, $this->profile->byType($target->type));
-        $filters[] = new Filter($group, $parameter, $this->address($target), $label);
+        $filters[] = new Filter($group, $parameter, $this->address($column, $target), $label);
       }
     }
     $collator = new \Collator($this->words->language);
@@ -183,10 +184,11 @@ final readonly class QueryBar
     return $target->deletedAt === null && $this->rows->readable($account, $target) ? $target : null;
   }
 
-  /* As a document names it: a term by its code, a record by its collection and slug. */
-  private function address(Entity $target): string
+  /* As a document names it: a controlled term by its code, any other record by
+     its collection and slug, a term's own set among them. */
+  private function address(Column $column, Entity $target): string
   {
-    return $target->typeName() === 'DefinedTerm' ? (string) $target->props->string('term_code')
+    return $column->field->cardinality === Cardinality::T ? (string) $target->props->string('term_code')
       : Collection::SLUGS[$target->typeName()] . '/' . $target->slug->value;
   }
 

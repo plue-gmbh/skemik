@@ -18,6 +18,7 @@ enum Endpoint
   case Logout;
   case Collection;
   case Search;
+  case Preview;
   case Record;
   case RecordCreate;
   case RecordPatch;

@@ -117,7 +117,8 @@ final readonly class Commerce
       $f->term('category', 'Category'),
       $f->ref('provider', 'Provider', 'Organization')->starter(),
       $f->refs('area_served', 'Area served', 'Place'),
-      $f->objects('available_channel', 'Channel', 'ServiceChannel'),
+      /* A channel answers in a language, so a second language may be a second address. */
+      $f->objects('available_channel', 'Channel', 'ServiceChannel')->words(),
       $f->objects('hours_available', 'Hours available', 'OpeningHoursSpecification'),
       ...$vo->flatten('PeopleAudience', 'audience', 'Audience', $f),
       $f->refs('offers', 'Offers', 'Offer')

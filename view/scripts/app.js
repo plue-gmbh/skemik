@@ -164,68 +164,14 @@ function placement(anchor, box = { width: 0, height: 0 }) {
     maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
 }
 
-/* ⇢ Insert link: a record search across what this account may read, in
-   the record's locale so a work is offered once, inserting `[selection or
-   label](skemik:id)` at the cursor — a link that survives a slug change because
-   it names the id. */
-function insertLink(button, words) {
-  const area = button.closest("[data-field]").querySelector("[data-prose]");
-  const id = button.closest("[data-record]").dataset.record;
-  const locale = JSON.parse(document.getElementById("sheet-data").textContent).rows
-    .find((row) => row.id === id)?.locale ?? "";
-  const [from, to] = [area.selectionStart, area.selectionEnd];
-  const search = Object.assign(document.createElement("input"), { type: "search", className: "popover-input",
-    placeholder: words["record.link_search"], autocomplete: "off" });
-  search.setAttribute("aria-label", words["record.link_search"]);
-  const list = Object.assign(document.createElement("div"), { className: "options" });
-  const label = Object.assign(document.createElement("p"), { className: "popover-label",
-    textContent: words["record.link_insert"] });
-  const { element, close } = popover(button, [label, search, list]);
-  const choose = (hit) => {
-    const text = `[${area.value.slice(from, to) || hit.label}](skemik:${hit.id})`;
-    area.setRangeText(text, from, to, "end");
-    area.dispatchEvent(new Event("input", { bubbles: true }));
-    close();
-    focusField(area, button);
-    toast(fill(words["record.link_done"], { label: hit.label }));
-  };
-  const paint = async () => {
-    const typed = search.value;
-    const address = "/search?" + new URLSearchParams({ q: typed, in: locale });
-    const hits = typed.trim() === "" ? []
-      : (await (await fetch(address, { headers: { Accept: "application/json" } })).json()).hits ?? [];
-    if (typed !== search.value) return;
-    list.replaceChildren(...hits.map((hit) => {
-      const option = Object.assign(document.createElement("button"), { type: "button", className: "option" });
-      option.append(glyphMark(hit.glyph), Object.assign(document.createElement("span"), { textContent: hit.label }),
-        Object.assign(document.createElement("span"), { className: "option-term", textContent: hit.collection }));
-      option.addEventListener("click", () => choose(hit));
-      return option;
-    }));
-    if (hits.length === 0 && typed.trim() !== "") {
-      list.append(Object.assign(document.createElement("p"), { className: "popover-hint",
-        textContent: words["record.link_none"] }));
-    }
-  };
-  let typing = 0;
-  search.addEventListener("input", () => { window.clearTimeout(typing); typing = window.setTimeout(paint, 200); });
-  search.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") list.querySelector("button")?.click();
-  });
-  focusField(search, element);
-}
-
 document.addEventListener("click", (event) => {
-  const trigger = event.target.closest("[data-toast], [data-dialog], [data-dialog-close], [data-link-insert],"
-    + " [data-grant], [data-view-menu]");
+  const trigger = event.target.closest("[data-toast], [data-dialog], [data-dialog-close], [data-grant],"
+    + " [data-view-menu]");
   if (trigger?.dataset.viewMenu !== undefined) openViewMenu(trigger);
   if (trigger?.dataset.grant !== undefined) openGrant(trigger);
   if (trigger?.dataset.toast !== undefined) toast(trigger.dataset.toast);
   if (trigger?.dataset.dialog !== undefined) document.getElementById(trigger.dataset.dialog)?.showModal();
   if (trigger?.dataset.dialogClose !== undefined) trigger.closest("dialog").close();
-  if (trigger?.dataset.linkInsert !== undefined) {
-    insertLink(trigger, JSON.parse(document.getElementById("sheet-data").textContent).words);
-  }
 });
 
 /* A narrow paper's view switch: the five views on the shared popover, the current one focused. */

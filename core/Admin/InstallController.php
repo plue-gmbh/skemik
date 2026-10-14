@@ -86,7 +86,7 @@ final readonly class InstallController
 
   private function page(Request $request, ?string $sentence, int $status): Response
   {
-    $requirements = $this->layout->requirements($this->premises);
+    $requirements = $this->layout->requirements($this->premises, $request->origin());
     $shipped = $this->words->shipped();
 
     return Response::html($this->template->render('pages/install', ['words' => $this->words,

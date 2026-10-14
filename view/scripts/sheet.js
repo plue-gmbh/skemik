@@ -125,7 +125,9 @@ function mountSheet(root) {
         this.done = false;
         this.draw(id, key);
       },
-      /* A prose field is its own textarea: only its mark follows, and a discard puts its text back. */
+      /* A prose field is its own textarea: only its mark follows, and a discard puts
+         its text back, said as an `input` so its height and its preview follow; only
+         where the text differs, since the event comes back here as a change. */
       draw(id, key) {
         const cell = cellOf(id, key);
         if (key === "additional_type") showKinds(table.querySelector(`[data-record="${id}"]`), this.current(id, key));
@@ -135,7 +137,11 @@ function mountSheet(root) {
         if (area) {
           const pending = key in (this.pending[id] ?? {});
           pending ? (cell.dataset.pending = "") : delete cell.dataset.pending;
-          if (!pending) area.value = rows.get(id).values[key] ?? "";
+          const stored = rows.get(id).values[key] ?? "";
+          if (!pending && area.value !== stored) {
+            area.value = stored;
+            area.dispatchEvent(new Event("input", { bubbles: true }));
+          }
           return;
         }
         loaded.has(id + key) || loaded.set(id + key, shown.innerHTML);

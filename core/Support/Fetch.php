@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Support;
 
-/* One HTTP GET, for the proofs that a file is not served (`Admin\DataLayout`):
-   what the install asks of its own address is what a stranger would get, so no
-   redirect is followed, one saying nothing about the file, and the certificate
-   is checked as a stranger's browser checks it. Over a socket rather than
-   `file_get_contents`, which `allow_url_fopen` switches off on the hosts that
-   most need the proof. HTTP/1.0, so no answer arrives chunked and a sentinel is
-   never split across two chunks. A fetch of the server serving it needs a
-   second worker: under `php -S` that is `PHP_CLI_SERVER_WORKERS`. The update's
-   archive is saved to a file as it arrives rather than held, since one of
-   many megabytes would not fit beside a request, and one shorter than its
+/* One HTTP request, a GET or a bodiless PATCH, for the first run's proofs
+   (`Admin\Proofs`): what the install asks of its own address is what a stranger
+   would get, so no redirect is followed, one saying nothing about the file, and
+   the certificate is checked as a stranger's browser checks it. Over a socket
+   rather than `file_get_contents`, which `allow_url_fopen` switches off on the
+   hosts that most need the proof. HTTP/1.0, so no answer arrives chunked and a
+   sentinel is never split across two chunks. A fetch of the server serving it
+   needs a second worker: under `php -S` that is `PHP_CLI_SERVER_WORKERS`. The
+   update's archive is saved to a file as it arrives rather than held, since one
+   of many megabytes would not fit beside a request, and one shorter than its
    `Content-Length` is refused here, so a connection that broke off is the
    network's to try again and not a signature the release got wrong. */
 final readonly class Fetch
@@ -23,7 +23,18 @@ final readonly class Fetch
 
   public function get(string $url): Fetched
   {
-    $socket = $this->asked($url);
+    return $this->answered('GET', $url);
+  }
+
+  /* No body, since all that is asked is who answers the method, the host's front or the code. */
+  public function patch(string $url): Fetched
+  {
+    return $this->answered('PATCH', $url);
+  }
+
+  private function answered(string $method, string $url): Fetched
+  {
+    $socket = $this->asked($method, $url);
     $answer = (string) stream_get_contents($socket, self::LIMIT_BYTES);
     fclose($socket);
 
@@ -34,7 +45,7 @@ final readonly class Fetch
      and refused, as one shorter than its head said. */
   public function save(string $url, string $path, int $limit): void
   {
-    $socket = $this->asked($url);
+    $socket = $this->asked('GET', $url);
     $head = '';
     while (!str_ends_with($head, "\r\n\r\n") && strlen($head) < 65536 && ($line = fgets($socket)) !== false) {
       $head .= $line;
@@ -68,7 +79,7 @@ final readonly class Fetch
   }
 
   /** @return resource the socket, the request sent and the answer still to read */
-  private function asked(string $url)
+  private function asked(string $method, string $url)
   {
     $parts = parse_url($url);
     if (!is_array($parts) || !isset($parts['host']) || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)) {
@@ -77,9 +88,10 @@ final readonly class Fetch
     $https = $parts['scheme'] === 'https';
     $port = $parts['port'] ?? ($https ? 443 : 80);
     $socket = $this->open(sprintf('%s://%s:%d', $https ? 'tls' : 'tcp', $parts['host'], $port), $parts['host']);
-    fwrite($socket, sprintf("GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: Skemik\r\nConnection: close\r\n\r\n",
-      ($parts['path'] ?? '/') . (isset($parts['query']) ? '?' . $parts['query'] : ''),
-      isset($parts['port']) ? $parts['host'] . ':' . $port : $parts['host']));
+    fwrite($socket, sprintf("%s %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: Skemik\r\nConnection: close\r\n%s\r\n",
+      $method, ($parts['path'] ?? '/') . (isset($parts['query']) ? '?' . $parts['query'] : ''),
+      isset($parts['port']) ? $parts['host'] . ':' . $port : $parts['host'],
+      $method === 'GET' ? '' : "Content-Length: 0\r\n"));
 
     return $socket;
   }
