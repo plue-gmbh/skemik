@@ -41,12 +41,18 @@ if (!isset($template)) {
   <teleport v-if="ticked.length > 0" to="[data-ticked]">
     <div class="ticked-bar" role="toolbar" :aria-label="words['sheet.ticked_actions']">
       <span class="ticked-count" :title="fill(words['sheet.ticked'], { n: ticked.length })"><span
-        aria-hidden="true">{{ fill(words['sheet.ticked_count'], { n: ticked.length }) }}</span><span
-        class="visually-hidden">{{ fill(words['sheet.ticked'], { n: ticked.length }) }}</span></span>
+        class="ticked-short" aria-hidden="true">{{ fill(words['sheet.ticked_count'],
+        { n: ticked.length }) }}</span><span
+        class="ticked-long">{{ fill(words['sheet.ticked'], { n: ticked.length }) }}</span></span>
       <select v-if="statuses.length > 0" class="ticked-field" :aria-label="words['sheet.set_status']"
         :value="status" @change="setStatus">
         <option value="">{{ words['sheet.set_status'] }}</option>
         <option v-for="each in statuses" :key="each.value" :value="each.value">{{ each.word }}</option>
+      </select>
+      <select v-if="locales.length > 1" class="ticked-field" :aria-label="words['sheet.set_locale']"
+        :value="locale" @change="setLocale">
+        <option value="">{{ words['sheet.set_locale'] }}</option>
+        <option v-for="tag in locales" :key="tag" :value="tag">{{ tag }}</option>
       </select>
       <select ref="setter" class="ticked-field" :aria-label="words['sheet.set_field']" @change="setField">
         <option value="">{{ words['sheet.set_field'] }}</option>

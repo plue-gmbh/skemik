@@ -566,6 +566,42 @@ button:disabled {
   flex: 1;
 }
 
+.header-sites {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.header-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: var(--radius-medium);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header-site .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--text-tertiary);
+}
+
+@media (hover: hover) {
+  .header-site:hover {
+    background: var(--surface-sunken);
+    color: var(--text);
+  }
+}
+
+.sidebar-sites {
+  display: none;
+}
+
 .account {
   position: relative;
 }
@@ -1046,6 +1082,15 @@ h2#home-needs_look ~ .home-empty {
 }
 
 @media (hover: hover) {
+  .locale-row > .button-quiet {
+    opacity: 0;
+  }
+
+  .locale-row:hover > .button-quiet,
+  .locale-row:focus-within > .button-quiet {
+    opacity: 1;
+  }
+
   .locale-row .button-quiet.is-danger:hover {
     background: color-mix(in srgb, var(--status-error) 12%, transparent);
     color: var(--status-error);
@@ -1216,6 +1261,14 @@ h2#home-needs_look ~ .home-empty {
   background: var(--surface);
   box-shadow: var(--shadow-resting);
   color: var(--text);
+}
+
+@media (hover: hover) {
+  .view-switch a:not([aria-current="true"]):hover,
+  .view-switch button:not([aria-pressed="true"], [aria-disabled="true"]):hover {
+    background: var(--surface-sunken-strong);
+    color: var(--text);
+  }
 }
 
 .view-switch [aria-disabled="true"] {
@@ -1470,6 +1523,10 @@ h2#home-needs_look ~ .home-empty {
   height: 10px;
   border-radius: 50%;
   background: var(--text-tertiary);
+}
+
+.state-draft {
+  background: var(--border-field);
 }
 
 .state-published {
@@ -2256,6 +2313,20 @@ a.chip {
   border-radius: var(--radius-large);
 }
 
+@container paper (min-width: 920px) {
+  .side-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .side-cards .record-card {
+    margin-bottom: 0;
+  }
+}
+
 .side-card-title {
   margin: 0;
   font-size: 14px;
@@ -2592,6 +2663,10 @@ a.chip {
   white-space: nowrap;
 }
 
+.ticked-short {
+  display: none;
+}
+
 .ticked-bar .is-danger {
   flex-shrink: 0;
   margin-left: auto;
@@ -2599,6 +2674,7 @@ a.chip {
 
 .ticked-field {
   min-width: 0;
+  max-width: 16%;
   height: 32px;
   padding: 0 10px;
   border: 1px solid var(--border-field);
@@ -3176,6 +3252,22 @@ a.cell {
     transition-delay: 0s;
   }
 
+  .header-sites {
+    display: none;
+  }
+
+  .sidebar-sites {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-sites .header-site {
+    padding: 7px 10px;
+  }
+
   .feed-panel {
     --feed-width: min(100vw, 480px);
     position: fixed;
@@ -3479,6 +3571,33 @@ a.cell {
     clip-path: inset(50%);
     white-space: nowrap;
   }
+
+  .view-switch button[aria-pressed="false"][data-record-mode] {
+    width: auto;
+    padding: 0 11px;
+  }
+
+  .view-switch button[aria-pressed="false"][data-record-mode] .view-switch-word {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .ticked-short {
+    display: inline;
+  }
+
+  .ticked-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
 }
 
 button.spine-chip {
@@ -3761,6 +3880,11 @@ button.spine-chip {
   outline-offset: -8px;
 }
 
+.record-file.is-dropping {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+
 .page-note {
   margin: 16px 0;
   padding: 10px 14px;
@@ -3777,6 +3901,20 @@ button.spine-chip {
 .page-note.is-refused {
   border-color: color-mix(in srgb, var(--status-error) 45%, var(--surface));
   background: color-mix(in srgb, var(--status-error) 10%, var(--surface));
+}
+
+.notice,
+.page-note,
+.trashed,
+.ticked-bar {
+  animation: appear var(--transition-fast);
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .upload-progress {

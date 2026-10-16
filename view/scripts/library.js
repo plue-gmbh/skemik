@@ -3,9 +3,10 @@
    is then read afresh, since what the uploads left is the server's to draw. A
    request the web server stops before PHP has no page to explain it, so that one
    sentence stands here. The bar counts bytes, since `fetch` cannot. Files dropped
-   anywhere on the library's screen are uploaded, and nowhere else: a file dropped
-   on another screen is no asset anybody asked for, and the browser opening it in
-   place of the page would lose what was typed there. */
+   anywhere on the library's screen are uploaded, one dropped on a file's preview
+   on its own screen replaces it, and nowhere else: a file dropped on another
+   screen is no asset anybody asked for, and the browser opening it in place of
+   the page would lose what was typed there. */
 
 function sent(form, file, moved) {
   const body = new FormData(form);
@@ -58,13 +59,23 @@ function mountUpload(form) {
   });
 }
 
-/* Entering and leaving fire for every element crossed, so the outline counts them. It is drawn inside the
-   scrolling paper, since outside the page it is clipped and a long library carries its bottom out of view. */
+/* An input for one file takes the first file dropped, as it takes the one picked. */
+function first(files) {
+  const carrier = new DataTransfer();
+  carrier.items.add(files[0]);
+  return carrier.files;
+}
+
+/* Entering and leaving fire for every element crossed, so the outline counts them. It is drawn on what takes
+   the drop: inside the scrolling paper on the library, since outside the page it is clipped and a long library
+   carries its bottom out of view, and around the preview alone on a file's screen, since a file meant for the
+   library and dropped anywhere there would replace the one shown, its bytes gone. */
 function mountDrop(form) {
-  const [input, paper] = [form.elements.file, form.closest(".paper")];
+  const [input, preview] = [form.elements.file, document.querySelector("[data-drop]")];
+  const zone = preview ?? form.closest(".paper");
   const carried = (event) => event.dataTransfer?.types.includes("Files");
   let entered = 0;
-  const mark = (count) => paper.classList.toggle("is-dropping", (entered = count) > 0);
+  const mark = (count) => zone.classList.toggle("is-dropping", (entered = count) > 0);
   document.addEventListener("dragenter", (event) => carried(event) && mark(entered + 1));
   document.addEventListener("dragleave", (event) => carried(event) && mark(entered - 1));
   document.addEventListener("dragover", (event) => carried(event) && event.preventDefault());
@@ -72,11 +83,13 @@ function mountDrop(form) {
     if (!carried(event)) return;
     event.preventDefault();
     mark(0);
-    if (input.disabled || event.dataTransfer.files.length === 0) return;
-    input.files = event.dataTransfer.files;
+    if (input.disabled || preview?.contains(event.target) === false || event.dataTransfer.files.length === 0) return;
+    input.files = input.multiple ? event.dataTransfer.files : first(event.dataTransfer.files);
     input.dispatchEvent(new Event("change"));
   });
 }
 
-document.querySelectorAll("[data-upload]").forEach(mountUpload);
-document.querySelectorAll("form#upload[data-upload]").forEach(mountDrop);
+document.querySelectorAll("[data-upload]").forEach((form) => {
+  mountUpload(form);
+  mountDrop(form);
+});

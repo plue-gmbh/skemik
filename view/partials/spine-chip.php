@@ -44,7 +44,7 @@ $present = count(array_filter($dots, fn (Admin\Translation $each): bool => $each
   class="spine-prefix"><?= $template->escape($prefix) ?></span><?php endif ?><span
   data-spine-slug><?= $template->escape($entity->slug->value) ?></span></span><?php foreach ($shown as $each): ?><span
   class="locale-dot<?= $each->record === null ? ' is-missing' : '' ?><?= $each->locale === $strong
-    ? ' is-current' : '' ?>"
+    ? ' is-current' : '' ?>"<?= $each->locale === $entity->locale->tag ? ' data-spine-locale' : '' ?>
   aria-hidden="true"><?= $template->escape($short($each->locale)) ?></span><?php endforeach ?><?php
   if (count($dots) > 3): ?><span class="locale-dot is-count" aria-hidden="true"><?= $present ?>/<?= count($dots)
   ?></span><?php endif ?></<?= $element ?>>

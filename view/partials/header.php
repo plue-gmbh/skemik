@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* On every admin page, one row: the menu button on a narrow screen, the mark as
    the link home and beside it the version, the owner's door to the update screen,
    marked while a release cannot be installed automatically, the reason being Needs a
-   look's; then the Feed button and the account. Search, settings and help are no
+   look's; then the house's own sites (`Storage\Sites`), where the row has room
+   for them, the Feed button and the account. Search, settings and help are no
    header items, because each belongs to a screen. The admin has no light/dark
    switch but three materials, chrome, paper and terminal, each a scope redefining
    the same tokens in `view/style.css`, so a region says its role by its material
@@ -38,6 +39,11 @@ $avatar = $menu->picture === null
 <?php endif ?>
   </span>
   <span class="header-space"></span>
+<?php if ($sites !== []): ?>
+  <nav class="header-sites" aria-label="<?= $template->escape($words->get('header.sites')) ?>">
+<?= $template->render('partials/site-links', ['sites' => $sites]) ?>
+  </nav>
+<?php endif ?>
   <button type="button" class="header-feed" aria-controls="feed-panel"
     aria-expanded="<?= $feed->open ? 'true' : 'false' ?>"
     data-feed-button><?= $template->escape($words->get('header.feed')) ?></button>

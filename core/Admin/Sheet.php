@@ -46,8 +46,8 @@ final readonly class Sheet
     'picker.remove', 'picker.no_targets', 'picker.no_values', 'picker.no_entries', 'picker.add_value',
     'picker.add_entry', 'picker.entry', 'picker.bearing', 'picker.refers', 'picker.unrefer',
     'picker.says', 'picker.done', 'sheet.ticked', 'sheet.ticked_count', 'sheet.ticked_actions', 'sheet.set_status',
-    'sheet.set_field', 'sheet.set_to', 'sheet.set_none', 'sheet.untick', 'delete.confirm', 'delete.question_many',
-    'delete.many', 'dialog.cancel'];
+    'sheet.set_field', 'sheet.set_to', 'sheet.set_none', 'sheet.set_locale', 'sheet.set_locale_kept', 'sheet.untick',
+    'delete.confirm', 'delete.question_many', 'delete.many', 'dialog.cancel'];
 
   public const OWN_STATUS = ['payment_status', 'order_status', 'reservation_status'];
   private const READ = 'date_read';
@@ -287,6 +287,6 @@ final readonly class Sheet
   private function word(string $key): string
   {
     return $this->words->get($key, ['n' => '{n}', 'label' => '{label}', 'name' => '{name}',
-      'field' => '{field}', 'reason' => '{reason}', 'term' => '{term}', 'value' => '{value}']);
+      'field' => '{field}', 'reason' => '{reason}', 'term' => '{term}', 'value' => '{value}', 'tag' => '{tag}']);
   }
 }

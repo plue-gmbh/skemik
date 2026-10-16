@@ -31,8 +31,8 @@ function mountTrash(area) {
 
 function counted(count, n) {
   count.title = fill(count.dataset.long, { n });
-  count.querySelector("[aria-hidden]").textContent = fill(count.dataset.short, { n });
-  count.querySelector(".visually-hidden").textContent = count.title;
+  count.querySelector(".ticked-short").textContent = fill(count.dataset.short, { n });
+  count.querySelector(".ticked-long").textContent = count.title;
   return count.title;
 }
 

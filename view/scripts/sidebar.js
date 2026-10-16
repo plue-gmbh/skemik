@@ -3,12 +3,15 @@
 
 /* Every sidebar link loads a page, which draws the list from its top again. The
    list's scroll is the viewer's and this tab's, so it is kept here and not by
-   the server; with nothing kept, the open collection is at least brought into view. */
+   the server, and the open collection is then brought into view, gliding where it
+   lies outside what was kept, since the kept position was the one last seen.
+   The mark leads home and starts over, so the list goes back to its top with it. */
 function keepSidebarScroll(list) {
   let kept = null;
   try { kept = sessionStorage.getItem("sidebar-scroll"); } catch { kept = null; }
   if (kept !== null) list.scrollTop = Number(kept);
-  list.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
+  list.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  document.querySelector(".header-home")?.addEventListener("click", () => { list.scrollTop = 0; });
   window.addEventListener("pagehide", () => {
     try { sessionStorage.setItem("sidebar-scroll", String(list.scrollTop)); } catch { /* private window */ }
   });

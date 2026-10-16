@@ -1,17 +1,20 @@
 /* A view's ticks and the bar over the view for what is ticked (each view draws
    its ticks, `partials/save-bar` the bar), mixed into the sheet island over its
-   `change` and `edit`. A status or one field's value across the ticked records
-   lands as pending edits the save bar saves record by record, so each is
-   checked, versioned and logged as a single edit is; the trash is a form,
+   `change` and `edit`. A status, a language or one field's value across the
+   ticked records lands as pending edits the save bar saves record by record, so
+   each is checked, versioned and logged as a single edit is; the trash is a form,
    confirmed, since deleting is never pending. A field is set through its own
    editor, opened empty on the first ticked record that has it, so a reference
    picked is picked for every record and never one record's own edge; a record
-   whose cell has no editor, off for its kind or a file's, is left. */
+   whose cell has no editor, off for its kind or a file's, is left, as is a record
+   that already keeps its own words in the language set, which the spine dialog
+   refuses one by one. */
 
 function ticked(table, data, spineData) {
   const boxes = () => [...table.querySelectorAll("[data-tick]")];
   return {
-    data: () => ({ ticked: [], statuses: spineData?.statuses ?? [], collection: data.collection, csrf: data.csrf }),
+    data: () => ({ ticked: [], statuses: spineData?.statuses ?? [], locales: spineData?.forks ? spineData.locales : [],
+      collection: data.collection, csrf: data.csrf }),
     computed: {
       /* A field the view shows no cell of is not offered, and a boolean, which has
          no editor to open, is offered as its two values. */
@@ -22,11 +25,13 @@ function ticked(table, data, spineData) {
             label: fill(this.words["sheet.set_to"], { field: field.label,
               value: this.words[value ? "cell.yes" : "cell.no"] }) }))));
       },
-      /* The status every ticked record would be saved with, so a status set stays shown until the ticks or
-         the pending edits make it untrue, and a mixed selection shows the placeholder. */
+      /* The status, and the language, every ticked record would be saved with, so one set stays shown
+         until the ticks or the pending edits make it untrue, and a mixed selection shows the placeholder. */
       status() {
-        const held = new Set(this.ticked.map((id) => this.current(id, "spine.status")));
-        return held.size === 1 ? [...held][0] : "";
+        return this.held("spine.status");
+      },
+      locale() {
+        return this.held("spine.locale");
       },
     },
     mounted() {
@@ -54,9 +59,20 @@ function ticked(table, data, spineData) {
         this.tick(all);
         all.focus();
       },
+      held(key) {
+        const held = new Set(this.ticked.map((id) => this.current(id, key)));
+        return held.size === 1 ? [...held][0] : "";
+      },
       setStatus(event) {
         const value = event.target.value;
         if (value) this.ticked.forEach((id) => this.change(id, "spine.status", value));
+      },
+      setLocale(event) {
+        const value = event.target.value;
+        if (!value) return;
+        const kept = this.ticked.filter((id) => spineData.rows[id].worded.includes(value));
+        this.ticked.filter((id) => !kept.includes(id)).forEach((id) => this.change(id, "spine.locale", value));
+        if (kept.length > 0) toast(fill(this.words["sheet.set_locale_kept"], { n: kept.length, tag: value }));
       },
       setField(event) {
         const [key, flag] = event.target.value.split(":");

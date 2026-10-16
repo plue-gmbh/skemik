@@ -60,6 +60,8 @@ const cellEditor = {
       return;
     }
     this.place = placement(this.editing.cell, this.$refs.popover.getBoundingClientRect());
+    this.$nextTick(() => { this.unfollow = this.$refs.popover && following(this.editing.cell, this.$refs.popover,
+      (at) => { this.place = { ...this.place, ...at }; }); });
     this.outside = (event) => {
       if (this.$refs.popover?.contains(event.target)) return;
       this.finish(this.mode === "select" && !this.many ? undefined
@@ -74,6 +76,7 @@ const cellEditor = {
     if (this.mode === "prose") this.$nextTick(() => this.$refs.prose.focus());
   },
   unmounted() {
+    this.unfollow?.();
     document.removeEventListener("pointerdown", this.outside, true);
   },
   methods: {

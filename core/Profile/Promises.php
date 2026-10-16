@@ -14,7 +14,7 @@ use Domain\Violation;
 final readonly class Promises
 {
   /* What a house transacts, and the field that says how each stands. */
-  private const STANDING = ['Order' => 'order_status', 'Invoice' => 'payment_status',
+  public const STANDING = ['Order' => 'order_status', 'Invoice' => 'payment_status',
     'Reservation' => 'reservation_status', 'Event' => 'event_status', 'Action' => 'action_status'];
 
   /* Every column of a row, and `l10n` beside the fields in `props`. A field of

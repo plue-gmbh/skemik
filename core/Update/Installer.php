@@ -17,7 +17,8 @@ namespace Update;
 final readonly class Installer
 {
   public const PAYLOAD = ['core', 'view', 'language', 'migrations', 'index.php', '.htaccess'];
-  private const PAPERS = ['README.md', 'LICENSE', 'SECURITY.md'];
+  /* The swap is run by the updater already installed, so a paper's name stands here one release before its file. */
+  private const PAPERS = ['README.md', 'LICENSE', 'SECURITY.md', 'SHA256SUMS'];
   private const ARRIVED = '.arrived';
   private const STAGED = '.staged';
   private const PREVIOUS = '.previous';

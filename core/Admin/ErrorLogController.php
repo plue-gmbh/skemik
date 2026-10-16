@@ -55,6 +55,7 @@ final readonly class ErrorLogController
     return Response::html($this->template->render('partials/frame', ['words' => $this->words,
       'account' => $account, 'title' => $this->words->get('errors.title'),
       'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
+      'sites' => $this->sidebar->sites(),
       'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => null,
       'space' => $this->probes->space(), 'update' => $this->probes->update(),
       'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,

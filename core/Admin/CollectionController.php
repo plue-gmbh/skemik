@@ -212,6 +212,7 @@ final readonly class CollectionController
       'account' => $account, 'title' => $title,
       'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
       'notice' => $notice, 'space' => $this->probes->space(), 'update' => $this->probes->update(),
+      'sites' => $this->sidebar->sites(),
       'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account),
       'open' => $collection->slug->value, 'locale' => $this->settings->locales()[0]->tag, 'main' => $main,
       'islands' => $islands, 'feed' => $feed]), $notice === '' ? 200 : 404);

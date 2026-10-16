@@ -153,12 +153,18 @@ function mountSheet(root) {
         shown.replaceChildren(cellShown(fieldOf(key), this.pending[id][key], data.terms[rows.get(id).locale] ?? {},
           this.language, this.words));
       },
-      /* The chip marks a pending spine edit and shows a pending slug. */
+      /* The chip marks a pending spine edit and shows a pending slug and language. A
+         view's dot is strong for the house's first language; the record screen's for its own. */
       drawSpine(id) {
         const [chip, values] = [chipOf(id), this.pending[id] ?? {}];
         if (!chip) return;
         Object.keys(values).some(isSpine) ? (chip.dataset.pending = "") : delete chip.dataset.pending;
         chip.querySelector("[data-spine-slug]").textContent = values["spine.slug"] ?? spineData.rows[id].slug;
+        const dot = chip.querySelector("[data-spine-locale]");
+        if (!dot) return;
+        const locale = values["spine.locale"] ?? spineData.rows[id].locale;
+        dot.textContent = locale.split("-")[0];
+        if (!table.closest("[data-record-screen]")) dot.classList.toggle("is-current", locale === spineData.locales[0]);
       },
       openSpine(chip) {
         const id = chip.dataset.spine;

@@ -38,7 +38,7 @@ $held = $rows !== [] && $rows[0]->held;
     data-ticked hidden>
     <span class="ticked-count" data-ticked-count data-short="<?= $template->escape($words->get('sheet.ticked_count',
       ['n' => '{n}'])) ?>" data-long="<?= $template->escape($words->get('sheet.ticked', ['n' => '{n}'])) ?>"><span
-      aria-hidden="true"></span><span class="visually-hidden"></span></span>
+      class="ticked-short" aria-hidden="true"></span><span class="ticked-long"></span></span>
     <form method="post" action="<?= $template->escape($address) ?>/restore">
       <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
       <input type="hidden" name="ids" data-ticked-ids>

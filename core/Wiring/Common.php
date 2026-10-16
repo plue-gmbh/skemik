@@ -52,6 +52,7 @@ use Storage\RateLimit;
 use Storage\RelationRepository;
 use Storage\Search;
 use Storage\SettingStore;
+use Storage\Sites;
 use Support\Clock;
 use Support\Fetch;
 use Support\Json;
@@ -247,8 +248,9 @@ final readonly class Common
   private function screens(): void
   {
     $this->filter = new PublicFilter($this->profile, $this->clock);
-    $this->sidebar = new Sidebar($this->collections, $this->counts, $this->authorizer, $this->filter,
-      $this->grants, $this->clock, $this->words);
+    $this->sidebar = new Sidebar($this->collections, $this->counts,
+      new Sites($this->db, $this->clock, $this->settings), $this->authorizer, $this->filter, $this->grants,
+      $this->clock, $this->words);
     $this->rows = new Rows($this->relations, $this->entities, $this->authorizer, $this->filter,
       $this->profile, $this->schema, $this->clock);
     $this->parameters = new FeedRequest($this->schema, $this->profile, $this->clock);

@@ -19,10 +19,10 @@ ob_start();
 <a class="skip-link" href="#main"><?= $template->escape($words->get('frame.skip')) ?></a>
 <?= $template->render('partials/header', ['words' => $words, 'menu' => $menu, 'csrf' => $csrf,
   'updates' => $account->can(Auth\Capability::RunUpdate), 'blocked' => $update, 'feed' => $feed,
-  'open' => $open]) ?>
+  'open' => $open, 'sites' => $sites]) ?>
 <div class="admin-body">
 <?= $template->render('partials/sidebar', ['words' => $words, 'entries' => $entries, 'open' => $open,
-  'locale' => $locale, 'exports' => $account->can(Auth\Capability::ExportHoldings)]) ?>
+  'locale' => $locale, 'exports' => $account->can(Auth\Capability::ExportHoldings), 'sites' => $sites]) ?>
 <main class="paper" id="main"><?php if (($notice ?? '') !== ''): ?><p class="notice"
   role="status"><?= $template->escape($notice) ?></p><?php endif ?><?php if ($space !== ''): ?><p class="notice"
   role="status"><?= $template->escape($space) ?></p><?php endif ?><?= $main ?><?= $template->render('partials/footer',

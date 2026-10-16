@@ -9,8 +9,10 @@ use Auth\Authorizer;
 use Auth\GrantRepository;
 use Feed\PublicFilter;
 use Storage\Collection;
+use Storage\CollectionField;
 use Storage\Counts;
 use Storage\CollectionStore;
+use Storage\Sites;
 use Storage\TypeCount;
 use Support\Clock;
 use Support\Words;
@@ -30,6 +32,7 @@ final readonly class Sidebar
   public function __construct(
     private CollectionStore $collections,
     private Counts $counts,
+    private Sites $sites,
     private Authorizer $authorizer,
     private PublicFilter $filter,
     private GrantRepository $grants,
@@ -60,6 +63,20 @@ final readonly class Sidebar
     usort($empty, $byName);
 
     return [...$filled, ...$empty];
+  }
+
+  /* The house's own sites, which the header draws where it has room and the drawer
+     where it has not, and only while the feed lets their `url` out: everybody is
+     shown them, and a colleague reading `WebSite` as a stranger must not be shown
+     what a stranger is not.
+     @return array<string, string> a host by URL */
+  public function sites(): array
+  {
+    $site = array_find($this->collections->all(), fn (Collection $held): bool => $held->type === Sites::WEB_SITE);
+    $out = $site !== null && array_any($this->filter->fields($site),
+      fn (CollectionField $field): bool => $field->key === 'url');
+
+    return $out ? $this->sites->linked() : [];
   }
 
   private function entry(Account $account, Collection $collection, ?TypeCount $count): ?SidebarEntry

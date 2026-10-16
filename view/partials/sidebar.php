@@ -8,7 +8,8 @@ declare(strict_types=1);
    under the collections it reads (`Admin\ExportController`), and alone: a
    snapshot nobody has to take is no button for every page, so Backup is a row
    of the Settings card (`view/partials/home-settings.php`). On narrow screens
-   it is a drawer behind the header's menu button (`view/scripts/sidebar.js`). */
+   it is a drawer behind the header's menu button (`view/scripts/sidebar.js`),
+   and the house's own sites, which the header then has no room for, head it. */
 
 if (!isset($template)) {
   return;
@@ -16,6 +17,11 @@ if (!isset($template)) {
 ?>
 <nav id="sidebar" class="sidebar" data-material="chrome-deep"
   aria-label="<?= $template->escape($words->get('sidebar.label')) ?>">
+<?php if ($sites !== []): ?>
+  <div class="sidebar-sites">
+<?= $template->render('partials/site-links', ['sites' => $sites]) ?>
+  </div>
+<?php endif ?>
   <ul class="sidebar-list">
 <?php foreach ($entries as $entry): ?>
     <li><a class="sidebar-entry<?= $entry->count === 0 ? ' is-empty' : '' ?>"

@@ -23,14 +23,16 @@ const edgeSays = {
 };
 
 /* A reference: a search over the field's targets (`Admin\SearchController`) in
-   the locale of the record edited, and for a list the targets in order. `fixed`
-   is another locale's words: the targets stand as the authored record holds
-   them, and only what they say there is written. */
+   the locale of the record edited, less the targets still listed, the held ones
+   named by their place, since a held chip names no target, and asked again when
+   one leaves, so it is offered back at once; and for a list the targets in
+   order. `fixed` is another locale's words: the targets stand as the authored
+   record holds them, and only what they say there is written. */
 const edgePicker = {
   template: "#edge-picker-template",
   mixins: [ordered],
   components: { edgeSays },
-  props: ["field", "value", "words", "collection", "locale", "fixed"],
+  props: ["field", "value", "words", "collection", "locale", "record", "fixed"],
   emits: ["draft", "done"],
   data() {
     const items = (this.value ?? []).map((item) => (item.qualifiers
@@ -44,6 +46,7 @@ const edgePicker = {
       return this.hits.filter((hit) => !taken.has(hit.id));
     },
     waits() { return this.field.any && this.typed.trim() === ""; },
+    held() { return this.items.flatMap((item) => ("edge" in item ? [item.edge] : [])).sort().join(","); },
     /* A term field takes the word typed where its set has no term of it, *Vegan* being `vegan`'s. */
     wordable() {
       const word = this.typed.trim().toLocaleLowerCase();
@@ -51,6 +54,7 @@ const edgePicker = {
         && !this.hits.some((hit) => hit.label.toLocaleLowerCase() === word);
     },
   },
+  watch: { held() { this.find(); } },
   mounted() {
     const popover = this.$el.closest(".popover");
     if (this.fixed) return focusField(this.$el.querySelector(".picker-value"), popover);
@@ -75,6 +79,7 @@ const edgePicker = {
       if (this.waits) return ([this.hits, this.asked] = [[], false]);
       const query = new URLSearchParams({
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
+        ...(this.held !== "" ? { record: this.record, held: this.held } : {}),
       });
       const answer = await (await fetch("/search?" + query, { headers: { Accept: "application/json" } })).json();
       if (typed !== this.typed) return;

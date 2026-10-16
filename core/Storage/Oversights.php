@@ -76,6 +76,17 @@ final readonly class Oversights
     return $ids === [] ? [] : [$type => $ids];
   }
 
+  /* What stands open by the field that says how it stands, in any state, since
+     what a till writes is a draft and stays one.
+     @param list<string> $values the states that count as open
+     @return array<string, int> by type URL */
+  public function standing(string $type, string $field, array $values): array
+  {
+    return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
+      . ' and json_extract(e.props, :path) in (select value from json_each(:values))',
+      ['type' => $type, 'path' => '$.' . $field, 'values' => $this->json->encode($values)]);
+  }
+
   /* A purge takes its edges with it, so what points into nothing points into the trash.
      @param list<string> $types the type URLs asked, of the record and of its target alike
      @return array<string, list<EntityId>> by type URL */

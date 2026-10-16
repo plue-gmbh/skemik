@@ -13,6 +13,7 @@ use Domain\Exceptions\UnknownType;
 use Domain\Status;
 use Domain\Violation;
 use Profile\Profile;
+use Profile\Promises;
 use Profile\Reach;
 use Profile\Validator;
 use Storage\Collection;
@@ -42,6 +43,12 @@ final readonly class NeedsLook
   private const FINISHED = ['Article', 'WebPage', 'WebSite', 'HowTo', 'Course', 'Dataset', 'Book', 'Review',
     'Comment', 'Product', 'Service', 'MemberProgram', 'Brand', 'Offer', 'Event', 'ItemList', 'JobPosting',
     'SoftwareApplication', 'Question'];
+  /* What a till or a booking service writes nobody began, so it is counted by
+     how it stands, `Promises::STANDING`, and not as a draft: a till writes an
+     order already delivered. Open until delivered, cancelled or returned, and
+     until confirmed or cancelled. */
+  private const OPEN = ['Order' => ['OrderPaymentDue', 'OrderProcessing', 'OrderInTransit'],
+    'Reservation' => ['ReservationPending', 'ReservationHold']];
   private const MONTH = 'P30D';
   /* A draft is old once its week is out, however lately it was edited: begun
      and not finished is what the finding asks after. */
@@ -75,6 +82,10 @@ final readonly class NeedsLook
 
     return array_values(array_filter([
       $this->opened(Overlooked::Unread, $this->unread($read), $collections),
+      $this->counted(Overlooked::Orders, $this->standing('Order', $read), $collections,
+        'orderStatus=' . implode(',', self::OPEN['Order'])),
+      $this->counted(Overlooked::Reservations, $this->standing('Reservation', $read), $collections,
+        'reservationStatus=' . implode(',', self::OPEN['Reservation'])),
       $this->counted(Overlooked::Draft, $this->oversights->inState(Status::Draft, $finished, $this->ago()),
         $collections, 'status=draft'),
       $this->counted(Overlooked::Review, $this->oversights->inState(Status::Review, $public), $collections,
@@ -132,6 +143,18 @@ final readonly class NeedsLook
     $message = $this->profile->byType('Message')->url();
 
     return in_array($message, $read, true) ? $this->oversights->unread($message) : [];
+  }
+
+  /**
+   * @param list<string> $read the type URLs counted
+   * @return array<string, int> by type URL
+   */
+  private function standing(string $name, array $read): array
+  {
+    $type = $this->profile->byType($name)->url();
+
+    return in_array($type, $read, true)
+      ? $this->oversights->standing($type, Promises::STANDING[$name], self::OPEN[$name]) : [];
   }
 
   /**

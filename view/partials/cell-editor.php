@@ -69,7 +69,7 @@ if (!isset($template)) {
         </div>
       </template>
       <edge-picker v-else-if="mode === 'edge'" :field="editing.field" :value="editing.value" :words="words"
-        :collection="editing.collection" :locale="editing.locale" :fixed="Boolean(editing.words)"
+        :collection="editing.collection" :locale="editing.locale" :record="editing.id" :fixed="Boolean(editing.words)"
         @draft="draft = $event" @done="finish($event, null)"></edge-picker>
       <list-picker v-else-if="mode === 'list'" :field="editing.field" :value="editing.value" :hints="editing.hint"
         :words="words"

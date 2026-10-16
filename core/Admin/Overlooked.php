@@ -8,6 +8,8 @@ namespace Admin;
 enum Overlooked: string
 {
   case Unread = 'unread';
+  case Orders = 'orders';
+  case Reservations = 'reservations';
   case Draft = 'draft';
   case Review = 'review';
   case Required = 'required';

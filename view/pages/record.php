@@ -141,7 +141,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   <article class="record-card" data-record-read>
 <?php if ($asset): ?>
     <figure class="record-figure">
-      <a class="record-image record-file"
+      <a class="record-image record-file"<?= $writes ? ' data-drop' : '' ?>
         href="<?= $template->escape((string) $entity->props->string('content_url')) ?>" target="_blank"
         rel="noreferrer"><?php if ($preview !== null): ?><img src="<?= $template->escape($preview) ?>" alt=""
         loading="lazy"><?php else: ?><?= $template->render('partials/glyph',
@@ -248,13 +248,14 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   </div>
 <?php endif ?>
 
+  <div class="side-cards">
 <?php if ($translations !== null): ?>
 <?= $template->render('partials/record-languages', ['words' => $words, 'translations' => $translations,
   'entity' => $entity, 'collection' => $collection, 'writes' => $writes, 'csrf' => $csrf]) ?>
 <?php endif ?>
-
 <?= $template->render('partials/record-pointers', ['words' => $words, 'pointers' => $pointers,
   'held' => $writes ? $held : null]) ?>
+  </div>
 <?php if ($writes && $held === null): ?>
 <?= $template->render('partials/delete-confirm', ['words' => $words, 'collection' => $collection, 'row' => $row,
   'csrf' => $csrf, 'query' => $query, 'pointing' => count($pointers)]) ?>

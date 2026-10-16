@@ -111,9 +111,10 @@ function focusField(target, surface) {
 /* Popovers: one at a time, under the element that opened it or over it where
    more room is, never covering what it is about; left-aligned to it, pushed back
    inside the viewport sideways, and capped at that room, since a search's hits
-   arrive after it is placed. An outside press and Escape close it. It hangs at
-   the end of the page, where Tab out of it would land past everything, so Tab
-   goes round inside it (`cycle`) and Escape is the keyboard's way out. */
+   arrive after it is placed. An outside press and Escape close it; a press on the
+   element that opened it is left to that element, whose click opens or closes.
+   It hangs at the end of the page, where Tab out of it would land past
+   everything, so Tab goes round inside it (`cycle`) and Escape is the keyboard's way out. */
 function popover(anchor, content, wide = false) {
   document.querySelector(".popover[data-shared]")?.dispatchEvent(new Event("close"));
   const element = Object.assign(document.createElement("div"), { className: "popover" + (wide ? " is-wide" : "") });
@@ -123,11 +124,13 @@ function popover(anchor, content, wide = false) {
   element.append(...content);
   document.body.append(element);
   Object.assign(element.style, placement(anchor, element.getBoundingClientRect()));
+  const unfollow = following(anchor, element, (at) => Object.assign(element.style, at));
   const locked = () => element.dataset.locked !== undefined;
-  const outside = (event) => element.contains(event.target) || locked() || close();
+  const outside = (event) => element.contains(event.target) || anchor.contains(event.target) || locked() || close();
   const escape = (event) => event.key === "Escape" && !locked() && (event.preventDefault(), close(), anchor.focus());
   const close = () => {
     element.remove();
+    unfollow();
     document.removeEventListener("pointerdown", outside, true);
     document.removeEventListener("keydown", escape, true);
   };
@@ -154,14 +157,28 @@ function cycle(event, element) {
    own bottom edge, so hits arriving later grow it away from the field. The width
    is the document's, since the window's counts the scrollbar and a popover
    pushed under it widens the page. */
-function placement(anchor, box = { width: 0, height: 0 }) {
+function placement(anchor, box = { width: 0, height: 0 }, below = null) {
   const at = anchor.getBoundingClientRect();
   const [under, over] = [window.innerHeight - at.bottom - 12, at.top - 12];
-  const below = box.height <= under || under >= over;
+  below ??= box.height <= under || under >= over;
   const left = Math.max(8, Math.min(at.left, document.documentElement.clientWidth - box.width - 8));
   return { left: window.scrollX + left + "px",
     top: window.scrollY + (below ? at.bottom + 4 : at.top - 4) + "px",
     maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
+}
+
+/* The paper scrolls under the page, not the page, so a popover goes along with its
+   anchor as any container scrolls, on the side it opened and as tall as it was
+   placed, since only its place changes; `apply` takes the place, as the element's
+   own style or as an island's binding. Returns what stops the following. */
+function following(anchor, element, apply) {
+  const below = element.style.transform === "none";
+  const move = () => {
+    const { left, top } = placement(anchor, element.getBoundingClientRect(), below);
+    apply({ left, top });
+  };
+  document.addEventListener("scroll", move, true);
+  return () => document.removeEventListener("scroll", move, true);
 }
 
 document.addEventListener("click", (event) => {
@@ -174,10 +191,14 @@ document.addEventListener("click", (event) => {
   if (trigger?.dataset.dialogClose !== undefined) trigger.closest("dialog").close();
 });
 
-/* A narrow paper's view switch: the five views on the shared popover, the current one focused. */
+/* A narrow paper's view switch: the five views on the shared popover, the current
+   one focused, and the button that opened it closes it again. */
+let viewMenu = null;
+
 function openViewMenu(button) {
-  const { element } = popover(button, [...document.getElementById("view-menu").content.cloneNode(true).childNodes]);
-  element.querySelector("[aria-current]")?.focus();
+  if (viewMenu?.element.isConnected) return viewMenu.close();
+  viewMenu = popover(button, [...document.getElementById("view-menu").content.cloneNode(true).childNodes]);
+  viewMenu.element.querySelector("[aria-current]")?.focus();
 }
 
 /* The account menu and New language are a `<details>`, which only its own summary
