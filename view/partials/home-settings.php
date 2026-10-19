@@ -8,11 +8,11 @@ declare(strict_types=1);
    the host's `mail()`, and the contact `security.txt` names before ours, where
    `config.php` names one, are rows to read and no links: `/install` or `config.php` set them, and a link with no
    screen behind it is a door drawn on a wall. The relay's login is never shown,
-   being the machine's credential. Backups and the error log open their screens,
-   green while that stands well and red once it failed (`Admin\Health`). Updates
-   have no row: the header's version is their door, marked once one is blocked.
-   A snapshot nobody has to take is a row and no card; what went wrong with one
-   is Needs a look's line. */
+   being the machine's credential. Backups and the error log open their screens and
+   the release's files have none, each green while it stands well and red once it
+   failed (`Admin\Health`). Updates have no row: the header's version is their door,
+   marked once one is blocked. A snapshot nobody has to take is a row and no card;
+   what went wrong with one, or with a file, is Needs a look's line. */
 
 if (!isset($template)) {
   return;
@@ -43,5 +43,11 @@ $reach = $address . ' · ' . $mail;
           class="change-name"><?= $template->escape($words->get('errors.title')) ?></span></span><span
           class="change-line"><span class="change-what <?= $template->escape($errorsHealth?->value) ?>"
           title="<?= $template->escape($errors) ?>"><?= $template->escape($errors) ?></span></span></a></li>
+<?php endif ?>
+<?php if ($files !== null): ?>
+        <li><div class="change"><span class="change-head"><span
+          class="change-name"><?= $template->escape($words->get('home.files')) ?></span></span><span
+          class="change-line"><span class="change-what <?= $template->escape($filesHealth?->value) ?>"
+          title="<?= $template->escape($files) ?>"><?= $template->escape($files) ?></span></span></div></li>
 <?php endif ?>
       </ul>

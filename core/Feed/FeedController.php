@@ -274,7 +274,7 @@ final readonly class FeedController
     $headers = [...$cache->feed($request->bearer() !== null || $this->fixed !== null),
       'ETag' => $cache->validator($body), ...$headers];
     if ($cache->matches($request->header('If-None-Match'), $headers['ETag'])) {
-      return new Response(304, '', $headers);
+      return Response::unchanged($headers);
     }
 
     return new Response(200, $body, $headers);

@@ -61,6 +61,7 @@ final readonly class Sheet
     private SchemaOrg $schema,
     private SettingStore $settings,
     private Clock $clock,
+    private Moments $moments,
     private Words $words,
     private Label $label = new Label(),
   ) {}
@@ -84,7 +85,7 @@ final readonly class Sheet
       $label = $this->label->of($entity, $this->profile->byType($entity->type));
 
       return new SheetRow($entity, $label, $this->state($entity), $this->profile->byType($entity->type)->reach,
-        $cells, $this->own($entity), $chips, changed: $this->clock->render($entity->updatedAt));
+        $cells, $this->own($entity), $chips, changed: $this->moments->day($entity->updatedAt));
     }, $records);
   }
 

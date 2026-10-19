@@ -38,6 +38,7 @@ final readonly class SpineDialog
     private Profile $profile,
     private ActivityLog $log,
     private Clock $clock,
+    private Moments $moments,
     private Words $words,
     private Label $label = new Label(),
   ) {}
@@ -135,10 +136,9 @@ final readonly class SpineDialog
 
   private function footer(Entity $entity): string
   {
-    $day = (new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::NONE,
-      'UTC'))->format(new \DateTimeImmutable($this->clock->render($entity->updatedAt), new \DateTimeZone('UTC')));
     $name = $this->log->lastActorName($entity->id);
-    $values = ['version' => (string) $entity->version, 'date' => (string) $day, 'name' => (string) $name];
+    $values = ['version' => (string) $entity->version, 'date' => $this->moments->day($entity->updatedAt),
+      'name' => (string) $name];
 
     return $this->words->get($name === null ? 'spine.footer_unnamed' : 'spine.footer', $values);
   }

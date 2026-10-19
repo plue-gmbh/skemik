@@ -12,7 +12,7 @@ namespace Support;
    as its last, as every parser a channel uses reads it, and `{}` reads as `[]`,
    so an empty object is refused where an object is asked, an empty `PATCH`
    having no purpose. Reading a file is here so `Profile\Vocabulary` needs no
-   reader of its own. */
+   reader of its own, and writing one so no report is ever half written. */
 final readonly class Json
 {
   /** @return array<string, mixed> */
@@ -24,6 +24,17 @@ final readonly class Json
     }
 
     return $this->decode($body);
+  }
+
+  /* Written beside the file and moved into place, so a write a full quota cuts short, or two at once, leave the
+     last whole file and never half of one: a report is read while every answer is built. */
+  public function writeFile(string $path, mixed $value): void
+  {
+    $part = $path . '.' . bin2hex(random_bytes(4)) . '.part';
+    if (file_put_contents($part, $this->encode($value) . "\n") === false || !rename($part, $path)) {
+      is_file($part) && unlink($part);
+      throw JsonFailed::unwritten($path);
+    }
   }
 
   /** @return array<string, mixed> */

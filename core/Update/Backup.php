@@ -6,6 +6,7 @@ namespace Update;
 
 use Support\Clock;
 use Support\Json;
+use Support\JsonFailed;
 
 /* Writes a snapshot of `holdings/` into `backups/{stamp}-{occasion}/holdings/`,
    the same shape as the original: the database through `vacuum into`, one
@@ -96,25 +97,29 @@ final readonly class Backup
     }
   }
 
+  /* One that cannot be read is none, so the day's run writes a whole one again: it is read while every answer
+     is built, and a failure page on every address is no price for a lost line of the backups screen. */
   public function report(): ?DailyReport
   {
     $path = $this->folder() . '/' . self::REPORT;
-    if (!is_file($path)) {
+    try {
+      $read = is_file($path) ? $this->json->readFile($path) : [];
+    } catch (JsonFailed) {
       return null;
     }
-    $read = $this->json->readFile($path);
 
-    return new DailyReport((string) $read['day'], $read['failed'] === null ? null : (string) $read['failed'],
-      (bool) $read['shrunk']);
+    return is_string($read['day'] ?? null) ? new DailyReport($read['day'],
+      is_string($read['failed'] ?? null) ? $read['failed'] : null, ($read['shrunk'] ?? false) === true) : null;
   }
 
   public function record(DailyReport $report): void
   {
     is_dir($this->folder()) || mkdir($this->folder(), 0700);
-    $written = file_put_contents($this->folder() . '/' . self::REPORT, $this->json->encode(['day' => $report->day,
-      'failed' => $report->failed, 'shrunk' => $report->shrunk]) . "\n");
-    if ($written === false) {
-      throw SnapshotFailed::writing(self::REPORT, new \RuntimeException('no room'));
+    try {
+      $this->json->writeFile($this->folder() . '/' . self::REPORT, ['day' => $report->day,
+        'failed' => $report->failed, 'shrunk' => $report->shrunk]);
+    } catch (JsonFailed $failure) {
+      throw SnapshotFailed::writing(self::REPORT, $failure);
     }
   }
 

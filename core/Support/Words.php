@@ -8,21 +8,31 @@ namespace Support;
    and beside it `{language}.fields.php`, the thirty types' field names, and
    `{language}.terms.php`, what a select's options are called, the two things
    here a feed document carries, the field names English's own where none ships.
-   Readable with no database, as the boot page renders through it in the
-   browser's language. A language ships with a release: an update replaces
+   A region's file, `de-CH.php` beside `de.php`, holds only the words its
+   spelling differs in and is read first, word by word, then its language's, then
+   English's; it ships as its chrome file, and its field names beside it as a
+   language's do. Readable with no database, as the boot page renders through it
+   in the browser's language. A language ships with a release: an update replaces
    `language/` whole, and a file a house put there is gone. A word a translation
    lacks is English's; a word English lacks and a placeholder handed no value
    halt a page under `zend.assertions`, and production shows the key or the brace
    rather than no page. Placeholders are named, `{found}`, so a translation may
-   reorder them. `language/` is not under `view/` because the boot page,
+   reorder them. A count is keyed by its form, `home.one.records` and
+   `home.many.records`, and a language counting in three forms words the third
+   under `few`, Polish's 2 to 4, which falls back to `many` where a translation
+   has none. `language/` is not under `view/` because the boot page,
    `Auth\CodeDelivery` and `Http\ErrorHandler` read it too. */
 final readonly class Words
 {
   private const SOURCE = 'en';
+  private const TAG = '/^([a-z]{2,3})(?:-[a-z]{4})?(?:-([a-z]{2}|\d{3}))?(?:-|$)/i';
   private const PLACEHOLDER = '/\{([a-z_]+)\}/';
+  private const FORMS = '{n, plural, few{few} other{other}}';
   private const LANGUAGE_RANGE = '/^\s*([a-z]{1,8}(?:-[a-z0-9]{1,8})*)\s*'
     . '(?:;\s*q=([01](?:\.\d{0,3})?))?\s*$/i';
 
+  /* As the reader asked it, `de-AT`, so every formatter writes that region's dates and numbers while the words
+     are the files' it finds, `de.php` here: a region's file is for spelling alone, and most regions have none. */
   public string $language;
 
   /** @var array<string, string> */
@@ -38,7 +48,7 @@ final readonly class Words
   {
     $this->source = $this->load(self::SOURCE);
     $this->language = $this->firstShipped([...$this->accepted($acceptLanguage), $house]);
-    $this->words = $this->language === self::SOURCE ? $this->source : $this->load($this->language);
+    $this->words = $this->language === self::SOURCE ? $this->source : $this->layered($this->language, '');
   }
 
   /** @param array<string, string> $values placeholder name without braces => value */
@@ -54,6 +64,21 @@ final readonly class Words
     }
 
     return strtr($text, $replacements);
+  }
+
+  /* A count in the form its number takes: `one` is exactly one, since its text
+     spells the 1 out and French's category counts zero as one; `few` is intl's
+     category of the number in this language, worded where the translation holds
+     the key; and `many` is the rest. */
+  public function count(string $group, string $noun, int $n): string
+  {
+    $few = $n !== 1 && \MessageFormatter::formatMessage($this->language, self::FORMS, ['n' => $n]) === 'few';
+    $worded = $few ? $this->words[$group . '.few.' . $noun] ?? null : null;
+    if ($worded !== null) {
+      return strtr($worded, ['{n}' => (string) $n]);
+    }
+
+    return $this->get($group . '.' . ($n === 1 ? 'one' : 'many') . '.' . $noun, ['n' => (string) $n]);
   }
 
   /* The same chrome in another language, a content locale's: what a feed
@@ -74,9 +99,7 @@ final readonly class Words
      @return array<string, string> by `key`, or `Type.key` where a type differs */
   public function fields(string $tag): array
   {
-    $language = $this->firstShipped([$tag]);
-
-    return is_file($this->path($language . '.fields')) ? $this->load($language . '.fields') : [];
+    return $this->layered($this->firstShipped([$tag]), '.fields');
   }
 
   /* Every shipped language's words for a select's options, empty where one ships
@@ -92,17 +115,43 @@ final readonly class Words
     return $terms;
   }
 
-  /** @param list<?string> $tags */
+  /* The first tag a language ships for, its region kept: `de-AT` though only `de.php` ships.
+     @param list<?string> $tags */
   private function firstShipped(array $tags): string
   {
     foreach ($tags as $tag) {
-      $language = strtolower(explode('-', $tag ?? '')[0]);
-      if (preg_match('/^[a-z]{2,3}$/', $language) === 1 && is_file($this->path($language))) {
-        return $language;
+      $spellings = $this->spellings($tag ?? '');
+      if (array_any($spellings, fn (string $name): bool => is_file($this->path($name)))) {
+        return $spellings[0];
       }
     }
 
     return self::SOURCE;
+  }
+
+  /** @return list<string> the tag as `language/` would name its region's file, then its language's */
+  private function spellings(string $tag): array
+  {
+    if (preg_match(self::TAG, $tag, $parts) !== 1) {
+      return [];
+    }
+    $language = strtolower($parts[1]);
+
+    return isset($parts[2]) ? [$language . '-' . strtoupper($parts[2]), $language] : [$language];
+  }
+
+  /* A region's words over its language's, so `de-CH` says Strasse and German
+     everywhere else; a tag its language ships for, so the language's file is
+     there and the region's may not be.
+     @return array<string, string> */
+  private function layered(string $name, string $suffix): array
+  {
+    $words = [];
+    foreach (array_reverse($this->spellings($name)) as $file) {
+      $words = is_file($this->path($file . $suffix)) ? [...$words, ...$this->load($file . $suffix)] : $words;
+    }
+
+    return $words;
   }
 
   /** @return list<string> ranked by the header's q, ties in written order */
@@ -148,12 +197,12 @@ final readonly class Words
     return $names;
   }
 
-  /** @return list<string> the chrome files, a language's field names not among them */
+  /** @return list<string> the languages' chrome files, neither a region's nor anybody's field names */
   private function languages(): array
   {
     $names = array_map(fn (string $path): string => basename($path, '.php'),
       glob($this->directory . '/*.php') ?: []);
 
-    return array_values(array_filter($names, fn (string $name): bool => !str_contains($name, '.')));
+    return array_values(array_filter($names, fn (string $name): bool => preg_match('/^[a-z]{2,3}$/', $name) === 1));
   }
 }

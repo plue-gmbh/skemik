@@ -18,6 +18,7 @@ enum Overlooked: string
   case Reported = 'reported';
   case BackupFailed = 'backup_failed';
   case BackupShrunk = 'backup_shrunk';
+  case Files = 'files';
   case Update = 'update';
   case Expiring = 'expiring';
 }

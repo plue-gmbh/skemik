@@ -28,7 +28,7 @@ final readonly class Dispatch
   public function answer(Route $route): Response
   {
     $records = new Records($this->common);
-    return $this->checkup()->after($this->updater()->after($this->daily()->after(match ($route->endpoint) {
+    $answer = match ($route->endpoint) {
       Endpoint::LoginForm, Endpoint::LoginAsk, Endpoint::LoginRedeem, Endpoint::Logout
         => (new Login($this->common))->answer($route),
       Endpoint::Home, Endpoint::Activity, Endpoint::ActivityRedact, Endpoint::Export, Endpoint::ExportTake
@@ -50,10 +50,14 @@ final readonly class Dispatch
         Endpoint::FeedRecord, Endpoint::IngestCreate, Endpoint::IngestPatch, Endpoint::IngestArrange,
         Endpoint::FeedPreflight, Endpoint::Robots, Endpoint::SecurityText, Endpoint::PanelLocale,
         Endpoint::PanelCollection, Endpoint::PanelRecord => (new Address($this->common))->answer($route),
-    })));
+    };
+
+    return $this->checkup()->after($this->common->files()->after($this->updater()->after($this->daily()->after(
+      $answer))));
   }
 
-  /* The day's snapshot first, then the release, each due once a day, and the slice fills in behind them. */
+  /* The day's snapshot first, then the release, then the release's files, each due once a day, and the slice
+     fills in behind them. */
   private function daily(): Daily
   {
     return new Daily($this->common->backup(), $this->common->clock);

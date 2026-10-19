@@ -7,21 +7,19 @@ namespace Admin;
 use Auth\Account;
 use Auth\Authorizer;
 use Auth\Capability;
-use Auth\Session;
 use Domain\Entity;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\UnknownType;
 use Domain\Violation;
-use Http\Csrf;
 use Http\Request;
 use Http\Response;
 use Profile\Profile;
+use Profile\TypeDefinition;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\SettingStore;
-use Support\Clock;
 use Support\JsonFailed;
 use Support\Template;
 use Support\Words;
@@ -43,12 +41,8 @@ final readonly class ChecksController
     private EntityRepository $entities,
     private CollectionStore $collections,
     private Profile $named,
-    private Sidebar $sidebar,
-    private Probes $probes,
-    private Session $session,
-    private Csrf $csrf,
-    private Rows $rows,
-    private Clock $clock,
+    private Frame $frame,
+    private Moments $moments,
     private Template $template,
     private Words $words,
     private Label $label = new Label(),
@@ -63,17 +57,11 @@ final readonly class ChecksController
     $entries = array_map(fn (Violation $violation): CheckEntry => $this->entry($violation, $collections),
       array_slice($found, 0, self::SHOWN));
     $main = $this->template->render('pages/checks', ['words' => $this->words, 'report' => $report,
-      'at' => $report === null ? '' : $this->when($report->at), 'count' => count($found),
+      'at' => $report === null ? '' : $this->moments->time($report->at), 'count' => count($found),
       'shown' => self::SHOWN, 'entries' => $entries]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('checks.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => null,
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person,
+      new Screen($this->words->get('checks.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
   /* The house's own first, then what Needs a look counts as the check's, then
@@ -96,23 +84,33 @@ final readonly class ChecksController
      @param list<Collection> $collections */
   private function entry(Violation $violation, array $collections): CheckEntry
   {
-    $reason = $violation->reason === Violation::REQUIRED
-      ? $this->words->get('checks.required') : $violation->reason;
     if ($violation->record === null) {
-      return new CheckEntry(null, 'alert', $violation->field, '', $reason);
+      return new CheckEntry(null, 'alert', $violation->field, '', $this->sentence($violation, null));
     }
     try {
       $entity = $this->entities->find($violation->record);
       $type = $this->named->byType($entity->type);
     } catch (EntityNotFound|MalformedValue|JsonFailed|UnknownType) {
-      return new CheckEntry(null, 'alert', $this->words->get('checks.gone'), '',
-        $violation->field . ': ' . $reason);
+      return new CheckEntry(null, 'alert', $this->words->get('checks.gone'), '', $this->sentence($violation, null));
     }
     $held = array_find($collections, fn (Collection $each): bool => $each->type === $entity->type);
 
     return new CheckEntry($this->opens($entity, $held), SidebarEntry::glyphOf($entity->type),
-      $this->label->of($entity, $type), $held->name ?? '',
-      ($type->field($violation->field)?->label ?? $violation->field) . ': ' . $reason);
+      $this->label->of($entity, $type), $held->name ?? '', $this->sentence($violation, $type));
+  }
+
+  /* A column an older version derived is said as that and not as the record's
+     fault, since the record fits its type and a save or the next release writes
+     the column again; a reader who saw *words: disagrees with props* took the
+     data for broken. */
+  private function sentence(Violation $violation, ?TypeDefinition $type): string
+  {
+    if ($violation->reason === Violation::STALE) {
+      return $this->words->get('checks.stale_' . $violation->field);
+    }
+    $reason = $violation->reason === Violation::REQUIRED ? $this->words->get('checks.required') : $violation->reason;
+
+    return ($type?->field($violation->field)?->label ?? $violation->field) . ': ' . $reason;
   }
 
   private function opens(Entity $entity, ?Collection $held): ?string
@@ -122,13 +120,5 @@ final readonly class ChecksController
       $entity->deletedAt !== null => '/trash/' . $held->slug->value,
       default => Rows::address($held, $entity),
     };
-  }
-
-  private function when(\DateTimeImmutable $at): string
-  {
-    $format = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::SHORT, $this->clock->zone->getName());
-
-    return (string) $format->format($at);
   }
 }

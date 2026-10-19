@@ -15,8 +15,7 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$counted = fn (string $noun, int $n): string => $words->get('home.' . ($n === 1 ? 'one' : 'many') . '.' . $noun,
-  ['n' => (string) $n]);
+$counted = fn (string $noun, int $n): string => $words->count('home', $noun, $n);
 $columns = [];
 foreach (array_keys($cards) as $index => $card) {
   $columns[$index % 3][$card] = $cards[$card];

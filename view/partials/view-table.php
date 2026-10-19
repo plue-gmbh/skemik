@@ -41,9 +41,8 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
       </thead>
       <tbody data-rows>
 <?php foreach ($rows as $row): ?>
-<?= $template->render('partials/sheet-row', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
-  'row' => $row, 'parameters' => $parameters,
-  'multilingual' => $multilingual, 'ticks' => $creates, 'house' => $house]) ?>
+<?= $template->render('partials/sheet-row', ['words' => $words, 'columns' => $columns, 'row' => $row,
+  'items' => $items, 'ticks' => $creates, 'house' => $house]) ?>
 <?php endforeach ?>
       </tbody>
     </table>
@@ -56,8 +55,8 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
   })) ?></p>
 <?php endif ?>
 <?php if ($creates): ?>
-  <template data-new-row><?= $template->render('partials/sheet-row', ['words' => $words, 'collection' => $collection,
-    'columns' => $columns, 'row' => null, 'parameters' => [], 'ticks' => true]) ?></template>
+  <template data-new-row><?= $template->render('partials/sheet-row', ['words' => $words, 'columns' => $columns,
+    'row' => null, 'items' => $items, 'ticks' => true]) ?></template>
   <button type="button" class="sheet-add" data-add-row><?= $template->render('partials/icon',
     ['name' => 'plus']) ?><?= $template->escape($add) ?></button>
 <?php endif ?>

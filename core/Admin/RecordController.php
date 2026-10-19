@@ -53,6 +53,7 @@ final readonly class RecordController
 {
   public function __construct(
     private CollectionController $collections,
+    private Frame $frame,
     private RecordPage $page,
     private EntityRepository $entities,
     private RelationRepository $relations,
@@ -89,11 +90,11 @@ final readonly class RecordController
     }
     $columns = $this->collections->columns($account, $collection);
 
-    return $this->collections->frame($account, $person, $collection,
+    return $this->frame->around($account, $person, new Screen(
       (new Label())->of($entity, $this->profile->byType($entity->type)),
       $this->page->render($account, $request, $collection, $entity, $columns),
-      array_any($columns, fn (Column $column): bool => $column->editable),
-      $this->page->feed($request, $collection, $entity));
+      $this->page->feed($request, $collection, $entity), $collection->slug->value,
+      array_any($columns, fn (Column $column): bool => $column->editable)));
   }
 
   /** @return array{Collection, Entity} */
@@ -154,6 +155,12 @@ final readonly class RecordController
       ?? throw MalformedValue::named('locale of this house', $tag);
   }
 
+  /* A row answered to a save opens with no query: the page it lands on keeps its own. */
+  private function items(Collection $collection): Items
+  {
+    return new Items($collection, [], $this->dialog->multilingual($collection));
+  }
+
   /* What a save answers, and the row the view it was made in draws in place of its own. */
   private function made(Account $account, Collection $collection, Entity $saved, string $view): Response
   {
@@ -161,8 +168,8 @@ final readonly class RecordController
     $row = $this->sheet->rows($account, $columns, [$saved])[0];
     $drawn = ['list' => 'list-row', 'cards' => 'card', 'grid' => 'grid-tile', 'timeline' => 'timeline-row'];
     $html = $this->template->render('partials/' . ($drawn[$view] ?? 'sheet-row'), ['words' => $this->words,
-      'collection' => $collection, 'columns' => $columns, 'row' => $row, 'parameters' => [], 'ticks' => true,
-      'multilingual' => $this->dialog->multilingual($collection), 'house' => $this->settings->locales()[0]->tag,
+      'collection' => $collection, 'columns' => $columns, 'row' => $row, 'ticks' => true,
+      'items' => $this->items($collection), 'house' => $this->settings->locales()[0]->tag,
       'glance' => new Glance($columns, $this->profile->byType($collection->type))]);
 
     return Response::json($this->json->encode([...$this->sheet->saved($row, $columns), 'id' => $saved->id->value,
@@ -255,9 +262,9 @@ final readonly class RecordController
     $columns = $this->collections->columns($account, $collection);
     [, $row, $editing] = $this->recordWords->rows($account, $columns, $entity,
       $this->recordWords->locale($request, $entity));
-    $own = $this->dialog->multilingual($collection) ? [new Translation($entity->locale->tag, $entity)] : null;
     $chip = $this->template->render('partials/spine-chip', ['words' => $this->words, 'row' => $row,
-      'prefix' => '', 'translations' => $own, 'opens' => true, 'current' => $this->settings->locales()[0]->tag]);
+      'prefix' => '', 'translations' => $this->items($collection)->own($row), 'opens' => true,
+      'current' => $this->settings->locales()[0]->tag]);
 
     return Response::json($this->json->encode([...$this->sheet->saved($row, $editing), 'chip' => $chip,
       'spine' => $this->dialog->row($collection, $row)]))

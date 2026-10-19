@@ -7,13 +7,9 @@ namespace Admin;
 use Auth\Account;
 use Auth\Authorizer;
 use Auth\Capability;
-use Auth\Session;
 use Domain\Entity;
-use Http\Csrf;
 use Http\Request;
 use Http\Response;
-use Storage\SettingStore;
-use Support\Clock;
 use Support\Template;
 use Support\Words;
 
@@ -33,13 +29,8 @@ final readonly class ErrorLogController
   public function __construct(
     private Authorizer $authorizer,
     private ErrorLog $log,
-    private Sidebar $sidebar,
-    private Probes $probes,
-    private SettingStore $settings,
-    private Session $session,
-    private Csrf $csrf,
-    private Rows $rows,
-    private Clock $clock,
+    private Frame $frame,
+    private Moments $moments,
     private Template $template,
     private Words $words,
   ) {}
@@ -52,21 +43,13 @@ final readonly class ErrorLogController
     $main = $this->template->render('pages/errors', ['words' => $this->words, 'incident' => $incident,
       'entries' => $this->log->entries(self::SHOWN, $incident), 'shown' => self::SHOWN, 'when' => $this->when(...)]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('errors.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => null,
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person,
+      new Screen($this->words->get('errors.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
+  /* To the second, since two lines of one burst are told apart by it. */
   private function when(?\DateTimeImmutable $at): string
   {
-    $format = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::MEDIUM, $this->clock->zone->getName());
-
-    return $at === null ? '—' : (string) $format->format($at);
+    return $at === null ? '—' : $this->moments->time($at, \IntlDateFormatter::MEDIUM);
   }
 }

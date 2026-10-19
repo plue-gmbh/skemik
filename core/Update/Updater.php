@@ -20,7 +20,8 @@ use Support\FetchFailed;
    same release is not tried again unless what stopped it was the machine's. Only
    what is true by definition reverts; `Checkup` reports. The release is recorded
    before the swap, so a process the host stops or a move seen late leaves the
-   screen right, and the tree aside goes at the next check of the release it made way for. */
+   screen right, and the tree aside goes at the next check of the release it made way for. An install that
+   declines updates still checks and installs nothing, or its screen would call a stale check current. */
 final readonly class Updater
 {
   /* The own address gives up after `Fetch`'s seconds while the move runs on: copying, scripts and every record
@@ -44,7 +45,7 @@ final readonly class Updater
   /* An answer that has work of its own, or streams a file, leaves the check to the next one. */
   public function after(Response $response): Response
   {
-    return $this->enabled && $response->after === null && $response->file === null && $this->check->due()
+    return $response->after === null && $response->file === null && $this->check->due()
       ? $response->after($this->run(...)) : $response;
   }
 
@@ -74,7 +75,7 @@ final readonly class Updater
     $offered = $manifest->offered(Version::APP, $today, $this->early);
     $report = $report->checkedAt($now->format(Clock::STORED), null, $offered ? $manifest->version : null);
     $this->check->record($report);
-    if ($offered && ($report->refused !== $manifest->version || $report->again)) {
+    if ($this->enabled && $offered && ($report->refused !== $manifest->version || $report->again)) {
       $this->attempted($manifest);
     }
   }

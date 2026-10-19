@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-/* The record screen (`Admin\RecordController`): the type's fields in the type's
-   order, and nothing arranged per record — no blocks, no canvas, no layout of
-   one's own. That is the step at which a CMS starts becoming the thing this
-   replaces, and it is refused here rather than resisted later. Read is the
-   default and editing is entered on intent. A field that is not prose opens the
-   table's own editor (`partials/cell-editor`), one implementation and not two,
-   and the type says which field is prose, so no install configures it. The words
-   locale is `words` beside `in`, so a link and the reload after a save keep it;
-   each option says Words, since on a type that also forks the Languages card
-   offers a record of its own in the same locales. */
+/* The record screen (`Admin\RecordController`): the collection's fields in the
+   table's order, read and edited alike, so a field stays put when editing starts
+   and arranging the table arranges this. Read is the default, editing entered on
+   intent, and nothing is arranged per record — no blocks, no canvas, no layout of
+   one's own: that is the step at which a CMS starts becoming the thing this
+   replaces, refused here rather than resisted later. A field that is not prose
+   opens the table's own editor (`partials/cell-editor`), one implementation and
+   not two, and the type says which field is prose, so no install configures it.
+   The words locale is `words` beside `in`, so a link and the reload after a save
+   keep it; each option says Words, since on a type that also forks the Languages
+   card offers a record of its own in the same locales. */
 
 use Profile\FieldKind;
 
@@ -29,20 +30,40 @@ $alt = trim((string) $entity->props->string('description'));
 $format = (string) $entity->props->string('encoding_format');
 $width = $entity->props->int('width');
 $shape = implode(' · ', array_filter([$width === null ? '' : $width . '×' . $entity->props->int('height'), $format]));
-$images = [];
-$lines = [];
+$kind = function (Admin\Column $column) use ($chips, $prose, $naming): string {
+  $key = $column->field->key;
+
+  return match (true) {
+    $key === $naming => '',
+    $column->field->kind === FieldKind::Image => ($chips[$key] ?? []) === [] ? '' : 'figures',
+    $column->prose() => isset($prose[$key]) ? 'prose' : '',
+    default => 'lines',
+  };
+};
+/* Each run of one kind inside a block is a part, so a value object's text reads as prose where it stands among
+   the block's lines; the block's heading goes before its first lines. */
+$parts = [];
 foreach ($blocks as $block) {
-  $kept = array_values(array_filter($block->columns, fn (Admin\Column $column): bool =>
-    $column->field->kind !== FieldKind::Image && !$column->prose() && $column->field->key !== $naming));
+  $runs = [];
   foreach ($block->columns as $column) {
-    if ($column->field->kind === FieldKind::Image) {
-      $images = [...$images, ...($chips[$column->field->key] ?? [])];
+    $part = $kind($column);
+    if ($part === '') {
+      continue;
     }
+    if ($runs === [] || $runs[array_key_last($runs)][0] !== $part) {
+      $runs[] = [$part, []];
+    }
+    $runs[array_key_last($runs)][1][] = $column;
   }
-  if ($kept !== []) {
-    $lines[] = new Admin\FieldBlock($block->heading, $kept);
+  $headed = false;
+  foreach ($runs as [$part, $columns]) {
+    $heads = $part === 'lines' && !$headed;
+    $headed = $headed || $heads;
+    $parts[] = ['kind' => $part, 'block' => new Admin\FieldBlock($block->heading, $columns), 'headed' => $heads];
   }
 }
+$joins = fn (int $index): bool => isset($parts[$index]) && $parts[$index]['block']->heading === null
+  && $parts[$index]['kind'] === 'lines';
 $back = '/c/' . $collection->slug->value . ($query === '' ? '' : '?' . $query);
 $line = function (Admin\FieldBlock $block, Admin\Column $column) use ($template, $words, $row): string {
   $intern = $column->feed ? '' : ' <span class="tag-intern">' . $template->escape($words->get('record.intern'))
@@ -155,7 +176,8 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         endif ?></figcaption>
     </figure>
 <?php endif ?>
-<?php foreach ($images as $chip): ?>
+<?php foreach ($parts as $index => ['kind' => $part, 'block' => $block, 'headed' => $headed]): ?>
+<?php if ($part === 'figures'): foreach ($block->columns as $each): foreach ($chips[$each->field->key] as $chip): ?>
     <figure class="record-figure">
       <span class="record-image" aria-hidden="true"><?php if (!$chip->gone && $chip->preview !== null): ?><img
         src="<?= $template->escape($chip->preview) ?>" alt=""
@@ -165,27 +187,24 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         : $chip->label)) ?><?php if ($chip->noAlt): ?> <span
         class="no-alt"><?= $template->escape($words->get('record.no_alt')) ?></span><?php endif ?></figcaption>
     </figure>
-<?php endforeach ?>
-<?php foreach ($blocks as $block): foreach ($block->columns as $column): if (isset($prose[$column->field->key])): ?>
+<?php endforeach; endforeach; elseif ($part === 'prose'): foreach ($block->columns as $each): ?>
     <section class="record-prose">
-      <h2 class="record-label"><?= $template->escape($column->label) ?></h2>
-      <div lang="<?= $template->escape($shownIn) ?>"><?= $prose[$column->field->key] ?></div>
+      <h2 class="record-label"><?= $template->escape($each->label) ?></h2>
+      <div lang="<?= $template->escape($shownIn) ?>"><?= $prose[$each->field->key] ?></div>
     </section>
-<?php endif; endforeach; endforeach ?>
-<?php foreach ($lines as $index => $block): $opens = $index === 0 || $block->heading !== null
-  || $lines[$index - 1]->heading !== null; $closes = $index === count($lines) - 1 || $block->heading !== null
-  || $lines[$index + 1]->heading !== null ?>
-<?php if ($block->heading !== null): ?>
+<?php endforeach; else: ?>
+<?php if ($headed && $block->heading !== null): ?>
     <h2 class="record-label record-block-heading"><?= $template->escape($block->heading) ?></h2>
 <?php endif ?>
-<?php if ($opens): ?>
+<?php if ($block->heading !== null || !$joins($index - 1)): ?>
     <dl class="record-fields<?= $block->heading === null ? '' : ' is-block' ?>">
 <?php endif ?>
-<?php foreach ($block->columns as $column): ?>
-      <?= $line($block, $column) ?>
+<?php foreach ($block->columns as $each): ?>
+      <?= $line($block, $each) ?>
 <?php endforeach ?>
-<?php if ($closes): ?>
+<?php if ($block->heading !== null || !$joins($index + 1)): ?>
     </dl>
+<?php endif ?>
 <?php endif ?>
 <?php endforeach ?>
   </article>
@@ -231,7 +250,13 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         <span class="record-edit-label"
           id="label-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
           ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?></span>
-<?php if ($column->editable && !$entity->keeps($key)): ?>
+<?php if ($column->editable && !$entity->keeps($key) && $column->field->kind->isReference()): ?>
+        <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"
+          data-field="<?= $template->escape($key) ?>"<?= $column->kindMarks($edit->entity) ?>><span
+          class="cell cell-held"><span class="cell-shown"><?= $edit->cells[$key] ?></span></span><button type="button"
+          class="cell-edit" data-edit><span class="visually-hidden"><?= $template->escape($block->labelOf($column)
+          . ': ' . $words->get('record.edit')) ?></span></button></span>
+<?php elseif ($column->editable && !$entity->keeps($key)): ?>
         <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"
           data-field="<?= $template->escape($key) ?>"<?= $column->kindMarks($edit->entity) ?>><button type="button"
           class="cell" data-edit aria-labelledby="label-<?= $template->escape($key) ?>"><span
@@ -248,14 +273,13 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   </div>
 <?php endif ?>
 
-  <div class="side-cards">
 <?php if ($translations !== null): ?>
 <?= $template->render('partials/record-languages', ['words' => $words, 'translations' => $translations,
   'entity' => $entity, 'collection' => $collection, 'writes' => $writes, 'csrf' => $csrf]) ?>
 <?php endif ?>
+
 <?= $template->render('partials/record-pointers', ['words' => $words, 'pointers' => $pointers,
   'held' => $writes ? $held : null]) ?>
-  </div>
 <?php if ($writes && $held === null): ?>
 <?= $template->render('partials/delete-confirm', ['words' => $words, 'collection' => $collection, 'row' => $row,
   'csrf' => $csrf, 'query' => $query, 'pointing' => count($pointers)]) ?>

@@ -14,14 +14,12 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$empty = $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text, 'value' => null,
-  'chips' => [], 'empty' => true, 'shown' => '']);
 $cell = fn (Admin\Column $column): string => $template->render('partials/sheet-cell', [
   'words' => $words, 'column' => $column, 'row' => $row, 'element' => 'span', 'named' => $column->label,
-  'cell' => $row === null ? $empty : $row->cells[$column->field->key]]);
+  'cell' => $row?->cells[$column->field->key]]);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
-$own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($row->entity->locale->tag,
-  $row->entity)] : null;
+$own = $items->own($row);
+$address = $items->address($row);
 $label = $glance->label();
 $when = ($timeline ?? null)?->when($row);
 $day = $when === null ? null : $timeline->day($when);
@@ -36,8 +34,7 @@ $day = $when === null ? null : $timeline->day($when);
     class="timeline-weekday"><?= $template->escape($timeline->says($day, 'EEE')) ?></span></time><?php endif ?></span>
   <span class="list-main">
 <?php if ($row !== null): ?>
-    <a class="item-label" href="<?= $template->escape(Admin\Rows::address($collection, $row->entity,
-      http_build_query(array_diff_key($parameters, ['in' => true])))) ?>"><?= $template->escape($row->label) ?></a>
+    <a class="item-label" href="<?= $template->escape((string) $address) ?>"><?= $template->escape($row->label) ?></a>
     <?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row, 'prefix' => '',
       'translations' => $own, 'opens' => $opens, 'current' => $house ?? null]) ?>
 <?php else: ?>

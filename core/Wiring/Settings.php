@@ -62,24 +62,22 @@ final readonly class Settings
   {
     $common = $this->common;
     return new UpdateController($common->authorizer, $common->updates(), new Signature(Release::KEY),
-      $common->premises->updates, $common->premises->early, $common->sidebar, $common->probes(), $common->settings,
-      $common->session, $common->csrf, $common->rows, $common->clock, $common->template, $common->words);
+      $common->premises->updates, $common->premises->early, $common->frame(), $common->moments, $common->template,
+      $common->words);
   }
 
   private function errorLogController(): ErrorLogController
   {
     $common = $this->common;
-    return new ErrorLogController($common->authorizer, $common->errors(), $common->sidebar, $common->probes(),
-      $common->settings, $common->session, $common->csrf, $common->rows, $common->clock, $common->template,
-      $common->words);
+    return new ErrorLogController($common->authorizer, $common->errors(), $common->frame(), $common->moments,
+      $common->template, $common->words);
   }
 
   private function checksController(): ChecksController
   {
     $common = $this->common;
     return new ChecksController($common->authorizer, $common->settings, $common->entities, $common->collections,
-      $common->named, $common->sidebar, $common->probes(), $common->session, $common->csrf, $common->rows,
-      $common->clock, $common->template, $common->words);
+      $common->named, $common->frame(), $common->moments, $common->template, $common->words);
   }
 
   private function backupController(): BackupController
@@ -88,8 +86,8 @@ final readonly class Settings
     $box = new Zip($common->premises->data . '/staging/backup-' . $common->uuid->generate() . '.zip',
       $common->clock->now());
     return new BackupController($common->authorizer, $common->backup(), $this->restore(), $box,
-      $common->sidebar, $common->probes(), $common->settings, $common->session, $common->csrf, $common->rows,
-      $common->clock, $common->template, $common->words);
+      $common->frame(), $common->session, $common->csrf, $common->moments, $common->clock, $common->template,
+      $common->words);
   }
 
   private function restore(): Restore

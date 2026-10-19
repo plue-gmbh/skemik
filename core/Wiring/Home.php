@@ -46,9 +46,8 @@ final readonly class Home
     $box = new Zip($common->premises->data . '/staging/export-' . $common->uuid->generate() . '.zip',
       $common->clock->now());
     return new ExportController($common->authorizer, $this->dump($account, $box), $box, $common->premises->data,
-      $common->log, $common->collections, $common->sidebar, $common->probes(), $common->settings,
-      $common->session, $common->csrf, $common->rows, $common->limit(10, 3600), $common->uuid, $common->clock,
-      $common->template, $common->words);
+      $common->log, $common->collections, $common->frame(), $common->sidebar, $common->session, $common->csrf,
+      $common->limit(10, 3600), $common->uuid, $common->clock, $common->template, $common->words);
   }
 
   /* The dump is the reader's own screen written to disk, so its filter is the
@@ -67,20 +66,19 @@ final readonly class Home
   {
     $common = $this->common;
     return new ActivityController($common->authorizer, $common->log, $this->changes(), $common->collections,
-      $common->sidebar, $common->probes(), $common->settings, $common->session, $common->csrf, $common->rows,
-      $common->template, $common->words);
+      $common->frame(), $common->session, $common->csrf, $common->template, $common->words);
   }
 
   private function controller(): HomeController
   {
     $common = $this->common;
-    return new HomeController($common->sidebar, $common->probes(), $common->settings, $common->csrf,
-      $common->template, $common->words, $common->rows, $common->session, $this->needsLook(), $this->changes(),
+    return new HomeController($common->frame(), $common->sidebar, $common->settings, $common->csrf,
+      $common->template, $common->words, $common->moments, $common->session, $this->needsLook(), $this->changes(),
       new Colleagues($common->accounts, $common->entities, $common->profile, $common->filter, $common->rows,
-        $common->clock, $common->words),
+        $common->moments, $common->words),
       new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts(),
         $common->words), $common->locales(), $common->backup(),
-      $common->errors(), $common->relay, $common->premises);
+      $common->files(), $common->errors(), $common->relay, $common->premises);
   }
 
   private function needsLook(): NeedsLook
@@ -88,7 +86,8 @@ final readonly class Home
     $common = $this->common;
     return new NeedsLook($common->settings, $common->entities, $common->relations, $common->collections,
       $common->validator, $common->authorizer, new Oversights($common->db),
-      $common->grants, $common->profile, $common->backup(), $common->updates(), $common->clock);
+      $common->grants, $common->profile, $common->backup(), $common->files(), $common->updates(),
+      $common->clock);
   }
 
   private function changes(): Changes
@@ -96,6 +95,6 @@ final readonly class Home
     $common = $this->common;
     return new Changes($common->log, $common->entities, $common->tokens, $common->collections,
       $common->sheet(), $common->rows, new HouseChanges($common->entities, $common->tokens, $common->collections,
-        $common->named, $common->words), $common->clock, $common->words);
+        $common->named, $common->words), $common->clock, $common->moments, $common->words);
   }
 }

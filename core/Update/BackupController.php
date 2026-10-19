@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Update;
 
-use Admin\AccountMenu;
 use Admin\DataLayout;
 use Admin\FeedPanel;
-use Admin\Probes;
-use Admin\Rows;
-use Admin\Sidebar;
+use Admin\Frame;
+use Admin\Moments;
+use Admin\Screen;
 use Auth\Account;
 use Auth\Authorizer;
 use Auth\Capability;
@@ -19,7 +18,6 @@ use Http\Csrf;
 use Http\Request;
 use Http\Response;
 use Http\RouteNotFound;
-use Storage\SettingStore;
 use Support\Clock;
 use Support\Template;
 use Support\Words;
@@ -46,12 +44,10 @@ final readonly class BackupController
     private Backup $backup,
     private Restore $restore,
     private Zip $box,
-    private Sidebar $sidebar,
-    private Probes $probes,
-    private SettingStore $settings,
+    private Frame $frame,
     private Session $session,
     private Csrf $csrf,
-    private Rows $rows,
+    private Moments $moments,
     private Clock $clock,
     private Template $template,
     private Words $words,
@@ -65,14 +61,8 @@ final readonly class BackupController
       'notice' => $this->session->take('backups'), 'refusal' => $this->session->take('backups-refused'),
       'csrf' => $this->csrf->token()]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('backups.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => null,
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person,
+      new Screen($this->words->get('backups.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
   public function take(Request $request): Response
@@ -189,11 +179,9 @@ final readonly class BackupController
 
   private function row(Snapshot $snapshot): SnapshotRow
   {
-    $when = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT,
-      $this->clock->zone->getName());
     $bytes = $this->backup->size($snapshot);
 
-    return new SnapshotRow($snapshot, (string) $when->format($snapshot->at), sprintf('%.1f', $bytes / 1_000_000),
+    return new SnapshotRow($snapshot, $this->moments->time($snapshot->at), sprintf('%.1f', $bytes / 1_000_000),
       $bytes >= self::LARGE_BYTES);
   }
 }

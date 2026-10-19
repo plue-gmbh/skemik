@@ -115,7 +115,7 @@ final readonly class MediaController
       'Content-Disposition' => ($shown ? 'inline' : 'attachment') . "; filename*=UTF-8''" . $file];
     $drawing = $mime === 'image/svg+xml' ? ['Content-Security-Policy' => self::DRAWING_POLICY] : [];
 
-    return Response::ranged($this->path($name, $mime), $request->header('Range'), [...$headers, ...$drawing]);
+    return $this->served($request, $name, $this->path($name, $mime), [...$headers, ...$drawing]);
   }
 
   /* Cold previews are rate-limited per address and warm ones are not: the work
@@ -131,7 +131,19 @@ final readonly class MediaController
     $headers = ['Content-Type' => 'image/webp', ...$this->cache->asset($this->shared($account, $request))];
 
     return $preview === null ? throw EntityNotFound::withId($name)
-      : Response::ranged($preview, $request->header('Range'), $headers);
+      : $this->served($request, $name, $preview, $headers);
+  }
+
+  /* The name is the tag, and it is matched only past the reading and the file:
+     a 304 would tell a stranger a draft is there, or a browser that a purged
+     file still is.
+     @param array<string, string> $headers */
+  private function served(Request $request, string $name, string $path, array $headers): Response
+  {
+    $headers = [...$headers, 'ETag' => $this->cache->named($name)];
+
+    return $this->cache->matches($request->header('If-None-Match'), $headers['ETag'])
+      ? Response::unchanged($headers) : Response::ranged($path, $request->header('Range'), $headers);
   }
 
   /* What the grid draws beside its tiles: how often each is used, under this

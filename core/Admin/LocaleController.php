@@ -143,11 +143,8 @@ final readonly class LocaleController
      through the trash or an edge's words is never called empty beside it. */
   private function counted(int $n, bool $held): string
   {
-    return match ($n) {
-      0 => $this->words->get($held ? 'locale.kept' : 'locale.empty'),
-      1 => $this->words->get('home.one.records'),
-      default => $this->words->get('home.many.records', ['n' => (string) $n]),
-    };
+    return $n === 0 ? $this->words->get($held ? 'locale.kept' : 'locale.empty')
+      : $this->words->count('home', 'records', $n);
   }
 
   private function refused(string $sentence): Response

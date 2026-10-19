@@ -7,11 +7,13 @@ namespace Wiring;
 use Admin\Cells;
 use Admin\DataLayout;
 use Admin\ErrorLog;
+use Admin\Frame;
 use Admin\Grants;
 use Admin\LiveKeys;
 use Admin\Intake;
 use Admin\KeyFacts;
 use Admin\LocaleController;
+use Admin\Moments;
 use Admin\Premises;
 use Admin\Probes;
 use Admin\Proofs;
@@ -61,6 +63,7 @@ use Support\Thumbnail;
 use Support\Uuid;
 use Support\Words;
 use Update\Backup;
+use Update\FileCheck;
 use Update\UpdateCheck;
 
 /* What more than one area answers with, built once per request in the order it
@@ -98,6 +101,7 @@ final readonly class Common
   public PublicFilter $filter;
   public Sidebar $sidebar;
   public Rows $rows;
+  public Moments $moments;
   public FeedRequest $parameters;
   public Thumbnail $thumbnails;
   public Profile $named;
@@ -150,6 +154,11 @@ final readonly class Common
     return new Backup($this->premises->data, $this->db, $this->clock, $this->premises->dailyBackups);
   }
 
+  public function files(): FileCheck
+  {
+    return new FileCheck($this->root, $this->backup(), $this->clock);
+  }
+
   public function errors(): ErrorLog
   {
     return new ErrorLog($this->premises->data . '/log');
@@ -167,11 +176,17 @@ final readonly class Common
     return new UpdateCheck($this->premises->data, new Fetch(), $this->clock);
   }
 
+  public function frame(): Frame
+  {
+    return new Frame($this->sidebar, $this->probes(), $this->session, $this->rows, $this->settings, $this->csrf,
+      $this->template, $this->words);
+  }
+
   public function sheet(): Sheet
   {
     return new Sheet($this->rows, new Cells($this->template, $this->words, $this->terms, $this->clock,
-      $this->profile), $this->collections, $this->terms, $this->profile, $this->schema, $this->settings,
-      $this->clock, $this->words);
+      $this->moments, $this->profile), $this->collections, $this->terms, $this->profile, $this->schema,
+      $this->settings, $this->clock, $this->moments, $this->words);
   }
 
   public function reviews(): Grants
@@ -182,12 +197,12 @@ final readonly class Common
 
   public function keys(): LiveKeys
   {
-    return new LiveKeys($this->tokens, $this->facts(), $this->clock, $this->words);
+    return new LiveKeys($this->tokens, $this->facts(), $this->clock, $this->moments, $this->words);
   }
 
   public function facts(): KeyFacts
   {
-    return new KeyFacts($this->entities, $this->clock, $this->words);
+    return new KeyFacts($this->entities, $this->clock, $this->moments, $this->words);
   }
 
   public function intake(): Intake
@@ -253,6 +268,7 @@ final readonly class Common
       $this->clock, $this->words);
     $this->rows = new Rows($this->relations, $this->entities, $this->authorizer, $this->filter,
       $this->profile, $this->schema, $this->clock);
+    $this->moments = new Moments($this->clock, $this->words);
     $this->parameters = new FeedRequest($this->schema, $this->profile, $this->clock);
     $this->thumbnails = new Thumbnail($this->premises->data . '/cache/thumbs');
     /* The screens name a field in the admin's language; validation, storage and

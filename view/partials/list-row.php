@@ -12,21 +12,17 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$empty = $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text, 'value' => null,
-  'chips' => [], 'empty' => true, 'shown' => '']);
 $cell = fn (Admin\Column $column, string $named): string => $template->render('partials/sheet-cell', [
   'words' => $words, 'column' => $column, 'row' => $row, 'element' => 'span', 'named' => $named,
-  'cell' => $row === null ? $empty : $row->cells[$column->field->key]]);
+  'cell' => $row?->cells[$column->field->key]]);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
-$own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($row->entity->locale->tag,
-  $row->entity)] : null;
+$own = $items->own($row);
 $label = $glance->label();
 $alt = $glance->media() && str_starts_with((string) $row?->entity->props->string('encoding_format'), 'image/');
 $pictured = $glance->media() || $glance->image() !== null;
 $picture = $template->render('partials/item-picture', ['row' => $row, 'glance' => $glance,
   'collection' => $collection, 'class' => 'list-picture']);
-$address = $row === null ? null
-  : Admin\Rows::address($collection, $row->entity, http_build_query(array_diff_key($parameters, ['in' => true])));
+$address = $items->address($row);
 ?>
 <li class="list-row" data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
 <?php if ($ticks ?? false): ?>

@@ -20,9 +20,8 @@ if (!isset($template)) {
 }
 $dated = $glance->date();
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/timeline-row', ['words' => $words,
-  'collection' => $collection, 'columns' => $columns, 'row' => $row, 'parameters' => $row === null ? [] : $parameters,
-  'multilingual' => $multilingual, 'ticks' => $creates, 'house' => $house, 'glance' => $glance,
-  'timeline' => $timeline]);
+  'columns' => $columns, 'row' => $row, 'items' => $items, 'ticks' => $creates, 'house' => $house,
+  'glance' => $glance, 'timeline' => $timeline]);
 $under = null;
 $today = $timeline->today();
 $descending = str_starts_with((string) ($parameters['sort'] ?? '-'), '-');

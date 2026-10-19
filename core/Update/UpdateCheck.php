@@ -55,14 +55,13 @@ final readonly class UpdateCheck
     }
   }
 
-  /* Written beside it and moved into place, so two checks at once or one cut off mid-write leave a whole
-     report, the last one's, and never half of one the update card cannot read. */
+  /* A report that could not be written leaves the last one standing, and the next check writes again. */
   public function record(UpdateReport $report): void
   {
-    $path = $this->data . '/' . self::FILE;
-    $part = $path . '.' . bin2hex(random_bytes(4)) . '.part';
-    if (file_put_contents($part, $this->json->encode($report->toArray()) . "\n") === false || !rename($part, $path)) {
-      is_file($part) && unlink($part);
+    try {
+      $this->json->writeFile($this->data . '/' . self::FILE, $report->toArray());
+    } catch (JsonFailed) {
+      return;
     }
   }
 

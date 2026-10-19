@@ -10,8 +10,9 @@ namespace Http;
    them, one address serving four formats and two readings. Sixty seconds is a
    constant and not a setting: long enough for a house's visitors to share a
    fetch, short enough that publishing and reloading shows it, and anything longer
-   needs a purge. The validator is the hash of the document rendered, right rather
-   than merely cheap, since a record goes live at its start without a write. It
+   needs a purge. A document's validator is the hash of it rendered, right rather
+   than merely cheap, since a record goes live at its start without a write; a
+   file's is its name, since its address names bytes that never change. It
    renders validators and `Preconditions` consumes them, so the two never both
    decide. */
 final readonly class CacheHeaders
@@ -41,6 +42,11 @@ final readonly class CacheHeaders
   public function validator(string $document): string
   {
     return '"' . substr(hash('sha256', $document), 0, 32) . '"';
+  }
+
+  public function named(string $name): string
+  {
+    return '"' . $name . '"';
   }
 
   /* A caller may send several, and `*` means any — both are the same answer. A

@@ -23,7 +23,6 @@ use Storage\EntityRepository;
 use Storage\Query;
 use Storage\RelationRepository;
 use Storage\Trash;
-use Support\Clock;
 use Support\Template;
 use Support\Words;
 
@@ -45,6 +44,7 @@ final readonly class TrashController
 {
   public function __construct(
     private CollectionController $collections,
+    private Frame $frame,
     private EntityRepository $entities,
     private Trash $trash,
     private RelationRepository $relations,
@@ -53,7 +53,7 @@ final readonly class TrashController
     private Session $session,
     private Profile $profile,
     private Intake $intake,
-    private Clock $clock,
+    private Moments $moments,
     private Csrf $csrf,
     private Template $template,
     private Words $words,
@@ -76,8 +76,8 @@ final readonly class TrashController
       'purges' => $account->can(Capability::EraseData), 'purged' => $this->session->take('purged'),
       'csrf' => $this->csrf->token()]);
 
-    return $this->collections->frame($account, $person, $collection, $title, $main, false,
-      $this->collections->feed($request, $collection));
+    return $this->frame->around($account, $person,
+      new Screen($title, $main, $this->collections->feed($request, $collection), $collection->slug->value));
   }
 
   /* To the trash, at once and not pending: the collection screen it
@@ -178,18 +178,9 @@ final readonly class TrashController
     $type = $this->profile->byType($entity->type);
 
     return new TrashedRow($entity, (new Label())->of($entity, $type),
-      $this->when((string) $entity->deletedAt), count($this->relations->inbound($entity->id)),
+      $this->moments->time((string) $entity->deletedAt), count($this->relations->inbound($entity->id)),
       $entity->typeName() === 'Person' && $this->log->namesActor($entity->id),
       $type->erasure === Erasure::Hold);
-  }
-
-  /* The house's wall time read back as a wall time, as `Cells` shows a moment. */
-  private function when(string $stored): string
-  {
-    $local = new \DateTimeImmutable($this->clock->render($stored), new \DateTimeZone('UTC'));
-
-    return (string) (new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::SHORT, 'UTC'))->format($local);
   }
 
   /** @return array{Collection, Entity} */

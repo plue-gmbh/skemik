@@ -23,9 +23,8 @@ if ($findings === []) { ?>
         <li><<?= $element ?> class="record-row"<?= $each->href === null ? '' : ' href="'
           . $template->escape($each->href) . '"' ?>><span
           class="record-row-glyph"><?= $template->render('partials/glyph', ['name' => $each->glyph]) ?></span><span
-          class="record-row-name"><?= $template->escape($words->get('look.' . ($each->count === 1 ? 'one' : 'many')
-          . '.' . $each->look->value,
-          ['n' => (string) $each->count])) ?></span><?php if ($each->collection !== '') { ?><span
+          class="record-row-name"><?= $template->escape($words->count('look', $each->look->value,
+          $each->count)) ?></span><?php if ($each->collection !== '') { ?><span
           class="record-row-note"><?= $template->escape($each->collection) ?><?= $each->others > 0 ? ' +'
           . $each->others : '' ?></span><?php } ?></<?= $element ?>></li>
 <?php } ?>

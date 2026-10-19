@@ -112,15 +112,16 @@ final readonly class Records
     $common = $this->common;
     return new CollectionController($common->collections, $common->entities, $common->authorizer,
       $common->filter, $common->named, $common->schema, $common->sheet(), $this->dialog(), $this->bar(),
-      $this->mediaController(), $this->fieldController(), $common->settings, $common->sidebar,
-      $common->probes(), $common->session, $common->reviews(), $common->keys(), $common->clock, $common->csrf,
+      $this->mediaController(), $this->fieldController(), $common->settings, $common->frame(),
+      $common->session, $common->reviews(), $common->keys(), $common->clock, $common->csrf,
       $common->template, $common->words, $common->rows);
   }
 
   private function recordController(): RecordController
   {
     $common = $this->common;
-    return new RecordController($this->collectionController(), $this->recordPage(), $common->entities,
+    return new RecordController($this->collectionController(), $common->frame(), $this->recordPage(),
+      $common->entities,
       $common->relations, $common->validator, $common->authorizer, $common->log, $common->sheet(),
       new FieldEdits(new EdgeEdits($common->entities, $common->rows, $common->predicates, $common->schema,
         $this->terming(), $common->targets), $common->schema, $common->profile, $common->settings, $common->clock,
@@ -162,11 +163,11 @@ final readonly class Records
   private function trashController(): TrashController
   {
     $common = $this->common;
-    return new TrashController($this->collectionController(), $common->entities,
+    return new TrashController($this->collectionController(), $common->frame(), $common->entities,
       new Trash($common->db, $common->entities, $common->relations,
         $common->accounts, $common->log, $common->profile, $common->schema, $common->clock),
       $common->relations, $common->log, $common->authorizer, $common->session, $common->profile,
-      $common->intake(), $common->clock, $common->csrf, $common->template, $common->words);
+      $common->intake(), $common->moments, $common->csrf, $common->template, $common->words);
   }
 
   private function fieldController(): FieldController
@@ -190,7 +191,7 @@ final readonly class Records
   {
     $common = $this->common;
     return new SpineDialog($common->entities, $common->settings, $common->rows, $common->sheet(),
-      $common->named, $common->log, $common->clock, $common->words);
+      $common->named, $common->log, $common->clock, $common->moments, $common->words);
   }
 
   private function bar(): QueryBar

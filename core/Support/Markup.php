@@ -81,7 +81,7 @@ final readonly class Markup
     foreach (self::DURATION_UNITS as $index => $unit) {
       $n = $parts[$index + 1] ?? '';
       if ($n !== '') {
-        $shown[] = $this->words->get('duration.' . ($n === '1' ? 'one' : 'many') . '.' . $unit, ['n' => $n]);
+        $shown[] = $this->words->count('duration', $unit, (int) $n);
       }
     }
 

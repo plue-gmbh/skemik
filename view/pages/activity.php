@@ -41,8 +41,9 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
   $state = $line->row === null ? null : ($public ? $words->get('status.' . $line->row->state) : $line->row->own);
   $who = ($line->byKey ? '<span class="grant-key">' . $template->render('partials/glyph', ['name' => 'key'])
     . '</span>' : '') . $template->escape($line->who);
-  $named = $line->by === null || $by !== null ? $who
-    : '<a href="?' . $template->escape(http_build_query(['by' => $line->by])) . '">' . $who . '</a>';
+  $named = ($line->by === null || $by !== null ? $who
+    : '<a href="?' . $template->escape(http_build_query(['by' => $line->by])) . '">' . $who . '</a>')
+    . ($line->state === null ? '' : ' ' . $template->escape($line->state));
   $mark = $template->render('partials/glyph', ['name' => $line->glyph]);
   $dialog = 'redact-' . $index ?>
     <li class="record-row<?= $line->href === null ? ' is-missing' : '' ?>">

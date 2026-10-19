@@ -190,6 +190,7 @@ a {
   a:not([class]):hover,
   .login-again:hover,
   .record-back:hover,
+  a.record-row-name:hover,
   a.header-version:hover {
     text-decoration: underline;
   }
@@ -1569,17 +1570,35 @@ h2#home-needs_look ~ .home-empty {
   max-width: 520px;
 }
 
-button.cell {
+button.cell,
+.cell-edit {
   cursor: text;
 }
 
+.cell-edit {
+  position: absolute;
+  inset: 0;
+}
+
+.cell-held {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cell-held a.chip {
+  pointer-events: auto;
+}
+
 @media (hover: hover) {
-  button.cell:hover {
+  button.cell:hover,
+  .cell-edit:hover {
     box-shadow: inset 0 0 0 1px var(--border-strong);
   }
 }
 
-button.cell:focus-visible {
+button.cell:focus-visible,
+.cell-edit:focus-visible {
   outline: 0;
   box-shadow: inset 0 0 0 2px var(--accent);
 }
@@ -1610,11 +1629,13 @@ button.cell:focus-visible {
   box-shadow: inset 0 0 0 2px var(--status-error);
 }
 
-.sheet-cell[data-editing] .cell {
+.sheet-cell[data-editing] .cell,
+.sheet-cell[data-editing] .cell-edit {
   visibility: hidden;
 }
 
 .sheet-cell[data-off] .cell,
+.sheet-cell[data-off] .cell-edit,
 .record-line:has([data-off]) {
   display: none;
 }
@@ -2174,6 +2195,16 @@ a.chip {
   border-left: 2px solid var(--border);
 }
 
+.record-fields + .record-figure,
+.record-fields + .record-prose {
+  margin-top: 18px;
+}
+
+.record-card > .record-figure:last-child,
+.record-card > .record-prose:last-child {
+  margin-bottom: 0;
+}
+
 .record-line {
   display: contents;
 }
@@ -2311,20 +2342,6 @@ a.chip {
   padding: 12px 14px;
   border: 1px dashed var(--border-field);
   border-radius: var(--radius-large);
-}
-
-@container paper (min-width: 920px) {
-  .side-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    align-items: start;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .side-cards .record-card {
-    margin-bottom: 0;
-  }
 }
 
 .side-card-title {
@@ -3442,6 +3459,10 @@ a.cell {
     white-space: nowrap;
   }
 
+  .update-page > .record-rows .record-row-mono {
+    text-align: right;
+  }
+
   .page > .record-rows .record-row-kept {
     order: 3;
     margin-top: 4px;
@@ -3755,7 +3776,9 @@ button.spine-chip {
   white-space: nowrap;
 }
 
-.picker-item .chip-mark {
+.picker-item .chip-mark,
+.picker-item .chip-preview {
+  vertical-align: middle;
   margin-right: 5px;
 }
 

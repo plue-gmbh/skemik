@@ -28,6 +28,7 @@ final readonly class Response
 
   /* A file whole, or the one range a player seeking in a video asks for.
      @param array<string, string> $headers */
+  /** @psalm-taint-sink file $path read as it stands */
   public static function ranged(string $path, ?string $range, array $headers): self
   {
     $size = (int) filesize($path);
@@ -42,6 +43,14 @@ final readonly class Response
     return $start > $end ? new self(416, '', ['Content-Range' => 'bytes */' . $size])
       : self::file(new FileBody($path, $start, $end - $start + 1),
         [...$headers, 'Content-Range' => sprintf('bytes %d-%d/%d', $start, $end, $size)], 206);
+  }
+
+  /* Nothing sent, the caller holding what the tag names; the headers go with it,
+     so a cache's lifetime starts again.
+     @param array<string, string> $headers */
+  public static function unchanged(array $headers): self
+  {
+    return new self(304, '', $headers);
   }
 
   /** @param array<string, string> $headers */
@@ -61,6 +70,7 @@ final readonly class Response
   }
 
   /* `303`, so a POST answered by a redirect is followed by a GET. */
+  /** @psalm-taint-sink header $location sent as it stands */
   public static function redirect(string $location): self
   {
     return new self(303, '', ['Location' => $location]);
@@ -83,7 +93,8 @@ final readonly class Response
       ...array_intersect_key($this->headers, ['Set-Cookie' => true])], null, $this->after);
   }
 
-  /** @param array<string, string> $headers */
+  /** @param array<string, string> $headers
+      @psalm-taint-sink header $headers sent as they stand */
   public function with(array $headers): self
   {
     return new self($this->status, $this->body, [...$this->headers, ...$headers], $this->file, $this->after);

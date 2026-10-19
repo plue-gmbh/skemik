@@ -17,16 +17,14 @@ if (!isset($template)) {
   return;
 }
 $entity = $row?->entity;
-$empty = $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text, 'value' => null,
-  'chips' => [], 'empty' => true, 'shown' => '']);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
-$own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($entity->locale->tag, $entity)] : null;
+$own = $items->own($row);
 $label = $glance->label();
 $mime = (string) $entity?->props->string('encoding_format');
 $alt = $glance->media() && str_starts_with($mime, 'image/');
 $missing = '<span class="no-alt">' . $template->escape($words->get('cell.no_alt')) . '</span>';
-$shown = fn (Admin\Column $column): string => match (true) {
-  $row === null => $empty,
+$shown = fn (Admin\Column $column): ?string => match (true) {
+  $row === null => null,
   $alt && $column->field->key === 'description' && trim((string) $entity->props->string('description')) === ''
     => $missing,
   default => $row->cells[$column->field->key],
@@ -34,8 +32,7 @@ $shown = fn (Admin\Column $column): string => match (true) {
 $cell = fn (Admin\Column $column, string $named): string => $template->render('partials/sheet-cell', [
   'words' => $words, 'column' => $column, 'row' => $row, 'element' => 'span', 'named' => $named,
   'cell' => $shown($column)]);
-$address = $row === null ? null
-  : Admin\Rows::address($collection, $entity, http_build_query(array_diff_key($parameters, ['in' => true])));
+$address = $items->address($row);
 $pictured = $glance->media() || $glance->image() !== null;
 $picture = $template->render('partials/item-picture', ['row' => $row, 'glance' => $glance,
   'collection' => $collection, 'class' => 'grid-picture']);

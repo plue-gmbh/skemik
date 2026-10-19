@@ -53,8 +53,7 @@ final readonly class CollectionController
     private MediaController $media,
     private FieldController $fields,
     private SettingStore $settings,
-    private Sidebar $sidebar,
-    private Probes $probes,
+    private Frame $frame,
     private Session $session,
     private Grants $grants,
     private LiveKeys $keys,
@@ -83,8 +82,8 @@ final readonly class CollectionController
       ...$this->fields->screen($account, $collection),
       'csrf' => $this->csrf->token()]);
 
-    return $this->frame($account, $person, $collection, $collection->name, $main, $islands,
-      $this->feed($request, $collection), $notice);
+    return $this->frame->around($account, $person, new Screen($collection->name, $main,
+      $this->feed($request, $collection), $collection->slug->value, $islands, $notice));
   }
 
   public function feed(Request $request, Collection $collection): FeedPanel
@@ -133,16 +132,17 @@ final readonly class CollectionController
       'timeline' => new Timeline($glance->date(), $this->clock, $this->words->language),
       'fixed' => $view === CollectionView::Timeline,
       'rows' => $rows, 'page' => $query->page ?? 1, 'perPage' => $query->perPage ?? Query::PER_PAGE,
+      'items' => new Items($collection, $request->query, $this->dialog->multilingual($collection)),
       'parameters' => $request->query, 'narrowing' => $this->bar->narrowing($request),
       'total' => $query === null ? 0 : $this->entities->count($query),
       'all' => $this->bar->total($account, $collection),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
       'filters' => $this->bar->filters($account, $collection, $columns),
       'data' => $this->sheet->data($collection, $columns, $rows, $this->csrf->token()),
-      'spine' => $this->dialog->data($collection, $rows), 'multilingual' => $this->dialog->multilingual($collection)];
+      'spine' => $this->dialog->data($collection, $rows)];
   }
 
-  /* The view asked for, which the session then keeps; else the one kept, else the list. */
+  /* The view asked for, which the session then keeps; else the one kept, else the table. */
   private function drawn(Request $request, Collection $collection): CollectionView
   {
     $kept = 'view.' . $collection->slug->value;
@@ -151,7 +151,7 @@ final readonly class CollectionController
       $this->session->remember($kept, $asked->value);
     }
 
-    return $asked ?? CollectionView::tryFrom((string) $this->session->remembered($kept)) ?? CollectionView::List;
+    return $asked ?? CollectionView::tryFrom((string) $this->session->remembered($kept)) ?? CollectionView::Table;
   }
 
   /* A timeline is ordered by its date, newest first unless it asks the other way,
@@ -201,21 +201,6 @@ final readonly class CollectionController
   {
     return $this->rows->opensTrash($account, $collection)
       ? $this->entities->count(new Query($collection->type)->inTrash()) : null;
-  }
-
-  /* The chrome around a screen under this collection, the record screen's too,
-     with the sidebar showing the collection open. */
-  public function frame(Account $account, Entity $person, Collection $collection, string $title, string $main,
-    bool $islands, FeedPanel $feed, string $notice = ''): Response
-  {
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $title,
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'notice' => $notice, 'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account),
-      'open' => $collection->slug->value, 'locale' => $this->settings->locales()[0]->tag, 'main' => $main,
-      'islands' => $islands, 'feed' => $feed]), $notice === '' ? 200 : 404);
   }
 
   /* An unknown collection and one this account cannot read at all answer alike,

@@ -112,7 +112,8 @@ final readonly class TokenController
   }
 
   /* The older secrets of the name are read before the new one is written, so
-     the stop ticked never stops the key just issued.
+     the stop ticked never stops the key just issued. Each is logged as replaced,
+     not revoked: read under the new key's line, a revocation reads as its own.
      @param list<Grant> $rules */
   private function issued(Request $request, Token $token, array $rules): Response
   {
@@ -121,7 +122,7 @@ final readonly class TokenController
     $this->logged(ActionType::Create, $token);
     foreach ($older as $each) {
       $this->tokens->revoke($each);
-      $this->logged(ActionType::Update, $each, 'revoked');
+      $this->logged(ActionType::Update, $each, 'replaced');
     }
 
     return Response::json($this->json->encode(['secret' => $secret, 'label' => $token->label]), 201);
@@ -157,10 +158,18 @@ final readonly class TokenController
     $this->grants->remove($held);
     $after = $this->tokens->find($token);
     $this->logged(ActionType::Update, $after, $after->revokedAt === null ? 'narrowed' : 'revoked');
-    $back = (string) $request->form('back');
-    $screen = preg_match('#^/c/[a-z0-9-]+(/[a-z0-9-]+)?(\?[^\s]*)?$#', $back) === 1;
 
-    return Response::redirect($screen ? $back : '/');
+    return Response::redirect($this->back($request));
+  }
+
+  /* The screen the rule was removed from, a collection's or a record's, else home:
+     a form's `back` is sent as it stands, so only a path of that shape is followed. */
+  /** @psalm-taint-escape header a path under /c/ proven by its pattern, with no room for a line break */
+  private function back(Request $request): string
+  {
+    $back = (string) $request->form('back');
+
+    return preg_match('#^/c/[a-z0-9-]+(/[a-z0-9-]+)?(\?[^\s]*)?$#D', $back) === 1 ? $back : '/';
   }
 
   /* The whole key at once, from the register; its caller is told what an

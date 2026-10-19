@@ -140,9 +140,10 @@ final readonly class LoginController
   }
 
   /* Only a path of this house, so the login forwards nobody elsewhere. */
+  /** @psalm-taint-escape header one slash, then no second, no backslash and no room for a line break */
   private static function path(string $to): ?string
   {
-    return preg_match('#^/(?![/\\\\])\S*$#', $to) === 1 ? $to : null;
+    return preg_match('#^/(?![/\\\\])\S*$#D', $to) === 1 ? $to : null;
   }
 
   private function address(?string $to, ?string $sentence = null, int $status = 200): Response

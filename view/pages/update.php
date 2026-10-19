@@ -14,7 +14,7 @@ if (!isset($template)) {
   return;
 }
 ?>
-<div class="page">
+<div class="page update-page">
   <header class="page-head">
     <h1><?= $template->escape($words->get('update.title')) ?></h1>
     <p class="page-shape"><?= $template->escape($words->get(match (true) {
@@ -35,7 +35,7 @@ if (!isset($template)) {
   $report->unreachable !== null => [$words->get('update.unreachable', ['reason' => $report->unreachable]),
     ' is-failing'],
   $report->offered !== null && $report->offered !== $report->installed && $report->offered !== $report->refused
-    => [$words->get('update.offered', ['version' => $report->offered]), ''],
+    => [$words->get($enabled ? 'update.offered' : 'update.available', ['version' => $report->offered]), ''],
   default => [$words->get('update.checked'), $stale ? ' is-failing' : ' is-ok'],
 } ?>
       <span class="record-row-note<?= $mark ?>"><?= $template->escape($check) ?></span>

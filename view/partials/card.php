@@ -15,13 +15,11 @@ if (!isset($template)) {
   return;
 }
 $entity = $row?->entity;
-$empty = $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text, 'value' => null,
-  'chips' => [], 'empty' => true, 'shown' => '']);
 $cell = fn (Admin\Column $column, string $named): string => $template->render('partials/sheet-cell', [
   'words' => $words, 'column' => $column, 'row' => $row, 'element' => 'span', 'named' => $named,
-  'cell' => $row === null ? $empty : $row->cells[$column->field->key]]);
+  'cell' => $row?->cells[$column->field->key]]);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
-$own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($entity->locale->tag, $entity)] : null;
+$own = $items->own($row);
 $label = $glance->label();
 $prose = $glance->prose();
 $alt = $glance->media() && str_starts_with((string) $entity?->props->string('encoding_format'), 'image/');
@@ -29,8 +27,7 @@ $fields = array_filter($glance->shown(4, $row === null), fn (Admin\Column $colum
 $pictured = $glance->media() || $glance->image() !== null;
 $picture = $template->render('partials/item-picture', ['row' => $row, 'glance' => $glance,
   'collection' => $collection, 'class' => 'card-picture']);
-$address = $row === null ? null
-  : Admin\Rows::address($collection, $entity, http_build_query(array_diff_key($parameters, ['in' => true])));
+$address = $items->address($row);
 ?>
 <li class="item-card" data-record="<?= $row === null ? '' : $template->escape($entity->id->value) ?>">
 <?php if (($ticks ?? false) && $row !== null): ?>

@@ -15,7 +15,6 @@ use Http\Response;
 use Storage\Activity;
 use Storage\ActivityLog;
 use Storage\CollectionStore;
-use Storage\SettingStore;
 use Support\Template;
 use Support\Words;
 
@@ -34,12 +33,9 @@ final readonly class ActivityController
     private ActivityLog $log,
     private Changes $changes,
     private CollectionStore $collections,
-    private Sidebar $sidebar,
-    private Probes $probes,
-    private SettingStore $settings,
+    private Frame $frame,
     private Session $session,
     private Csrf $csrf,
-    private Rows $rows,
     private Template $template,
     private Words $words,
   ) {}
@@ -54,14 +50,8 @@ final readonly class ActivityController
       'perPage' => self::PER_PAGE, 'by' => $by, 'redacts' => $account->can(Capability::EraseData),
       'notice' => $this->session->take('activity'), 'csrf' => $this->csrf->token()]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('change.all'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => null,
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person,
+      new Screen($this->words->get('change.all'), $main, FeedPanel::at($request, '/feed')));
   }
 
   /* Back to the page the line stood on, which now says it was redacted. */

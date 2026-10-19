@@ -122,11 +122,13 @@ final readonly class Request
     return inet_ntop(substr($packed, 0, 8) . str_repeat("\0", 8)) . '/64';
   }
 
+  /** @psalm-taint-source input a header is the caller's */
   public function header(string $name): ?string
   {
     return $this->headers[strtolower($name)] ?? null;
   }
 
+  /** @psalm-taint-source input a query value is the caller's */
   public function query(string $name): ?string
   {
     return $this->query[$name] ?? null;
@@ -165,11 +167,13 @@ final readonly class Request
     return null;
   }
 
+  /** @psalm-taint-source input a form value is the caller's */
   public function form(string $name): ?string
   {
     return $this->form[$name] ?? null;
   }
 
+  /** @psalm-taint-source input a cookie is the caller's */
   public function cookie(string $name): ?string
   {
     return $this->cookies[$name] ?? null;

@@ -44,6 +44,7 @@ final readonly class Changes
     private Rows $rows,
     private HouseChanges $house,
     private Clock $clock,
+    private Moments $moments,
     private Words $words,
   ) {}
 
@@ -113,14 +114,14 @@ final readonly class Changes
       glyph: $this->house->glyph($object));
   }
 
-  /** @return array{who: string, by: ?string, ago: string, stamp: string, when: string, kept: list<string>,
-      activity: ?string, byKey: bool} */
+  /** @return array{who: string, state: ?string, by: ?string, ago: string, stamp: string, when: string,
+      kept: list<string>, activity: ?string, byKey: bool} */
   private function said(Activity $activity): array
   {
     $kept = $activity->target instanceof HouseObject ? [] : $this->kept($activity);
 
-    return ['who' => $this->who($activity), 'by' => $activity->person ?? $activity->token,
-      'ago' => $this->ago($activity->at), 'stamp' => $this->day($activity->at, \IntlDateFormatter::SHORT),
+    return [...$this->actor($activity), 'by' => $activity->person ?? $activity->token,
+      'ago' => $this->ago($activity->at), 'stamp' => $this->moments->time($activity->at),
       'when' => $this->clock->render($activity->at), 'kept' => $kept,
       'activity' => $kept === [] ? null : $activity->id, 'byKey' => $activity->token !== null];
   }
@@ -158,16 +159,8 @@ final readonly class Changes
       $minutes < 1440 => $this->words->get('change.hours', ['n' => (string) intdiv($minutes, 60)]),
       $minutes < 2880 => $this->words->get('change.day'),
       $minutes < 10080 => $this->words->get('change.days', ['n' => (string) intdiv($minutes, 1440)]),
-      default => $this->day($at, \IntlDateFormatter::NONE),
+      default => $this->moments->day($at),
     };
-  }
-
-  private function day(string $at, int $time): string
-  {
-    $format = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM, $time,
-      $this->clock->zone);
-
-    return (string) $format->format(new \DateTimeImmutable($at));
   }
 
   /* A record in the trash says so where its state would stand, as the trash's own notice does. */
@@ -197,40 +190,47 @@ final readonly class Changes
   }
 
   /* Unknown only for a name redacted, which a person's current name must not
-     undo; the install is nobody's and says so. */
-  private function who(Activity $activity): string
+     undo; the install is nobody's and says so. The state stands apart from the
+     name, so a screen can link the name alone.
+     @return array{who: string, state: ?string} */
+  private function actor(Activity $activity): array
   {
-    return match (true) {
-      $activity->person === null && $activity->token === null => $this->words->get('change.install'),
-      $activity->name === null => $this->words->get('change.unknown'),
-      $activity->token !== null => $this->token($activity->token, $activity->name),
-      default => $this->person((string) $activity->person, $activity->name),
-    };
+    if ($activity->person === null && $activity->token === null) {
+      return ['who' => $this->words->get('change.install'), 'state' => null];
+    }
+    if ($activity->name === null) {
+      return ['who' => $this->words->get('change.unknown'), 'state' => null];
+    }
+
+    return $activity->token !== null ? $this->token($activity->token, $activity->name)
+      : $this->person((string) $activity->person, $activity->name);
   }
 
   /* By the name the person holds now, so a colleague who changed theirs is not
-     two people, and by the kept one once the record is gone. */
-  private function person(string $id, string $kept): string
+     two people, and by the kept one once the record is gone.
+     @return array{who: string, state: ?string} */
+  private function person(string $id, string $kept): array
   {
     try {
       $person = $this->entities->find(new EntityId($id));
     } catch (EntityNotFound) {
-      return $this->words->get('change.removed', ['name' => $kept]);
+      $person = null;
     }
-    if ($person->deletedAt !== null) {
-      return $this->words->get('change.removed', ['name' => $kept]);
+    if ($person === null || $person->deletedAt !== null) {
+      return ['who' => $kept, 'state' => $this->words->get('change.removed')];
     }
     $name = trim((string) $person->props->string('name'));
 
-    return $name === '' ? $kept : $name;
+    return ['who' => $name === '' ? $kept : $name, 'state' => null];
   }
 
-  private function token(string $id, string $kept): string
+  /** @return array{who: string, state: ?string} */
+  private function token(string $id, string $kept): array
   {
     try {
       $token = $this->tokens->find($id);
     } catch (EntityNotFound) {
-      return $kept;
+      return ['who' => $kept, 'state' => null];
     }
     $key = match (true) {
       $token->revokedAt !== null => 'change.revoked',
@@ -238,6 +238,6 @@ final readonly class Changes
       default => null,
     };
 
-    return $key === null ? $kept : $this->words->get($key, ['name' => $kept]);
+    return ['who' => $kept, 'state' => $key === null ? null : $this->words->get($key)];
   }
 }

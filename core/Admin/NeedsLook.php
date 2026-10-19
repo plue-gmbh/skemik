@@ -24,6 +24,7 @@ use Storage\RelationRepository;
 use Storage\SettingStore;
 use Support\Clock;
 use Update\Backup;
+use Update\FileCheck;
 use Update\UpdateCheck;
 
 /* The home screen's Needs a look, whose contract is the header of
@@ -65,6 +66,7 @@ final readonly class NeedsLook
     private GrantRepository $grants,
     private Profile $profile,
     private Backup $backup,
+    private FileCheck $files,
     private UpdateCheck $updates,
     private Clock $clock,
   ) {}
@@ -96,6 +98,7 @@ final readonly class NeedsLook
       $this->opened(Overlooked::Dangling, $this->oversights->pointingIntoTrash($read), $collections),
       $account->can(Capability::ManageHouse) ? $this->reported() : null,
       $account->can(Capability::RunBackup) ? $this->snapshot() : null,
+      $account->can(Capability::ManageHouse) ? $this->shipped() : null,
       $account->can(Capability::RunUpdate) ? $this->update() : null,
       $account->can(Capability::ManageTokens) ? $this->expiring($collections) : null,
     ]));
@@ -214,6 +217,16 @@ final readonly class NeedsLook
     };
 
     return $look === null ? null : new Finding($look, 1, '/settings/backups', 'alert', '', 0);
+  }
+
+  /* Files that differ from the release, as the daily run last compared them, the
+     first named and opening nothing, since the Settings card's row names them all. */
+  private function shipped(): ?Finding
+  {
+    $differing = $this->files->report()?->differing() ?? [];
+
+    return $differing === [] ? null
+      : new Finding(Overlooked::Files, count($differing), null, 'alert', $differing[0], count($differing) - 1);
   }
 
   /* A release that cannot be installed by itself, the version as the note, so

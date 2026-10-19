@@ -12,7 +12,6 @@ use Feed\PublicFilter;
 use Profile\Profile;
 use Profile\TypeDefinition;
 use Storage\EntityRepository;
-use Support\Clock;
 use Support\Words;
 
 /* What the Accounts card reads: a row per account, owners first since a house
@@ -32,7 +31,7 @@ final readonly class Colleagues
     private Profile $profile,
     private PublicFilter $filter,
     private Rows $rows,
-    private Clock $clock,
+    private Moments $moments,
     private Words $words,
   ) {}
 
@@ -78,7 +77,7 @@ final readonly class Colleagues
     $picture = array_find($this->rows->chips($reader, $person, [])['image'] ?? [],
       fn (Chip $chip): bool => $chip->preview !== null)?->preview;
     $login = $account->lastLoginAt === null ? $this->words->get('account.never')
-      : $this->words->get('account.last_login', ['date' => $this->date($account->lastLoginAt)]);
+      : $this->words->get('account.last_login', ['date' => $this->moments->day($account->lastLoginAt)]);
 
     $last = $owners === 1 && $account->role === Role::Owner && $account->disabledAt === null;
 
@@ -86,18 +85,30 @@ final readonly class Colleagues
       $account->email . ' · ' . $login, $picture, $last);
   }
 
-  /* The reader's own row says so at the head of its sentence, where a flag beside the name would cost the name
-     its width. */
+  /* The reader's own row says so in its sentence, in the second person, where a
+     flag beside the name would cost the name its width. */
   private function sentence(Account $account, bool $yours): string
   {
+    $person = $yours ? 'yours_' : '';
     $does = match ($account->role) {
-      Role::Owner => [$this->words->get('account.does_all')],
-      Role::Editor => [$this->scope('writes', $account->write), $this->scope('reads', $account->read)],
-      Role::Viewer => [$this->scope('reads', $account->read)],
+      Role::Owner => [$this->words->get('account.' . $person . 'does_all')],
+      Role::Editor => $this->editor($person, $account),
+      Role::Viewer => [$this->scope($person . 'reads', $account->read)],
     };
 
     return $this->words->get($yours ? 'account.yours' : 'account.sentence',
       ['role' => $this->words->get('account.role.' . $account->role->value), 'does' => implode(', ', $does)]);
+  }
+
+  /* Two whole scopes are one clause, since "writes every type, reads every type" reads as a list of two.
+     @return list<string> */
+  private function editor(string $person, Account $account): array
+  {
+    if ($account->write->types === null && $account->read->types === null) {
+      return [$this->words->get('account.' . $person . 'writes_reads_all')];
+    }
+
+    return [$this->scope($person . 'writes', $account->write), $this->scope($person . 'reads', $account->read)];
   }
 
   private function scope(string $verb, TypeScope $scope): string
@@ -108,13 +119,5 @@ final readonly class Colleagues
     $named = array_intersect_key($this->types(), array_flip($scope->types));
 
     return $this->words->get('account.' . $verb, ['types' => implode(', ', $named)]);
-  }
-
-  private function date(string $stored): string
-  {
-    $local = new \DateTimeImmutable($this->clock->render($stored), new \DateTimeZone('UTC'));
-
-    return (string) (new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::NONE, 'UTC'))->format($local);
   }
 }

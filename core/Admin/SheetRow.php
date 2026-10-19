@@ -14,7 +14,7 @@ use Profile\Reach;
    Draft), each column's cell already rendered, and its edges as chips, which a
    picker starts from. Where another locale's words are edited, that locale and
    the authored record ride along for the editors' placeholders (`RecordWords`). `changed` is
-   its last change in the house's wall time, which the spine chip dates. */
+   the day of its last change worded for the reader (`Moments`), which the spine chip's title says. */
 final readonly class SheetRow
 {
   /**

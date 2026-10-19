@@ -14,13 +14,9 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$empty = $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text, 'value' => null,
-  'chips' => [], 'empty' => true, 'shown' => '']);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
-$open = $row === null ? null
-  : Admin\Rows::address($collection, $row->entity, http_build_query(array_diff_key($parameters, ['in' => true])));
-$own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($row->entity->locale->tag,
-  $row->entity)] : null;
+$open = $items->address($row);
+$own = $items->own($row);
 ?>
         <tr data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
 <?php if ($ticks ?? false): ?>
@@ -39,6 +35,6 @@ $own = ($multilingual ?? false) && $row !== null ? [new Admin\Translation($row->
             'current' => $house ?? null]) ?></td>
 <?php foreach ($columns as $column): ?>
           <?= $template->render('partials/sheet-cell', ['words' => $words, 'column' => $column, 'row' => $row,
-  'element' => 'td', 'cell' => $row === null ? $empty : $row->cells[$column->field->key]]) ?>
+  'element' => 'td', 'cell' => $row?->cells[$column->field->key]]) ?>
 <?php endforeach ?>
         </tr>

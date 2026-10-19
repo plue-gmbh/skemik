@@ -19,11 +19,8 @@ $word = match (true) {
   $row->own !== null => $row->own,
   default => '',
 };
-$changed = (new IntlDateFormatter($words->language, IntlDateFormatter::MEDIUM, IntlDateFormatter::NONE, 'UTC'))
-  ->format(new DateTimeImmutable($row->changed === '' ? $entity->updatedAt : $row->changed,
-    new DateTimeZone('UTC')));
 $title = implode(' · ', array_filter([$word, '/' . $entity->slug->value, $entity->locale->tag,
-  'v' . $entity->version, $words->get('spine.changed', ['date' => (string) $changed])]));
+  'v' . $entity->version, $words->get('spine.changed', ['date' => $row->changed])]));
 $dots = $translations ?? [];
 $shown = count($dots) > 3 ? array_filter($dots,
   fn (Admin\Translation $each): bool => $each->locale === $entity->locale->tag) : $dots;

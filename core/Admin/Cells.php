@@ -32,6 +32,7 @@ final readonly class Cells
     private Words $words,
     private Terms $terms,
     private Clock $clock,
+    private Moments $moments,
     private Profile $profile,
   ) {}
 
@@ -76,9 +77,8 @@ final readonly class Cells
       is_array($value) => implode(', ', array_filter($value, is_scalar(...))),
       $field->kind === FieldKind::Number => $this->amount($entity, $field,
         is_int($value) || is_float($value) ? $value : 0),
-      $field->kind === FieldKind::Date => $this->moment((string) $value, \IntlDateFormatter::NONE),
-      $field->kind === FieldKind::DateTime => $this->moment($this->clock->render((string) $value),
-        \IntlDateFormatter::SHORT),
+      $field->kind === FieldKind::Date => $this->moments->day((string) $value),
+      $field->kind === FieldKind::DateTime => $this->moments->time((string) $value),
       $field->kind === FieldKind::Duration => $this->duration((string) $value),
       $field->kind === FieldKind::Select => $this->terms->word($field, (string) $value,
         $entity->locale),
@@ -108,7 +108,7 @@ final readonly class Cells
     return match (true) {
       is_int($value) || is_float($value) => $this->number($value),
       !is_string($value) => '',
-      $key->kind() === FieldKind::Date => $this->moment($value, \IntlDateFormatter::NONE),
+      $key->kind() === FieldKind::Date => $this->moments->day($value),
       default => $value,
     };
   }
@@ -140,16 +140,6 @@ final readonly class Cells
     $formatter->setAttribute(\NumberFormatter::GROUPING_USED, (int) (abs($value) >= 10000));
 
     return (string) $formatter->format($value);
-  }
-
-  /* The house's wall time read back as a wall time, so no zone moves it twice. */
-  private function moment(string $local, int $time): string
-  {
-    $format = strlen($local) === strlen('YYYY-MM-DD') ? '!Y-m-d' : '!Y-m-d\TH:i:s';
-    $moment = \DateTimeImmutable::createFromFormat($format, $local, new \DateTimeZone('UTC'));
-    $formatter = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM, $time, 'UTC');
-
-    return $moment === false ? $local : (string) $formatter->format($moment);
   }
 
   private function duration(string $iso): string

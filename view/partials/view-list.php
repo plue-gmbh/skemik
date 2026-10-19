@@ -12,8 +12,8 @@ if (!isset($template)) {
   return;
 }
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/list-row', ['words' => $words,
-  'collection' => $collection, 'columns' => $columns, 'row' => $row, 'parameters' => $row === null ? [] : $parameters,
-  'multilingual' => $multilingual, 'ticks' => $creates, 'house' => $house, 'glance' => $glance]);
+  'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
+  'ticks' => $creates, 'house' => $house, 'glance' => $glance]);
 ?>
 <div data-ticked></div>
 <div class="sheet-card">

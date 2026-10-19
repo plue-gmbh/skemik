@@ -16,6 +16,7 @@ use Storage\SettingStore;
 use Support\Template;
 use Support\Words;
 use Update\Backup;
+use Update\FileCheck;
 
 /* The overview, decided rather than accumulated: the title, one line of totals,
    six cards and the feed panel. The totals are counted past `Feed\PublicFilter`
@@ -29,13 +30,13 @@ use Update\Backup;
 final readonly class HomeController
 {
   public function __construct(
+    private Frame $frame,
     private Sidebar $sidebar,
-    private Probes $probes,
     private SettingStore $settings,
     private Csrf $csrf,
     private Template $template,
     private Words $words,
-    private Rows $rows,
+    private Moments $moments,
     private Session $session,
     private NeedsLook $needsLook,
     private Changes $changes,
@@ -43,6 +44,7 @@ final readonly class HomeController
     private Register $register,
     private LocaleController $locales,
     private Backup $backup,
+    private FileCheck $files,
     private ErrorLog $errors,
     private ?Smtp $relay,
     private Premises $premises,
@@ -51,21 +53,14 @@ final readonly class HomeController
   public function show(Account $account, Entity $person, Request $request): Response
   {
     $entries = $this->sidebar->entries($account);
-    $locale = $this->settings->locales()[0];
     $records = array_sum(array_map(fn (SidebarEntry $entry): int => $entry->count, $entries));
     $main = $this->template->render('pages/home', ['words' => $this->words,
       'address' => explode('://', $request->origin(), 2)[1],
       'collections' => count(array_filter($entries, fn (SidebarEntry $entry): bool => $entry->count > 0)),
       'records' => $records, 'cards' => $this->cards($account)]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('home.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $entries, 'open' => null,
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $locale->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed/' . $locale->tag)]));
+    return $this->frame->around($account, $person, new Screen($this->words->get('home.title'), $main,
+      FeedPanel::at($request, '/feed/' . $this->settings->locales()[0]->tag), entries: $entries));
   }
 
   /** @return array<string, array<string, list<Finding>|list<Change>|list<Colleague>|list<RegisterEntry>
@@ -99,6 +94,7 @@ final readonly class HomeController
       'address' => $this->premises->address, 'mail' => $this->mail(),
       'contact' => $this->premises->securityContact,
       'backups' => $this->backups(), 'backupsHealth' => $this->backupsHealth(),
+      'files' => $this->shipped(), 'filesHealth' => $this->shippedHealth(),
       'errors' => $errors ? $this->failing() : null, 'errorsHealth' => $errors ? $this->errorsHealth() : null];
   }
 
@@ -128,6 +124,33 @@ final readonly class HomeController
     return $this->backup->report()?->failed === null ? Health::Ok : Health::Failing;
   }
 
+  /* The Settings card's files row as the daily run last compared them, none before its first run: each kind
+     of difference with its paths, so a release half copied names what is missing. */
+  private function shipped(): ?string
+  {
+    $report = $this->files->report();
+    if ($report === null || !$report->listed || $report->differing() === []) {
+      return $report === null ? null : $this->words->get($report->listed ? 'home.files_match' : 'home.files_unlisted',
+        ['version' => $report->version]);
+    }
+    $kinds = array_filter(['changed' => $report->changed, 'missing' => $report->missing,
+      'added' => $report->added]);
+
+    return implode(' · ', array_map(fn (string $kind, array $paths): string => $this->words->get('home.files_'
+      . $kind, ['paths' => implode(', ', $paths)]), array_keys($kinds), $kinds));
+  }
+
+  /* No list is no state to judge, as a `-dev` install carries none. */
+  private function shippedHealth(): ?Health
+  {
+    $report = $this->files->report();
+    if ($report === null || !$report->listed) {
+      return null;
+    }
+
+    return $report->differing() === [] ? Health::Ok : Health::Failing;
+  }
+
   /* A failure the owner has read is no longer news, but no reason for green either. */
   private function errorsHealth(): ?Health
   {
@@ -146,7 +169,7 @@ final readonly class HomeController
       return $this->words->get($this->backup->daily ? 'home.backups_none' : 'home.backups_off');
     }
 
-    return $this->words->get('home.backups_last', ['when' => $this->when($latest->at)]);
+    return $this->words->get('home.backups_last', ['when' => $this->moments->time($latest->at)]);
   }
 
   /* The Settings card's error log row: when the last failure was logged, and its incident. */
@@ -155,15 +178,7 @@ final readonly class HomeController
     $latest = $this->errors->entries(1)[0] ?? null;
 
     return $latest === null ? $this->words->get('home.errors_none')
-      : $this->words->get('home.errors_last', ['when' => $latest->time === null ? '—' : $this->when($latest->time),
-        'incident' => $latest->incident]);
-  }
-
-  private function when(\DateTimeInterface $at): string
-  {
-    $format = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::SHORT, $this->settings->timezone()->getName());
-
-    return (string) $format->format($at);
+      : $this->words->get('home.errors_last', ['incident' => $latest->incident,
+        'when' => $latest->time === null ? '—' : $this->moments->time($latest->time)]);
   }
 }

@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Update;
 
-use Admin\AccountMenu;
 use Admin\FeedPanel;
-use Admin\Probes;
-use Admin\Rows;
-use Admin\Sidebar;
+use Admin\Frame;
+use Admin\Moments;
+use Admin\Screen;
 use Auth\Account;
 use Auth\Authorizer;
 use Auth\Capability;
-use Auth\Session;
 use Domain\Entity;
-use Http\Csrf;
 use Http\Request;
 use Http\Response;
-use Storage\SettingStore;
-use Support\Clock;
 use Support\Template;
 use Support\Words;
 
@@ -36,13 +31,8 @@ final readonly class UpdateController
     private Signature $signature,
     private bool $enabled,
     private bool $early,
-    private Sidebar $sidebar,
-    private Probes $probes,
-    private SettingStore $settings,
-    private Session $session,
-    private Csrf $csrf,
-    private Rows $rows,
-    private Clock $clock,
+    private Frame $frame,
+    private Moments $moments,
     private Template $template,
     private Words $words,
   ) {}
@@ -56,14 +46,8 @@ final readonly class UpdateController
       'stale' => $this->check->stale(), 'checked' => $this->when($report->checked),
       'installedAt' => $this->when($report->installedAt)]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('update.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $this->sidebar->entries($account), 'open' => 'update',
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person,
+      new Screen($this->words->get('update.title'), $main, FeedPanel::at($request, '/feed'), 'update'));
   }
 
   /* Empty while the source holds no key, which the screen says in place of an id. */
@@ -78,12 +62,6 @@ final readonly class UpdateController
 
   private function when(?string $stored): string
   {
-    if ($stored === null) {
-      return '';
-    }
-    $format = new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT,
-      $this->clock->zone->getName());
-
-    return (string) $format->format(new \DateTimeImmutable($stored));
+    return $stored === null ? '' : $this->moments->time($stored);
   }
 }

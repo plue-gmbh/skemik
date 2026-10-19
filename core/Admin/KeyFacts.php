@@ -19,6 +19,7 @@ final readonly class KeyFacts
   public function __construct(
     private EntityRepository $entities,
     private Clock $clock,
+    private Moments $moments,
     private Words $words,
   ) {}
 
@@ -36,7 +37,7 @@ final readonly class KeyFacts
   public function issued(Token $token): string
   {
     return $this->words->get('grant.issued', ['name' => $this->issuer($token),
-      'date' => $this->date($token->createdAt)]);
+      'date' => $this->moments->day($token->createdAt)]);
   }
 
   public function expiry(Token $token): string
@@ -44,7 +45,8 @@ final readonly class KeyFacts
     $left = (int) ceil(((new \DateTimeImmutable($token->expiresAt))->getTimestamp()
       - $this->clock->now()->getTimestamp()) / 86400);
 
-    return $this->words->get('grant.expires', ['date' => $this->date($token->expiresAt), 'n' => (string) $left]);
+    return $this->words->get('grant.expires', ['date' => $this->moments->day($token->expiresAt),
+      'n' => (string) $left]);
   }
 
   public function used(Token $token): string
@@ -66,15 +68,7 @@ final readonly class KeyFacts
   /* What a newer key of the name means for this one. */
   public function replaced(Token $token, Token $newer): string
   {
-    return $this->words->get('grant.replaced', ['date' => $this->date($newer->createdAt),
-      'until' => $this->date($token->expiresAt)]);
-  }
-
-  public function date(string $stored): string
-  {
-    $local = new \DateTimeImmutable($this->clock->render($stored), new \DateTimeZone('UTC'));
-
-    return (string) (new \IntlDateFormatter($this->words->language, \IntlDateFormatter::MEDIUM,
-      \IntlDateFormatter::NONE, 'UTC'))->format($local);
+    return $this->words->get('grant.replaced', ['date' => $this->moments->day($newer->createdAt),
+      'until' => $this->moments->day($token->expiresAt)]);
   }
 }

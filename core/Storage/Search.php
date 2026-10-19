@@ -11,6 +11,7 @@ use Domain\Props;
 use Domain\Slug;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
+use Profile\FieldKind;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
@@ -70,6 +71,7 @@ final readonly class Search
       $tokens = $field->cardinality === Cardinality::S && $field->kind->isSearched()
         ? $this->indexed($this->joined([$document[$field->key] ?? null, ...array_column($translations, $field->key)]))
         : [];
+      $tokens = $field->kind === FieldKind::Text && $field->holdsWords() ? $this->endings($tokens) : $tokens;
       $words = $tokens === [] ? $words : [...$words, $field->key => $tokens];
     }
 
@@ -148,6 +150,24 @@ final readonly class Search
     $folded = $this->tokens($composed);
 
     return [...$folded, ...array_values(array_diff($this->tokens(strtr($composed, self::GERMAN)), $folded))];
+  }
+
+  /* A short text of words names something, and a name is often one compound word, *Grundkurs* or
+     *itemlist.jpg*, so its words keep every ending as a word too and the prefix range finds `kurs` inside. A
+     code or a hash is typed from its start, and a long text keeps its words whole: it holds most of the table,
+     which this would make several times its size, and a fragment would match nearly every text.
+     @param list<string> $words
+     @return list<string> each word, then every ending of it */
+  private function endings(array $words): array
+  {
+    $kept = [];
+    foreach ($words as $word) {
+      for ($start = 0; $start < mb_strlen($word); $start++) {
+        $kept[] = mb_substr($word, $start);
+      }
+    }
+
+    return array_values(array_unique($kept));
   }
 
   /** @param list<mixed> $values decoded JSON, lists of words among them */

@@ -151,6 +151,7 @@ final readonly class DataLayout
      typed, since resolved it would tell anyone before the first run where the
      domain root lies. `open_basedir` is asked first, since a path outside it
      prints a warning where it should refuse. */
+  /** @psalm-taint-escape file the operator's own folder, proven empty and writable before anything is made in it */
   private function folder(string $typed): string
   {
     $typed = trim($typed);

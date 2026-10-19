@@ -22,7 +22,6 @@ use Storage\CollectionStore;
 use Storage\HouseItem;
 use Storage\HouseObject;
 use Storage\RateLimit;
-use Storage\SettingStore;
 use Support\Clock;
 use Support\Template;
 use Support\Uuid;
@@ -57,12 +56,10 @@ final readonly class ExportController
     private string $data,
     private ActivityLog $log,
     private CollectionStore $collections,
+    private Frame $frame,
     private Sidebar $sidebar,
-    private Probes $probes,
-    private SettingStore $settings,
     private Session $session,
     private Csrf $csrf,
-    private Rows $rows,
     private RateLimit $runs,
     private Uuid $uuid,
     private Clock $clock,
@@ -80,14 +77,8 @@ final readonly class ExportController
       'public' => $this->names($account, $entries, true), 'unfit' => $this->unfit($size),
       'notice' => $this->session->take('export'), 'csrf' => $this->csrf->token()]);
 
-    return Response::html($this->template->render('partials/frame', ['words' => $this->words,
-      'account' => $account, 'title' => $this->words->get('export.title'),
-      'menu' => new AccountMenu($account, $person, $this->rows, $this->session),
-      'sites' => $this->sidebar->sites(),
-      'csrf' => $this->csrf->token(), 'entries' => $entries, 'open' => 'export',
-      'space' => $this->probes->space(), 'update' => $this->probes->update(),
-      'locale' => $this->settings->locales()[0]->tag, 'main' => $main, 'islands' => false,
-      'feed' => FeedPanel::at($request, '/feed')]));
+    return $this->frame->around($account, $person, new Screen($this->words->get('export.title'), $main,
+      FeedPanel::at($request, '/feed'), 'export', entries: $entries));
   }
 
   /* The box leaves `staging/` once it has been sent, or the download given up,

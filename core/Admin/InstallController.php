@@ -93,8 +93,8 @@ final readonly class InstallController
       'requirements' => $requirements, 'sentence' => $sentence, 'asksFolder' => $this->premises === null,
       'costs' => array_filter($this->layout->costs(), fn (Requirement $cost): bool => !$cost->met),
       'ready' => array_filter($requirements, fn (Requirement $requirement): bool => !$requirement->met) === [],
-      'form' => [...['timezone' => SettingStore::DEFAULT_TIMEZONE, 'language' => $this->words->language],
-        ...$request->form],
+      'form' => [...['timezone' => SettingStore::DEFAULT_TIMEZONE,
+        'language' => explode('-', $this->words->language)[0]], ...$request->form],
       'timezones' => \DateTimeZone::listIdentifiers(),
       'languages' => array_combine($shipped, array_map(fn (string $code): string =>
         mb_ucfirst(\Locale::getDisplayLanguage($code, $code)), $shipped))]), $status);

@@ -18,6 +18,7 @@ final readonly class LiveKeys
     private TokenRepository $tokens,
     private KeyFacts $facts,
     private Clock $clock,
+    private Moments $moments,
     private Words $words,
   ) {}
 
@@ -65,7 +66,7 @@ final readonly class LiveKeys
   public function adding(Token $token): string
   {
     return $this->words->get('grant.adding', ['name' => $token->label,
-      'until' => $this->facts->date($token->expiresAt)]);
+      'until' => $this->moments->day($token->expiresAt)]);
   }
 
   /* Why a name's new key is not issued: it would read a collection two ways (`Auth\Grant::readTwoWays`). */

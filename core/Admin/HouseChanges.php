@@ -104,6 +104,7 @@ final readonly class HouseChanges
       $object->item === HouseItem::Dump => $this->dumped($kept),
       $activity->action === ActionType::Create => [$this->words->get($object->item === HouseItem::Key
         ? 'change.issued' : 'change.added')],
+      $kept->has('replaced') => [$this->words->get('change.replaced_key')],
       $kept->has('revoked') => [$this->words->get('change.revoked_key')],
       $kept->has('narrowed') => [$this->words->get('change.narrowed')],
       default => [$this->words->get('change.made_default')],

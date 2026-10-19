@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.2](https://img.shields.io/badge/version-1.0.2-1f6feb)
+![Version 1.0.3](https://img.shields.io/badge/version-1.0.3-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -13,7 +13,9 @@ tool to design first, no column called `Date2`.
 Like a headless CMS or a spreadsheet database, except the model is already
 there, and it is schema.org.
 
-[skemik.de](https://skemik.de) in German, [skemik.com](https://skemik.com) in English.
+[skemik.de](https://skemik.de) in German,
+[skemik.com](https://skemik.com) in English,
+[skemik.fr](https://skemik.fr) in French.
 
 ---
 
@@ -195,18 +197,21 @@ Ask the host for these before you copy anything.
 
 ## Install
 
-Copy `index.php`, `.htaccess`, `core/`, `view/`, `language/` and `migrations/`
-into the folder your domain points at, then open `/install` on it by hand:
-nothing links there, and until it has run no other address answers. Run it the
-minute the files are copied: it answers only while the house has no account,
-and until then the house belongs to whoever runs it first, who needs nothing but
-the path of an empty data folder.
+Copy everything the release's folder holds into the folder your domain points
+at: `index.php`, `.htaccess`, `core/`, `view/`, `language/` and `migrations/`,
+and the four papers beside them, since the house checks its files against
+`SHA256SUMS` and a paper left out reads as missing. Then open `/install` on it
+by hand: nothing links there, and until it has run no other address answers.
+Run it the minute the files are copied: it answers only while the house has no
+account, and until then the house belongs to whoever runs it first, who needs
+nothing but the path of an empty data folder.
 
-A release is one zip named after its tag, `skemik-1.0.0.zip`, holding that copy
-and three papers, this README, the `LICENSE` and `SECURITY.md`, under a folder
-of the same name, and beside it its signature, minisign's, which the updater
-checks against the key in the source before it unpacks anything. Both are
-downloaded from the release's page at
+A release is one zip named after its tag, `skemik-1.0.0.zip`, holding that
+folder under the same name, the code and four papers, this README, the
+`LICENSE`, `SECURITY.md` and `SHA256SUMS`, and beside it its signature,
+minisign's, which the updater checks against the key in the source before it
+unpacks anything.
+Both are downloaded from the release's page at
 [github.com/plue-gmbh/skemik/releases](https://github.com/plue-gmbh/skemik/releases),
 where every release stands under its tag, and the updater fetches the same two
 from `releases.skemik.org`. Check it by hand with the same key before you open
@@ -214,6 +219,14 @@ the folder:
 
 ```sh
 minisign -Vm skemik-1.0.0.zip -P RWTcPiN2NJok7rtTpL5Ipn/LHlDpGfDQGT2ZHkbGp1Lry05p4J71nMzW
+```
+
+`SHA256SUMS` lists every file the release ships but `.htaccess`, whose lines
+outside the Skemik block are the hoster's, so once the files are copied this
+checks each of them against the release, in the domain root:
+
+```sh
+sha256sum -c SHA256SUMS
 ```
 
 What the copied files are, the one `/install` writes, and the papers beside
@@ -237,6 +250,7 @@ migrations/   numbered scripts that move an existing database to the declared
 README.md     this file, as the release it came with
 LICENSE       the licence, stamped with the release's version and Change Date
 SECURITY.md   where to report a vulnerability
+SHA256SUMS    the hash of every file shipped but .htaccess
 ```
 
 The installer checks the server first and stores nothing until every check
@@ -250,7 +264,9 @@ unless `config.php` already names one, the owner's name and login address, the
 house's timezone and the admin's language. That is also the first language the
 house publishes in, in the region the installing browser names for it, `de-AT`,
 else the one it is most at home in, `de-DE` or `en-US`; the admin's own words
-are the same in every region.
+are the language's, in a region's spelling where a file for it ships, Swiss
+German's *Strasse*, and its dates and numbers are written as the browser's
+region writes them, *€ 1.234,50* in `de-AT`.
 
 - **Make the data folder beforehand**, empty, best above the domain root. The
   installer never creates one, never takes over one that holds something, and
@@ -355,6 +371,17 @@ edge into nothing or a required field a release added to records that stood, is
 a line of Needs a look, and the Holdings check screen behind it names each
 record.
 
+**The release's files are compared with its `SHA256SUMS` once a day**, and at
+once after an update: a file changed, one missing, and one added where only the
+release puts files, `core/`, `view/`, `language/`, `migrations/` and a `.php`
+beside `index.php`, each stand on a row of the home screen's Settings card and
+as a line of Needs a look, and the row says so while the files match. While one
+differs they are compared every hour, so a tree put right, a hand edit undone
+or a copy by hand finished, turns green by itself within the hour. A copy with
+no `SHA256SUMS` beside it is not compared. Whoever can change the code can
+change the list too, so this finds a release half copied, a hand edit or a
+careless intruder, never a careful one.
+
 **A failure is logged under the incident id its page or answer shows**, six
 characters to read out over the phone, in `log/app.log`, rotated at 8 MB with
 the five files before it kept. The owner's error log, opened from a row on the
@@ -387,13 +414,14 @@ current, and the address answers *being updated* for the seconds of the swap.
 - **A snapshot of the holdings is taken first** and the tree as it ran kept
   beside it, and both go back together where the new release cannot take over
   the database. The lines a hoster had you add to `.htaccess` outside `# BEGIN
-  Skemik` and `# END Skemik` are kept. This README, the licence and the
-  security policy beside the code are replaced by the release's own, so what an
-  install says of itself is the release it runs.
+  Skemik` and `# END Skemik` are kept. This README, the licence, the security
+  policy and `SHA256SUMS` beside the code are replaced by the release's own, so
+  what an install says of itself is the release it runs.
 
 - **An install declines with `'updates' => false`** in `config.php`. A
   development copy says so too, since `0.3.0-dev` sorts below `0.3.0` and the
-  release would replace it.
+  release would replace it. It still checks once an hour and installs
+  nothing, so its update screen names the release that came out.
 
 - **A release may be held back until a day** the manifest names, so it reaches
   a few houses before all of them: an install whose `config.php` says
@@ -450,11 +478,15 @@ A collection or a record answers JSON-LD, or a page to a browser, and
 `.jsonld`, `.html`, `.csv` or `.md` after the collection or the slug picks the
 format; the locales, the collections and the profile are JSON-LD only. Every
 reading carries an `ETag`, and `If-None-Match` with it answers `304` while
-nothing changed. A refusal is JSON whatever was asked: `error` says what went
-wrong, a `422` on a write adds `violations`, a `field` and a `reason` for each
-property as the document spells it, and a `500` gives an `incident` to quote to
-the house. A list takes these parameters and refuses any other, as *Reading the
-feed* says in full:
+nothing changed. An asset's file at its `contentUrl`, and the preview at
+`/thumb` behind it, carry the file's name as their tag, since that address
+names bytes that never change, and answer `304` only to whoever may read the
+file: a stranger revalidating a draft is refused, never told it is there. A
+refusal is JSON whatever was asked: `error` says what went wrong, a `422` on a
+write adds `violations`, a `field` and a `reason` for each property as the
+document spells it, and a `500` gives an `incident` to quote to the house. A
+list takes these parameters and refuses any other, as *Reading the feed* says
+in full:
 
 | Parameter | Asks for |
 |---|---|
@@ -694,10 +726,14 @@ in a field the reader reads: a text in any of its languages, a link, so a
 customer is found by an email address, the code of a public term a record is
 tagged with, so `?q=bakery` finds what carries `Bakery`, and its slug, which
 every address shows, so `?q=imprint` finds `web-pages/imprint` whatever the
-page is named. Case and accents do not count, `ca` finding *Café*, and *Müller*
-is found as `muller` and as `mueller`. A field holding a number or a date is a
-filter's, and what holds no letter or digit, a stray quote, finds nothing rather
-than failing. The most matching words come first unless `?sort=` says otherwise.
+page is named. In a short field of words, a name or a title, a word typed is
+found anywhere inside a word too, since a name is often one compound word:
+`?q=kurs` finds *Grundkurs* and `?q=list` *itemlist.jpg*, while a long text is
+matched from the start of its words. Case and accents do not count, `ca` finding
+*Café*, and *Müller* is found as `muller` and as `mueller`. A field holding a
+number or a date is a filter's, and what holds no letter or digit, a stray
+quote, finds nothing rather than failing. The most matching words come first
+unless `?sort=` says otherwise.
 A search takes twenty words at most: each word, like each value of a filter, is
 weighed against the records, so a question asking more is refused with `400`
 naming its parameter rather than costing more than a page of 200 does.
@@ -1196,6 +1232,14 @@ imprint may as well be a page whose `text` is typed whole.
   is its words alone where no page is about it. A visitor never lands in the
   feed.
 
+- **Pictures and fonts** are served from the frontend's own copies, never from
+  the feed's address in an `<img>`: a file at its `contentUrl` comes through the
+  house's PHP, a worker per picture per visitor, while a copy costs the house
+  one read per file in fifteen minutes. The copy is made once the page has
+  left, never on a visitor's path, and a file the feed no longer serves, `404`,
+  loses its copy, so a picture taken offline leaves the site within the quarter
+  hour. skemik.com keeps its copies under its own `media/`.
+
 - **Words** such as *Licence* are the catalogue's names of the fields. The site
   has none of its own.
 
@@ -1437,13 +1481,21 @@ what it spends.
   called, and no code. English rather than German, although the first houses
   are German: every later language would otherwise be translated out of one
   most translators do not have. German, French, Spanish, Italian and Polish
-  ship beside it. The language is the reader's and not the house's, since a
-  bookkeeper and an editor need not share one: the browser's decides, and the
-  one chosen at `/install` stands where the browser names none a file ships
-  for. It is no content language: a house publishing German and English may be
-  edited in French, and none of the admin's own words reaches a document. The
-  one crossing is the first run, since a house set up in English should not
-  write its first record as German.
+  ship beside it, and Swiss German as a region's file, `de-CH.php` beside
+  `de.php`, holding only the words its spelling differs in and read first, word
+  by word, in the admin and in the profile's field names, so a browser asking
+  for `de-CH`, and the profile of a `de-CH` route, read *Strasse* and German
+  everywhere else; a region ships as its chrome file, its field names beside it.
+  The language is the reader's and not the house's, since a bookkeeper and an
+  editor need not share one: the browser's decides, and the one chosen at
+  `/install` stands where the browser names none a file ships for. It is no
+  content language: a house publishing German and English may be edited in
+  French, and none of the admin's own words reaches a document. The one crossing
+  is the first run, since a house set up in English should not write its first
+  record as German. The region is the reader's too, and writes the admin's dates
+  and numbers whether or not it spells differently, *€ 1.234,50* in `de-AT` and
+  *16 Jan 2026, 14:05* in `en-GB`: a spelling is a file somebody keeps, while
+  every region's formats come with PHP's `intl`.
 
 - **A field's name is ours, in every language.** The fields are named before
   you start, and that holds for their words too: a file per language says what

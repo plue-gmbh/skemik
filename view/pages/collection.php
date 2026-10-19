@@ -116,7 +116,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
 <?= $template->render('partials/view-' . $view->value, ['words' => $words, 'collection' => $collection,
   'columns' => $columns, 'rows' => $rows, 'page' => $page, 'perPage' => $perPage, 'total' => $total,
   'narrowed' => $narrowed, 'parameters' => $parameters, 'creates' => $creates, 'badges' => $badges, 'data' => $data,
-  'spine' => $spine, 'multilingual' => $multilingual, 'add' => $add, 'house' => $house, 'glance' => $glance,
+  'spine' => $spine, 'items' => $items, 'add' => $add, 'house' => $house, 'glance' => $glance,
   'timeline' => $timeline, 'uses' => $uses ?? [], 'uploads' => $uploads ?? false, 'limit' => $limit ?? '']) ?>
   </div>
 <?php if ($trash !== null): ?>

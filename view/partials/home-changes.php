@@ -32,8 +32,8 @@ if ($changes === []) { ?>
           class="change-what"><?= strtr($template->escape($words->get('change.by', ['what' => $each->what,
           'who' => "\x01"])), ["\x01" => ($each->byKey ? '<span class="grant-key">'
           . $template->render('partials/glyph', ['name' => 'key']) . '</span>' : '')
-          . $template->escape($each->who)]) ?></span><time class="change-when"
-          datetime="<?= $template->escape($each->when) ?>"
+          . $template->escape($each->who . ($each->state === null ? '' : ' ' . $each->state))]) ?></span><time
+          class="change-when" datetime="<?= $template->escape($each->when) ?>"
           title="<?= $template->escape($each->stamp) ?>"><?= $template->escape($each->ago) ?></time></span></a></li>
 <?php } ?>
       </ul>

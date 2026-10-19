@@ -16,8 +16,8 @@ if (!isset($template)) {
 }
 $library = $glance->media();
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/grid-tile', ['words' => $words,
-  'collection' => $collection, 'columns' => $columns, 'row' => $row, 'parameters' => $row === null ? [] : $parameters,
-  'multilingual' => $multilingual, 'ticks' => $creates, 'house' => $house, 'glance' => $glance, 'uses' => $uses]);
+  'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
+  'ticks' => $creates, 'house' => $house, 'glance' => $glance, 'uses' => $uses]);
 $ending = $library ? $uploads : $creates;
 ?>
 <div data-ticked></div>

@@ -111,7 +111,7 @@ final readonly class HoldingsCheck
     $statement->execute();
 
     return (int) $statement->fetchColumn() === 0 ? []
-      : [new Violation('entity_word', 'disagrees with the words it follows')];
+      : [new Violation('entity_word', Violation::STALE)];
   }
 
   /* A sampled pass wraps to the start once it reads fewer rows than it asked for.
@@ -179,10 +179,10 @@ final readonly class HoldingsCheck
     $stored = $statement->fetch(\PDO::FETCH_ASSOC);
     $found = [];
     if ($stored['sort_keys'] !== $this->sortKeys->of($type, $entity->props)) {
-      $found[] = new Violation('sort_keys', 'disagrees with props', $entity->id);
+      $found[] = new Violation('sort_keys', Violation::STALE, $entity->id);
     }
     if ($stored['words'] !== $this->search->words($type, $entity->props, $entity->slug)) {
-      $found[] = new Violation('words', 'disagrees with props', $entity->id);
+      $found[] = new Violation('words', Violation::STALE, $entity->id);
     }
 
     return $found;
