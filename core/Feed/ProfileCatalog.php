@@ -72,7 +72,7 @@ final readonly class ProfileCatalog
     $worded = $field->holdsWords() && $type->locale !== LocaleMode::None;
 
     return [...$this->property($this->range($field)),
-      ...($rows === null ? [] : ['valueReference' => $this->rows($rows)]),
+      ...($rows === null ? [] : ['valueReference' => $this->rows($rows, $field, $locale)]),
       ...($worded ? ['inLanguage' => $locale->tag] : [])];
   }
 
@@ -90,33 +90,22 @@ final readonly class ProfileCatalog
       $field->cardinality->isEdge() => array_map(fn (string $target): string
         => $target === '*' ? 'Thing' : $target, $field->targets),
       $field->kind === FieldKind::Objects => [(string) $field->ref],
-      default => [$this->datatype($field->kind)],
+      default => $this->schema->holds($field->kind, $field->options, $field->whole),
     };
   }
 
-  /* A select leaves as its token and a Markdown field as its text, so both are text. */
-  private function datatype(FieldKind $kind): string
-  {
-    return match ($kind) {
-      FieldKind::Date => 'Date',
-      FieldKind::DateTime => 'DateTime',
-      FieldKind::Duration => 'Duration',
-      FieldKind::Time => 'Time',
-      FieldKind::Number => 'Number',
-      FieldKind::Boolean => 'Boolean',
-      FieldKind::Link => 'URL',
-      default => 'Text',
-    };
-  }
-
-  /** @return list<array<string, mixed>> */
-  private function rows(ValueObject $object): array
+  /* A key that takes a closed list carries its words, as a select's entry does.
+     @return list<array<string, mixed>> */
+  private function rows(ValueObject $object, FieldDefinition $field, Locale $locale): array
   {
     $range = fn (string $key): array => $key === $object->reference ? $object->targets
-      : [$this->datatype($object->kinds[$key] ?? FieldKind::Text)];
+      : $this->schema->holds($object->kinds[$key] ?? FieldKind::Text, $object->options[$key] ?? [],
+        in_array($key, $object->whole, true));
+    $words = fn (string $key): array => isset($object->options[$key])
+      ? ['valueReference' => $this->variables->worded($field, $object->options[$key], $locale)] : [];
 
-    return array_map(fn (string $key): array => [...$this->property($range($key)), 'propertyID' => $key],
-      $object->keys);
+    return array_map(fn (string $key): array => [...$this->property($range($key)), 'propertyID' => $key,
+      ...$words($key)], $field->carried($object));
   }
 
   /* An edge is annotated apart from the values, since a value object may arrive

@@ -99,9 +99,9 @@ final readonly class EdgeEdits
     if ($target === null || $target->deletedAt !== null || !$this->rows->readable($account, $target)) {
       throw MalformedValue::named('record this account may read, for ' . $field->key, $id);
     }
-    $set = $field->cardinality === Cardinality::T ? $this->schema->termSet($field) : null;
-    if ($set !== null && $this->targets->setOf($target) !== $set) {
-      throw MalformedValue::named('term in the set ' . $set, $id);
+    $misfit = $this->targets->misfit($field, $target);
+    if ($misfit !== null) {
+      throw MalformedValue::named($misfit, $id);
     }
     $term = $target->typeName() === 'DefinedTerm' ? $target->props->string('term_code') : null;
 

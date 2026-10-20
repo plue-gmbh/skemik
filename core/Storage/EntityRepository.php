@@ -10,11 +10,13 @@ use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\StaleWrite;
 use Domain\Locale;
+use Domain\LocalisedText;
 use Domain\Props;
 use Domain\Relation;
 use Domain\Slug;
 use Domain\Status;
 use Domain\TranslationGroup;
+use Profile\FieldDefinition;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
@@ -127,7 +129,8 @@ final readonly class EntityRepository
     $type = $this->profile->byType($entity->type);
     $this->transaction->run($this->db, function () use ($entity, $type, $edges, $expectedVersion): void {
       $stored = $this->requireSaveable($entity, $expectedVersion);
-      if ($stored !== null && $entity->holdsAs($stored) && $this->relations->holds($entity->id, $edges)) {
+      $changed = $stored === null ? [] : $this->changed($entity, $stored, $edges);
+      if ($stored !== null && $changed === [] && $entity->holdsAs($stored)) {
         return;
       }
       $entity = $stored === null ? $entity->withSlug($this->collisions->freeSlug($entity)) : $entity;
@@ -136,7 +139,7 @@ final readonly class EntityRepository
       $this->collisions->requireUnique($entity, $edges);
       $stored === null ? $this->insert($entity, $type) : $this->update($entity, $type);
       $this->relations->replace($entity->id, $edges);
-      $this->log->recordSave($entity, $stored, $type);
+      $this->log->recordSave($entity, $stored, $changed);
     });
 
     return $this->find($entity->id);
@@ -156,6 +159,24 @@ final readonly class EntityRepository
 
     return $expectedVersion === null || $stored->version === $expectedVersion ? $stored
       : throw StaleWrite::expected($expectedVersion);
+  }
+
+  /* The fields and edges a save changes, by field: a field's words in another
+     locale count as the field.
+     @param list<Relation> $edges
+     @return list<FieldDefinition> */
+  private function changed(Entity $entity, Entity $stored, array $edges): array
+  {
+    $predicates = $this->relations->changed($entity->id, $edges);
+    [$was, $is] = [$stored->props->document(), $entity->props->document()];
+    $value = fn (array $document, string $key): array => [$document[$key] ?? null, array_filter(array_map(
+      fn (mixed $own): mixed => is_array($own) ? $own[$key] ?? null : null, $document[LocalisedText::KEY] ?? []),
+      fn (mixed $words): bool => $words !== null)];
+
+    return array_values(array_filter($this->profile->byType($entity->type)->fields(),
+      fn (FieldDefinition $field): bool => $field->cardinality->isEdge()
+        ? in_array($this->schema->propertyName($field->key), $predicates, true)
+        : $value($was, $field->key) !== $value($is, $field->key)));
   }
 
   private function insert(Entity $entity, TypeDefinition $type): void

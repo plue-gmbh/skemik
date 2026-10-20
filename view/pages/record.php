@@ -279,10 +279,10 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php endif ?>
 
 <?= $template->render('partials/record-pointers', ['words' => $words, 'pointers' => $pointers,
-  'held' => $writes ? $held : null]) ?>
+  'pointing' => $pointing, 'held' => $writes ? $held : null]) ?>
 <?php if ($writes && $held === null): ?>
 <?= $template->render('partials/delete-confirm', ['words' => $words, 'collection' => $collection, 'row' => $row,
-  'csrf' => $csrf, 'query' => $query, 'pointing' => count($pointers)]) ?>
+  'csrf' => $csrf, 'query' => $query, 'pointing' => $pointing]) ?>
 <?php endif ?>
 <?php if ($writes): ?>
 <?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>

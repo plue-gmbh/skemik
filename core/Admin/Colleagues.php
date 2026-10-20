@@ -6,6 +6,7 @@ namespace Admin;
 
 use Auth\Account;
 use Auth\AccountRepository;
+use Auth\Capability;
 use Auth\Role;
 use Auth\TypeScope;
 use Feed\PublicFilter;
@@ -16,13 +17,13 @@ use Support\Words;
 
 /* What the Accounts card reads: a row per account, owners first since a house
    asks first who can still hand out the keys, and the thirty types its scope
-   editors tick. A scope is said by the types it names and never by the ones it
-   leaves out, and it says where the rest is read, because a narrowed read scope
-   hides nothing: a type left out is read as the public reads it. Which types have
+   editors tick. Without `manageAccounts` a disabled account is left out, being
+   nobody to ask. A scope is said by the types it names, and where the rest is
+   read, because a type left out is read as the public reads it; which types have
    no public reading is `Feed\PublicFilter`'s answer, so the dialog can say that
-   leaving one out leaves nothing to read, not only the drafts. The picture is
-   the account menu's, drawn as a chip draws it, so one the reader may not see
-   falls back to the initials. */
+   leaving one out leaves nothing to read. The picture is the account menu's,
+   drawn as a chip draws it, so one the reader may not see falls back to the
+   initials. */
 final readonly class Colleagues
 {
   public function __construct(
@@ -41,7 +42,9 @@ final readonly class Colleagues
     $accounts = $this->accounts->all();
     $owners = count(array_filter($accounts, fn (Account $each): bool =>
       $each->role === Role::Owner && $each->disabledAt === null));
-    $colleagues = array_map(fn (Account $each): Colleague => $this->colleague($each, $reader, $owners), $accounts);
+    $asked = array_filter($accounts, fn (Account $each): bool =>
+      $each->disabledAt === null || $reader->can(Capability::ManageAccounts));
+    $colleagues = array_map(fn (Account $each): Colleague => $this->colleague($each, $reader, $owners), $asked);
     $collator = new \Collator($this->words->language);
     $rank = fn (Colleague $row): int => (int) array_search($row->account->role, Role::cases(), true);
     usort($colleagues, fn (Colleague $one, Colleague $other): int => $rank($one) <=> $rank($other)
@@ -76,13 +79,18 @@ final readonly class Colleagues
     $name = (string) $person->props->string('name');
     $picture = array_find($this->rows->chips($reader, $person, [])['image'] ?? [],
       fn (Chip $chip): bool => $chip->preview !== null)?->preview;
-    $login = $account->lastLoginAt === null ? $this->words->get('account.never')
-      : $this->words->get('account.last_login', ['date' => $this->moments->day($account->lastLoginAt)]);
-
     $last = $owners === 1 && $account->role === Role::Owner && $account->disabledAt === null;
 
     return new Colleague($account, $name, $this->sentence($account, $account->id === $reader->id),
-      $account->email . ' · ' . $login, $picture, $last);
+      $this->facts($account), $picture, $last);
+  }
+
+  private function facts(Account $account): string
+  {
+    $login = $account->lastLoginAt === null ? $this->words->get('account.never')
+      : $this->words->get('account.last_login', ['date' => $this->moments->day($account->lastLoginAt)]);
+
+    return $account->email . ' · ' . $login;
   }
 
   /* The reader's own row says so in its sentence, in the second person, where a

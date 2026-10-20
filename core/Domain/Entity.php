@@ -58,10 +58,23 @@ final readonly class Entity
   /* What a save would write, the bookkeeping columns being the save's own. */
   public function holdsAs(Entity $stored): bool
   {
-    return $this->props->document() === $stored->props->document() && $this->status === $stored->status
-      && $this->locale->tag === $stored->locale->tag && $this->slug->value === $stored->slug->value
-      && $this->translationOf?->value === $stored->translationOf?->value
-      && [$this->publishFrom, $this->publishTo] === [$stored->publishFrom, $stored->publishTo];
+    return $this->props->document() === $stored->props->document() && $this->spineChanged($stored) === []
+      && $this->slug->value === $stored->slug->value
+      && $this->translationOf?->value === $stored->translationOf?->value;
+  }
+
+  /* The spine's settings a save would change, by the spine dialog's keys; the
+     slug is a former address the log keeps whole, and a translation is joined
+     on a screen of its own.
+     @return list<string> */
+  public function spineChanged(Entity $stored): array
+  {
+    return array_keys(array_filter([
+      'status' => $this->status !== $stored->status,
+      'publish_from' => $this->publishFrom !== $stored->publishFrom,
+      'publish_to' => $this->publishTo !== $stored->publishTo,
+      'locale' => $this->locale->tag !== $stored->locale->tag,
+    ]));
   }
 
   public function withProps(Props $props): self

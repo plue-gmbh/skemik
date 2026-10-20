@@ -11,20 +11,20 @@ use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Props;
-use Profile\TypeDefinition;
+use Profile\FieldDefinition;
 use Support\Clock;
 use Support\Json;
 use Support\Uuid;
 
 /* Append-only writer for `activity`: no update and no delete, and the absence is
    the design. The actor is bound at construction, so no write path can attribute
-   a change to somebody else. What changed is kept only where nothing else could
-   tell later, and never an account's address. `actor_name` is written with the
-   row, the last moment the name is certain to exist, so the log still says who
-   changed a record after they have left. The two redactions are the only other
-   writes, since an actor's name and a former slug are personal data an erasure
-   has to reach: the owner's only, each nulling one value and never a row, and
-   each logged by a row of its own. */
+   a change to somebody else. A save keeps the keys of what it changed, and
+   a value only where nothing else could tell later, never an account's address.
+   `actor_name` is written with the row, the last moment the name is certain to
+   exist, so the log still says who changed a record after they have left. The
+   two redactions are the only other writes, since an actor's name and a former
+   slug are personal data an erasure has to reach: the owner's only, each nulling
+   one value and never a row, and each logged by a row of its own. */
 final readonly class ActivityLog
 {
   /* A row that is about nothing, which only a redaction of a row about nothing
@@ -66,9 +66,11 @@ final readonly class ActivityLog
       ]);
   }
 
-  /* A save records what it left behind and nothing can reconstruct afterwards:
-     the slug a site was built from, and a number no second record may hold. */
-  public function recordSave(Entity $entity, ?Entity $stored, TypeDefinition $type): void
+  /* A save records what it left behind and nothing can reconstruct afterwards,
+     the slug a site was built from and a number no second record may hold, and
+     the keys of the fields and spine settings it changed, never their values.
+     @param list<FieldDefinition> $changed */
+  public function recordSave(Entity $entity, ?Entity $stored, array $changed): void
   {
     if ($stored === null) {
       $this->record(ActionType::Create, $entity->id);
@@ -76,13 +78,16 @@ final readonly class ActivityLog
       return;
     }
     $held = ['slug' => [$stored->slug->value, $entity->slug->value]];
-    foreach ($type->fields() as $field) {
+    foreach ($changed as $field) {
       if ($field->unique !== null) {
         $held[$field->key] = [$stored->props->string($field->key), $entity->props->string($field->key)];
       }
     }
     $left = array_filter($held, fn (array $pair): bool => $pair[0] !== $pair[1]);
     $result = array_map(fn (array $pair): array => ['from' => $pair[0], 'to' => $pair[1]], $left);
+    $named = ['spine' => $entity->spineChanged($stored),
+      'fields' => array_map(fn (FieldDefinition $field): string => $field->key, $changed)];
+    $result = [...$result, ...array_filter($named)];
     $this->record(ActionType::Update, $entity->id, $result === [] ? null : new Props($result));
   }
 

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 /* The login code's mail as a page (`Admin\LoginMail`): the login screen's card on
-   white, since a dark ground stood in a light inbox as a block of its own, the
-   code on the sunken surface, the footer under the card.
+   its dark ground, the code on the sunken surface, the footer under the card. The
+   ground is set on the page and on the table that carries it, at the screen's
+   full height, since a ground ending short of a phone's screen stood in a light
+   inbox as a block of its own.
    Mail clients drop stylesheets and most of CSS, so every style is inline and
    the layout is tables; the mark is left out, since an SVG shows in few of them,
    and no font or image is fetched, which a client would block or report. */
@@ -13,21 +15,22 @@ if (!isset($template)) {
   return;
 }
 $sans = "font-family: Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;";
-$links = ['<a href="https://plue.tech" style="color: #5C635C; text-decoration: underline;">plue GmbH</a>',
-  '<a href="https://skemik.org" style="color: #5C635C; text-decoration: underline;">Skemik</a>™'];
+$links = ['<a href="https://plue.tech" style="color: #9BA79F; text-decoration: underline;">plue GmbH</a>',
+  '<a href="https://skemik.org" style="color: #9BA79F; text-decoration: underline;">Skemik</a>™'];
 ?>
 <!doctype html>
-<html lang="<?= $template->escape($words->language) ?>">
+<html lang="<?= $template->escape($words->language) ?>" style="height: 100%; background: #121815;">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <title><?= $template->escape($words->get('login.mail.subject', ['code' => $code])) ?></title>
 </head>
-<body style="margin: 0; padding: 0; background: #FFFFFF;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #FFFFFF;">
+<body style="height: 100%; min-height: 100vh; margin: 0; padding: 0; background: #121815;">
+<table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#121815"
+  style="width: 100%; height: 100%; min-height: 100vh; background: #121815;">
   <tr>
-    <td align="center" style="padding: 40px 16px;">
+    <td align="center" valign="top" style="padding: 40px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
         style="max-width: 440px; background: #FFFFFF; border: 1px solid #E2E7E1; border-radius: 20px;">
         <tr>
@@ -45,7 +48,7 @@ $links = ['<a href="https://plue.tech" style="color: #5C635C; text-decoration: u
           </td>
         </tr>
       </table>
-      <p style="margin: 20px 0 0; <?= $sans ?> color: #5C635C; font-size: 11px;"><?= str_replace(
+      <p style="margin: 20px 0 0; <?= $sans ?> color: #9BA79F; font-size: 11px;"><?= str_replace(
         ['{company}', '{product}'], $links, $template->escape($words->get('footer.copyright',
         ['company' => '{company}', 'product' => '{product}']))) ?></p>
     </td>

@@ -9,8 +9,11 @@ declare(strict_types=1);
    Beside a reference's target the pencil opens what the edge says
    of it under schema.org's names, `position` being no line since it is the list's
    order. A value object's keys stand under their schema.org names, since the
-   profile gives a repeated object's keys no words of their own. Every hit passes
-   the reader's scope, as `/search`'s do. */
+   profile gives a repeated object's keys no words of their own, and a key on a
+   closed list is a select of its tokens' words, a held value outside the list
+   offered as it stands, so opening a row never rewrites it. Every hit passes
+   the reader's scope, as `/search`'s do. A file field's Upload sits in the foot,
+   as a picture is added after the search has not found it. */
 
 if (!isset($template)) {
   return;
@@ -38,6 +41,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
               :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('close') ?></button>
           </span>
         </div>
+        <p v-if="item.draft" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
         <edge-says v-if="shows(item)" :item="item" :lines="linesOf(item)" :words="words" @changed="changed"
           @done="$emit('done', result())"></edge-says>
       </li>
@@ -56,6 +60,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             :aria-expanded="shows(items[0]) ? 'true' : 'false'" @click="toggle(items[0])"><?= $icon('edit') ?></button>
         </span>
       </div>
+      <p v-if="items[0].draft" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
       <edge-says v-if="shows(items[0])" :item="items[0]" :lines="linesOf(items[0])" :words="words" @changed="changed"
         @done="$emit('done', result())"></edge-says>
     </div>
@@ -81,8 +86,14 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             >{{ fill(words['picker.add_term'], { term: typed.trim() }) }}</span>
         </button>
       </div>
+      <p class="popover-hint is-error" role="alert" v-if="refused">{{ refused }}</p>
     </template>
     <div class="picker-foot">
+      <label v-if="!fixed && field.upload" class="button-quiet upload-button picker-upload"
+        :title="fill(words['media.upload_up_to'], { limit })"><input ref="file"
+        type="file" class="visually-hidden" :accept="field.accept.map((kind) => kind + '/*').join() || null"
+        :disabled="sending"
+        @change="upload">{{ sending ? words['media.sending'] : words['media.upload'] }}</label>
       <button v-if="!fixed && !field.many && items.length > 0" type="button" class="button-quiet"
         @click="$emit('done', [])">{{ words['picker.remove_relation'] }}</button>
       <button v-if="field.many || items.length > 0" type="button" class="button-primary"
@@ -160,6 +171,14 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             class="picker-bearing"> · {{ words['picker.bearing'] }}</span></span>
           <input v-if="shaped(entry[key])" class="popover-input picker-value" :value="JSON.stringify(entry[key])"
             disabled>
+          <select v-else-if="field.choices[key]" class="popover-input picker-value" v-model="entry[key]"
+            @change="typing(index, key)">
+            <option value="">{{ words['sheet.empty_option'] }}</option>
+            <option v-if="entry[key] && !field.choices[key].includes(entry[key])" :value="entry[key]">{{
+              entry[key] }}</option>
+            <option v-for="token in field.choices[key]" :key="token" :value="token">{{ terms?.[token] ?? token
+              }}</option>
+          </select>
           <input v-else class="popover-input picker-value" v-model="entry[key]" @input="typing(index, key)"
             autocomplete="off"
             @keydown.enter.prevent="$emit('done')"

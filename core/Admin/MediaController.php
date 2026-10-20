@@ -13,7 +13,6 @@ use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Relation;
-use Domain\Status;
 use Feed\PublicFilter;
 use Http\CacheHeaders;
 use Http\Csrf;
@@ -69,14 +68,22 @@ final readonly class MediaController
   ) {}
 
   /* The island asks for JSON, since a redirect it followed would spend the kept
-     sentence on a page nobody sees. */
+     sentence on a page nobody sees. A picker names the kinds of file its field
+     takes, as the sheet told it (`SchemaOrg::fileKinds`), and is answered alone,
+     since nobody opens the library after it; a kind nobody named is no kind. */
   public function upload(Request $request): Response
   {
     $this->csrf->require($request);
     $library = $this->holder();
     $this->authorizer->requireHuman(Capability::WriteContent, $library);
+    $picks = $request->form('picks');
+    if ($picks !== null) {
+      $kinds = array_values(array_intersect(explode(',', $picks), array_keys(Media::EMITTED)));
+
+      return $this->picked($library, $request->upload, $kinds);
+    }
     try {
-      $this->note('uploaded', $this->intake->taken($library, $request->upload, Status::Draft)->id->value);
+      $this->note('uploaded', $this->intake->taken($library, $request->upload)->id->value);
     } catch (UploadRefused $refused) {
       $this->note('refused', $refused->getMessage());
     }
@@ -84,6 +91,32 @@ final readonly class MediaController
 
     return $request->wantsJson() ? Response::json($this->json->encode(['address' => $address]))
       : Response::redirect($address);
+  }
+
+  /* Whether a file field's picker offers this account an upload: a library stands and they write it. */
+  public function uploads(Account $account): bool
+  {
+    try {
+      return $this->authorizer->writes($account, $this->holder());
+    } catch (EntityNotFound) {
+      return false;
+    }
+  }
+
+  /* What landed, as the search names a hit to a picker (`SearchController`).
+     @param list<string> $kinds */
+  private function picked(Collection $library, ?Upload $upload, array $kinds): Response
+  {
+    try {
+      $asset = $this->intake->taken($library, $upload, $kinds);
+    } catch (UploadRefused $refused) {
+      return Response::json($this->json->encode(['error' => $refused->getMessage()]), 422);
+    }
+    $label = (new Label())->of($asset, $this->profile->byType($asset->type));
+
+    return Response::json($this->json->encode(['picked' => ['id' => $asset->id->value, 'label' => $label,
+      'glyph' => SidebarEntry::glyphOf($asset->type), 'preview' => Rows::preview($asset),
+      'type' => $asset->typeName()]]));
   }
 
   /* A record's file exchanged on its own screen: a translation's own bytes, or
@@ -96,7 +129,8 @@ final readonly class MediaController
     $this->authorizer->requireHuman(Capability::WriteContent, $library);
     $asset = $this->asset($library, $slug, $id);
     try {
-      $replaced = $this->intake->replaced($asset, $request->upload, $this->relations->outbound($asset->id));
+      $file = $this->intake->file($request->upload, $this->showing->fileKinds($asset));
+      $replaced = $this->intake->replaced($asset, $file, $this->relations->outbound($asset->id));
     } catch (UploadRefused $refused) {
       return Response::json($this->json->encode(['error' => $refused->getMessage()]), 422);
     }

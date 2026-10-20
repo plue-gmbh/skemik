@@ -10,6 +10,7 @@ use Domain\ActionType;
 use Domain\Entity;
 use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
+use Profile\Profile;
 use Storage\Activity;
 use Storage\ActivityLog;
 use Storage\Collection;
@@ -32,8 +33,12 @@ final readonly class Changes
 {
   private const SHOWN = 7;
 
-  /* What a row keeps that is no former value: the trash's way and a redaction's note. */
-  private const NOTES = ['deleted_at' => true, 'redacted' => true, 'activity' => true, 'type' => true];
+  /* What a row keeps that is no former value: the trash's way, a redaction's note, what a save changed. */
+  private const NOTES = ['deleted_at' => true, 'redacted' => true, 'activity' => true, 'type' => true,
+    'spine' => true, 'fields' => true];
+
+  /* The spine settings a save names, as the spine dialog orders them. */
+  private const SPINE = ['status', 'publish_from', 'publish_to', 'locale'];
 
   public function __construct(
     private ActivityLog $log,
@@ -45,6 +50,7 @@ final readonly class Changes
     private HouseChanges $house,
     private Clock $clock,
     private Moments $moments,
+    private Profile $profile,
     private Words $words,
   ) {}
 
@@ -90,7 +96,8 @@ final readonly class Changes
 
     return new Change($row, $row->label,
       $trashed ? '/trash/' . $collection->slug->value : Rows::address($collection, $entity),
-      $this->what($entity->typeName(), $activity), ...$this->said($activity));
+      $this->what($entity->typeName(), $activity, $this->named($account, $collection, $activity)),
+      ...$this->said($activity));
   }
 
   /* A record purged since, or an account whose person is gone, as the log
@@ -141,11 +148,34 @@ final readonly class Changes
     return $kept;
   }
 
-  /* No type names a record gone before the row its purge wrote. */
-  private function what(string $type, Activity $activity): string
+  /* No type names a record gone before the row its purge wrote, and the fields
+     a save changed stand where the type would. */
+  private function what(string $type, Activity $activity, ?string $fields = null): string
   {
-    return $this->words->get('change.what', ['done' => $this->words->get($this->done($activity)),
-      'type' => $this->words->get($type === '' ? 'change.record' : 'type_one.' . $type)]);
+    $done = $this->done($activity);
+
+    return $this->words->get('change.what', ['done' => implode(', ', array_map($this->words->get(...),
+      $fields === null ? [$done] : array_unique(['change.changed', $done]))),
+      'type' => $fields ?? $this->words->get($type === '' ? 'change.record' : 'type_one.' . $type)]);
+  }
+
+  /* The spine settings a save changed, which the record screen heads, and the
+     fields the reader reads, in the order that screen shows them, two by name
+     and the rest counted; none for a row from before the log named them, or
+     one whose fields the reader is not shown. */
+  private function named(Account $account, Collection $collection, Activity $activity): ?string
+  {
+    $changed = $activity->result?->list('fields') ?? [];
+    $type = $this->profile->byType($collection->type);
+    $named = array_map(fn (string $key): string => $this->words->get('spine.' . $key),
+      array_values(array_intersect(self::SPINE, $activity->result?->list('spine') ?? [])));
+    foreach ($this->rows->fields($account, $collection) as $field) {
+      $named = in_array($field->key, $changed, true)
+        ? [...$named, $type->field($field->key)?->label ?? $field->key] : $named;
+    }
+
+    return $named === [] ? null : implode(', ', array_slice($named, 0, 2))
+      . (count($named) > 2 ? ' +' . (count($named) - 2) : '');
   }
 
   /* As a glance wants it, and past a week the day itself. */

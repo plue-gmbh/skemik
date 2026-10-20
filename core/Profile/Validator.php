@@ -147,6 +147,9 @@ final readonly class Validator
     if (!$this->kinds->fits($field->kind, $value)) {
       return [new Violation($field->key, 'not a ' . $field->kind->value)];
     }
+    if ($field->whole && !is_int($value)) {
+      return [new Violation($field->key, 'not a whole number')];
+    }
     if ($field->dialled && preg_match(self::DIALLED, $value) !== 1) {
       return [new Violation($field->key, self::NOT_DIALLED)];
     }
@@ -175,7 +178,7 @@ final readonly class Validator
     }
     $violations = [];
     foreach ($value as $key => $held) {
-      $reason = $this->keyFails($object, (string) $key, $held);
+      $reason = $this->keyFails($field, $object, (string) $key, $held);
       if ($reason !== null) {
         $violations[] = new Violation($field->key, $reason);
       }
@@ -204,10 +207,15 @@ final readonly class Validator
     return (preg_match('/^[AEIO]/', $object->name) === 1 ? 'an ' : 'a ') . $object->name;
   }
 
-  private function keyFails(ValueObject $object, string $key, mixed $held): ?string
+  /* A key the field does not carry is refused as a property no field declares is: kept, it would be
+     stored where no screen shows it. */
+  private function keyFails(FieldDefinition $field, ValueObject $object, string $key, mixed $held): ?string
   {
     if (!$object->has($key)) {
       return sprintf('%s has no key %s', $object->name, $key);
+    }
+    if (!in_array($key, $field->carried($object), true)) {
+      return sprintf('%s carries no %s', $field->key, $key);
     }
     if ($key === $object->reference && !$this->refers($held)) {
       return sprintf('%s is a word or a record', $key);
@@ -225,9 +233,15 @@ final readonly class Validator
     if (in_array($key, $object->dialled, true)) {
       return is_string($held) && preg_match(self::DIALLED, $held) === 1 ? null : $key . ' is ' . self::NOT_DIALLED;
     }
+    if (isset($object->options[$key])) {
+      return in_array($held, $object->options[$key], true) ? null : $key . ' is not one of its values';
+    }
     $kind = $object->kinds[$key] ?? null;
+    if ($kind !== null && !$this->kinds->fits($kind, $held)) {
+      return sprintf('%s is not a %s', $key, $kind->value);
+    }
 
-    return $kind === null || $this->kinds->fits($kind, $held) ? null : sprintf('%s is not a %s', $key, $kind->value);
+    return in_array($key, $object->whole, true) && !is_int($held) ? $key . ' is not a whole number' : null;
   }
 
   private function schemed(string $key, mixed $value): bool

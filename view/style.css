@@ -190,7 +190,7 @@ a {
   a:not([class]):hover,
   .login-again:hover,
   .record-back:hover,
-  a.record-row-name:hover,
+  a.record-row-name:not(:has(+ .record-row-locales)):hover,
   a.header-version:hover {
     text-decoration: underline;
   }
@@ -2440,6 +2440,30 @@ a.chip {
   margin-left: 0;
 }
 
+.record-row-locales {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.record-row-locales > .locale-dot {
+  text-decoration: none;
+}
+
+.record-row-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+@media (hover: hover) {
+  .record-row-locales > .locale-dot:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+}
+
 @media (hover: hover) {
   .record-row.is-linked:hover {
     background: var(--surface-sunken);
@@ -3501,6 +3525,22 @@ a.cell {
     grid-column: 2;
   }
 
+  .side-card .record-row-locales {
+    grid-row: 2;
+    grid-column: 3 / -1;
+    justify-self: end;
+  }
+
+  .side-card .record-row-state {
+    grid-column: 3 / -1;
+    justify-self: end;
+    align-items: start;
+  }
+
+  .side-card .record-row-locales ~ .record-row-mono {
+    grid-column: 2;
+  }
+
   .side-card .record-row-link[open] {
     grid-column: 1 / -1;
   }
@@ -3833,6 +3873,20 @@ button.spine-chip {
 
 .picker-foot:empty {
   display: none;
+}
+
+.picker-upload {
+  display: inline-flex;
+  align-items: center;
+  margin-right: auto;
+  background: var(--surface-sunken);
+  color: var(--text);
+}
+
+@media (hover: hover) {
+  .picker-upload:hover {
+    background: var(--surface-sunken-strong);
+  }
 }
 
 .picker-entry {

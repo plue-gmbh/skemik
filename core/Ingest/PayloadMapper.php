@@ -10,13 +10,12 @@ use Domain\Locale;
 use Domain\Relation;
 use Domain\Slug;
 use Domain\Violation;
-use Feed\JsonLd;
+use Feed\Spelling;
 use Feed\Targets;
 use Http\Route;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
 use Profile\Profile;
-use Profile\Seed\Media;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
 use Profile\WrittenBy;
@@ -36,7 +35,7 @@ use Support\Markup;
    is dropped, since nothing stores it. An instant with an offset is one instant
    and is converted to UTC; one without is refused by the `Validator`, never read
    in the house's zone, since an agent is not a person at the editor. A link under
-   this origin is stored as its path (`JsonLd::held`). A property no field of
+   this origin is stored as its path (`Spelling::held`). A property no field of
    the type declares is refused by name: kept, it would be stored where no document
    and no screen shows it. Each property that cannot be read is named, not the first. */
 final readonly class PayloadMapper
@@ -127,8 +126,7 @@ final readonly class PayloadMapper
   {
     $type = $this->profile->byType($collection->type);
     /* An asset is read back as the feed spells it, since the file decides. */
-    $spellings = [$type->name, ...($type->name === 'MediaObject' ? array_values(Media::EMITTED) : [])];
-    if ($property === '@type' && !in_array($value, $spellings, true)) {
+    if ($property === '@type' && !in_array($value, $this->schema->emittedAs($type->name), true)) {
       throw MalformedValue::named('@type of ' . $collection->name, is_string($value) ? $value : 'a list');
     }
     if (in_array($property, self::SPINE, true) || ($property === 'inLanguage' && $type->locale->forks())) {
@@ -226,11 +224,11 @@ final readonly class PayloadMapper
 
     return match (true) {
       $raw === '' || $raw === null => null,
-      $single => [JsonLd::held($field, $this->rows->held($field, $raw), $this->origin)],
+      $single => [Spelling::held($field, $this->rows->held($field, $raw), $this->origin)],
       $field->kind === FieldKind::Objects && is_array($raw) => $this->rows->stored($field, $raw),
       $field->kind === FieldKind::DateTime && is_string($raw) => $this->utc($raw),
       $field->kind === FieldKind::Markdown && is_string($raw) => $this->linked($raw),
-      default => JsonLd::held($field, $this->rows->held($field, $raw), $this->origin),
+      default => Spelling::held($field, $this->rows->held($field, $raw), $this->origin),
     };
   }
 

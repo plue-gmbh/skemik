@@ -156,7 +156,7 @@ final readonly class Agents
       ...$vo->flatten('GeoCoordinates', 'geo', 'Coordinates', $f),
       $f->text('telephone', 'Telephone')->dialled()->starter(),
       $f->link('has_map', 'Map'),
-      $f->number('maximum_attendee_capacity', 'Capacity'),
+      $f->number('maximum_attendee_capacity', 'Capacity')->whole(),
       $f->boolean('public_access', 'Open to the public'),
       $f->boolean('is_accessible_for_free', 'Free of charge'),
       $f->boolean('smoking_allowed', 'Smoking allowed'),

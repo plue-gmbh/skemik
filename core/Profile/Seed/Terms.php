@@ -8,18 +8,39 @@ use Domain\Locale;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
 use Profile\Profile;
+use Profile\ValueObject;
 
-/* The words for a select's tokens, per content language: what a person reads
-   where the holdings store and emit `EventCancelled`, from `language/`'s
-   `{language}.terms.php`, whose header says why they are files of their own. */
+/* The words for a select's tokens and a row key's, per content language: what a
+   person reads where the holdings store and emit `EventCancelled`, from
+   `language/`'s `{language}.terms.php`, whose header says why they are files of
+   their own. */
 final readonly class Terms
 {
   private const SOURCE = 'en';
 
+  /** @var array<string, array<string, list<string>>> each value object's closed keys, by its name */
+  private array $rows;
+
   /** @param array<string, array<string, string>> $words by language, then token (`Support\Words::terms`) */
   public function __construct(Profile $profile, private array $words)
   {
+    $this->rows = array_column(array_map(fn (ValueObject $object): array => [$object->name, $object->options],
+      $profile->valueObjects()), 1, 0);
     assert($this->unworded($profile) === [], 'a select token has no word in every shipped language');
+  }
+
+  /* The keys of an objects field's rows that take a closed list, each with its tokens.
+     @return array<string, list<string>> */
+  public function rowOptions(FieldDefinition $field): array
+  {
+    return $field->kind === FieldKind::Objects ? $this->rows[(string) $field->ref] ?? [] : [];
+  }
+
+  /* Every token a field draws on, its own and its rows' keys'.
+     @return list<string> */
+  public function tokens(FieldDefinition $field): array
+  {
+    return [...$field->choices(), ...array_merge(...array_values($this->rowOptions($field)))];
   }
 
   /* A code from the world's list is named by `intl`, a token of the profile's by
@@ -40,8 +61,7 @@ final readonly class Terms
     $missing = [];
     foreach ($profile->types() as $type) {
       foreach ($type->fields() as $field) {
-        $options = $field->kind === FieldKind::Select ? $field->options : [];
-        foreach ($options as $token) {
+        foreach ($field->list === null ? $this->tokens($field) : [] as $token) {
           foreach ($this->words as $language => $words) {
             isset($words[$token]) || $missing[] = $language . ':' . $token;
           }

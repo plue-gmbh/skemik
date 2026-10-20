@@ -95,6 +95,6 @@ final readonly class Home
     $common = $this->common;
     return new Changes($common->log, $common->entities, $common->tokens, $common->collections,
       $common->sheet(), $common->rows, new HouseChanges($common->entities, $common->tokens, $common->collections,
-        $common->named, $common->words), $common->clock, $common->moments, $common->words);
+        $common->named, $common->words), $common->clock, $common->moments, $common->named, $common->words);
   }
 }

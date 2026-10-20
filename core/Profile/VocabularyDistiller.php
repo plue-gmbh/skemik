@@ -18,9 +18,9 @@ final readonly class VocabularyDistiller
   public const SOURCE = 'https://schema.org/version/latest/schemaorg-current-https.jsonld';
 
   private const NOTE = 'Every class the released vocabulary publishes with its parents, every '
-    . 'property with its domainIncludes, and every name superseded with its successor. Not pruned '
-    . 'to the profile: a snapshot cut to what the '
-    . 'profile already names cannot tell a property the profile newly adds from a name nobody '
+    . 'property with its domainIncludes and its rangeIncludes, every enumeration member with its '
+    . 'enumerations, and every name superseded with its successor. Not pruned to the profile: a snapshot '
+    . 'cut to what the profile already names cannot tell a property the profile newly adds from a name nobody '
     . 'published. Committed, refreshed deliberately, never fetched at runtime.';
 
   /**
@@ -33,7 +33,8 @@ final readonly class VocabularyDistiller
 
     return ['source' => self::SOURCE, 'distilled' => $today, 'note' => self::NOTE,
       'superseded' => $this->superseded($nodes), 'classes' => $this->classes($nodes),
-      'properties' => $this->properties($nodes)];
+      'properties' => $this->properties($nodes, 'schema:domainIncludes'),
+      'ranges' => $this->properties($nodes, 'schema:rangeIncludes'), 'members' => $this->members($nodes)];
   }
 
   /* The released file carries the vocabularies schema.org aligns with —
@@ -73,19 +74,32 @@ final readonly class VocabularyDistiller
     return array_map(fn (array $node): array => $this->names($node['rdfs:subClassOf'] ?? null), $classes);
   }
 
-  /** @return array<string, list<string>> each property with the types it is declared on */
-  private function properties(array $nodes): array
+  /** @return array<string, list<string>> each property with the types it is declared on, or holds */
+  private function properties(array $nodes, string $key): array
   {
     $isProperty = fn (array $node): bool => ($node['@type'] ?? null) !== 'rdfs:Class'
       && str_contains($this->typeOf($node), 'rdf:Property');
 
     return array_map(
-      fn (array $node): array => $this->names($node['schema:domainIncludes'] ?? null),
+      fn (array $node): array => $this->names($node[$key] ?? null),
       array_filter($nodes, $isProperty),
     );
   }
 
-  /* `domainIncludes` and `subClassOf` are one node, a list, or absent.
+  /* Kept because a select stores a member by its name, `EventScheduled`, and
+     only its type says it is an `EventStatusType`.
+     @return array<string, list<string>> each member with the enumerations it is typed by */
+  private function members(array $nodes): array
+  {
+    $isMember = fn (array $node): bool => !str_contains($this->typeOf($node), 'rdfs:Class')
+      && !str_contains($this->typeOf($node), 'rdf:Property');
+    $types = fn (array $node): array => array_values(array_map($this->localName(...),
+      array_filter((array) $node['@type'], fn (string $type): bool => str_starts_with($type, 'schema:'))));
+
+    return array_filter(array_map($types, array_filter($nodes, $isMember)));
+  }
+
+  /* `domainIncludes`, `rangeIncludes` and `subClassOf` are one node, a list, or absent.
      @return list<string> */
   private function names(mixed $value): array
   {

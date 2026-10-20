@@ -12,7 +12,7 @@ use Domain\Locale;
 use Domain\LocalisedText;
 use Domain\Props;
 use Domain\Relation;
-use Feed\JsonLd;
+use Feed\Spelling;
 use Http\Request;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
@@ -217,7 +217,7 @@ final readonly class FieldEdits
         : $entry, $value);
       $entries = array_values(array_filter($entries, fn (mixed $entry): bool => !$blank($entry)));
 
-      return $entries === [] ? null : JsonLd::held($field, $entries, $this->origin);
+      return $entries === [] ? null : Spelling::held($field, $entries, $this->origin);
     }
     if ($blank($value)) {
       return null;
@@ -226,6 +226,6 @@ final readonly class FieldEdits
       return $this->clock->parse($value);
     }
 
-    return JsonLd::held($field, $value, $this->origin);
+    return Spelling::held($field, $value, $this->origin);
   }
 }

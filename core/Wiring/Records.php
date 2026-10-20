@@ -16,7 +16,6 @@ use Admin\RecordController;
 use Admin\RecordPage;
 use Admin\RecordWords;
 use Admin\SearchController;
-use Admin\Showing;
 use Admin\SpineDialog;
 use Admin\SpineEdits;
 use Admin\TermMaker;
@@ -122,7 +121,8 @@ final readonly class Records
     $common = $this->common;
     return new RecordController($this->collectionController(), $common->frame(), $this->recordPage(),
       $common->entities,
-      $common->relations, $common->validator, $common->authorizer, $common->log, $common->sheet(),
+      $common->relations, $common->validator, $common->showing(), $common->authorizer, $common->log,
+      $common->sheet(),
       new FieldEdits(new EdgeEdits($common->entities, $common->rows, $common->predicates, $common->schema,
         $this->terming(), $common->targets), $common->schema, $common->profile, $common->settings, $common->clock,
         $common->request->origin()),
@@ -148,7 +148,7 @@ final readonly class Records
   private function recordPage(): RecordPage
   {
     $common = $this->common;
-    return new RecordPage($common->entities, $this->showing(), $common->collections, $common->settings,
+    return new RecordPage($common->entities, $common->showing(), $common->collections, $common->settings,
       $this->bar(), $common->sheet(), $common->rows, $this->prose(), $this->dialog(),
       $this->recordWords(), $common->accounts, $common->named, $common->schema, $common->csrf,
       $common->template, $common->words, $common->reviews(), $common->keys());
@@ -182,7 +182,7 @@ final readonly class Records
   {
     $common = $this->common;
     return new MediaController($common->collections, $common->entities, $common->relations,
-      $this->showing(), $common->rows, $common->intake(), $common->authorizer, $common->clock,
+      $common->showing(), $common->rows, $common->intake(), $common->authorizer, $common->clock,
       $common->session, $common->thumbnails, $common->limit(150, 60), $common->profile, $common->csrf,
       $common->words, $common->premises->data . '/holdings/media');
   }
@@ -216,8 +216,4 @@ final readonly class Records
       $common->settings->locales()[0], $common->uuid, $common->clock);
   }
 
-  private function showing(): Showing
-  {
-    return new Showing($this->common->relations, $this->common->entities, $this->common->profile);
-  }
 }

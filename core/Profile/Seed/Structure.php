@@ -67,7 +67,7 @@ final readonly class Structure
     return [
       /* ∂ — the array has a length. Order leaves the house in the edge's
          position and nowhere else: a JSON-LD array is an unordered set. */
-      $f->number('number_of_items', 'Items')
+      $f->number('number_of_items', 'Items')->whole()
         ->derived(Derivation::over(Derived::Count, 'item_list_element')),
       $f->refs('item_list_element', 'Members', '*')->required(),
       $this->base->description()->starter(),
@@ -122,7 +122,7 @@ final readonly class Structure
       $f->longText('education_requirements', 'Education required'),
       $f->text('work_hours', 'Working hours'),
       $f->date('job_start_date', 'Start date'),
-      $f->number('total_job_openings', 'Openings'),
+      $f->number('total_job_openings', 'Openings')->whole(),
       $f->boolean('direct_apply', 'Direct apply'),
       $f->term('occupational_category', 'Occupational category', 'occupation'),
       $f->term('industry', 'Industry'),
@@ -168,7 +168,7 @@ final readonly class Structure
       $f->listed('countries_supported', 'Countries supported', ClosedList::Country)->repeatable(),
       $f->listed('countries_not_supported', 'Countries not supported', ClosedList::Country)
         ->repeatable(),
-      $f->refs('screenshot', 'Screenshots', 'MediaObject'),
+      $f->image('screenshot', 'Screenshots')->repeatable(),
       $f->refs('software_add_on', 'Add-ons', 'SoftwareApplication'),
       $f->refs('offers', 'Offers', 'Offer')
         ->derived(Derivation::over(Derived::Range, 'item_offered')->inbound()),
@@ -184,8 +184,8 @@ final readonly class Structure
 
     return [
       $f->longText('text', 'Elaboration'),
-      $f->number('answer_count', 'Answers'),
-      $f->number('upvote_count', 'Upvotes'),
+      $f->number('answer_count', 'Answers')->whole(),
+      $f->number('upvote_count', 'Upvotes')->whole(),
       $f->term('edu_question_type', 'Question type'),
       /* Said whole: `Accepted answer: Answer` names the block twice in a header. */
       ...array_map(fn (FieldDefinition $field): FieldDefinition => $field->labelled(self::ANSWERED[$field->key]),

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Profile;
 
-use Profile\Seed\Media;
 use Domain\Violation;
 
 /* The checks that need no data: the profile against the released vocabulary,
@@ -42,12 +41,6 @@ final readonly class Claims
     'PropertyValue.inLanguage' => 'that a field holds words per language, in the profile',
   ];
 
-  /* One library for every asset, and the emitted @type follows from the MIME
-     type — so a property the vocabulary declares on what this row will be
-     emitted as is declared on this row. Not an exception: it is the derived
-     @type made checkable. */
-  private const EMITTED_AS = ['MediaObject' => Media::EMITTED];
-
   public function __construct(
     private Profile $profile,
     private SchemaOrg $schema,
@@ -73,6 +66,7 @@ final readonly class Claims
       'predicates' => $this->checkPredicates(),
       'words' => $this->checkWords(),
       ...(new Promises($this->profile))->checks(),
+      ...(new Ranges($this->profile, $this->schema, $this->vocabulary))->checks(),
     ];
   }
 
@@ -201,9 +195,12 @@ final readonly class Claims
       : [];
   }
 
+  /* One library for every asset, and the emitted @type follows from the MIME
+     type, so a property the vocabulary declares on what this row will be
+     emitted as is declared on this row: the derived @type made checkable. */
   private function belongsToAnyEmitted(string $property, string $type): bool
   {
-    foreach ([$type, ...self::EMITTED_AS[$type] ?? []] as $candidate) {
+    foreach ($this->schema->emittedAs($type) as $candidate) {
       if ($this->schema->belongsTo($property, $candidate)) {
         return true;
       }

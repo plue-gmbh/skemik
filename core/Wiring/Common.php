@@ -19,6 +19,7 @@ use Admin\Probes;
 use Admin\Proofs;
 use Admin\Rows;
 use Admin\Sheet;
+use Admin\Showing;
 use Admin\Sidebar;
 use Auth\Account;
 use Auth\AccountRepository;
@@ -203,6 +204,11 @@ final readonly class Common
   public function facts(): KeyFacts
   {
     return new KeyFacts($this->entities, $this->clock, $this->moments, $this->words);
+  }
+
+  public function showing(): Showing
+  {
+    return new Showing($this->relations, $this->entities, $this->profile, $this->schema);
   }
 
   public function intake(): Intake

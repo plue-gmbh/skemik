@@ -38,7 +38,7 @@ final readonly class Kinds
     };
   }
 
-  /* A link's one spelling, asked wherever one enters (`Feed\JsonLd::held`): a
+  /* A link's one spelling, asked wherever one enters (`Feed\Spelling::held`): a
      space, which a mail's subject is typed with and no link can hold, is `%20`,
      as a browser would send it, so a button's `mailto:` saves as it was typed. */
   public static function spelled(string $link): string

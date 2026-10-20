@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Profile;
 
 /* schema.org's released vocabulary, whole: each class with its parents, each
-   property with the types it is declared on. A snapshot, committed beside the
-   model and refreshed deliberately — never fetched, because a check that needs
-   the network is a check that gets skipped.
+   property with the types it is declared on and what it holds, each enumeration
+   member with its enumerations. A snapshot, committed beside the model and
+   refreshed deliberately — never fetched, because a check that needs the network
+   is a check that gets skipped.
    Whole and not pruned to what the profile names: a snapshot holding only the
    properties already declared here cannot answer the question `Claims` asks of
    a newly added one, and reported it as a name schema.org does not publish. */
@@ -22,6 +23,12 @@ final readonly class Vocabulary
   /** @var array<string, list<string>> */
   private array $properties;
 
+  /** @var array<string, list<string>> */
+  private array $ranges;
+
+  /** @var array<string, list<string>> */
+  private array $members;
+
   /** @var array<string, string> names the vocabulary has superseded, each with its successor */
   private array $superseded;
 
@@ -30,6 +37,8 @@ final readonly class Vocabulary
   {
     $this->classes = $snapshot['classes'] ?? [];
     $this->properties = $snapshot['properties'] ?? [];
+    $this->ranges = $snapshot['ranges'] ?? [];
+    $this->members = $snapshot['members'] ?? [];
     $this->superseded = $snapshot['superseded'] ?? [];
 
     assert($this->classes !== [] && $this->properties !== [], 'the vocabulary snapshot is empty');
@@ -55,6 +64,18 @@ final readonly class Vocabulary
   public function domainsOf(string $property): ?array
   {
     return $this->properties[$property] ?? null;
+  }
+
+  /** @return ?list<string> the classes the property holds, or null if unknown here */
+  public function rangeOf(string $property): ?array
+  {
+    return $this->ranges[$property] ?? null;
+  }
+
+  /** @return list<string> the enumerations a member is typed by, empty for any other name */
+  public function enumerationsOf(string $member): array
+  {
+    return $this->members[$member] ?? [];
   }
 
   /** @return list<string> every class filed under the type, by name */

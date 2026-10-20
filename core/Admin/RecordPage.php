@@ -15,6 +15,7 @@ use Domain\Locale;
 use Domain\LocalisedText;
 use Domain\Slug;
 use Domain\Status;
+use Domain\TranslationGroup;
 use Http\Csrf;
 use Http\Request;
 use Http\Upload;
@@ -66,6 +67,7 @@ final readonly class RecordPage
     $query = http_build_query(array_diff_key($request->query, ['in' => true, 'words' => true]));
     $locale = $this->recordWords->locale($request, $entity);
     [$row, $edit, $editing] = $this->recordWords->rows($account, $columns, $entity, $locale);
+    $pointers = $this->pointers($account, $entity, $locale ?? $entity->locale);
 
     return $this->template->render('pages/record', ['words' => $this->words, 'collection' => $collection,
       'row' => $row, 'edit' => $edit, 'blocks' => FieldBlock::of($columns), 'editing' => FieldBlock::of($editing),
@@ -73,7 +75,8 @@ final readonly class RecordPage
       'offered' => $this->recordWords->offered($entity), 'locale' => $locale, 'authored' => $entity,
       'chips' => $this->rows->chips($account, $entity, $this->collections->all()),
       'prose' => $this->prose($account, $row->entity, $columns),
-      'pointers' => $this->pointers($account, $entity, $locale ?? $entity->locale),
+      'pointers' => $pointers,
+      'pointing' => array_sum(array_map(fn (Pointer $pointer): int => $pointer->records(), $pointers)),
       'translations' => $this->dialog->translations($account, $collection, $entity),
       'asset' => $type->name === 'MediaObject', 'limit' => Intake::size(Upload::limit()),
       'neighbours' => $this->neighbours($account, $request, $collection, $entity),
@@ -140,18 +143,24 @@ final readonly class RecordPage
     return null;
   }
 
-  /** @return list<Pointer> each named in the words of the locale the screen reads */
+  /* A work's translations pointing with one field are one row, named by the one
+     in the locale the screen reads, else by the one the others translate.
+     @return list<Pointer> each named in the words of the locale the screen reads */
   public function pointers(Account $account, Entity $entity, Locale $in): array
   {
-    $pointers = [];
+    $members = [];
+    $predicates = [];
     foreach ($this->showing->edges($entity) as $edge) {
       $subject = $this->readable($account, $edge->subject);
       if ($subject !== null) {
-        $pointers[] = $this->pointer($subject, $edge->predicate, $in);
+        $group = TranslationGroup::rootOf($subject)->value . ' ' . $edge->predicate;
+        $members[$group][$subject->id->value] = $subject;
+        $predicates[$group] = $edge->predicate;
       }
     }
 
-    return $pointers;
+    return array_values(array_map(fn (string $group): Pointer => $this->pointer(array_values($members[$group]),
+      $predicates[$group], $in), array_keys($members)));
   }
 
   /* The records before and after this one in the query it was opened from, on
@@ -217,8 +226,11 @@ final readonly class RecordPage
     return $entity->deletedAt === null && $this->rows->readable($account, $entity) ? $entity : null;
   }
 
-  private function pointer(Entity $subject, string $predicate, Locale $in): Pointer
+  /** @param list<Entity> $members one record, or the translations of one work */
+  private function pointer(array $members, string $predicate, Locale $in): Pointer
   {
+    $subject = array_find($members, fn (Entity $member): bool => $member->locale->tag === $in->tag)
+      ?? array_find($members, fn (Entity $member): bool => $member->translationOf === null) ?? $members[0];
     $holder = array_find($this->collections->all(),
       fn (Collection $collection): bool => $collection->type === $subject->type);
     $type = $this->profile->byType($subject->type);
@@ -228,6 +240,25 @@ final readonly class RecordPage
 
     return new Pointer(SidebarEntry::glyphOf($subject->type), $this->label->of($named, $type),
       $this->sheet->state($subject), $holder?->name ?? $type->name, $field?->label ?? $predicate,
-      $holder === null ? null : Rows::address($holder, $subject));
+      $holder === null ? null : Rows::address($holder, $subject), $this->locales($members, $holder));
+  }
+
+  /* Each translation's address in the house's order of its locales.
+     @param list<Entity> $members
+     @return array<string, string> */
+  private function locales(array $members, ?Collection $holder): array
+  {
+    if (count($members) < 2 || $holder === null) {
+      return [];
+    }
+    $order = array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales());
+    usort($members, fn (Entity $one, Entity $other): int => array_search($one->locale->tag, $order, true)
+      <=> array_search($other->locale->tag, $order, true));
+    $locales = [];
+    foreach ($members as $member) {
+      $locales[$member->locale->tag] = Rows::address($holder, $member);
+    }
+
+    return $locales;
   }
 }

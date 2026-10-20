@@ -39,8 +39,7 @@ final readonly class Relation
     }
     foreach (array_keys($qualifiers->document()) as $key) {
       $qualifier = Qualifier::tryFrom((string) $key);
-      $held = $key === LocalisedText::KEY || ($qualifier !== null
-        && (!$qualifier->ofMembership() || Qualifier::membership($predicate, $objectType)));
+      $held = $key === LocalisedText::KEY || $qualifier?->heldOn($predicate, $objectType) === true;
       if (!$held) {
         throw MalformedValue::named(sprintf('qualifier on %s → %s', $predicate, $objectType), (string) $key);
       }

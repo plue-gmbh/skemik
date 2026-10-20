@@ -63,7 +63,8 @@ final readonly class Edges
     return $relations;
   }
 
-  /* Words sent empty are no words, as a field sent empty is no value.
+  /* Words sent empty are no words, as a field sent empty is no value. A wrapper
+     inside another, a role around a membership, carries its words in too.
      @return array{mixed, array<string, mixed>} the target, and the qualifiers its wrapper carried */
   private function unwrapped(string $predicate, mixed $member): array
   {
@@ -76,9 +77,10 @@ final readonly class Edges
     if (array_key_exists(LocalisedText::KEY, $qualifiers)) {
       throw MalformedValue::named('word a wrapper carries', LocalisedText::KEY);
     }
+    [$target, $inside] = $this->unwrapped($key, $member[$key] ?? null);
 
-    return [$member[$key] ?? null, array_filter($qualifiers, fn (mixed $value): bool
-      => !in_array($value, [null, '', []], true))];
+    return [$target, [...array_filter($qualifiers, fn (mixed $value): bool
+      => !in_array($value, [null, '', []], true)), ...$inside]];
   }
 
   /** @return array{EntityId, string, ?string} the object, its type and its term code */
@@ -97,7 +99,8 @@ final readonly class Edges
 
   /* A term named by its address is held to the field's set as one named by its
      code is, or a `keywords` edge would hold a gender that reads back as a code
-     the set does not know.
+     the set does not know, and a picture field's target to a picture, as the
+     admin's save holds them (`Feed\Targets::misfit`).
      @return array{EntityId, string, ?string} */
   private function addressed(FieldDefinition $field, string $address): array
   {
@@ -105,9 +108,9 @@ final readonly class Edges
     if ($record === null || !($this->reads)($record)) {
       throw MalformedValue::named('record at', $address);
     }
-    $set = $this->schema->termSet($field);
-    if ($field->cardinality === Cardinality::T && $this->targets->setOf($record) !== $set) {
-      throw MalformedValue::named('term in the set ' . $set, $address);
+    $misfit = $this->targets->misfit($field, $record);
+    if ($misfit !== null) {
+      throw MalformedValue::named($misfit, $address);
     }
     $term = $record->typeName() === 'DefinedTerm' ? $record->props->string('term_code') : null;
 

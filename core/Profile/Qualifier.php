@@ -20,6 +20,9 @@ enum Qualifier: string
   case MembershipNumber = 'membershipNumber';
   case MembershipPointsEarned = 'membershipPointsEarned';
 
+  /* A role's own words, which a list item and a membership do not declare. */
+  public const ROLE = ['roleName', 'startDate', 'endDate'];
+
   public function kind(): FieldKind
   {
     return match ($this) {
@@ -42,7 +45,8 @@ enum Qualifier: string
       array_values(array_filter(self::cases(), fn (self $qualifier): bool => $qualifier->holdsWords())));
   }
 
-  /* A membership's own two, on an edge to a `MemberProgram` and no other. */
+  /* A membership's own two, on an edge to a `MemberProgram` and no other, which
+     a reservation names as the membership it used. */
   public function ofMembership(): bool
   {
     return in_array($this, [self::MembershipNumber, self::MembershipPointsEarned], true);
@@ -50,7 +54,30 @@ enum Qualifier: string
 
   public static function membership(string $predicate, ?string $objectType): bool
   {
-    return $predicate === 'memberOf' && $objectType === 'MemberProgram';
+    return in_array($predicate, ['memberOf', 'programMembershipUsed'], true) && $objectType === 'MemberProgram';
+  }
+
+  /* Whether such an edge may carry this one. */
+  public function heldOn(string $predicate, ?string $objectType): bool
+  {
+    return !$this->ofMembership() || self::membership($predicate, $objectType);
+  }
+
+  /* The wrapper an edge's words are emitted in, never on the edge's subject; a
+     role's own go into a `Role` inside it (`Feed\Wrappers`). */
+  public static function wrapper(string $predicate, ?string $objectType): string
+  {
+    return match (true) {
+      $predicate === 'itemListElement' => 'ListItem',
+      self::membership($predicate, $objectType) => 'ProgramMembership',
+      default => 'Role',
+    };
+  }
+
+  /* What it holds as schema.org names it: its buttons are rows of `Action`. */
+  public function datatype(): string
+  {
+    return $this === self::PotentialAction ? 'Action' : $this->kind()->datatype();
   }
 
   /* What a screen writes on such an edge, each a line of its own read as its
@@ -60,8 +87,7 @@ enum Qualifier: string
   {
     $lines = [];
     foreach (self::cases() as $qualifier) {
-      if ($qualifier !== self::PotentialAction
-        && (!$qualifier->ofMembership() || self::membership($predicate, $objectType))) {
+      if ($qualifier !== self::PotentialAction && $qualifier->heldOn($predicate, $objectType)) {
         $lines[$qualifier->value] = $qualifier->kind();
       }
     }

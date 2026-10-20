@@ -58,6 +58,7 @@ final readonly class RecordController
     private EntityRepository $entities,
     private RelationRepository $relations,
     private Validator $validator,
+    private Showing $showing,
     private Authorizer $authorizer,
     private ActivityLog $log,
     private Sheet $sheet,
@@ -200,7 +201,8 @@ final readonly class RecordController
   {
     [$edited, $edges] = $this->edited($account, $request, $collection, $entity);
     SaveRefused::unless([...$this->validator->check($this->profile->byType($entity->type),
-      $edited->props->document(), $edges), ...$this->spine->violations($entity, $edited)]);
+      $edited->props->document(), $edges), ...$this->showing->kept($edited),
+      ...$this->spine->violations($entity, $edited)]);
 
     return $this->entities->save($edited, $edges, $entity->version);
   }

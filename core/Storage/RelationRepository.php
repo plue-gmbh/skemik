@@ -109,18 +109,36 @@ final readonly class RelationRepository
     });
   }
 
-  /* Whether `replace` would leave the edges as they stand, order and words included.
-     @param list<Relation> $edges */
-  public function holds(EntityId $subject, array $edges): bool
+  /* The predicates whose edges `replace` would change, order and words included:
+     none where it would leave them as they stand.
+     @param list<Relation> $edges
+     @return list<string> */
+  public function changed(EntityId $subject, array $edges): array
   {
-    $spelt = fn (Relation $edge): string => $this->json->encode([$edge->predicate, $edge->object->value,
-      $edge->position, $edge->qualifiers->document()]);
-    $held = array_map($spelt, $this->outbound($subject));
-    $sent = array_map($spelt, $edges);
-    sort($held);
-    sort($sent);
+    $held = $this->spelt($this->outbound($subject));
+    $sent = $this->spelt($edges);
 
-    return $held === $sent;
+    return array_values(array_filter(array_unique([...array_keys($held), ...array_keys($sent)]),
+      fn (string $predicate): bool => ($held[$predicate] ?? []) !== ($sent[$predicate] ?? [])));
+  }
+
+  /**
+   * @param list<Relation> $edges
+   * @return array<string, list<string>> each predicate's edges, sorted
+   */
+  private function spelt(array $edges): array
+  {
+    $spelt = [];
+    foreach ($edges as $edge) {
+      $spelt[$edge->predicate][] = $this->json->encode([$edge->object->value, $edge->position,
+        $edge->qualifiers->document()]);
+    }
+
+    return array_map(function (array $each): array {
+      sort($each);
+
+      return $each;
+    }, $spelt);
   }
 
   /* The same target twice under one predicate is one edge sent twice, refused by

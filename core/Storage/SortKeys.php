@@ -17,9 +17,9 @@ use Support\Json;
    because SQLite has neither casefold nor transliteration. The four German folds
    come first, since intl would make `ä` into `ae`. One folding per install, not
    per locale: a Swedish house sorts `ä` with `a`, and reversing that is one
-   rewrite of this column. Only the short `text` kind is keyed: a long text is
-   searched through the word table and never sorted, and a copy of every article
-   body is not a key. */
+   rewrite of this column. Only the short `text` kind is keyed, and rows by the
+   `value` each holds: a long text is searched through the word table and never
+   sorted, and a copy of every article body is not a key. */
 final readonly class SortKeys
 {
   private const GERMAN = ['ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss'];
@@ -51,13 +51,10 @@ final readonly class SortKeys
   {
     $keys = [];
     foreach ($type->fields() as $field) {
-      $value = $document[$field->key] ?? null;
-      if (self::keys($field) && is_string($value) && $value !== '') {
-        $keys[$field->key] = $this->key($value);
-      }
-      $entries = self::listed($field) && is_array($value) ? array_values(array_filter($value, is_string(...))) : [];
+      $keyed = self::keys($field) || self::listed($field);
+      $entries = $keyed ? self::entries($field, $document[$field->key] ?? null) : [];
       if ($entries !== []) {
-        $keys[$field->key] = array_map($this->key(...), $entries);
+        $keys[$field->key] = self::keys($field) ? $this->key($entries[0]) : array_map($this->key(...), $entries);
       }
     }
 
@@ -72,7 +69,23 @@ final readonly class SortKeys
 
   public static function listed(FieldDefinition $field): bool
   {
-    return $field->kind === FieldKind::Text && $field->cardinality === Cardinality::S && $field->repeatable;
+    return $field->cardinality === Cardinality::S
+      && (($field->kind === FieldKind::Text && $field->repeatable) || $field->kind === FieldKind::Objects);
+  }
+
+  /* The strings a value is keyed and searched by: a text, each of a repeatable
+     one, and of rows the `value` each holds, the key schema.org gives the
+     objects that are one value, PropertyValue among them. So an identifier is
+     found as a text is, while a row's name stands as a field's word does and
+     is no more searched than that.
+     @return list<string> */
+  public static function entries(FieldDefinition $field, mixed $value): array
+  {
+    $held = is_array($value) && array_is_list($value) ? $value : [$value];
+    $strings = $field->kind !== FieldKind::Objects ? $held
+      : array_map(fn (mixed $row): mixed => is_array($row) ? $row['value'] ?? null : null, $held);
+
+    return array_values(array_filter($strings, fn (mixed $one): bool => is_string($one) && $one !== ''));
   }
 
   public function key(string $text): string

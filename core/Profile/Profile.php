@@ -40,6 +40,7 @@ final readonly class Profile
     assert(count($byName) === count($types), 'a type name is declared twice');
     assert($this->keysAreSnakeCase(), 'a field key is not snake_case');
     assert($this->aggregatesCompose(), 'an AggregateOffer composes over more than one hop');
+    assert($this->rowsCarryTheirKeys(), 'a row carries keys its value object lacks, or lacks a bearing one');
     assert($this->averagesReadAuthored(), 'an average of averages is wrong');
   }
 
@@ -118,6 +119,22 @@ final readonly class Profile
     foreach ($this->byName as $type) {
       foreach ($type->fields() as $field) {
         if (preg_match('/^[a-z][a-z0-9_]*$/', $field->key) !== 1) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /* A narrowed row still bears: what makes it a value cannot be a key it lacks. */
+  private function rowsCarryTheirKeys(): bool
+  {
+    foreach ($this->byName as $type) {
+      foreach ($type->fields() as $field) {
+        $object = $field->keys === [] ? null : $this->valueObject((string) $field->ref);
+        if ($object !== null
+          && (array_diff($field->keys, $object->keys) !== [] || array_diff($object->bearing, $field->keys) !== [])) {
           return false;
         }
       }

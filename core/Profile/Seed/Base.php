@@ -31,13 +31,10 @@ final readonly class Base
       $this->description()->starter(),
       $f->longText('disambiguating_description', 'Disambiguating description'),
       $f->link('url', 'URL'),
-      /* Not flattened, and the aim is what places it: a
-         club's register number is one string, and a line-item list with
-         propertyID, unitCode, minValue and maxValue is four columns nobody
-         fills on the one field every type carries. schema.org's `identifier`
-         takes Text as well as PropertyValue, so the document stays valid. */
-      $f->text('identifier', 'Identifier')->repeatable()
-        ->notFlattened('an identifier is one string; PropertyValue here is four columns nobody fills'),
+      /* Rows, as a brand's tokens are: a register entry is a name and a value,
+         and one string had the name typed into the value, the page showing the
+         field's word above it. An invoice's number stays one string, its own row. */
+      $f->objects('identifier', 'Identifier', 'PropertyValue')->keys('name', 'value'),
       $this->image(),
       /* What lets a term stand for a thing outside every type here, an element
          or a legal form: its identity is Wikidata's or a register's, not ours. */
@@ -102,7 +99,7 @@ final readonly class Base
       $f->refs('has_part', 'Lists', 'ItemList'),
       $f->refs('is_based_on', 'Based on', 'CreativeWork'),
       $f->refs('citation', 'Citation', 'CreativeWork'),
-      $f->ref('video', 'Video', 'MediaObject'),
+      $f->ref('video', 'Video', 'VideoObject'),
       /* ∂ where the reviews are rows here, typed where they live at a platform
          this house cannot read: the holdings decide per record. */
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),

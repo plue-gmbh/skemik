@@ -44,6 +44,8 @@ final readonly class FieldDefinition
     public ?ClosedList $list = null,    // Select only: the world's list in place of options
     public ?string $set = null,         // T only: the set's code where it is not the property's name
     public ?string $block = null,       // the heading a flattened field stands under with its kin
+    public bool $whole = false,         // a count — see whole()
+    public array $keys = [],            // Objects only: the keys of a row this field carries — see keys()
   ) {
     /* Self-tests on the profile's own declarations. Each group is called inside
        `assert()`, so production neither checks nor calls it. */
@@ -57,15 +59,8 @@ final readonly class FieldDefinition
      MonetaryAmount's key and carried by both amounts, which `flatten` cannot express. */
   public function keyOf(string $valueObject, string $valueObjectKey, ?string $carriedBy = null): self
   {
-    return new self(
-      $this->key, $this->label, $this->kind, $this->cardinality,
-      $this->writtenBy, $this->required, $this->starter, $this->repeatable,
-      $this->options, $this->ref, $this->unique, $this->targets,
-      $valueObject, $valueObjectKey, $carriedBy,
-      $this->notFlattened, $this->writerFromHoldings, $this->words,
-      $this->derivation, $this->ofKind, $this->dialled, $this->list, $this->set,
-      $carriedBy === null ? null : explode(': ', $this->label)[0],
-    );
+    return $this->with(valueObject: $valueObject, valueObjectKey: $valueObjectKey, valueObjectOf: $carriedBy,
+      block: $carriedBy === null ? null : explode(': ', $this->label)[0]);
   }
 
   /* Where a word file names the block: the property it arrived on and a colon,
@@ -88,6 +83,21 @@ final readonly class FieldDefinition
   public function notFlattened(string $reason): self
   {
     return $this->with(notFlattened: $reason);
+  }
+
+  /* The keys of its value object a row of this field carries, where a use fills
+     fewer than the object has: a register entry is a name and a value, and a
+     unit and a range beside them are columns nobody fills. Every key where none
+     is named, as a spec sheet fills them. */
+  public function keys(string ...$keys): self
+  {
+    return $this->with(keys: $keys);
+  }
+
+  /** @return list<string> the keys a row holds, the object's own unless narrowed */
+  public function carried(ValueObject $object): array
+  {
+    return $this->keys === [] ? $object->keys : $this->keys;
   }
 
   public function unique(?string $perEdge = null): self
@@ -166,9 +176,16 @@ final readonly class FieldDefinition
     return $this->with(dialled: true);
   }
 
+  /* A count, which the vocabulary types `Integer`: a fraction is refused. Still a
+     number and no kind of its own, since it is drawn, sorted and filtered as one. */
+  public function whole(): self
+  {
+    return $this->with(whole: true);
+  }
+
   public function labelled(string $label, ?string $block = null): self
   {
-    return $this->with(label: $label, block: $block);
+    return $this->with(label: $label, block: $block ?? $this->block);
   }
 
   public function onFirstScreen(): bool
@@ -188,6 +205,7 @@ final readonly class FieldDefinition
       && $this->cardinality === Cardinality::S), 'only a Text or Objects field is marked as words');
     assert(!$this->dialled || ($this->kind === FieldKind::Text && !$this->words),
       'a number to dial is text nobody translates');
+    assert(!$this->whole || $this->kind === FieldKind::Number, 'only a number is whole');
     /* The mark without the declaration is a field `Feed\JsonLd` has to know
        about by name, which puts the type table in a second place. */
     assert($this->writtenBy !== WrittenBy::Derived || $this->derivation !== null,
@@ -215,6 +233,7 @@ final readonly class FieldDefinition
        had to remember [] beside it could forget it. */
     assert($this->kind !== FieldKind::Objects || $this->repeatable,
       'an objects field is repeatable by what the kind means');
+    assert($this->keys === [] || $this->kind === FieldKind::Objects, 'only rows carry a narrowed set of keys');
     assert(!$this->kind->isReference() || $this->cardinality->isEdge(), 'ref, refs and image are edges');
 
     return true;
@@ -253,40 +272,9 @@ final readonly class FieldDefinition
     return true;
   }
 
-  private function with(
-    ?WrittenBy $writtenBy = null,
-    ?bool $required = null,
-    ?bool $starter = null,
-    ?bool $repeatable = null,
-    ?Uniqueness $unique = null,
-    ?string $notFlattened = null,
-    ?bool $writerFromHoldings = null,
-    ?bool $words = null,
-    ?Derivation $derivation = null,
-    ?string $label = null,
-    ?string $ofKind = null,
-    ?bool $dialled = null,
-    ?string $block = null,
-  ): self {
-    return new self(
-      $this->key, $label ?? $this->label, $this->kind, $this->cardinality,
-      $writtenBy ?? $this->writtenBy,
-      $required ?? $this->required,
-      $starter ?? $this->starter,
-      $repeatable ?? $this->repeatable,
-      $this->options, $this->ref,
-      $unique ?? $this->unique,
-      $this->targets,
-      $this->valueObject, $this->valueObjectKey, $this->valueObjectOf,
-      $notFlattened ?? $this->notFlattened,
-      $writerFromHoldings ?? $this->writerFromHoldings,
-      $words ?? $this->words,
-      $derivation ?? $this->derivation,
-      $ofKind ?? $this->ofKind,
-      $dialled ?? $this->dialled,
-      $this->list,
-      $this->set,
-      $block ?? $this->block,
-    );
+  /* Through the constructor and never `clone`, so a copy's marks are asserted as the seed's are. */
+  private function with(WrittenBy|Uniqueness|Derivation|array|string|bool|null ...$changed): self
+  {
+    return new self(...[...get_object_vars($this), ...$changed]);
   }
 }

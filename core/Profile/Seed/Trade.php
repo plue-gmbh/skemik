@@ -72,12 +72,11 @@ final readonly class Trade
         ->keyOf('QuantitativeValue', 'value', 'eligibleDuration'),
       $f->text('eligible_duration_unit', 'Eligible duration: unit')
         ->keyOf('QuantitativeValue', 'unitCode', 'eligibleDuration'),
-      $f->term('eligible_customer_type', 'Eligible customer type'),
       $f->term('eligible_region', 'Eligible region', 'region')->repeatable(),
       $f->term('ineligible_region', 'Ineligible region', 'region')->repeatable(),
       $f->term('accepted_payment_method', 'Payment methods', 'paymentMethod')->repeatable(),
-      $f->term('item_condition', 'Condition'),
-      $f->term('business_function', 'Business function'),
+      $f->select('item_condition', 'Condition',
+        ['NewCondition', 'UsedCondition', 'RefurbishedCondition', 'DamagedCondition']),
       $f->number('advance_booking_requirement', 'Advance booking')
         ->keyOf('QuantitativeValue', 'value', 'advanceBookingRequirement'),
       $f->text('advance_booking_requirement_unit', 'Advance booking: unit')
@@ -91,8 +90,6 @@ final readonly class Trade
       $f->text('warranty', 'Warranty')->words()
         ->notFlattened('a WarrantyPromise, and the profile declares no such value object'),
       $f->link('checkout_page_url_template', 'Checkout URL template'),
-      /* A membership tier is an offer of its program, so the program is among
-         them, off-range as `has_tiers` is from the other end. */
       $f->ref('item_offered', 'What is offered', 'Product', 'Service', 'Event', 'Course',
         'SoftwareApplication', 'MemberProgram')->required(),
       $f->ref('seller', 'Seller', 'Organization')->starter(),

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.3](https://img.shields.io/badge/version-1.0.3-1f6feb)
+![Version 1.0.4](https://img.shields.io/badge/version-1.0.4-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -466,8 +466,8 @@ browser's preflight is answered.
 | Method | Address | Answers |
 |---|---|---|
 | `GET` | `/feed` | the locales the house holds |
-| `GET` | `/feed/{locale}` | the catalogue: the collections this reader reads, the names of their fields in that language and the words for every value from a fixed list, such as `EventScheduled` |
-| `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this house carries, and what a write must send, may repeat and cannot set |
+| `GET` | `/feed/{locale}` | the catalogue: the collections this reader reads, the names of their fields in that language and the words for every value a field takes from a fixed list, such as `EventScheduled` |
+| `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this house carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
 | `GET` | `/feed/{locale}/{collection}` | a page of its records |
 | `GET` | `/feed/{locale}/{collection}/{slug}` | one record |
 | `POST` | `/feed/{locale}/{collection}` | a new record, a draft, `201` with its address in `Location` |
@@ -575,7 +575,7 @@ As `/feed/de-DE/events/test-exercise` answers a stranger:
   "@type": "Event",
   "name": "Test Exercise",
   "startDate": "2026-10-02T16:00:00Z",
-  "eventStatus": "EventScheduled",
+  "eventStatus": "https://schema.org/EventScheduled",
   "location": {
     "@id": "https://example.com/feed/de-DE/places/north-hall",
     "@type": "Place",
@@ -599,10 +599,12 @@ A record's targets are written into it one level deep, with the fields the
 reader may read, and theirs as addresses; a list nested in it still arrives with
 its members, but a list among those brings its own as addresses, to be read at
 its address. A listing's member is the record's own document, to the same depth,
-so a page drawn from a listing reads no member a second time. `EventScheduled`
-is a value from schema.org's fixed list, whose words in each language the
-catalogue holds. An order, an invoice, a reservation, an event and an action
-each say how they stand in such a list of their own, `orderStatus`,
+so a page drawn from a listing reads no member a second time. `eventStatus`
+holds a value from schema.org's fixed list, spelt as the member's address,
+`https://schema.org/EventScheduled`, whose words in each language the catalogue
+holds under the code, `EventScheduled`, which a filter names and a write may
+send in place of the address. An order, an invoice, a reservation, an event and
+an action each say how they stand in such a list of their own, `orderStatus`,
 `paymentStatus`, `reservationStatus`, `eventStatus` and `actionStatus`.
 `remainingAttendeeCapacity` and `offers` are computed as the
 document is written and never stored. A time leaves in UTC, as `startDate` does
@@ -611,10 +613,14 @@ frontend that shows a time is configured with it once.
 
 Two lines of consumer contract hold in all four formats: read a list member as
 `member.item ?? member`, and unwrap any value whose `@type` is `Role` or
-`ProgramMembership`. Both wrappers say what the referring record means about
-the target, and their words override the target's without replacing them: where
-an edge carries no `name` or `description` of its own, the target's stand, so
-read the edge first and the entity second.
+`ProgramMembership`, again where one holds the other. Both wrappers say what the
+referring record means about the target, and their words override the target's
+without replacing them: where an edge carries no `name` or `description` of its
+own, the target's stand, so read the edge first and the entity second. An edge
+to a membership programme is always a `ProgramMembership` around it, since a
+membership and not its programme is what `memberOf` holds, and a role's
+`roleName`, `startDate` and `endDate` on a list's member or on a membership
+stand in a `Role` around the target, the one class that declares them.
 
 ### Texts, terms and links
 
@@ -756,18 +762,21 @@ reader and in every install: the thirty, the four never public among them, each
 with every field of its type, where the catalogue says what its reader reads of
 what this house carries. A type is the `Class` it is `about`, and a field is
 the catalogue's entry, named and worded alike, typed a `Property` too: its
-`rangeIncludes` is its kind, `Text`, `DateTime`, `URL`, or what an edge points
-at, a term's being `DefinedTerm`. A value object is one entry with its keys
-under `valueReference`, as a key that configures the collection reads it, and a
-field of rows lists a row's keys there. `inLanguage` on a field's entry is the
-route's language where its words differ by route, and absent where its value is
-one on every route. Each collection's `potentialAction` is the `CreateAction` a
-`POST` to it is, whose `result` annotates each property as schema.org annotates
-an action, nested where a document nests it: `valueRequired` where a write must
-send it, `multipleValues` where it holds a list and `readonlyValue` where it is
-computed and never stored, a flag that is false left out, as schema.org
-defaults it. The events, cut to three of their fields as `/feed/en-GB/profile`
-answers:
+`rangeIncludes` is its kind, `Text`, `DateTime`, `URL`, `Integer` for a count,
+the enumeration a fixed list's values are members of, or what an edge points
+at, a term's being `DefinedTerm`, each within the range schema.org gives the
+property or named in the release's code as a step outside it. A fixed list's
+words stand under its `valueReference`. A value object is one entry with its
+keys under `valueReference`, as a key that configures the collection reads it,
+and a field of rows lists a row's keys there, a key on a fixed list with its
+words. `inLanguage` on a field's entry is the route's language where its words
+differ by route, and absent where its value is one on every route. Each
+collection's `potentialAction` is the `CreateAction` a `POST` to it is, whose
+`result` annotates each property as schema.org annotates an action, nested where
+a document nests it: `valueRequired` where a write must send it,
+`multipleValues` where it holds a list and `readonlyValue` where it is computed
+and never stored, a flag that is false left out, as schema.org defaults it. The
+events, cut to five of their fields as `/feed/en-GB/profile` answers:
 
 ```json
 {
@@ -788,6 +797,26 @@ answers:
       "propertyID": "startDate",
       "name": "Starts",
       "rangeIncludes": ["https://schema.org/DateTime"]
+    },
+    {
+      "@type": ["PropertyValue", "Property"],
+      "propertyID": "eventAttendanceMode",
+      "name": "Attendance",
+      "valueReference": [
+        {"@type": "DefinedTerm", "@id": "https://schema.org/OfflineEventAttendanceMode",
+          "termCode": "OfflineEventAttendanceMode", "name": "In person"},
+        {"@type": "DefinedTerm", "@id": "https://schema.org/OnlineEventAttendanceMode",
+          "termCode": "OnlineEventAttendanceMode", "name": "Online"},
+        {"@type": "DefinedTerm", "@id": "https://schema.org/MixedEventAttendanceMode",
+          "termCode": "MixedEventAttendanceMode", "name": "Hybrid"}
+      ],
+      "rangeIncludes": ["https://schema.org/EventAttendanceModeEnumeration"]
+    },
+    {
+      "@type": ["PropertyValue", "Property"],
+      "propertyID": "maximumAttendeeCapacity",
+      "name": "Capacity",
+      "rangeIncludes": ["https://schema.org/Integer"]
     },
     {
       "@type": ["PropertyValue", "Property"],
@@ -836,14 +865,16 @@ A key holding a grant writes to the address it reads, one record a write. A
 fields to change: one left out stays, one sent empty is removed, and a list is
 replaced whole, so `"keywords": ["vegan"]` leaves the product one term, as
 `"keywords": "vegan"` does: a field that holds several is held and served as a
-list, a list of one where there is one. A dump's JSON-LD file posted back gives
-an equal record, one locale's tree at a time: a person is in every tree, and
-her other language is a `PATCH` on its route. An asset is posted beside its
-file, as `multipart/form-data` with the document in a `document` part and the
-bytes in a `file` part: the file says its own address, format, size and pixels,
-so the copy's `contentUrl` names the new file. A person's `name` is made from
-`givenName` and `familyName` where those are sent and no name is, and follows a
-new `familyName` until a name is typed, which then stands.
+list, a list of one where there is one. A fixed list's value is sent as the
+member's address or as its code, `https://schema.org/EventCancelled` or
+`EventCancelled`, and stored as the code either way. A dump's JSON-LD file
+posted back gives an equal record, one locale's tree at a time: a person is in
+every tree, and her other language is a `PATCH` on its route. An asset is posted
+beside its file, as `multipart/form-data` with the document in a `document` part
+and the bytes in a `file` part: the file says its own address, format, size and
+pixels, so the copy's `contentUrl` names the new file. A person's `name` is made
+from `givenName` and `familyName` where those are sent and no name is, and
+follows a new `familyName` until a name is typed, which then stands.
 
 - **Nothing to learn but the feed's own shapes.** A nested record, a bare
   `{"@id": …}` and a term's code in the field's set all name a target, and
@@ -1019,13 +1050,13 @@ function read(string $address, string $key = ''): ?array
 
 **A list's members, and what an edge points at.** The two lines of consumer
 contract from *Reading the feed* as code: a member is its `item`, and a `Role`
-or a `ProgramMembership` is opened onto its target with the edge's own words
-first.
+or a `ProgramMembership` is opened onto its target, one inside another, with
+the edge's own words first.
 
 ```php
 function members(array $list): array
 {
-  return array_map(fn (array $member): array => $member['item'] ?? $member,
+  return array_map(fn (array $member): array => target($member['item'] ?? $member, 'item'),
     $list['itemListElement'] ?? []);
 }
 
@@ -1034,8 +1065,8 @@ function target(array $value, string $property): array
   if (!in_array($value['@type'] ?? '', ['Role', 'ProgramMembership'], true)) {
     return $value;
   }
-  $inside = $value[$property] ?? $value['program'];
-  return [...$inside, ...array_diff_key($value, ['@type' => 1, $property => 1, 'program' => 1])];
+  $key = isset($value[$property]) ? $property : 'program';
+  return [...target($value[$key], 'program'), ...array_diff_key($value, ['@type' => 1, $key => 1])];
 }
 ```
 
@@ -1225,7 +1256,11 @@ imprint may as well be a page whose `text` is typed whole.
   organisation who may act for it, under the `roleName` their `worksFor` edge
   to it says, and nobody whose edge says none:
   `people?worksFor=organizations/…`. Its `text` holds only what is typed
-  nowhere, the liability and copyright wording.
+  nowhere, the liability and copyright wording. A register entry is a row of
+  `identifier`, a `name` and a `value` each, as the brand's tokens are, so the
+  page prints *Handelsregister* above *HRB 784950* and never the field's word,
+  and `?identifier=` and `?q=` find the value; a bare string is refused. An
+  invoice's `identifier` stays its number, one string.
 
 - **A link in a text** goes to the page it names, or to the site's page whose
   `mainEntity` is the record it names, `web-pages?isPartOf=…&mainEntity=…`, and

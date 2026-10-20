@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ingest;
 
 use Domain\Exceptions\MalformedValue;
+use Feed\Spelling;
 use Feed\Targets;
 use Profile\FieldDefinition;
 use Profile\Kinds;
@@ -19,7 +20,9 @@ use Profile\ValueObject;
    not refer to is refused here, since only this door and the editor's ever hold
    the record to ask, and one the key does not read as one that does not stand
    (`Edges`). One object where rows are declared is one row, as JSON-LD
-   lets a single value stand for a list and as an edge's target is read. */
+   lets a single value stand for a list and as an edge's target is read. A key on
+   a fixed list arrives as the token or the member's address and is stored as the
+   token, as a select is (`Spelling::token`). */
 final readonly class ObjectRows
 {
   /** @param \Closure(\Domain\Entity): bool $reads whether the key reads a target */
@@ -40,7 +43,20 @@ final readonly class ObjectRows
     $rows = $rows !== [] && !array_is_list($rows) ? [$rows] : $rows;
 
     return array_map(fn (mixed $row): mixed
-      => is_array($row) ? Kinds::spelledRow($kinds, $this->row($object, $row)) : $row, $rows);
+      => is_array($row) ? Kinds::spelledRow($kinds, $this->tokened($kinds, $this->row($object, $row))) : $row,
+      $rows);
+  }
+
+  /** @param array<array-key, mixed> $row @return array<array-key, mixed> */
+  private function tokened(?ValueObject $object, array $row): array
+  {
+    foreach (array_keys($object?->options ?? []) as $key) {
+      if (is_string($row[$key] ?? null)) {
+        $row[$key] = Spelling::token($row[$key]);
+      }
+    }
+
+    return $row;
   }
 
   /* The referring key alone, as a flattened field holds it. */

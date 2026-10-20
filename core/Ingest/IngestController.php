@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ingest;
 
+use Admin\Showing;
 use Auth\Authorizer;
 use Auth\GrantCapability;
 use Auth\Token;
@@ -61,6 +62,7 @@ final readonly class IngestController
     private Collisions $collisions,
     private PayloadMapper $mapper,
     private Validator $validator,
+    private Showing $showing,
     private Profile $profile,
     private SchemaOrg $schema,
     private RateLimit $perToken,
@@ -183,7 +185,7 @@ final readonly class IngestController
       $written->props->document())));
     $edges = $payload->edges($record, $stored ? $this->relations->outbound($record->id) : []);
     $violations = [...$payload->refusedOn($record), ...$this->grouped($entity),
-      ...$this->validator->check($type, $entity->props->document(), $edges)];
+      ...$this->validator->check($type, $entity->props->document(), $edges), ...$this->showing->kept($entity)];
     if ($violations !== []) {
       return $this->refused($type, $violations);
     }

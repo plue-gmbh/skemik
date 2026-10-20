@@ -92,7 +92,8 @@ function mountSheet(root) {
         cell.dataset.editing = "";
         const terms = data.terms[rows.get(id).locale] ?? {};
         this.editing = { id, field, cell, terms, value: all ? null : this.current(id, key), collection: data.collection,
-          locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone, words: wordsIn, all };
+          locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone, words: wordsIn, all,
+          csrf: data.csrf, limit: data.limit };
       },
       close() {
         const { id, field, cell, all } = this.editing;

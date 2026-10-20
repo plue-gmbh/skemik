@@ -41,13 +41,31 @@ enum FieldKind: string
     return $this === self::Ref || $this === self::Refs || $this === self::Image;
   }
 
+  /* The schema.org data type a value of the kind is, which `SchemaOrg::holds`
+     narrows for a count and a fixed list: a Markdown field leaves as its text and
+     a select as its token, so both are text. */
+  public function datatype(): string
+  {
+    return match ($this) {
+      self::Date => 'Date',
+      self::DateTime => 'DateTime',
+      self::Duration => 'Duration',
+      self::Time => 'Time',
+      self::Number => 'Number',
+      self::Boolean => 'Boolean',
+      self::Link => 'URL',
+      default => 'Text',
+    };
+  }
+
   /* What somebody types into a search box: the words, every short text beside
-     them, since an order number and a town are looked for too, and a link, since
-     a customer is looked for by an email address. Never a number or a date,
-     which a filter finds. */
+     them, since an order number and a town are looked for too, a link, since
+     a customer is looked for by an email address, and rows by the value each
+     holds, since a register entry is looked for by its number. Never a number
+     or a date, which a filter finds. */
   public function isSearched(): bool
   {
-    return $this === self::Text || $this === self::Link || $this->isWords();
+    return $this === self::Text || $this === self::Link || $this === self::Objects || $this->isWords();
   }
 
   /* Longtext and markdown are always words a reader reads; a Text field

@@ -8,6 +8,7 @@ use Auth\Account;
 use Domain\Entity;
 use Domain\Locale;
 use Domain\Status;
+use Http\Upload;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
@@ -47,7 +48,8 @@ final readonly class Sheet
     'picker.add_entry', 'picker.entry', 'picker.bearing', 'picker.refers', 'picker.unrefer',
     'picker.says', 'picker.done', 'sheet.ticked', 'sheet.ticked_count', 'sheet.ticked_actions', 'sheet.set_status',
     'sheet.set_field', 'sheet.set_to', 'sheet.set_none', 'sheet.set_locale', 'sheet.set_locale_kept', 'sheet.untick',
-    'delete.confirm', 'delete.question_many', 'delete.many', 'dialog.cancel'];
+    'delete.confirm', 'delete.question_many', 'delete.many', 'dialog.cancel', 'media.upload', 'media.upload_up_to',
+    'media.sending', 'media.lost', 'picker.draft'];
 
   public const OWN_STATUS = ['payment_status', 'order_status', 'reservation_status'];
   private const READ = 'date_read';
@@ -136,6 +138,7 @@ final readonly class Sheet
 
     return (new Json())->encode(['collection' => $collection->slug->value, 'csrf' => $csrf,
       'language' => $this->words->language, 'locale' => $house, 'zone' => $this->clock->zone->getName(),
+      'limit' => Intake::size(Upload::limit()),
       'fields' => array_map(fn (Column $column): array => $this->field($column,
         $this->profile->byType($collection->type)), $editable),
       'rows' => array_map(fn (SheetRow $row): array => $this->record($row, $editable), $rows),
@@ -147,7 +150,8 @@ final readonly class Sheet
   /* What the island needs to pick an editor for a field: a select's options, or
      what its input suggests where they are the world's list or a record's kinds,
      a reference's targets — which collections hold them, named in the picker's
-     heading — and an object's keys.
+     heading — and whether it uploads and which kinds of file, and an object's
+     keys and those of them that take a closed list.
      @return array<string, mixed> */
   private function field(Column $column, TypeDefinition $type): array
   {
@@ -155,18 +159,20 @@ final readonly class Sheet
     $suggested = $field->key === TypeDefinition::KIND ? $this->schema->kindsOf($type)
       : ($field->list?->codes() ?? []);
     $object = $field->kind === FieldKind::Objects ? $this->profile->valueObject((string) $field->ref) : null;
+    $keys = $object === null ? [] : $field->carried($object);
     $edge = $field->cardinality->isEdge();
 
     return ['key' => $field->key, 'label' => $column->label,
       'kind' => $field->kind->value, 'options' => $field->options, 'suggested' => $suggested,
-      'prose' => $column->prose(), 'many' => $field->holdsMany(),
-      'edge' => $edge, 'any' => $field->targets === ['*'],
+      'prose' => $column->prose(), 'many' => $field->holdsMany(), 'whole' => $field->whole,
+      'edge' => $edge, 'any' => $field->targets === ['*'], 'upload' => $column->uploads,
+      'accept' => $this->schema->fileKinds($field->targets),
       'term' => $field->cardinality === Cardinality::T,
       'target' => $edge ? $this->targets($field) : '', 'lines' => $this->lines($field),
-      'keys' => $object?->keys ?? [],
-      'bearing' => $object?->bearing ?? [], 'reference' => $object?->reference,
+      'keys' => $keys, 'bearing' => $object?->bearing ?? [], 'reference' => $object?->reference,
       'refers' => $object === null && $this->profile->referring($field) !== null,
-      'numbers' => array_keys($object?->kinds ?? [], FieldKind::Number, true)];
+      'numbers' => array_values(array_intersect(array_keys($object?->kinds ?? [], FieldKind::Number, true), $keys)),
+      'choices' => (object) $this->terms->rowOptions($field)];
   }
 
   /* The lines a picker offers under a target it adds, by the target's type
@@ -276,7 +282,7 @@ final readonly class Sheet
   {
     $words = [];
     foreach ($editable as $column) {
-      foreach ($column->field->choices() as $token) {
+      foreach ($this->terms->tokens($column->field) as $token) {
         $words[$token] = $this->terms->word($column->field, $token, new Locale($tag));
       }
     }
@@ -288,6 +294,7 @@ final readonly class Sheet
   private function word(string $key): string
   {
     return $this->words->get($key, ['n' => '{n}', 'label' => '{label}', 'name' => '{name}',
-      'field' => '{field}', 'reason' => '{reason}', 'term' => '{term}', 'value' => '{value}', 'tag' => '{tag}']);
+      'field' => '{field}', 'reason' => '{reason}', 'term' => '{term}', 'value' => '{value}', 'tag' => '{tag}',
+      'limit' => '{limit}']);
   }
 }

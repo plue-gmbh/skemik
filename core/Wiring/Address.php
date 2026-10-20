@@ -74,7 +74,8 @@ final readonly class Address
       new PayloadMapper($common->profile, $common->schema, $targets, $common->collections,
         new ObjectRows($common->profile, $common->schema, $targets, $reads),
         new Edges($common->schema, $common->predicates, $targets, $reads), $origin, $reads),
-      $common->validator, $common->profile, $common->schema, $common->limit(600, 60), $common->limit(600, 60),
+      $common->validator, $common->showing(), $common->profile, $common->schema, $common->limit(600, 60),
+      $common->limit(600, 60),
       $common->uuid, $common->clock, $common->entitiesFor(...),
       new Filed($common->intake(), $common->schema));
   }

@@ -69,16 +69,17 @@ const listPicker = {
 /* A list of value objects: an entry per object, a line per key, the keys
    that bear it marked. A key the value object declares a number is sent as one,
    a key held as a number stays one while it reads as one, since a property's
-   value is either, and a value this editor cannot spell is kept and shown, never rewritten. The
-   key that refers takes a word, and offers the records the word finds: a pick
-   replaces the word by the record, ✕ returns the line to a word. */
+   value is either, and a value this editor cannot spell is kept and shown, never rewritten. A
+   row held as a text, as a field holds it from before it took rows, opens as its `value`, the
+   key a row of one value names it by. The key that refers takes a word, and offers the records
+   the word finds: a pick replaces the word by the record, ✕ returns the line to a word. */
 const objectsPicker = {
   template: "#objects-picker-template",
   mixins: [ordered],
-  props: ["field", "value", "words", "collection", "locale"],
+  props: ["field", "value", "words", "terms", "collection", "locale"],
   emits: ["draft", "done"],
   data() {
-    const items = (this.value ?? []).map((entry) => ({ ...entry }));
+    const items = (this.value ?? []).map((entry) => (this.shaped(entry) ? { ...entry } : { value: entry }));
     const numbers = (entry) => Object.keys(entry).filter((key) => typeof entry[key] === "number");
     const numeric = new Set([...this.field.numbers, ...items.flatMap(numbers)]);
     return { items, numeric, hits: [], asking: null };

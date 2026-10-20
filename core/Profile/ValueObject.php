@@ -25,7 +25,10 @@ final readonly class ValueObject
    * @param list<string> $dialled the keys that hold a number to dial, as `FieldDefinition::dialled`
    * @param array<string, FieldKind> $kinds the keys of a row that are not text, so a
    *   row's `email` is refused where the same value in a field would be. A key
-   *   schema.org gives two ranges stays text.
+   *   whose range no kind holds stays text.
+   * @param array<string, list<string>> $options the keys that take a closed list,
+   *   each with its tokens, as a select's options are
+   * @param list<string> $whole the number keys that count, as `FieldDefinition::whole`
    */
   public function __construct(
     public string $name,
@@ -36,11 +39,16 @@ final readonly class ValueObject
     public array $targets = [],
     public array $dialled = [],
     public array $kinds = [],
+    public array $options = [],
+    public array $whole = [],
   ) {
     assert($keys !== [], 'a value object has keys');
     assert(array_diff($bearing, $keys) === [], 'a bearing key is a key of this value object');
     assert(array_diff($dialled, $keys) === [], 'a dialled key is a key of this value object');
     assert(array_diff(array_keys($kinds), $keys) === [], 'a kind is said of a key of this value object');
+    assert(array_diff(array_keys($options), $keys) === [], 'options are said of a key of this value object');
+    assert(array_all($whole, fn (string $key): bool => ($kinds[$key] ?? null) === FieldKind::Number),
+      'a whole key is a number');
     assert($reference === null || in_array($reference, $keys, true), 'the reference is a key');
     assert(($reference === null) === ($targets === []), 'a reference names its targets, and only one does');
   }

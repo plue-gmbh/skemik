@@ -67,7 +67,8 @@ final readonly class Commerce
       $f->text('depth_unit', 'Depth: unit')->keyOf('QuantitativeValue', 'unitCode', 'depth'),
       $f->number('weight', 'Weight')->keyOf('QuantitativeValue', 'value', 'weight'),
       $f->text('weight_unit', 'Weight: unit')->keyOf('QuantitativeValue', 'unitCode', 'weight'),
-      $f->term('item_condition', 'Condition'),
+      $f->select('item_condition', 'Condition',
+        ['NewCondition', 'UsedCondition', 'RefurbishedCondition', 'DamagedCondition']),
       $f->date('production_date', 'Produced'),
       $f->date('release_date', 'Released'),
       $f->date('purchase_date', 'Purchased'),
@@ -140,8 +141,6 @@ final readonly class Commerce
 
     return [
       $f->ref('hosting_organization', 'Run by', 'Organization')->starter(),
-      /* Off-range on purpose: a tier is a price with conditions, and a
-         price is an Offer row here or it is nothing. */
       $f->refs('has_tiers', 'Tiers', 'Offer'),
       $this->base->description()->starter(),
     ];
@@ -163,7 +162,7 @@ final readonly class Commerce
          step off-domain costs the proof link and nothing else. A font token's
          value is the typeface's name and free text: a fact about the brand that
          a frontend does with what it wants, matched against no file here. */
-      $f->objects('additional_property', 'Brand token', 'PropertyValue')->starter(),
+      $f->objects('additional_property', 'Brand token', 'PropertyValue')->keys('name', 'value')->starter(),
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
       $this->base->description(),
     ];

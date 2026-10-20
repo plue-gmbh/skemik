@@ -56,15 +56,20 @@ final readonly class Variables
     if ($field->kind !== FieldKind::Select) {
       return $variable;
     }
-    if ($field->list !== null) {
-      return [...$variable, 'valueReference' => $field->list->source()];
-    }
-    $words = [];
-    foreach ($field->options as $option) {
-      $words[] = ['@type' => 'DefinedTerm', 'termCode' => $option,
-        'name' => $this->terms->word($field, $option, $locale)];
-    }
 
-    return [...$variable, 'valueReference' => $words];
+    return [...$variable, 'valueReference' => $field->list?->source() ?? $this->worded($field, $field->options,
+      $locale)];
+  }
+
+  /* Each token of a closed list as a term by its code, with its word in the
+     locale; a row key's stand in the profile alone, its rows' keys being entries
+     there, where `valueReference` in the catalogue names a value object's keys.
+     @param list<string> $tokens @return list<array<string, string>> */
+  public function worded(FieldDefinition $field, array $tokens, Locale $locale): array
+  {
+    $address = fn (string $token): array => ($at = $this->schema->member($token)) === null ? [] : ['@id' => $at];
+
+    return array_map(fn (string $token): array => ['@type' => 'DefinedTerm', ...$address($token),
+      'termCode' => $token, 'name' => $this->terms->word($field, $token, $locale)], $tokens);
   }
 }

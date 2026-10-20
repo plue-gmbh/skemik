@@ -67,8 +67,8 @@ final readonly class Editorial
       $this->base->image()->starter(),
       $f->term('article_section', 'Section'),
       $f->longText('backstory', 'Backstory'),
-      $f->number('page_start', 'First page'),
-      $f->number('page_end', 'Last page'),
+      $f->number('page_start', 'First page')->whole(),
+      $f->number('page_end', 'Last page')->whole(),
       $f->text('pagination', 'Pagination'),
     ];
   }
@@ -84,6 +84,8 @@ final readonly class Editorial
       /* The name is the <title>, the headline the <h1>; a page has both. */
       $f->text('headline', 'Headline')->starter()->words(),
       $f->markdown('text', 'Body')->starter(),
+      /* A page's sections, which is where a site places what it shows. */
+      $f->refs('has_part', 'Lists', 'ItemList')->starter(),
       $this->base->image()->starter(),
       $f->term('specialty', 'Specialty'),
       /* How a page borrows another entity's content without duplicating it —
@@ -96,6 +98,9 @@ final readonly class Editorial
       /* Narrower than the pool's: a page belongs to a site, and the list a
          work may sit in is not a page's. ‡, since the site holds its address. */
       $f->ref('is_part_of', 'Part of', 'WebSite')->starter(),
+      /* The page's own address on its site, which validators ask of every page
+         and only the frontend knows. */
+      $f->link('url', 'URL')->starter(),
     ];
   }
 
@@ -106,6 +111,8 @@ final readonly class Editorial
 
     return [
       $f->link('url', 'URL')->required(),
+      /* The menu and the footer, which every site has. */
+      $f->refs('has_part', 'Lists', 'ItemList')->starter(),
       /* No authored in_language: a site is a work, so it forks per locale and
          the inherited derived field answers from the spine. */
       $f->text('issn', 'ISSN'),
@@ -147,14 +154,14 @@ final readonly class Editorial
       $f->text('course_code', 'Course code')->starter(),
       $this->base->image()->starter(),
       $f->refs('course_prerequisites', 'Prerequisites', 'Course'),
-      $f->number('number_of_credits', 'Credits'),
+      $f->number('number_of_credits', 'Credits')->whole(),
       $f->text('educational_credential_awarded', 'Credential awarded')->words(),
       $f->text('occupational_credential_awarded', 'Occupational credential')->words(),
       $f->term('educational_level', 'Level'),
       $f->term('teaches', 'Learning outcomes')->repeatable(),
       $f->refs('syllabus_sections', 'Syllabus', 'ItemList'),
       $f->listed('available_language', 'Available languages', ClosedList::Language)->repeatable(),
-      $f->boolean('financial_aid_eligible', 'Eligible for financial aid'),
+      $f->term('financial_aid_eligible', 'Financial aid'),
       $f->refs('has_course_instance', 'Scheduled runs', 'Event'),
       $f->ref('provider', 'Provider', 'Organization')->starter(),
       /* Authored Offers where a course sells directly; where it sells its dates,
@@ -194,7 +201,7 @@ final readonly class Editorial
       $f->text('book_edition', 'Edition'),
       $f->select('book_format', 'Format', ['Hardcover', 'Paperback', 'EBook', 'AudiobookFormat'])
         ->starter(),
-      $f->number('number_of_pages', 'Pages'),
+      $f->number('number_of_pages', 'Pages')->whole(),
       $this->base->image()->starter(),
       $f->refs('illustrator', 'Illustrator', 'Person'),
       $f->refs('example_of_work', 'Edition of', 'Book'),

@@ -13,6 +13,7 @@ use Profile\Cardinality;
 use Profile\FieldDefinition;
 use Profile\Profile;
 use Profile\SchemaOrg;
+use Profile\Seed\Media;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\Query;
@@ -118,6 +119,23 @@ final readonly class Targets
 
     return array_find($this->entities->list($query), fn (Entity $term): bool
       => mb_strtolower((string) $term->props->string('term_code')) === $spelt && $this->setOf($term) === $set);
+  }
+
+  /* What a field takes past its targets' type that the record is not, null where
+     it fits: a term field its own set's terms, and a file field the files that
+     leave as a class it names, since a PDF behind `image` is a MediaObject where
+     the field says ImageObject. */
+  public function misfit(FieldDefinition $field, Entity $record): ?string
+  {
+    $set = $field->cardinality === Cardinality::T ? $this->schema->termSet($field) : null;
+    $class = $record->typeName() === 'MediaObject' ? Media::emittedType($record) : null;
+
+    return match (true) {
+      $set !== null && $this->setOf($record) !== $set => 'term in the set ' . $set,
+      $class !== null && !$this->schema->within($field->targets, $class)
+        => 'file of the class ' . implode(' or ', $field->targets),
+      default => null,
+    };
   }
 
   /* The code of the set a term is in, null for a root. */

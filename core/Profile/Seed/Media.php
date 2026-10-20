@@ -89,11 +89,11 @@ final readonly class Media
       $f->boolean('requires_subscription', 'Requires subscription'),
       /* An authored poster somebody chose and uploaded — the generated preview
          is derived, lives at a deterministic address, and is stored nowhere. */
-      $f->ref('thumbnail', 'Poster', 'MediaObject'),
+      $f->image('thumbnail', 'Poster'),
       $f->refs('actor', 'Actor', 'Person'),
       $f->refs('director', 'Director', 'Person'),
       $f->refs('creator', 'Creator', 'Person', 'Organization'),
-      $f->ref('production_company', 'Production company', 'Person', 'Organization'),
+      $f->ref('production_company', 'Production company', 'Organization'),
     ];
   }
 }

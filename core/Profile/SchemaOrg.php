@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Profile;
 
+use Profile\Seed\Media;
+
 /* The proof layer: every type and every field points at its schema.org entry.
    It returns null rather than guessing — a dead link is worse than no link, and
    a field the profile places off-domain on purpose (the brand tokens) shows
@@ -157,6 +159,28 @@ final readonly class SchemaOrg
     return true;
   }
 
+  /* What a plain value is as schema.org names it, stated by the profile and asked
+     by `Ranges`: a count is an `Integer`, a token of a closed list the
+     enumeration it is a member of, `EventStatusType`, or text where it is none.
+     @param list<string> $options @return list<string> */
+  public function holds(FieldKind $kind, array $options = [], bool $whole = false): array
+  {
+    if ($options === []) {
+      return [$whole ? 'Integer' : $kind->datatype()];
+    }
+
+    return array_values(array_unique(array_map(fn (string $option): string
+      => $this->vocabulary->enumerationsOf($option)[0] ?? 'Text', $options)));
+  }
+
+  /* A fixed list's value as the JSON-LD document spells it: the member's address,
+     `https://schema.org/EventScheduled`, where the vocabulary types the token as a
+     member of an enumeration, and null for a token of the house's own. */
+  public function member(string $token): ?string
+  {
+    return $this->vocabulary->enumerationsOf($token) === [] ? null : self::BASE . $token;
+  }
+
   /* An edge to a class takes what the vocabulary says is one: a LocalBusiness is
      an Organization and a Place, so a branch sells an order and hosts an event. */
   public function accepts(FieldDefinition $field, string $type): bool
@@ -164,10 +188,36 @@ final readonly class SchemaOrg
     return $this->takes($field->targets, $type);
   }
 
-  /** @param list<string> $targets an edge's, or a value object's reference's */
+  /* A record of the type may stand behind the targets: the library's, whose
+     file decides what it leaves as, behind any class one of its files is.
+     @param list<string> $targets an edge's, or a value object's reference's */
   public function takes(array $targets, string $type): bool
   {
-    return array_intersect(['*', $type, ...$this->vocabulary->ancestorsOf($type)], $targets) !== [];
+    return array_any($this->emittedAs($type), fn (string $class): bool => $this->within($targets, $class));
+  }
+
+  /** @param list<string> $classes @return bool whether the class is one of them or below one */
+  public function within(array $classes, string $class): bool
+  {
+    return array_intersect(['*', $class, ...$this->vocabulary->ancestorsOf($class)], $classes) !== [];
+  }
+
+  /* The classes a record of the type leaves the document as: itself, and for the
+     library each class its format derives (`Seed\Media::emittedType`).
+     @return list<string> */
+  public function emittedAs(string $type): array
+  {
+    return [$type, ...($type === 'MediaObject' ? array_values(Media::EMITTED) : [])];
+  }
+
+  /* The kinds of file a field takes of the library, `image`, by the classes its
+     targets are: empty where any file stands, which is what the picker's search,
+     its upload, a save and a replaced file all ask.
+     @param list<string> $targets @return list<string> */
+  public function fileKinds(array $targets): array
+  {
+    return $this->within($targets, 'MediaObject') ? [] : array_keys(array_filter(Media::EMITTED,
+      fn (string $class): bool => $this->within($targets, $class)));
   }
 
   /* What an editor suggests for a record's kind: every class a write would take,

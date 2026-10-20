@@ -34,7 +34,9 @@ use Support\Rendered;
    there is no `expand` parameter: a nested object is a rendering of a record and
    not the record, so only a document fetched at its own address may be cached
    under that address. A dump hands it `$built` for a page, whose records it
-   writes in four formats and again as the listing, so each is built once. */
+   writes in four formats and again as the listing, so each is built once per
+   spelling, the JSON-LD's (`record`) and the flat formats', and the HTML page's
+   again with its texts rendered (`rendering`). */
 final readonly class JsonLd
 {
   public const CONTENT_TYPE = 'application/ld+json; charset=utf-8';
@@ -42,6 +44,7 @@ final readonly class JsonLd
   private const SPINE = ['inLanguage', 'translationOfWork', 'workTranslation'];
 
   private Properties $properties;
+  private Spelling $spelling;
 
   public function __construct(
     private Profile $profile,
@@ -56,8 +59,10 @@ final readonly class JsonLd
     private Json $json = new Json(),
     ?Markup $markup = null,
     private ?\ArrayObject $built = null,
+    private bool $addressed = false,
   ) {
     $this->properties = new Properties($profile, $schema, $markup);
+    $this->spelling = new Spelling($schema, $profile, $origin, $addressed);
   }
 
   public function rendering(Markup $markup): self
@@ -70,15 +75,25 @@ final readonly class JsonLd
     return self::CONTENT_TYPE;
   }
 
+  /* The JSON answers spell a fixed list's value as the member's address
+     (`SchemaOrg::member`); the flat formats, built on the documents below, keep
+     the token, which is what a filter names and a table sorts. */
   public function record(Entity $entity, Collection $collection): string
   {
-    return $this->json->encode($this->recordDocument($entity, $collection));
+    return $this->json->encode($this->spelling()->recordDocument($entity, $collection));
   }
 
   /** @param list<Entity> $members this page; $total every record the query matches */
   public function listing(array $members, Collection $collection, int $total, string $address): string
   {
-    return $this->json->encode($this->listDocument($members, $collection, $total, $address));
+    return $this->json->encode($this->spelling()->listDocument($members, $collection, $total, $address));
+  }
+
+  /* The same cache, whose keys say the spelling, so a page's listing reuses what its records built. */
+  private function spelling(): self
+  {
+    return $this->addressed ? $this : clone($this, ['addressed' => true,
+      'spelling' => new Spelling($this->schema, $this->profile, $this->origin, true)]);
   }
 
   /* The flat formats are this document in another syntax, so the gates run once
@@ -101,7 +116,8 @@ final readonly class JsonLd
   /** @return array<string, mixed> */
   private function document(Entity $entity, Collection $collection, Depth $depth): array
   {
-    $key = implode(' ', [$entity->id->value, $entity->version, $collection->slug->value, $depth->name]);
+    $key = implode(' ', [$entity->id->value, $entity->version, $collection->slug->value, $depth->name,
+      $this->addressed ? 'addressed' : 'token']);
 
     return $this->built === null ? $this->build($entity, $collection, $depth)
       : ($this->built[$key] ??= $this->build($entity, $collection, $depth));
@@ -150,27 +166,8 @@ final readonly class JsonLd
     return ['@id', ...$this->properties->names($collection->type, $keys), ...$spine];
   }
 
-  /* A link under the origin the documents carry is held as its path, which
-     `scalar` emits whole again: a house that moves its domain keeps every link,
-     and the spelling a document shows finds its row. The two doors and
-     `FeedRequest` ask here, so a link is one spelling wherever it enters.
-     @param string|int|float|bool|array<array-key, mixed>|null $value
-     @return string|int|float|bool|array<array-key, mixed>|null */
-  public static function held(?FieldDefinition $field, string|int|float|bool|array|null $value,
-    string $origin): string|int|float|bool|array|null
-  {
-    $path = fn (string|int|float|bool|array|null $link): string|int|float|bool|array|null
-      => !is_string($link) ? $link : (str_starts_with($link = \Profile\Kinds::spelled($link), $origin . '/')
-        ? substr($link, strlen($origin)) : $link);
-    if ($field?->kind !== FieldKind::Link) {
-      return $value;
-    }
-
-    return is_array($value) ? array_map($path, $value) : $path($value);
-  }
-
-  /* A link held as a path is of this house, served under the origin its `@id`s
-     carry, one or a list of them: the inverse of `held`.
+  /* A plain value as the document shows it (`Spelling`), a referring key as its
+     target, and rows each with theirs.
      @return string|int|float|bool|array<array-key, mixed>|null */
   private function scalar(Entity $entity, FieldDefinition $field, ?Depth $below): string|int|float|bool|array|null
   {
@@ -179,15 +176,12 @@ final readonly class JsonLd
     if ($field->valueObject !== null && $key !== '' && $value !== null) {
       return $this->referring($field, [$key => $value], $below)[$key] ?? null;
     }
-    $whole = fn (string|int|float|bool|array|null $link): string|int|float|bool|array|null
-      => is_string($link) && str_starts_with($link, '/') ? $this->origin . $link : $link;
     if ($field->kind !== FieldKind::Objects) {
-      return $field->kind !== FieldKind::Link ? $value
-        : (is_array($value) ? array_map($whole, $value) : $whole($value));
+      return $this->spelling->shown($field, $value);
     }
     /** @param array<string, mixed> $row */
     $typed = fn (array $row): array => ['@type' => (string) $field->ref,
-      ...$this->referring($field, $row, $below)];
+      ...$this->spelling->row($field, $this->referring($field, $row, $below))];
 
     return array_map($typed, array_filter($entity->props->list($field->key), is_array(...)));
   }
@@ -255,26 +249,13 @@ final readonly class JsonLd
       : $this->document($target, $collection, $below);
   }
 
-  /* An edge's qualifiers are what this surface says about the target, so they are
-     emitted in the wrapper schema.org keeps for that, in the reader's language.
+  /* An edge's qualifiers are what this surface says about the target, in the reader's language.
      @param array<string, mixed>|string|Rendered $target
      @return array<string, mixed>|string|Rendered */
   private function wrapped(Relation $edge, array|string|Rendered $target): array|string|Rendered
   {
-    $qualifiers = $this->properties->qualified($edge->qualifiersIn($this->locale));
-    if ($edge->predicate === 'itemListElement') {
-      $position = $edge->position === null ? [] : ['position' => $edge->position];
-
-      return ['@type' => 'ListItem', ...$position, ...$qualifiers, 'item' => $target];
-    }
-    if ($qualifiers === []) {
-      return $target;
-    }
-    if ($edge->predicate === 'memberOf' && $edge->objectType === 'MemberProgram') {
-      return ['@type' => 'ProgramMembership', ...$qualifiers, 'program' => $target];
-    }
-
-    return ['@type' => 'Role', ...$qualifiers, $edge->predicate => $target];
+    return (new Wrappers())->wrapped($edge, $this->properties->qualified($edge->qualifiersIn($this->locale)),
+      $target);
   }
 
   /* The spine's content columns, which survive a copy of the holdings, in

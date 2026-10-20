@@ -224,14 +224,17 @@ final readonly class CollectionController
   {
     $outside = $this->authorizer->readsAsPublic($account, $collection->type);
     $writes = !$outside && $this->authorizer->writes($account, $collection);
+    $uploads = $writes && $this->media->uploads($account);
     $type = $this->profile->byType($collection->type);
     $columns = [];
     foreach ($outside ? $this->filter->fields($collection) : $collection->fields as $held) {
       $field = $type->field($held->key);
       if ($field !== null) {
-        $columns[] = new Column($field, $field->label, $held->feed, $writes && $field->writtenBy->hasEditor(),
-          (string) $this->schema->parameterName($field->key), $this->schema->propertyUrl($field->key),
-          $this->schema->objectUrl($field));
+        $editable = $writes && $field->writtenBy->hasEditor();
+        $columns[] = new Column($field, $field->label, $held->feed, $editable,
+          (string) $this->schema->parameterName($field->key),
+          $editable && $uploads && array_intersect($field->targets, $this->schema->emittedAs('MediaObject')) !== [],
+          $this->schema->propertyUrl($field->key), $this->schema->objectUrl($field));
       }
     }
 

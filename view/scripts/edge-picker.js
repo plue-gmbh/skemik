@@ -27,18 +27,20 @@ const edgeSays = {
    named by their place, since a held chip names no target, and asked again when
    one leaves, so it is offered back at once; and for a list the targets in
    order. `fixed` is another locale's words: the targets stand as the authored
-   record holds them, and only what they say there is written. */
+   record holds them, and only what they say there is written. A file field
+   uploads too, and what lands is picked as a hit is, marked a draft; a single
+   target stays shown with that said, where a pick would end the picker unread. */
 const edgePicker = {
   template: "#edge-picker-template",
   mixins: [ordered],
   components: { edgeSays },
-  props: ["field", "value", "words", "collection", "locale", "record", "fixed"],
+  props: ["field", "value", "words", "collection", "locale", "record", "fixed", "csrf", "limit"],
   emits: ["draft", "done"],
   data() {
     const items = (this.value ?? []).map((item) => (item.qualifiers
       ? { ...item, qualifiers: { ...item.qualifiers } } : { ...item }));
     const opened = new Set(items.filter((item) => Object.keys(item.qualifiers ?? {}).length > 0));
-    return { items, opened, typed: "", hits: [], asked: false };
+    return { items, opened, typed: "", hits: [], asked: false, sending: false, refused: "" };
   },
   computed: {
     offered() {
@@ -100,6 +102,25 @@ const edgePicker = {
     pick(hit) {
       this.take({ id: hit.id, label: hit.label, glyph: hit.glyph, preview: hit.preview, type: hit.type,
         gone: false, qualifiers: {} });
+    },
+    async upload() {
+      const file = this.$refs.file.files[0];
+      if (file === undefined) return;
+      const body = new FormData();
+      body.set("file", file);
+      body.set("picks", this.field.accept.join());
+      [this.sending, this.refused] = [true, ""];
+      announce(this.words["media.sending"]);
+      const answer = await fetch("/media", { method: "POST", body,
+        headers: { Accept: "application/json", "X-CSRF-Token": this.csrf } })
+        .then((response) => response.json()).catch(() => ({}));
+      [this.sending, this.$refs.file.value] = [false, ""];
+      if (!answer.picked) return (this.refused = answer.error ?? fill(this.words["media.lost"], { limit: this.limit }));
+      const item = { ...answer.picked, gone: false, qualifiers: {}, draft: true };
+      announce(this.words["picker.draft"]);
+      if (this.field.many) return this.take(item);
+      this.items = [item];
+      this.changed();
     },
     /* Enter takes the first hit, or the word a term set lacks, and ends the picker. */
     enter() {

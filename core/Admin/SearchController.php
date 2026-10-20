@@ -20,7 +20,6 @@ use Http\Request;
 use Http\Response;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
-use Profile\FieldKind;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
@@ -205,17 +204,12 @@ final readonly class SearchController
       fn (string $name): bool => $this->schema->takes($targets, $name)));
   }
 
-  /* An image field is offered pictures: a PDF is a `MediaObject` and still no
-     image. A term field is offered its own set's terms, and none of another's.
+  /* A field is offered what a save of it takes (`Feed\Targets::misfit`).
      @param ?list<string> $targets null for any type */
   private function fits(?FieldDefinition $field, ?array $targets, Entity $entity): bool
   {
-    $picture = $field?->kind !== FieldKind::Image
-      || str_starts_with((string) $entity->props->string('encoding_format'), 'image/');
-    $inSet = $field?->cardinality !== Cardinality::T
-      || $this->targets->setOf($entity) === $this->schema->termSet($field);
-
-    return $picture && $inSet && ($targets === null || in_array($entity->typeName(), $targets, true));
+    return ($field === null || $this->targets->misfit($field, $entity) === null)
+      && ($targets === null || in_array($entity->typeName(), $targets, true));
   }
 
   /**
@@ -244,10 +238,11 @@ final readonly class SearchController
   private function narrowed(?FieldDefinition $field): array
   {
     $root = $field?->cardinality === Cardinality::T ? $this->targets->root($this->schema->termSet($field)) : null;
+    $kinds = $field === null ? [] : $this->schema->fileKinds($field->targets);
 
     return match (true) {
       $root !== null => ['in_defined_term_set' => [$root->id->value]],
-      $field?->kind === FieldKind::Image => ['encoding_format' => ['image/']],
+      $kinds !== [] => ['encoding_format' => array_map(fn (string $kind): string => $kind . '/', $kinds)],
       default => [],
     };
   }

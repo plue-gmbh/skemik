@@ -68,8 +68,10 @@ final readonly class Search
     $translations = array_filter((array) ($document[LocalisedText::KEY] ?? []), is_array(...));
     $words = [];
     foreach ($type->fields() as $field) {
+      $held = [$document[$field->key] ?? null, ...array_column($translations, $field->key)];
+      $entries = fn (mixed $value): array => SortKeys::entries($field, $value);
       $tokens = $field->cardinality === Cardinality::S && $field->kind->isSearched()
-        ? $this->indexed($this->joined([$document[$field->key] ?? null, ...array_column($translations, $field->key)]))
+        ? $this->indexed(implode("\n", array_merge(...array_map($entries, $held))))
         : [];
       $tokens = $field->kind === FieldKind::Text && $field->holdsWords() ? $this->endings($tokens) : $tokens;
       $words = $tokens === [] ? $words : [...$words, $field->key => $tokens];
@@ -168,18 +170,5 @@ final readonly class Search
     }
 
     return array_values(array_unique($kept));
-  }
-
-  /** @param list<mixed> $values decoded JSON, lists of words among them */
-  private function joined(array $values): string
-  {
-    $words = [];
-    array_walk_recursive($values, function (mixed $value) use (&$words): void {
-      if (is_string($value) && $value !== '') {
-        $words[] = $value;
-      }
-    });
-
-    return implode("\n", $words);
   }
 }

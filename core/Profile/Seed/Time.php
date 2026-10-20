@@ -57,15 +57,15 @@ final readonly class Time
       $f->select('event_attendance_mode', 'Attendance', ['OfflineEventAttendanceMode',
         'OnlineEventAttendanceMode', 'MixedEventAttendanceMode'])->starter(),
       $f->objects('event_schedule', 'Recurrence', 'Schedule'),
-      $f->number('maximum_attendee_capacity', 'Capacity'),
+      $f->number('maximum_attendee_capacity', 'Capacity')->whole(),
       /* ∂ — capacity minus every reservation not cancelled, computed at emit. The
          editor offers no input for a number every booking overwrites. */
-      $f->number('remaining_attendee_capacity', 'Places left')
+      $f->number('remaining_attendee_capacity', 'Places left')->whole()
         ->derived(Derivation::over(Derived::Count, 'reservation_for')->inbound()
           ->minus('maximum_attendee_capacity')
           ->lapsesAt('reservation_status', 'ReservationCancelled')),
-      $f->number('maximum_virtual_attendee_capacity', 'Online capacity'),
-      $f->number('maximum_physical_attendee_capacity', 'On-site capacity'),
+      $f->number('maximum_virtual_attendee_capacity', 'Online capacity')->whole(),
+      $f->number('maximum_physical_attendee_capacity', 'On-site capacity')->whole(),
       $f->boolean('is_accessible_for_free', 'Free of charge'),
       $f->text('typical_age_range', 'Age range'),
       $f->listed('in_language', 'Language', ClosedList::Language),

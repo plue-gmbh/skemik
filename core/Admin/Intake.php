@@ -10,7 +10,6 @@ use Domain\EntityId;
 use Domain\Props;
 use Domain\Relation;
 use Domain\Slug;
-use Domain\Status;
 use Domain\SvgGuard;
 use Domain\Violation;
 use Http\Upload;
@@ -58,9 +57,11 @@ final readonly class Intake
     private SvgGuard $guard = new SvgGuard(),
   ) {}
 
-  public function taken(Collection $library, ?Upload $upload, Status $status): Entity
+  /* As a draft, like every other record; a field's picker takes what it offers (`SchemaOrg::fileKinds`).
+     @param list<string> $kinds */
+  public function taken(Collection $library, ?Upload $upload, array $kinds = []): Entity
   {
-    $file = $this->file($upload);
+    $file = $this->file($upload, $kinds);
     if ($this->validator->check($this->profile->byType($library->type), $file->document(), []) !== []) {
       $this->drop($file);
       throw new \LogicException('an upload the profile refuses: ' . $upload?->name);
@@ -69,14 +70,13 @@ final readonly class Intake
 
     return $this->entities->save(new Entity(new EntityId($this->uuid->generate()),
       $library->type, $this->settings->locales()[0], Slug::from((string) $upload?->name, 'file'), $file, $now,
-      $now, $status), []);
+      $now), []);
   }
 
-  /* The record's file exchanged for this one, its other fields and its edges kept.
+  /* The record's file exchanged for this one, taken by `file`, its other fields and its edges kept.
      @param list<Relation> $edges the asset's, as they stand */
-  public function replaced(Entity $asset, ?Upload $upload, array $edges): Entity
+  public function replaced(Entity $asset, Props $file, array $edges): Entity
   {
-    $file = $this->file($upload);
     $kept = array_diff_key($asset->props->document(), array_flip(self::DESCRIBED));
     $named = self::fileName((string) $asset->props->string('name'),
       (string) $asset->props->string('encoding_format'));
@@ -85,7 +85,7 @@ final readonly class Intake
     $type = $this->profile->byType($asset->type);
     if ($this->validator->check($type, $replaced->props->document(), $edges) !== []) {
       $this->drop($file);
-      throw new \LogicException('a replacement the profile refuses: ' . $upload?->name);
+      throw new \LogicException('a replacement the profile refuses: ' . $file->string('name'));
     }
     try {
       return $this->entities->save($replaced, $edges, $asset->version);
@@ -122,12 +122,14 @@ final readonly class Intake
   }
 
   /* The file placed under a generated name and described as its asset holds it,
-     or refused in a sentence naming it. */
-  public function file(?Upload $upload): Props
+     or refused in a sentence naming it, and where a kind of file is shown,
+     refused unless it is one, before anything is placed.
+     @param list<string> $kinds the kinds taken, `image`, none for any */
+  public function file(?Upload $upload, array $kinds = []): Props
   {
     $mime = $upload?->error === UPLOAD_ERR_OK && class_exists(\finfo::class)
       ? (string) (new \finfo(FILEINFO_MIME_TYPE))->file($upload->path) : '';
-    $refusal = $this->refusal($upload, $mime);
+    $refusal = $this->refusal($upload, $mime, $kinds);
     if ($refusal !== null || $upload === null) {
       throw UploadRefused::because((string) $refusal);
     }
@@ -157,8 +159,9 @@ final readonly class Intake
     };
   }
 
-  /* Why this file is not taken, in a sentence naming it; null where it is. */
-  private function refusal(?Upload $upload, string $mime): ?string
+  /* Why this file is not taken, in a sentence naming it; null where it is.
+     @param list<string> $kinds */
+  private function refusal(?Upload $upload, string $mime, array $kinds): ?string
   {
     $said = ['name' => $upload?->name ?? '', 'limit' => self::size(Upload::limit()), 'type' => $mime];
 
@@ -169,6 +172,8 @@ final readonly class Intake
       $upload->error !== UPLOAD_ERR_OK, !is_uploaded_file($upload->path) => $this->words->get('media.failed', $said),
       !class_exists(\finfo::class) => $this->words->get('boot.extension', ['extension' => 'fileinfo']),
       !isset(Media::FORMATS[$mime]) => $this->words->get('media.format', $said),
+      $kinds !== [] && !in_array(strtok($mime, '/'), $kinds, true)
+        => $this->words->get('media.no_' . $kinds[0], $said),
       $mime === 'image/svg+xml' => $this->drawing($upload, $said),
       default => null,
     };

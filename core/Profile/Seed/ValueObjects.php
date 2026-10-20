@@ -21,7 +21,8 @@ final readonly class ValueObjects
   /* The key, the English label and what each key of a flattened value object
      holds: a kind, the options of a select, the world's list, or `T` for a term
      of the house's own, with its set's code after it where that is not the
-     key's own name — text where it says nothing. An empty label is the object's
+     key's own name — text where it says nothing — and after a kind `words` for
+     what a reader reads or `whole` for a count. An empty label is the object's
      own value, named by its heading alone, as a width is. A repeatable value object
      needs none of it: it stays one field of kind `objects` and the editor draws
      its columns from the key set above. Kinds are every one but `objects`,
@@ -51,8 +52,8 @@ final readonly class ValueObjects
       'ratingValue' => ['value', '', FieldKind::Number],
       'bestRating' => ['best', 'Best possible', FieldKind::Number],
       'worstRating' => ['worst', 'Worst possible', FieldKind::Number],
-      'ratingCount' => ['count', 'Number of ratings', FieldKind::Number],
-      'reviewCount' => ['reviews', 'Number of reviews', FieldKind::Number],
+      'ratingCount' => ['count', 'Number of ratings', FieldKind::Number, 'whole'],
+      'reviewCount' => ['reviews', 'Number of reviews', FieldKind::Number, 'whole'],
     ],
     'Rating' => [
       'ratingValue' => ['value', '', FieldKind::Number],
@@ -63,7 +64,7 @@ final readonly class ValueObjects
     'MerchantReturnPolicy' => [
       'returnPolicyCategory' => ['category', '', ['MerchantReturnFiniteReturnWindow',
         'MerchantReturnUnlimitedWindow', 'MerchantReturnNotPermitted', 'MerchantReturnUnspecified']],
-      'merchantReturnDays' => ['days', 'Days to return', FieldKind::Number],
+      'merchantReturnDays' => ['days', 'Days to return', FieldKind::Number, 'whole'],
       'returnMethod' => ['method', 'Return method', ['ReturnByMail', 'ReturnInStore', 'ReturnAtKiosk',
         'KeepProduct']],
       'returnFees' => ['fees', 'Return fees', ['FreeReturn', 'ReturnShippingFees',
@@ -97,7 +98,7 @@ final readonly class ValueObjects
       'text' => ['text', 'Answer', FieldKind::Markdown],
       'author' => ['author', 'Answered by'],
       'url' => ['url', 'Answer address', FieldKind::Link],
-      'upvoteCount' => ['upvotes', 'Upvotes', FieldKind::Number],
+      'upvoteCount' => ['upvotes', 'Upvotes', FieldKind::Number, 'whole'],
     ],
   ];
 
@@ -113,7 +114,8 @@ final readonly class ValueObjects
         ['latitude', 'longitude']),
       new ValueObject('ContactPoint',
         ['contactType', 'telephone', 'email', 'areaServed', 'availableLanguage', 'contactOption', 'hoursAvailable'],
-        ['contactType'], dialled: ['telephone'], kinds: ['email' => FieldKind::Link]),
+        ['contactType'], dialled: ['telephone'], kinds: ['email' => FieldKind::Link],
+        options: ['contactOption' => ['TollFree', 'HearingImpairedSupported']]),
       new ValueObject('ServiceChannel',
         ['serviceUrl', 'servicePhone', 'serviceSmsNumber', 'serviceLocation', 'availableLanguage', 'processingTime'],
         ['serviceUrl'], dialled: ['servicePhone', 'serviceSmsNumber'],
@@ -122,7 +124,9 @@ final readonly class ValueObjects
         ['dayOfWeek', 'opens', 'closes', 'validFrom', 'validThrough'],
         ['dayOfWeek', 'opens', 'closes'],
         kinds: ['opens' => FieldKind::Time, 'closes' => FieldKind::Time, 'validFrom' => FieldKind::Date,
-          'validThrough' => FieldKind::Date]),
+          'validThrough' => FieldKind::Date],
+        options: ['dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+          'PublicHolidays']]),
       new ValueObject('QuantitativeValue',
         ['value', 'unitCode', 'unitText', 'minValue', 'maxValue'],
         ['value'], amount: true),
@@ -151,8 +155,11 @@ final readonly class ValueObjects
       new ValueObject('Schedule',
         ['repeatFrequency', 'repeatCount', 'byDay', 'byMonth', 'byMonthDay', 'byMonthWeek', 'startDate', 'endDate',
           'startTime', 'endTime', 'exceptDate', 'scheduleTimezone'],
-        ['repeatFrequency'], kinds: ['repeatCount' => FieldKind::Number, 'startDate' => FieldKind::Date,
-          'endDate' => FieldKind::Date, 'startTime' => FieldKind::Time, 'endTime' => FieldKind::Time]),
+        ['repeatFrequency'], kinds: ['repeatCount' => FieldKind::Number, 'byMonth' => FieldKind::Number,
+          'byMonthDay' => FieldKind::Number, 'byMonthWeek' => FieldKind::Number, 'startDate' => FieldKind::Date,
+          'endDate' => FieldKind::Date, 'startTime' => FieldKind::Time, 'endTime' => FieldKind::Time,
+          'exceptDate' => FieldKind::Date],
+        whole: ['repeatCount', 'byMonth', 'byMonthDay', 'byMonthWeek']),
       /* The three age and gender keys are PeopleAudience's, so the profile
          declares that subclass, and every audience here is one. */
       new ValueObject('PeopleAudience',
@@ -166,21 +173,23 @@ final readonly class ValueObjects
         ['shippingDestination']),
       new ValueObject('HowToStep',
         ['name', 'text', 'image', 'url'],
-        ['text'], kinds: ['url' => FieldKind::Link]),
+        ['text'], kinds: ['image' => FieldKind::Link, 'url' => FieldKind::Link]),
       new ValueObject('HowToTool',
         ['name', 'description', 'image', 'url', 'requiredQuantity'],
-        ['name'], kinds: ['url' => FieldKind::Link]),
+        ['name'], kinds: ['image' => FieldKind::Link, 'url' => FieldKind::Link]),
       new ValueObject('HowToSupply',
         ['name', 'description', 'image', 'url', 'requiredQuantity'],
-        ['name'], kinds: ['url' => FieldKind::Link]),
+        ['name'], kinds: ['image' => FieldKind::Link, 'url' => FieldKind::Link]),
       new ValueObject('Answer',
         ['text', 'author', 'url', 'upvoteCount'],
         ['text'], reference: 'author', targets: ['Person', 'Organization'],
-        kinds: ['upvoteCount' => FieldKind::Number, 'url' => FieldKind::Link]),
+        kinds: ['upvoteCount' => FieldKind::Number, 'url' => FieldKind::Link], whole: ['upvoteCount']),
       new ValueObject('OrderItem',
         ['orderQuantity', 'orderItemNumber', 'orderItemStatus', 'orderedItem'],
         ['orderedItem'], reference: 'orderedItem', targets: ['Product', 'Service'],
-        kinds: ['orderQuantity' => FieldKind::Number]),
+        kinds: ['orderQuantity' => FieldKind::Number],
+        options: ['orderItemStatus' => ['OrderPaymentDue', 'OrderProcessing', 'OrderInTransit', 'OrderDelivered',
+          'OrderCancelled', 'OrderReturned']]),
       new ValueObject('VirtualLocation',
         ['url'],
         ['url'], kinds: ['url' => FieldKind::Link]),
@@ -200,7 +209,8 @@ final readonly class ValueObjects
       new ValueObject('Certification',
         ['name', 'issuedBy', 'validIn', 'validFrom', 'expires', 'certificationIdentification', 'certificationStatus'],
         ['name'], reference: 'issuedBy', targets: ['Organization'],
-        kinds: ['validFrom' => FieldKind::Date, 'expires' => FieldKind::Date]),
+        kinds: ['validFrom' => FieldKind::Date, 'expires' => FieldKind::Date],
+        options: ['certificationStatus' => ['CertificationActive', 'CertificationInactive']]),
       new ValueObject('EntryPoint',
         ['urlTemplate', 'encodingType', 'contentType', 'httpMethod'],
         ['urlTemplate']),
@@ -241,7 +251,11 @@ final readonly class ValueObjects
         : $f->valueOf($valueObject, $key, $stored, $named, $holds, $property);
       /* ‡ binds the object, not its keys: an address puts its five fields on
          the first screen together or not at all. */
-      $field = $holds !== Cardinality::T && ($spec[3] ?? null) === 'words' ? $field->words() : $field;
+      $field = match ($holds === Cardinality::T ? null : $spec[3] ?? null) {
+        'words' => $field->words(),
+        'whole' => $field->whole(),
+        default => $field,
+      };
       $field = $starter ? $field->starter() : $field;
       $fields[] = $computed ? $field->derivable($this->computed($valueObject)[$key]) : $field;
     }

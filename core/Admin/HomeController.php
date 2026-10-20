@@ -25,8 +25,9 @@ use Update\FileCheck;
    move it. The cards' order is the argument, what has to be done first: Needs a
    look, Grants, Languages, Last changed, Accounts, Settings, so each column holds
    one question. A card is drawn only for an account holding its capability, and
-   none is hidden for being empty, since a card that comes and goes moves every
-   card after it. Each card's contract is its partial's header (`home-*.php`). */
+   Accounts for every account in a shape that follows it; none is hidden for being
+   empty, since a card that comes and goes moves every card after it. Each card's
+   contract is its partial's header (`home-*.php`). */
 final readonly class HomeController
 {
   public function __construct(
@@ -69,6 +70,7 @@ final readonly class HomeController
   private function cards(Account $account): array
   {
     $house = $account->can(Capability::ManageHouse);
+    $manage = $account->can(Capability::ManageAccounts);
     $cards = ['needs_look' => ['findings' => $this->needsLook->findings($account)],
       'grants' => $account->can(Capability::ManageTokens) ? ['entries' => $this->register->entries($account),
         'collections' => $this->register->collections(), 'until' => $this->register->until(),
@@ -77,9 +79,9 @@ final readonly class HomeController
         'refused' => (string) $this->session->take('locales')] : null,
       'changes' => ['changes' => $this->changes->latest($account),
         'log' => $account->can(Capability::ReadLog)],
-      'accounts' => $account->can(Capability::ManageAccounts) ? ['colleagues' => $this->colleagues->all($account),
-        'types' => $this->colleagues->types(), 'unreadable' => $this->colleagues->unreadable(),
-        'csrf' => $this->csrf->token()] : null,
+      'accounts' => ['colleagues' => $this->colleagues->all($account), 'manage' => $manage,
+        ...$manage ? ['types' => $this->colleagues->types(), 'unreadable' => $this->colleagues->unreadable(),
+        'csrf' => $this->csrf->token()] : []],
       'settings' => $house ? $this->settingsCard($account) : null];
 
     return array_filter($cards, fn (?array $card): bool => $card !== null);

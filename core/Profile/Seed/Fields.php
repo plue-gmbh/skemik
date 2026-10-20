@@ -58,11 +58,11 @@ final readonly class Fields
     return $this->scalar($key, $label, FieldKind::Link);
   }
 
-  /* An image, video or file field — the edge target is the asset, and what
-     lands in the JSON-LD is the asset's own @type, not the field's. */
+  /* A picture field — an edge to the library's pictures, which leave as the
+     `ImageObject` it names (`Media::emittedType`), drawn as pictures. */
   public function image(string $key, string $label): FieldDefinition
   {
-    return new FieldDefinition($key, $label, FieldKind::Image, Cardinality::E, targets: ['MediaObject']);
+    return new FieldDefinition($key, $label, FieldKind::Image, Cardinality::E, targets: ['ImageObject']);
   }
 
   /* Every target the type names, in its order — `author` is a Person or an

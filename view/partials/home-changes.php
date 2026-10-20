@@ -8,8 +8,10 @@ declare(strict_types=1);
    person's current name, so a colleague who renamed is not two people, and
    unknown only ever for a redacted name. A record the reader could not open is
    never named; the actor's name is not filtered, since who works in the house is
-   no secret from the house. Two lines each at every width, so a short entry
-   beside a long name is never cut. */
+   no secret from the house. A save names the spine settings and the fields it
+   changed that the reader reads, two and the rest counted; an older or
+   redacted line says *changed*. Two lines each at every width, so a short
+   entry beside a long name is never cut. */
 
 if (!isset($template)) {
   return;

@@ -97,7 +97,7 @@ final readonly class FeedRequest
 
   /* An empty value would match every row holding the field, a text's start
      being nothing, so `?name=` and `?name=a,` are refused. A link is read as it
-     is stored (`JsonLd::held`), so the spelling a document shows finds its row.
+     is stored (`Spelling::held`), so the spelling a document shows finds its row.
      @return list<string> */
   private function values(?FieldDefinition $field, string $name, Request $request): array
   {
@@ -111,7 +111,7 @@ final readonly class FeedRequest
     $instants = $field?->kind === FieldKind::DateTime;
 
     return array_map(fn (string $one): string => $instants ? $this->instants($one)
-      : (string) JsonLd::held($field, $one, $request->origin()), $values);
+      : (string) Spelling::held($field, $one, $request->origin()), $values);
   }
 
   /* A period's first and last second in the house's zone, the last being the one
