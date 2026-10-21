@@ -86,8 +86,8 @@ final readonly class Grants
   }
 
   /**
-   * Every anchor that draws a badge: those with grants for everyone, and for an
-   * account that may issue, every anchor.
+   * Every anchor that draws a badge: the collection's own and those with grants
+   * for everyone, and for an account that may issue, every anchor.
    *
    * @param list<Column> $columns
    * @return array<string, Badge> by field key, '' for the collection
@@ -102,7 +102,7 @@ final readonly class Grants
     $badges = [];
     foreach ($anchors as $key => $title) {
       $field = $key === '' ? null : (string) $key;
-      if ($issues || isset($reviews[$key])) {
+      if ($issues || $key === '' || isset($reviews[$key])) {
         $badges[$key] = new Badge($field, $title, $reviews[$key] ?? [],
           $issues ? $this->offers($account, $collection, $field) : []);
       }

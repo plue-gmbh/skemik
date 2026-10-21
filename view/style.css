@@ -1882,6 +1882,11 @@ a.option {
   font-size: 12px;
 }
 
+[data-sheet="cards"] ~ .sheet-pages,
+[data-sheet="grid"] ~ .sheet-pages {
+  margin-top: 14px;
+}
+
 .sheet-pages span {
   margin-right: auto;
   color: var(--text-secondary);
@@ -2708,14 +2713,16 @@ a.chip {
   display: none;
 }
 
-.ticked-bar .is-danger {
+.ticked-bar .tool-button {
   flex-shrink: 0;
+}
+
+.ticked-bar .is-danger {
   margin-left: auto;
 }
 
 .ticked-field {
   min-width: 0;
-  max-width: 16%;
   height: 32px;
   padding: 0 10px;
   border: 1px solid var(--border-field);

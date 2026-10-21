@@ -69,8 +69,9 @@ function refocus() {
 
 /* Read is the record screen's default and editing is entered on intent. Back
    from editing after a save, the page is read afresh, since the read view is the
-   server's drawing of what is now stored. A language chosen loads its address,
-   as a query bar's choice does. */
+   server's drawing of what is now stored. A copy just made arrives at `#edit`,
+   opening in editing once, so a reload reads it. A language chosen loads its
+   address, as a query bar's choice does. */
 function mountRecord(screen, mounted) {
   const [read, edit] = [screen.querySelector("[data-record-read]"), screen.querySelector("[data-record-edit]")];
   const modes = screen.querySelectorAll("[data-record-mode]");
@@ -85,6 +86,10 @@ function mountRecord(screen, mounted) {
     edit.querySelectorAll("[data-prose]").forEach(grow);
   };
   modes.forEach((button) => button.addEventListener("click", () => show(button.dataset.recordMode)));
+  if (edit && location.hash === "#edit") {
+    history.replaceState(null, "", location.pathname + location.search);
+    show("edit");
+  }
   const words = screen.querySelector("[data-words-select]");
   if (words) chosen(words, "[data-words-select]", (select) => location.assign(select.value));
   edit?.addEventListener("input", (event) => event.target.matches("[data-prose]") && grow(event.target));

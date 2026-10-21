@@ -39,6 +39,7 @@ final readonly class Router
     'POST /c/{collection}/{id}/restore' => Endpoint::RecordRestore,
     'POST /c/{collection}/{id}/purge' => Endpoint::RecordPurge,
     'POST /c/{collection}/{id}/translation' => Endpoint::RecordTranslation,
+    'POST /c/{collection}/{id}/duplicate' => Endpoint::RecordDuplicate,
     'POST /c/{collection}/{id}/link' => Endpoint::RecordLink,
     'POST /c/{collection}/{id}/unlink' => Endpoint::RecordUnlink,
     'POST /c/{collection}/{id}/file' => Endpoint::MediaReplace,

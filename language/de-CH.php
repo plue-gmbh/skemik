@@ -12,7 +12,7 @@ return [
   'backups.restore_explain' => 'Das Haus geht auf diesen Stand zurück. Was seitdem geschrieben wurde, bleibt als Backup „vor der Wiederherstellung“ erhalten, nicht im laufenden Haus, und alle melden sich neu an. Wer hinein darf, bleibt wie jetzt: Ein seitdem entferntes Konto oder ein gesperrter Schlüssel bleibt draussen, und deines bleibt dir.',
   'export.size' => 'Grösse',
   'update.refused_again' => 'Skemik {version} liess sich noch nicht automatisch einspielen: {reason}. Jede Stunde wird es erneut versucht, es genügt also, das zu beheben; oder die Version von Hand über diese kopieren, config.php bleibt unberührt, und der Bestand zieht beim ersten Aufruf um.',
-  'grant.none' => 'Keine Vollmacht – nichts schreibt oder liest hier von aussen.',
+  'grant.none' => 'Keine Vollmacht – nichts schreibt hier von aussen, und gelesen wird nur, was veröffentlicht ist.',
   'grant.others' => 'Derselbe Schlüssel darf ausserdem:',
   'grant.secret' => 'Der Schlüssel für {name}, nur jetzt sichtbar. Nach dem Schliessen ist er weg; ein verlorener Schlüssel wird neu ausgestellt.',
   'grant.reissue_hint' => 'Ein neuer Schlüssel unter diesem Namen, mit dem Angekreuzten und nie mehr. Der bisherige gilt bis zu seinem Datum weiter, ausser er wird hier gesperrt.',

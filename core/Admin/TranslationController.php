@@ -6,7 +6,8 @@ namespace Admin;
 
 /* A work's group from its record screen's Languages card: a translation made
    as a draft, a record already written in another locale linked in, and a
-   member let go. A house moving in brings its German and its English blog side
+   member let go; and the copy that leaves the group, here since a translation
+   is a copy too. A house moving in brings its German and its English blog side
    by side, and a link is how they become one group without a copy made and the
    original deleted. The record named is joined to this one's root and never the
    other way, so two groups are never merged; `Storage\Collisions` refuses what
@@ -22,6 +23,7 @@ use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\LocalisedText;
+use Domain\Props;
 use Domain\Relation;
 use Domain\Slug;
 use Domain\Status;
@@ -75,10 +77,37 @@ final readonly class TranslationController
   {
     $type = $this->profile->byType($entity->type);
     $now = $this->clock->now()->format(Clock::STORED);
-    $draft = new Entity(new EntityId($this->uuid->generate()), $entity->type, $locale,
+
+    return $this->copied($entity, new Entity(new EntityId($this->uuid->generate()), $entity->type, $locale,
       Slug::from((new Label())->of($entity, $type), 'record'),
       (new LocalisedText($type))->forked($entity, $locale), $now, $now, Status::Draft,
-      TranslationGroup::rootOf($entity));
+      TranslationGroup::rootOf($entity)));
+  }
+
+  /* A record to change into one of its own, an event's next date, a product's
+     second variant: a draft in its locale holding its values and edges but the
+     ones held once, which it would collide on, under the next free slug its
+     label gives, in no group and without a window. It opens for editing, since
+     a copy is made to be changed. */
+  public function duplicate(Account $account, Request $request, string $slug, string $id): Response
+  {
+    [$collection, $entity] = $this->aimed($account, $request, $slug, $id);
+    $type = $this->profile->byType($entity->type);
+    if (!$type->copies()) {
+      throw MalformedValue::named('type whose records are copied', $type->name);
+    }
+    $now = $this->clock->now()->format(Clock::STORED);
+    $draft = new Entity(new EntityId($this->uuid->generate()), $entity->type, $entity->locale,
+      Slug::from((new Label())->of($entity, $type), 'record'),
+      new Props(array_diff_key($entity->props->document(), array_flip($type->uniqueKeys()))), $now, $now);
+    $saved = $this->transaction->saved($this->db, fn (): Entity => $this->copied($entity, $draft));
+
+    return Response::redirect(Rows::address($collection, $saved) . '#edit');
+  }
+
+  /* The draft saved with the record's own edges, as they point now. */
+  private function copied(Entity $entity, Entity $draft): Entity
+  {
     $edges = array_map(fn (Relation $edge): Relation => new Relation($this->predicates, $draft->id,
       $edge->predicate, $edge->object, $edge->objectType, $edge->objectTerm, $edge->position, $edge->qualifiers),
       $this->relations->outbound($entity->id));

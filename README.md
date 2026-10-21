@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.4](https://img.shields.io/badge/version-1.0.4-1f6feb)
+![Version 1.0.5](https://img.shields.io/badge/version-1.0.5-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -8,10 +8,16 @@ The database that ships its own data model: 30 curated schema.org types, the
 same in every install, their fields named and typed before you start — no empty
 tool to design first, no column called `Date2`.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.0)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.5)
 
 Like a headless CMS or a spreadsheet database, except the model is already
 there, and it is schema.org.
+
+The demo house's events, read with no key:
+
+```sh
+curl https://demo.skemik.org/feed/en-GB/events
+```
 
 [skemik.de](https://skemik.de) in German,
 [skemik.com](https://skemik.com) in English,
@@ -1515,12 +1521,13 @@ what it spends.
   three files, its words, its field names and what a select's options are
   called, and no code. English rather than German, although the first houses
   are German: every later language would otherwise be translated out of one
-  most translators do not have. German, French, Spanish, Italian and Polish
-  ship beside it, and Swiss German as a region's file, `de-CH.php` beside
-  `de.php`, holding only the words its spelling differs in and read first, word
-  by word, in the admin and in the profile's field names, so a browser asking
-  for `de-CH`, and the profile of a `de-CH` route, read *Strasse* and German
-  everywhere else; a region ships as its chrome file, its field names beside it.
+  most translators do not have. German, French, Spanish, Italian, Polish and
+  Dutch ship beside it, and Swiss German as a region's file, `de-CH.php`
+  beside `de.php`, holding only the words its spelling differs in and read
+  first, word by word, in the admin and in the profile's field names, so a
+  browser asking for `de-CH`, and the profile of a `de-CH` route, read
+  *Strasse* and German everywhere else; a region ships as its chrome file, its
+  field names beside it.
   The language is the reader's and not the house's, since a bookkeeper and an
   editor need not share one: the browser's decides, and the one chosen at
   `/install` stands where the browser names none a file ships for. It is no

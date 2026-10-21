@@ -131,18 +131,9 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php endif ?>
       <?= $tool($before, 'previous', 'record.previous', 'record.first') ?>
       <?= $tool($after, 'next', 'record.next', 'record.last') ?>
-<?php if ($writes && $held !== null): ?>
-      <button type="button" class="tool-button" aria-disabled="true"
-        title="<?= $template->escape($words->get('record.held', ['email' => $held->email])) ?>"
-        data-toast="<?= $template->escape($words->get('record.held',
-        ['email' => $held->email])) ?>"><?= $template->render('partials/icon', ['name' => 'trash']) ?><span
-        class="visually-hidden"><?= $template->escape($words->get('record.held',
-        ['email' => $held->email])) ?></span></button>
-<?php elseif ($writes): ?>
-      <button type="button" class="tool-button" title="<?= $template->escape($words->get('delete.confirm')) ?>"
-        data-dialog="delete-<?= $template->escape($entity->id->value) ?>"><?= $template->render('partials/icon',
-        ['name' => 'trash']) ?><span
-        class="visually-hidden"><?= $template->escape($words->get('delete.confirm')) ?></span></button>
+<?php if ($writes): ?>
+      <?= $template->render('partials/record-acts', ['words' => $words, 'collection' => $collection,
+        'entity' => $entity, 'csrf' => $csrf, 'held' => $held, 'copies' => $copies]) ?>
 <?php endif ?>
     </div>
   </header>

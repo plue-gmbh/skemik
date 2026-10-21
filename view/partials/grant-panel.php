@@ -11,8 +11,7 @@ declare(strict_types=1);
    is answered with every rule the new secret then holds, the newest secret being
    the whole key. The secret is shown once, in a state an outside press does not
    close. Where nothing is granted yet and the form is offered, the popover opens
-   on the form alone: a heading and *no grant* above it would say what the form
-   already says. */
+   on the form alone: a heading above it would say what the form already says. */
 
 if (!isset($template)) {
   return;
@@ -25,9 +24,6 @@ $bare = $badge->reviews === [] && $badge->offers !== [];
 ?>
 <?php if (!$folded && !$bare): ?>
   <p class="popover-label"><?= $template->escape($words->get('grant.label', ['anchor' => $badge->title])) ?></p>
-<?php endif ?>
-<?php if ($badge->reviews === [] && !$folded && !$bare): ?>
-  <p class="popover-hint"><?= $template->escape($words->get('grant.none')) ?></p>
 <?php endif ?>
 <?php foreach ($badge->reviews as $review): ?>
   <div class="grant">

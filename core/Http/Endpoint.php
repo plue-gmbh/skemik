@@ -30,6 +30,7 @@ enum Endpoint
   case RecordsPurge;
   case Trash;
   case RecordTranslation;
+  case RecordDuplicate;
   case RecordLink;
   case RecordUnlink;
   case FieldAdd;

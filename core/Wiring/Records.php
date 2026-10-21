@@ -53,6 +53,8 @@ final readonly class Records
         $segment('collection'), $segment('id')),
       Endpoint::RecordTranslation => $this->translationController()->translate($account(), $common->request,
         $segment('collection'), $segment('id')),
+      Endpoint::RecordDuplicate => $this->translationController()->duplicate($account(), $common->request,
+        $segment('collection'), $segment('id')),
       Endpoint::RecordLink => $this->translationController()->link($account(), $common->request,
         $segment('collection'), $segment('id')),
       Endpoint::RecordUnlink => $this->translationController()->unlink($account(), $common->request,

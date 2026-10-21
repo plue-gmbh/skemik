@@ -115,6 +115,20 @@ final readonly class TypeDefinition
     return $keys;
   }
 
+  /** @return list<string> the ! keys — what no second record of the type holds again */
+  public function uniqueKeys(): array
+  {
+    return array_values(array_map(fn (FieldDefinition $field): string => $field->key,
+      array_filter($this->fields(), fn (FieldDefinition $field): bool => $field->unique !== null)));
+  }
+
+  /* A copy holds every value but the ! ones, so a type requiring one, a term
+     its code, has none: the copy would lack it. */
+  public function copies(): bool
+  {
+    return array_intersect($this->uniqueKeys(), $this->requiredKeys()) === [];
+  }
+
   /* The naming field the type requires — a course carries a `headline` it
      inherits and is named by its `name`, a job posting by its `title`. A label
      and a new record's slug are both made of it. */
