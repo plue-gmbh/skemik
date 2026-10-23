@@ -1887,6 +1887,10 @@ a.option {
   margin-top: 14px;
 }
 
+.page > .record-rows ~ .sheet-pages {
+  margin-top: 8px;
+}
+
 .sheet-pages span {
   margin-right: auto;
   color: var(--text-secondary);
@@ -2582,6 +2586,18 @@ a.chip {
   font-family: var(--font-mono);
   font-size: 11px;
   overflow-wrap: anywhere;
+}
+
+.record-row-redact {
+  margin-left: 10px;
+  color: var(--status-error);
+  font-family: var(--font-sans);
+}
+
+@media (hover: hover) {
+  .record-row-redact:hover {
+    text-decoration: underline;
+  }
 }
 
 .error-search {

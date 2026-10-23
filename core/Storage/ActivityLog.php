@@ -96,31 +96,35 @@ final readonly class ActivityLog
      redaction changes the log and not the record, so it is not the answer. */
   public function lastActorName(EntityId $target): ?string
   {
-    $statement = $this->db->prepare('select actor_name from activity'
-      . " where target_id = :target and json_extract(result, '$.redacted') is null"
-      . ' order by start_time desc, id desc limit 1');
-    $statement->execute(['target' => $target->value]);
-    $name = $statement->fetchColumn();
-
-    return $name === false || $name === null ? null : (string) $name;
+    return $this->lastActorNames([$target])[$target->value] ?? null;
   }
 
-  /* The latest row on each record, account, key and language, newest first,
-     read down the time index as it is fetched, so the home screen stops once it
-     holds what it shows. A redaction is left out, as for `lastActorName`.
+  /* The same for a page of records, so a page reads the log once and not once a row.
+     @param list<EntityId> $targets
+     @return array<string, string> by record id; a record nobody named is absent */
+  public function lastActorNames(array $targets): array
+  {
+    $statement = $this->db->prepare('select target_id, actor_name from (select target_id, actor_name,'
+      . ' row_number() over (partition by target_id order by start_time desc, id desc) as newest from activity'
+      . " where target_id in (select value from json_each(:targets)) and json_extract(result, '$.redacted') is null)"
+      . ' where newest = 1 and actor_name is not null');
+    $statement->execute(['targets' => $this->json->encode(array_map(fn (EntityId $id): string => $id->value,
+      $targets))]);
+
+    return array_map(strval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
+  }
+
+  /* Every row, newest first, read down the time index as it is fetched, so the
+     home screen stops once it holds what it shows. A redaction is left out, as
+     for `lastActorName`.
      @return \Generator<int, Activity> */
   public function latest(): \Generator
   {
     $statement = $this->db->prepare(self::READ . " and json_extract(result, '$.redacted') is null"
       . ' order by start_time desc, id desc');
     $statement->execute();
-    $seen = [];
     while (($row = $statement->fetch(\PDO::FETCH_ASSOC)) !== false) {
-      $about = (string) ($row['target_id'] ?? $row['object_id']);
-      if (!isset($seen[$about])) {
-        $seen[$about] = true;
-        yield $this->activity($row);
-      }
+      yield $this->activity($row);
     }
   }
 

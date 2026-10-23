@@ -76,7 +76,7 @@ final readonly class SettingStore
     if ($tags === [] || count(array_unique($tags)) !== count($tags)) {
       throw MalformedValue::named('locale list', implode(', ', $tags));
     }
-    $left = array_diff($this->held(), $tags);
+    $left = array_diff(array_keys($this->held()), $tags);
     if ($left !== []) {
       throw MalformedValue::named('locale list, since records or words remain in ' . reset($left),
         implode(', ', $tags));
@@ -85,16 +85,19 @@ final readonly class SettingStore
   }
 
   /* Every tag something is written in: a record's own, the words a record or an
-     edge keeps under `l10n`, in the trash too.
-     @return list<string> */
+     edge keeps under `l10n`, in the trash too. Each with the records outside the
+     trash written in it, one record counted once, for the Languages card: one
+     pass, since each walks every record's words.
+     @return array<string, int> by tag */
   public function held(): array
   {
-    $statement = $this->db->prepare('select locale from entity'
-      . " union select l.key from entity e, json_each(e.props, '$.l10n') l"
-      . " union select l.key from relation r, json_each(r.props, '$.l10n') l");
+    $statement = $this->db->prepare('select tag, count(distinct case when live then id end) from ('
+      . 'select id, locale as tag, deleted_at is null as live from entity'
+      . " union all select e.id, l.key, e.deleted_at is null from entity e, json_each(e.props, '$.l10n') l"
+      . " union all select null, l.key, 0 from relation r, json_each(r.props, '$.l10n') l) group by tag");
     $statement->execute();
 
-    return $statement->fetchAll(\PDO::FETCH_COLUMN);
+    return array_map(intval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
   }
 
   /* The last row `HoldingsCheck`'s sampled pass reached, null before the first

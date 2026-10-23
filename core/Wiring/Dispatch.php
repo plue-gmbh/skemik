@@ -48,8 +48,9 @@ final readonly class Dispatch
         => (new Settings($this->common))->answer($route),
       Endpoint::FeedCatalog, Endpoint::FeedLocale, Endpoint::FeedProfile, Endpoint::FeedCollection,
         Endpoint::FeedRecord, Endpoint::IngestCreate, Endpoint::IngestPatch, Endpoint::IngestArrange,
-        Endpoint::FeedPreflight, Endpoint::Robots, Endpoint::SecurityText, Endpoint::PanelLocale,
-        Endpoint::PanelCollection, Endpoint::PanelRecord => (new Address($this->common))->answer($route),
+        Endpoint::FeedPreflight, Endpoint::Robots, Endpoint::SecurityText, Endpoint::PanelCatalog,
+        Endpoint::PanelLocale, Endpoint::PanelCollection, Endpoint::PanelRecord
+        => (new Address($this->common))->answer($route),
     };
 
     return $this->checkup()->after($this->common->files()->after($this->updater()->after($this->daily()->after(

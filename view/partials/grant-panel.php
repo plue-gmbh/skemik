@@ -37,9 +37,7 @@ $bare = $badge->reviews === [] && $badge->offers !== [];
 <?php if ($review->stale !== null): ?>
     <p class="grant-note is-stale"><?= $template->escape($review->stale) ?></p>
 <?php endif ?>
-<?php if ($review->others === []): ?>
-    <p class="grant-facts"><?= $template->escape($words->get('grant.only')) ?></p>
-<?php else: ?>
+<?php if ($review->others !== []): ?>
     <p class="grant-facts"><?= $template->escape($words->get('grant.others')) ?></p>
     <ul class="grant-others">
 <?php foreach ($review->others as $other): ?>

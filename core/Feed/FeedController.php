@@ -21,6 +21,7 @@ use Profile\Seed\Terms;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
+use Storage\Modified;
 use Storage\RelationRepository;
 use Storage\SettingStore;
 use Support\Markup;
@@ -52,6 +53,7 @@ final readonly class FeedController
     private Terms $terms,
     private Clock $clock,
     private Words $words,
+    private Modified $modified,
     private Preconditions $preconditions = new Preconditions(),
     private Json $json = new Json(),
     private ?PublicFilter $fixed = null,
@@ -65,7 +67,8 @@ final readonly class FeedController
 
   public function locales(Request $request): Response
   {
-    $document = $this->catalog($request, $this->reading())->locales($this->settings->locales());
+    $document = $this->catalog($request, $this->reading())->locales($this->settings->locales(),
+      $this->modified->at());
 
     return $this->answer($request, $this->json->encode($document),
       ['Content-Type' => JsonLd::CONTENT_TYPE]);

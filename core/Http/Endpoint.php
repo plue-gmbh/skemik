@@ -71,6 +71,7 @@ enum Endpoint
   case FeedPreflight;
   case Robots;
   case SecurityText;
+  case PanelCatalog;
   case PanelLocale;
   case PanelCollection;
   case PanelRecord;

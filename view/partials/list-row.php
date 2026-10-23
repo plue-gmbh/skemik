@@ -5,8 +5,8 @@ declare(strict_types=1);
 /* One row of the list view, drawn by the collection screen and by the answer to
    a new record's `POST`, as the table's are (`partials/sheet-row`): the tick
    where the account writes, the picture where the type has one, it and the label
-   both the link to the record, the spine chip beneath, then the fields the type
-   shows (`Admin\Glance`) as the table's cells. Without a record it is the blank
+   both the link to the record, the spine chip beneath, then the collection's
+   first fields (`Admin\Glance`) as the table's cells. Without a record it is the blank
    row + New record clones, its label a cell until it has an address. */
 
 if (!isset($template)) {

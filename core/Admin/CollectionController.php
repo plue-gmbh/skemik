@@ -18,6 +18,7 @@ use Feed\PublicFilter;
 use Http\Csrf;
 use Http\Request;
 use Http\Response;
+use Profile\FieldDefinition;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Storage\Collection;
@@ -116,30 +117,41 @@ final readonly class CollectionController
    * The view and the query bar over it, under the query the address asks.
    *
    * @param list<Column> $columns
-   * @return array<string, object|array<array-key, object|string|int|float|bool|null>|string|int|bool>
+   * @return array<string, object|array<array-key, object|string|int|float|bool|null>|string|int|bool|null>
    */
   private function view(Account $account, Request $request, Collection $collection, array $columns): array
   {
     $view = $this->drawn($request, $collection);
-    $glance = new Glance($columns, $this->profile->byType($collection->type));
-    $request = $this->ordered($request, $view, $glance);
+    $glance = $view === CollectionView::Table ? null : $this->glance($collection, $columns);
+    $request = $this->ordered($request, $view, $glance?->date());
     $query = $this->bar->query($account, $request, $collection);
     $rows = $this->sheet->rows($account, $columns, $query === null ? [] : $this->entities->list($query));
     $library = basename($collection->type) === 'MediaObject'
       ? $this->media->library($account, $collection, $rows) : [];
 
     return [...$library, 'view' => $view, 'glance' => $glance,
-      'timeline' => new Timeline($glance->date(), $this->clock, $this->words->language),
+      'timeline' => new Timeline($glance?->date(), $this->clock, $this->words->language),
       'fixed' => $view === CollectionView::Timeline,
       'rows' => $rows, 'page' => $query->page ?? 1, 'perPage' => $query->perPage ?? Query::PER_PAGE,
       'items' => new Items($collection, $request->query, $this->dialog->multilingual($collection)),
       'parameters' => $request->query, 'narrowing' => $this->bar->narrowing($request),
-      'total' => $query === null ? 0 : $this->entities->count($query),
-      'all' => $this->bar->total($account, $collection),
+      ...$this->counted($account, $collection, $query),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
       'filters' => $this->bar->filters($account, $collection, $columns),
       'data' => $this->sheet->data($collection, $columns, $rows, $this->csrf->token()),
       'spine' => $this->dialog->data($collection, $rows)];
+  }
+
+  /* What the page counts and what the whole reading does: the same question where the page's
+     query asks nothing beyond its order and page, so it is asked once and not twice.
+     @return array{total: int, all: int} */
+  private function counted(Account $account, Collection $collection, ?Query $query): array
+  {
+    $total = $query === null ? 0 : $this->entities->count($query);
+    $whole = $query !== null && $query->filters === [] && $query->statuses === [] && $query->locale === null
+      && $query->search === '';
+
+    return ['total' => $total, 'all' => $whole ? $total : $this->bar->total($account, $collection)];
   }
 
   /* The view asked for, which the session then keeps; else the one kept, else the table. */
@@ -157,9 +169,9 @@ final readonly class CollectionController
   /* A timeline is ordered by its date, newest first unless it asks the other way,
      whatever order the view it was switched from had; without a date, by when
      each record was made, newest first, which is a list asked for no order. */
-  private function ordered(Request $request, CollectionView $view, Glance $glance): Request
+  private function ordered(Request $request, CollectionView $view, ?Column $dated): Request
   {
-    $date = $glance->date()?->parameter;
+    $date = $dated?->parameter;
 
     return match (true) {
       $view !== CollectionView::Timeline => $request,
@@ -216,6 +228,16 @@ final readonly class CollectionController
       && !$this->filter->passesType($collection->type);
 
     return $collection === null || $closed ? throw EntityNotFound::withId($slug) : $collection;
+  }
+
+  /* What the views beside the table show of a row, read by a saved row's answer too. The table
+     asks none of it: which fields some record holds reads every row of the type to say none does.
+     @param list<Column> $columns */
+  public function glance(Collection $collection, array $columns): Glance
+  {
+    return new Glance($columns, $this->profile->byType($collection->type), $this->profile,
+      $this->entities->held($collection->type, array_map(fn (Column $column): FieldDefinition => $column->field,
+        $columns)));
   }
 
   /* Outside the read scope the columns are the anonymous document's, gate 3 included.

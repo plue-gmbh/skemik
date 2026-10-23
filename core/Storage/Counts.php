@@ -29,20 +29,6 @@ final readonly class Counts
     return $counts;
   }
 
-  /* The Languages card's numbers: the records written in each locale, as their
-     own row or as words under `l10n`, one record counted once per locale.
-     @return array<string, int> by tag; a locale nothing is written in is absent */
-  public function byLocale(): array
-  {
-    $statement = $this->db->prepare('select tag, count(*) from (select id, locale as tag from entity'
-      . ' where deleted_at is null'
-      . " union select e.id, l.key from entity e, json_each(e.props, '$.l10n') l"
-      . ' where e.deleted_at is null) group by tag');
-    $statement->execute();
-
-    return array_map(intval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
-  }
-
   /* The query bar's Language group: only locales a row of the type is written in,
      and outside the reader's scope only those a public row is.
      @return list<string> */

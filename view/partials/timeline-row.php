@@ -5,7 +5,7 @@ declare(strict_types=1);
 /* One row of the timeline, drawn by the collection screen and by the answer to
    a new record's `POST`, as the list's are (`partials/list-row`): the tick where
    the account writes, its day as the house lives it, the label as the link to
-   the record with the spine chip beneath, then the fields the type shows
+   the record with the spine chip beneath, then the collection's first fields
    (`Admin\Glance`) as the table's cells, its date among them, since that is
    where it is edited. The answer to a `POST` has no day to draw: a row saved
    with a date is read again with the page. Without a record it is the blank
@@ -45,7 +45,7 @@ $day = $when === null ? null : $timeline->day($when);
 <?php endif ?>
   </span>
   <span class="list-cells">
-<?php foreach ($glance->shown(3, $row === null) as $column): ?>
+<?php foreach ($glance->dated(3, $row === null) as $column): ?>
     <?= $cell($column) ?>
 <?php endforeach ?>
   </span>

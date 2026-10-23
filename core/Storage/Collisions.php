@@ -55,12 +55,13 @@ final readonly class Collisions
   /* The first spelling of a new record's slug that nothing of its type in its
      locales holds — `till`, then `till-2` — so no caller is asked to pick one
      (`Domain\Slug`). Per type, since the type is part of the address: a site, a
-     brand and a software may all be `skemik`. */
+     brand and a software may all be `skemik`. Asked as a range on `entity_slug`:
+     `-` is the one letter a slug may hold that sorts below `.`, so the range holds
+     the slug and every `slug-…`, and a new record does not read its whole type. */
   public function freeSlug(Entity $entity): Slug
   {
     $statement = $this->db->prepare('select slug from entity where type = :type'
-      . " and id <> :id and (slug = :slug or substr(slug, 1, length(:slug) + 1) = :slug || '-') and "
-      . self::IN_LOCALE);
+      . " and id <> :id and slug >= :slug and slug < :slug || '.' and " . self::IN_LOCALE);
     $statement->execute(['type' => $entity->type,
       'slug' => $entity->slug->value, 'id' => $entity->id->value,
       ...$this->localeScope($entity->type, $entity->locale)]);

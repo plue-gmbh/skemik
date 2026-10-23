@@ -37,14 +37,19 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
 <?php endif ?>
   <ul class="record-rows">
 <?php foreach ($lines as $index => $line):
+  $trashed = $line->row?->state === 'trashed';
   $public = $line->row?->reach === Profile\Reach::Public;
-  $state = $line->row === null ? null : ($public ? $words->get('status.' . $line->row->state) : $line->row->own);
+  $state = $line->row === null || $trashed ? null
+    : ($public ? $words->get('status.' . $line->row->state) : $line->row->own);
   $who = ($line->byKey ? '<span class="grant-key">' . $template->render('partials/glyph', ['name' => 'key'])
     . '</span>' : '') . $template->escape($line->who);
   $named = ($line->by === null || $by !== null ? $who
     : '<a href="?' . $template->escape(http_build_query(['by' => $line->by])) . '">' . $who . '</a>')
     . ($line->state === null ? '' : ' ' . $template->escape($line->state));
-  $mark = $template->render('partials/glyph', ['name' => $line->glyph]);
+  $mark = $trashed ? '<span title="' . $template->escape($words->get('status.trashed')) . '">'
+    . $template->render('partials/icon', ['name' => 'trash']) . '</span><span class="visually-hidden">'
+    . $template->escape($words->get('status.trashed')) . '</span>'
+    : $template->render($line->glyph === 'export' ? 'partials/icon' : 'partials/glyph', ['name' => $line->glyph]);
   $dialog = 'redact-' . $index ?>
     <li class="record-row<?= $line->href === null ? ' is-missing' : '' ?>">
       <span class="record-row-glyph"><?php if ($state !== null): ?><span
@@ -61,11 +66,14 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
         'who' => "\x02"])), ["\x01" => $template->escape($line->what), "\x02" => $named]) ?></span>
       <time class="record-row-mono"
         datetime="<?= $template->escape($line->when) ?>"><?= $template->escape($line->stamp) ?></time>
-<?php if ($redacts && $line->activity !== null): ?>
-      <button type="button" class="button-quiet is-danger" aria-haspopup="dialog"
+<?php if ($line->kept !== []): ?>
+      <span class="record-row-kept"><?= $template->escape(implode(' · ', $line->kept)) ?><?php if ($redacts
+        && $line->activity !== null): ?><button type="button" class="record-row-redact" aria-haspopup="dialog"
         data-dialog="<?= $dialog ?>"><?= $template->escape($words->get('change.redact')) ?><span
         class="visually-hidden"> – <?= $template->escape($line->label) ?>, <?= $template->escape($line->stamp)
-          ?></span></button>
+          ?></span></button><?php endif ?></span>
+<?php endif ?>
+<?php if ($redacts && $line->activity !== null): ?>
       <dialog class="dialog" id="<?= $dialog ?>" aria-labelledby="<?= $dialog ?>-title">
         <form method="post" action="/changes/<?= $template->escape($line->activity) ?>/redact">
           <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
@@ -82,9 +90,6 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
           </div>
         </form>
       </dialog>
-<?php endif ?>
-<?php if ($line->kept !== []): ?>
-      <span class="record-row-kept"><?= $template->escape(implode(' · ', $line->kept)) ?></span>
 <?php endif ?>
     </li>
 <?php endforeach ?>

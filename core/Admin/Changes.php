@@ -23,7 +23,7 @@ use Support\Words;
 /* The home screen's Last changed, whose contract is the header of
    `view/partials/home-changes.php`, and the lines of the log screen's
    (`view/pages/activity.php`). The log is read newest first and only as far
-   as seven records the reader may open, so a colleague scoped to one type walks
+   as seven lines the reader may open, so a colleague scoped to one type walks
    further back than the owner and never learns from a gap what stood there. A
    record in the trash is listed for whoever may take it back out, opening that
    trash, since the record screen does not open it; a purged one is gone, and
@@ -54,20 +54,38 @@ final readonly class Changes
     private Words $words,
   ) {}
 
-  /** @return list<Change> */
+  /* A row folds into the line above it before the reader's scope is asked,
+     since one thing is in it or out of it whole, and a row the reader cannot
+     see breaks no run, so no line split in two says something stood between.
+     A run ends with the house's day, so a line's time never hides a change
+     made days before it. A line is drawn again only where a row folded in.
+     @return list<Change> */
   public function latest(Account $account): array
   {
     $collections = $this->collections->all();
-    $changes = [];
+    [$runs, $lines] = [[], []];
     foreach ($this->log->latest() as $activity) {
-      $change = $this->line($account, $activity, $collections);
-      $changes = $change === null ? $changes : [...$changes, $change];
-      if (count($changes) === self::SHOWN) {
+      $last = array_key_last($runs);
+      $joined = $last === null || !$this->sameDay($runs[$last], $activity) ? null
+        : $runs[$last]->joined($activity);
+      if ($joined !== null) {
+        [$runs[$last], $lines[$last]] = [$joined, null];
+        continue;
+      }
+      if (count($runs) === self::SHOWN) {
         break;
       }
+      $line = $this->line($account, $activity, $collections);
+      [$runs, $lines] = $line === null ? [$runs, $lines] : [[...$runs, $activity], [...$lines, $line]];
     }
 
-    return $changes;
+    return array_values(array_filter(array_map(fn (Activity $run, ?Change $line): ?Change
+      => $line ?? $this->line($account, $run, $collections), $runs, $lines)));
+  }
+
+  private function sameDay(Activity $newer, Activity $older): bool
+  {
+    return substr($this->clock->render($newer->at), 0, 10) === substr($this->clock->render($older->at), 0, 10);
   }
 
   /**

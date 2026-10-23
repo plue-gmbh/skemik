@@ -25,12 +25,12 @@ spl_autoload_register(function (string $class): void {
   }
 });
 
+/* Settings no `php.ini` is trusted for: a warning or a trace's argument shows a stranger a path
+   or a code, and a host's precision of 17 writes 19.9 as 19.899999999999999. */
 header_remove('X-Powered-By');
-/* A page's warning or a trace's argument can show a stranger a path, a relay or a code. */
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 ini_set('zend.exception_ignore_args', '1');
-/* A host's 17 would write 19.9 into a document or a table's cell as 19.899999999999999. */
 ini_set('serialize_precision', '-1');
 ini_set('precision', '-1');
 $request = Http\Request::from($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
@@ -40,8 +40,9 @@ if (PHP_SAPI === 'cli-server'
 }
 $template = new Support\Template(__DIR__ . '/view');
 $words = new Support\Words(__DIR__ . '/language', $request->header('Accept-Language') ?? '');
-/* Free, so asked on every request; what runs before it parses from PHP 8.2 up, so a PHP older than the 8.5
-   it needs gets this refusal and not a parse error. */
+
+/* The boot refusal, free, so asked on every request. This file parses from PHP 8.2 up, so an older PHP gets
+   this refusal and not a parse error; what needs 8.5 is only autoloaded. */
 $missing = array_values(array_filter(['pdo_sqlite', 'intl', 'dom', 'mbstring'],
   fn (string $name): bool => !extension_loaded($name)));
 $boot = match (true) {
@@ -49,7 +50,6 @@ $boot = match (true) {
   $missing !== [] => $words->get('boot.extension', ['extension' => $missing[0]]),
   default => null,
 };
-/* A halt that passes by itself is a wait and not a failure, and says when to ask again. */
 $refuse = function (Support\Halt $halt) use ($template, $words): void {
   http_response_code(503);
   header('Content-Type: text/html; charset=utf-8');
@@ -62,8 +62,9 @@ if ($boot !== null) {
   return;
 }
 $utc = new Support\Clock(new DateTimeZone('UTC'));
-/* A file is opened before the status line, so one a swap or a restore took away since it was measured
-   answers 404, and never a 200 shorter than the length it promised. */
+
+/* Sending: a file is opened before the status line, so one a swap or a restore took away since it
+   was measured answers 404, never a 200 shorter than the length it promised. */
 $send = function (Http\Response $response) use ($request): void {
   $in = $response->file === null || !is_file($response->file->path) ? false : fopen($response->file->path, 'r');
   $response = $response->file !== null && $in === false ? $response->gone() : $response;
@@ -78,6 +79,7 @@ $send = function (Http\Response $response) use ($request): void {
   }
 };
 $firstRun = new Wiring\FirstRun(__DIR__, $request, $template, $words, $utc);
+
 /* Before the first run only it answers; any other address a bare line, as an empty host's would. */
 if (!is_file(__DIR__ . '/config.php')) {
   try {
@@ -91,15 +93,17 @@ if (!is_file(__DIR__ . '/config.php')) {
   $send($response);
   return;
 }
+
+/* `config.php`, read before a database opens: `/install` wrote every key, the relay's with no host
+   and the contact `null`, so an empty one is none, and a folder that takes no write is refused
+   here, not as a 500 naming nothing. */
 $config = require __DIR__ . '/config.php';
 $data = (string) $config['data'];
-/* A request's `Host` is whatever its sender typed, so nothing stands in for the address `/install` wrote. */
 $address = rtrim(is_string($config['address'] ?? null) ? $config['address'] : '', '/');
 if (preg_match('#^https?://[^/]+$#', $address) !== 1) {
   $refuse(new Support\Halt($words->get('boot.address')));
   return;
 }
-/* `/install` writes every key, the relay's with no host and the contact as `null`, so an empty one is none. */
 $relay = (string) ($config['relay']['host'] ?? '') !== '' ? new Auth\Smtp((string) $config['relay']['host'],
   (int) $config['relay']['port'], (string) $config['relay']['user'], (string) $config['relay']['password'],
   (string) $config['relay']['sender'], (string) parse_url($address, PHP_URL_HOST)) : null;
@@ -107,7 +111,6 @@ $logger = new Http\Logger($data . '/log', $utc);
 $premises = new Admin\Premises($data, $address, (bool) ($config['daily_backups'] ?? true),
   (bool) ($config['updates'] ?? true), ($config['updates'] ?? true) === 'early',
   (string) ($config['security_contact'] ?? '') !== '' ? (string) $config['security_contact'] : null);
-/* Before the database opens, where a folder that takes no write fails as a 500 naming nothing. */
 $halt = (new Admin\Probes($data,
   new Admin\DataLayout(__DIR__, new Admin\Proofs(new Support\Fetch(), $words), $words),
   new Support\Fetch(), $utc, $words, new Update\UpdateCheck($data, new Support\Fetch(), $utc)))
@@ -117,20 +120,19 @@ if ($halt !== null) {
   return;
 }
 
+/* The answer: the route first, since a first run resumed and the holdings' move each come before
+   a session is resumed or a table read. */
 [$common, $sessioned] = [null, false];
 try {
   assert(($running = (new Support\Payload(__DIR__, $data))->running()) === [],
     implode(', ', $running) . ' runs something when included');
   assert(($apart = (new Support\Payload(__DIR__, $data))->found('public', Storage\Query::publicDisagreements(...)))
     === [], implode(', ', $apart) . ' is public to one of Storage\Query::PUBLIC and Status::isPublicAt only');
-  /* Matched first: the feed keeps no session, which would be a file per visitor of every page,
-     and a run stopped after `config.php` resumes before reading tables it never made. */
   $route = (new Http\Router())->match($request);
   if ($route->endpoint->isFirstRun()) {
     $send($firstRun->resumed($route, $premises));
     return;
   }
-  /* The first request on a new version moves the holdings to it before anything reads them. */
   $moving = (new Wiring\Arrival(__DIR__, $premises, $utc, $words))->move()->halt();
   if ($moving !== null) {
     $refuse($moving);
@@ -145,13 +147,14 @@ try {
   $response = (new Http\ErrorHandler($logger, $template, $common?->words ?? $words))
     ->handle($failure, $request, $common?->account?->id);
 }
-/* A cookie that named no live session is cleared; none is set unless the answer began a session. */
+
+/* After the answer: a cookie that named no live session is cleared and none set unless the answer
+   began one; the work that follows runs once the bytes have left, so nobody times it. */
 if ($sessioned && ($session->active() || $request->cookie('session') !== null)) {
   $response = $response->with(['Set-Cookie' => $session->cookie()]);
   session_write_close();
 }
 $send($response);
-/* What follows the answer runs once it has left, so nobody times it; failing there, it is logged. */
 if ($response->after !== null) {
   ob_get_level() > 0 && ob_end_flush();
   function_exists('fastcgi_finish_request') ? fastcgi_finish_request() : flush();

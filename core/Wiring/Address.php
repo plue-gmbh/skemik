@@ -18,6 +18,8 @@ use Ingest\Filed;
 use Ingest\IngestController;
 use Ingest\ObjectRows;
 use Ingest\PayloadMapper;
+use Storage\Modified;
+use Update\Move;
 use Update\Version;
 
 /* The feed address, read and written, which keeps no session, and the panel's
@@ -39,6 +41,7 @@ final readonly class Address
       Endpoint::IngestCreate => $this->ingest()->create($request, $route),
       Endpoint::IngestPatch => $this->ingest()->patch($request, $route),
       Endpoint::IngestArrange => $this->arranger()->arrange($request, $route),
+      Endpoint::PanelCatalog => $this->staff()->locales($request),
       Endpoint::PanelLocale => $this->staff()->collections($request, $route),
       Endpoint::PanelCollection => $this->staff()->list($request, $route),
       Endpoint::PanelRecord => $this->staff()->record($request, $route),
@@ -54,7 +57,8 @@ final readonly class Address
     $common = $this->common;
     return new FeedController($common->profile, $common->schema, $common->entities, $common->relations,
       $common->collections, $common->settings, $common->authorizer, $common->parameters, $common->targets,
-      $common->terms, $common->clock, $common->words);
+      $common->terms, $common->clock, $common->words,
+      new Modified($common->db, $common->clock, $common->premises->data . '/' . Move::STAMP));
   }
 
   private function staff(): FeedController

@@ -6,7 +6,7 @@ declare(strict_types=1);
    to a new record's `POST`, as the table's rows are: the tick where the account
    writes, the picture where the collection carries an image, it and the label
    both the link to the record, the spine chip beneath, the first line of its
-   long text, and the fields the type shows (`Admin\Glance`) as the table's
+   long text, and the collection's first fields (`Admin\Glance`) as the table's
    cells, each named on the card, since a card has room for the name a list row
    only titles. Without a record it is the blank card + New record clones, its
    label a cell until it has an address. */

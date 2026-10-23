@@ -219,8 +219,8 @@ final readonly class Common
 
   public function locales(): LocaleController
   {
-    return new LocaleController($this->authorizer, $this->settings, $this->counts, $this->session,
-      $this->csrf, $this->words, $this->log);
+    return new LocaleController($this->authorizer, $this->settings, $this->session, $this->csrf,
+      $this->words, $this->log);
   }
 
   private function model(): void

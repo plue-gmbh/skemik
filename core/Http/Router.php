@@ -69,6 +69,7 @@ final readonly class Router
     'POST /export' => Endpoint::ExportTake,
     'GET /robots.txt' => Endpoint::Robots,
     'GET /.well-known/security.txt' => Endpoint::SecurityText,
+    'GET /feed-panel' => Endpoint::PanelCatalog,
     'GET /feed-panel/{locale}' => Endpoint::PanelLocale,
     'GET /feed-panel/{locale}/{collection}[.fmt]' => Endpoint::PanelCollection,
     'GET /feed-panel/{locale}/{collection}/{slug}[.fmt]' => Endpoint::PanelRecord,

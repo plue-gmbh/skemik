@@ -6,6 +6,7 @@ namespace Admin;
 
 use Auth\Account;
 use Domain\Entity;
+use Domain\EntityId;
 use Domain\Locale;
 use Domain\LocalisedText;
 use Domain\Status;
@@ -48,6 +49,8 @@ final readonly class SpineDialog
   {
     $type = $this->profile->byType($collection->type);
     $holds = Status::heldBy($type);
+    $names = $this->log->lastActorNames(array_map(fn (SheetRow $row): EntityId => $row->entity->id, $rows));
+    $spine = fn (SheetRow $row): array => $this->spine($collection, $row, $names[$row->entity->id->value] ?? null);
 
     return (new Json())->encode(['collection' => $collection->slug->value,
       'public' => in_array(Status::Published, $holds, true), 'forks' => $type->locale->forks(),
@@ -57,7 +60,7 @@ final readonly class SpineDialog
       'words' => (object) array_combine(self::WORDS, array_map(fn (string $key): string => $this->words->get($key,
         ['locales' => '{locales}']), self::WORDS)),
       'rows' => (object) array_combine(array_map(fn (SheetRow $row): string => $row->entity->id->value, $rows),
-        array_map(fn (SheetRow $row): array => $this->row($collection, $row), $rows))]);
+        array_map($spine, $rows))]);
   }
 
   /**
@@ -67,6 +70,12 @@ final readonly class SpineDialog
    */
   public function row(Collection $collection, SheetRow $row): array
   {
+    return $this->spine($collection, $row, $this->log->lastActorName($row->entity->id));
+  }
+
+  /** @return array<string, string|int|list<string>|list<array<string, string|bool|null>>|null> */
+  private function spine(Collection $collection, SheetRow $row, ?string $lastBy): array
+  {
     $entity = $row->entity;
     $wall = fn (?string $stored): ?string => $stored === null ? null : $this->clock->render($stored);
 
@@ -74,7 +83,7 @@ final readonly class SpineDialog
       'publish_from' => $wall($entity->publishFrom), 'publish_to' => $wall($entity->publishTo),
       'locale' => $entity->locale->tag, 'address' => Rows::address($collection, $entity),
       'worded' => (new LocalisedText($this->profile->byType($entity->type)))->locales($entity),
-      'own' => $this->own($collection, $row), 'footer' => $this->footer($entity)];
+      'own' => $this->own($collection, $row), 'footer' => $this->footer($entity, $lastBy)];
   }
 
   /* Whether a table row shows its record's language: on a work, since its record
@@ -134,12 +143,11 @@ final readonly class SpineDialog
       'field' => (string) $type->field($key)?->label, 'word' => $row->own ?? '—']);
   }
 
-  private function footer(Entity $entity): string
+  private function footer(Entity $entity, ?string $lastBy): string
   {
-    $name = $this->log->lastActorName($entity->id);
     $values = ['version' => (string) $entity->version, 'date' => $this->moments->day($entity->updatedAt),
-      'name' => (string) $name];
+      'name' => (string) $lastBy];
 
-    return $this->words->get($name === null ? 'spine.footer_unnamed' : 'spine.footer', $values);
+    return $this->words->get($lastBy === null ? 'spine.footer_unnamed' : 'spine.footer', $values);
   }
 }

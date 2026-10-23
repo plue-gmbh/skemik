@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.5](https://img.shields.io/badge/version-1.0.5-1f6feb)
+![Version 1.0.6](https://img.shields.io/badge/version-1.0.6-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -25,13 +25,21 @@ curl https://demo.skemik.org/feed/en-GB/events
 
 ---
 
-[Quickstart](#quickstart) · [What it is](#what-it-is) ·
-[Requirements](#requirements) · [Install](#install) ·
-[Running it](#running-it) · [Updating](#updating) · [Addresses](#addresses) ·
-[Collections](#collections) · [Reading the feed](#reading-the-feed) ·
+[Quickstart](#quickstart) ·
+[What it is](#what-it-is) ·
+[Requirements](#requirements) ·
+[Install](#install) ·
+[Running it](#running-it) ·
+[Updating](#updating) ·
+[Addresses](#addresses) ·
+[Collections](#collections) ·
+[Reading the feed](#reading-the-feed) ·
 [Writing through the feed](#writing-through-the-feed) ·
-[Reading it from PHP](#reading-it-from-php) · [How to build a website](#how-to-build-a-website) ·
-[Decisions](#decisions) · [Security](#security) · [Contributing](#contributing) ·
+[Reading it from PHP](#reading-it-from-php) ·
+[How to build a website](#how-to-build-a-website) ·
+[Decisions](#decisions) ·
+[Security](#security) ·
+[Contributing](#contributing) ·
 [Licence and trademark](#licence-and-trademark)
 
 ---
@@ -377,6 +385,18 @@ edge into nothing or a required field a release added to records that stood, is
 a line of Needs a look, and the Holdings check screen behind it names each
 record.
 
+**Needs a look, a card on the home screen, finds what somebody should take up
+or mend**, each line counting it and opening where that starts: a message a
+contact form wrote until somebody marks it read, the oldest first; an order a
+till wrote and a reservation a booking service wrote while they stand open by
+their own status, one delivered or confirmed on arrival never; a record
+waiting in review and one pointing at a record in the trash; a draft begun
+over a week ago of a type meant to be published, never a person, whom a house
+holds as a draft on purpose; and an image without alt text, opening the
+library's pictures. For whoever issues keys it counts a key running out within
+30 days, until a new one is issued under its name. A colleague is told only of
+what they read, and each line leaves once what it counts is taken up or mended.
+
 **The release's files are compared with its `SHA256SUMS` once a day**, and at
 once after an update: a file changed, one missing, and one added where only the
 release puts files, `core/`, `view/`, `language/`, `migrations/` and a `.php`
@@ -471,7 +491,7 @@ browser's preflight is answered.
 
 | Method | Address | Answers |
 |---|---|---|
-| `GET` | `/feed` | the locales the house holds |
+| `GET` | `/feed` | the locales the house holds, and `dateModified`, when anything a reading shows last changed |
 | `GET` | `/feed/{locale}` | the catalogue: the collections this reader reads, the names of their fields in that language and the words for every value a field takes from a fixed list, such as `EventScheduled` |
 | `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this house carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
 | `GET` | `/feed/{locale}/{collection}` | a page of its records |
@@ -566,6 +586,20 @@ cache between may keep what a stranger reads for a minute, so a record taken
 offline can still be served for sixty seconds. `/robots.txt` sends every crawler
 away, from the feed's pages too: a search engine should find the house's
 website.
+
+`/feed`, the smallest document the address answers, carries the house's
+`dateModified`, so one cheap request says whether a frontend's copies still
+stand. It is one date for the whole house and never older than what any reading
+shows: it moves with every write the house logs, a draft or an account among
+them, as a record's window opens or closes, as an offer runs out and with a
+release. So it moves for more than changed, and anybody can tell when the house
+last wrote and, asking often, how often, a till's orders an hour among it,
+though never what. A data folder copied back by hand can move it back, so a
+frontend compares it for a difference and never as newer. It counts whole
+seconds, and a write in the second it already names leaves it standing, so what
+a frontend fetched in the minute after it saw the date move is fetched once more
+after that minute. The feed dates no record itself: a work's `dateModified` is
+what the house typed, and a record's `ETag` says whether it changed.
 
 From `1.0` on, every release's tag in the public repository carries its notes:
 one line per addition at the address and per change a frontend has to act on.
@@ -978,17 +1012,20 @@ script that PHP may write. The blocks are general to any house and free to
 copy, as *Licence and trademark* says, and every release runs them against a
 trial install, so none breaks them unnoticed.
 
-**The documents a page needs, in one call.** A copy is kept ten to fifteen
-minutes, a span of its own so the copies a page took together do not all run
-out together, and is stamped before it is fetched again, so two pages asked in
-the same second refresh it once. Then it is revalidated by its `ETag`; the last
-copy stands while the feed fails and goes when the address answers `404`. A key
-reads what a stranger cannot, an invoice
-by the bookkeeping's, and its copies are kept apart from the stranger's.
-`reads()` takes every address a page needs and fetches the ones not kept
-together, so the page waits for the slowest answer and not for each in turn:
-against a house on another host the round trip is what costs, a `304` as much
-as a `200`. `read()` is one address.
+**The documents a page needs, in one call.** A copy is kept while the house's
+`dateModified` stands, which `changed()` asks of `/feed` at most once a minute,
+so a house nobody writes to is read from its copies for days. Once the date has
+moved, a copy is revalidated by its `ETag`, and counts as current only when
+answered more than a minute after the move was seen, since a cache between may
+hold what came before for that minute and a write in the same second moves no
+date. It is stamped before it is fetched again, so two pages asked in the same
+second refresh it once and a feed that fails is asked again a minute later; the
+last copy stands while the feed fails and goes when the address answers `404`.
+A key reads what a stranger cannot, an invoice by the bookkeeping's, and its
+copies are kept apart from the stranger's. `reads()` takes every address a page
+needs and fetches the ones not kept together, so the page waits for the slowest
+answer and not for each in turn: against a house on another host the round trip
+is what costs, a `304` as much as a `200`. `read()` is one address.
 
 ```php
 function fetching(string $address, string $file, array $headers): CurlHandle
@@ -1020,6 +1057,23 @@ function kept(string $file, int $status, ?string $body): void
   }
 }
 
+function changed(string $address): int
+{
+  $house = preg_replace('#(?<!/)/feed\b.*#', '/feed', $address);
+  $file = __DIR__ . '/cache/' . md5($house) . '.date';
+  [$date, $since] = is_file($file) ? explode("\n", (string) file_get_contents($file)) + ['', '0'] : ['', '0'];
+  if (!is_file($file) || filemtime($file) <= time() - 60) {
+    file_put_contents($file, $date . "\n" . $since);
+    $catalogue = curl_exec(fetching($house, $file, ['Accept: application/ld+json']));
+    $seen = json_decode((string) $catalogue, true)['dateModified'] ?? $date;
+    if ($seen !== $date) {
+      [$date, $since] = [$seen, time() + 60];
+      file_put_contents($file, $date . "\n" . $since);
+    }
+  }
+  return (int) $since;
+}
+
 function reads(array $addresses, string $key = ''): array
 {
   $headers = ['Accept: application/ld+json', ...($key === '' ? [] : ['Authorization: Bearer ' . $key])];
@@ -1031,7 +1085,8 @@ function reads(array $addresses, string $key = ''): array
   $multi = curl_multi_init();
   $fetching = [];
   foreach ($files as $address => $file) {
-    if (!is_file($file) || filemtime($file) <= time() - 600 - crc32($file) % 300) {
+    $stale = !is_file($file . '.etag') || filemtime($file . '.etag') <= changed($address);
+    if (!is_file($file) || $stale && filemtime($file) <= time() - 60) {
       is_file($file) && touch($file);
       $fetching[$file] = fetching($address, $file, $headers);
       curl_multi_add_handle($multi, $fetching[$file]);

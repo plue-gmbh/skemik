@@ -87,16 +87,17 @@ final readonly class Oversights
       ['type' => $type, 'path' => '$.' . $field, 'values' => $this->json->encode($values)]);
   }
 
-  /* A purge takes its edges with it, so what points into nothing points into the trash.
+  /* A purge takes its edges with it, so what points into nothing points into the trash. Asked from the
+     trash's side, a few rows, through `relation_object`: `cross join` keeps that order, which SQLite would
+     otherwise turn round to ask every live record whether it points into the trash.
      @param list<string> $types the type URLs asked, of the record and of its target alike
      @return array<string, list<EntityId>> by type URL */
   public function pointingIntoTrash(array $types): array
   {
-    $statement = $this->db->prepare('select e.type, e.id from entity e where ' . self::LIVE
-      . ' and e.type in (select value from json_each(:types)) and exists (select 1 from relation r'
-      . ' join entity t on t.id = r.object_id where r.subject_id = e.id'
-      . ' and t.deleted_at is not null'
-      . ' and t.type in (select value from json_each(:types))) order by e.type, e.id');
+    $statement = $this->db->prepare('select distinct e.type, e.id from entity t'
+      . ' cross join relation r on r.object_id = t.id cross join entity e on e.id = r.subject_id'
+      . ' where t.deleted_at is not null and t.type in (select value from json_each(:types))'
+      . ' and ' . self::LIVE . ' and e.type in (select value from json_each(:types)) order by e.type, e.id');
     $statement->execute(['types' => $this->json->encode($types)]);
     $ids = [];
     foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {

@@ -15,7 +15,6 @@ use Http\Csrf;
 use Http\Request;
 use Http\Response;
 use Storage\ActivityLog;
-use Storage\Counts;
 use Storage\HouseItem;
 use Storage\HouseObject;
 use Storage\SettingStore;
@@ -37,7 +36,6 @@ final readonly class LocaleController
   public function __construct(
     private Authorizer $authorizer,
     private SettingStore $settings,
-    private Counts $counts,
     private Session $session,
     private Csrf $csrf,
     private Words $words,
@@ -48,12 +46,11 @@ final readonly class LocaleController
   public function rows(): array
   {
     $locales = $this->settings->locales();
-    $counts = $this->counts->byLocale();
     $held = $this->settings->held();
 
     return array_map(fn (Locale $locale): LocaleRow => new LocaleRow($locale->tag,
-      $this->counted($counts[$locale->tag] ?? 0, in_array($locale->tag, $held, true)),
-      $this->refusal($locale, $locales, $held)), $locales);
+      $this->counted($held[$locale->tag] ?? 0, isset($held[$locale->tag])),
+      $this->refusal($locale, $locales, array_keys($held))), $locales);
   }
 
   public function add(Request $request): Response
@@ -93,7 +90,7 @@ final readonly class LocaleController
     $this->guard($request);
     $locales = $this->settings->locales();
     $leaving = $this->held($locales, $tag);
-    $refusal = $this->refusal($leaving, $locales, $this->settings->held());
+    $refusal = $this->refusal($leaving, $locales, array_keys($this->settings->held()));
     if ($refusal !== null) {
       return $this->refused($refusal);
     }

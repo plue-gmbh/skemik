@@ -90,7 +90,7 @@ final readonly class NeedsLook
         'reservationStatus=' . implode(',', self::OPEN['Reservation'])),
       $this->counted(Overlooked::Draft, $this->oversights->inState(Status::Draft, $finished, $this->ago()),
         $collections, 'status=draft'),
-      $this->counted(Overlooked::Review, $this->oversights->inState(Status::Review, $public), $collections,
+      $this->counted(Overlooked::Review, $this->oversights->inState(Status::Review, $read), $collections,
         'status=review'),
       $this->opened(Overlooked::Required, $this->unfilled($read), $collections),
       $this->counted(Overlooked::NoAlt, in_array($media, $read, true) ? $this->oversights->withoutAlt($media)

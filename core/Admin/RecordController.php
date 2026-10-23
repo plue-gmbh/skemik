@@ -171,7 +171,7 @@ final readonly class RecordController
     $html = $this->template->render('partials/' . ($drawn[$view] ?? 'sheet-row'), ['words' => $this->words,
       'collection' => $collection, 'columns' => $columns, 'row' => $row, 'ticks' => true,
       'items' => $this->items($collection), 'house' => $this->settings->locales()[0]->tag,
-      'glance' => new Glance($columns, $this->profile->byType($collection->type))]);
+      'glance' => isset($drawn[$view]) ? $this->collections->glance($collection, $columns) : null]);
 
     return Response::json($this->json->encode([...$this->sheet->saved($row, $columns), 'id' => $saved->id->value,
       'label' => $row->label, 'html' => $html, 'spine' => $this->dialog->row($collection, $row)]), 201)

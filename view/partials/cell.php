@@ -54,12 +54,10 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
   $says[$index] ?? '') ?><?php endforeach ?></span>
 <?php elseif ($kind === FieldKind::Markdown):
   $plain = trim((string) preg_replace('/\s+/u', ' ', (string) preg_replace('/[#*_>`]/u', '', $shown)));
-  $paragraphs = count(preg_split('/\n\s*\n/u', trim($shown)) ?: []);
   $links = preg_match_all('/\]\(skemik:[^)]+\)/u', $shown);
 ?>
 <span class="cell-markdown"><span lang="<?= $template->escape($locale) ?>"><?= $template->escape(mb_strimwidth($plain,
-  0, 60, '…')) ?></span> <span class="cell-note"><?= $template->escape($words->get('cell.paragraphs',
-  ['n' => (string) $paragraphs])) ?></span><?php if ($links > 0): ?> <span
+  0, 60, '…')) ?></span><?php if ($links > 0): ?> <span
   class="cell-note">⇢ <?= $links ?></span><?php endif ?></span>
 <?php elseif (in_array($kind, [FieldKind::Date, FieldKind::DateTime, FieldKind::Duration], true)): ?>
 <span title="<?= $template->escape((string) $value) ?>"><?= $template->escape($shown) ?></span>

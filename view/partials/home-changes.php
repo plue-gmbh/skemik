@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-/* Last changed (`Admin\Changes`), for everybody: the latest action on each of
-   seven records, read from the log and not from `updated_at`, with who took it,
-   since what changed without who is the question half-answered. Who is the
-   person's current name, so a colleague who renamed is not two people, and
-   unknown only ever for a redacted name. A record the reader could not open is
-   never named; the actor's name is not filtered, since who works in the house is
-   no secret from the house. A save names the spine settings and the fields it
-   changed that the reader reads, two and the rest counted; an older or
-   redacted line says *changed*. Two lines each at every width, so a short
-   entry beside a long name is never cut. */
+/* Last changed (`Admin\Changes`), for everybody: the latest seven actions,
+   read from the log and not from `updated_at`, with who took them, since what
+   changed without who is the question half-answered. A day's run of saves or
+   arrangements of one thing by one hand is one line naming all it changed, so
+   a draft saved six times fills no card. Who is the person's current name, and
+   unknown only for a redacted one; a record the reader could not open is never
+   named, the actor always, since who works in the house is no secret from it.
+   A save names the spine settings and fields it changed that the reader reads,
+   two and the rest counted. A record in the trash draws the trash for its
+   state. Two lines each at every width, so a short entry is never cut. */
 
 if (!isset($template)) {
   return;
@@ -21,9 +21,14 @@ if ($changes === []) { ?>
 <?php } else { ?>
       <ul class="changes">
 <?php foreach ($changes as $each) {
+  $trashed = $each->row?->state === 'trashed';
   $public = $each->row?->reach === Profile\Reach::Public;
-  $state = $each->row === null ? null : ($public ? $words->get('status.' . $each->row->state) : $each->row->own);
-  $mark = $template->render('partials/glyph', ['name' => $each->glyph]); ?>
+  $state = $each->row === null || $trashed ? null
+    : ($public ? $words->get('status.' . $each->row->state) : $each->row->own);
+  $mark = $trashed ? '<span title="' . $template->escape($words->get('status.trashed')) . '">'
+    . $template->render('partials/icon', ['name' => 'trash']) . '</span><span class="visually-hidden">'
+    . $template->escape($words->get('status.trashed')) . '</span>'
+    : $template->render($each->glyph === 'export' ? 'partials/icon' : 'partials/glyph', ['name' => $each->glyph]); ?>
         <li><a class="change" href="<?= $template->escape($each->href) ?>"><span
           class="change-head"><span class="record-row-glyph"><?php if ($state !== null) { ?><span
           class="state-dot <?= $public ? 'state-' . $template->escape((string) $each->row?->state) : 'state-own' ?>"

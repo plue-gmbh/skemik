@@ -36,6 +36,10 @@ use Support\Words;
    ran under, since who took it is the line's own. */
 final readonly class HouseChanges
 {
+  /* What an arrangement did to its fields, in the order the log keeps: let out, withheld, added, removed. */
+  private const ARRANGED = ['let_out' => 'change.let_out', 'withheld' => 'change.withheld',
+    'added' => 'change.fields_added', 'removed' => 'change.fields_removed'];
+
   public function __construct(
     private EntityRepository $entities,
     private TokenRepository $tokens,
@@ -66,12 +70,16 @@ final readonly class HouseChanges
     };
   }
 
+  /* A collection's as the sidebar draws it, and a dump's as the export screen does. */
   public function glyph(HouseObject $object): string
   {
+    $type = $object->item === HouseItem::Collection ? $this->collection(null, $object)?->type : null;
+
     return match ($object->item) {
       HouseItem::Account => 'Person',
       HouseItem::Key => 'key',
-      default => 'activity',
+      HouseItem::Dump => 'export',
+      default => $type === null ? 'activity' : SidebarEntry::glyphOf($type),
     };
   }
 
@@ -88,8 +96,22 @@ final readonly class HouseChanges
 
   public function what(HouseObject $object, Activity $activity): string
   {
-    return $this->words->get('change.what', ['type' => $this->words->get('change.about.' . $object->item->value),
+    return $this->words->get('change.what', ['type' => $this->words->get($this->about($object, $activity)),
       'done' => implode(', ', $this->done($object, $activity))]);
+  }
+
+  /* An arrangement is about the fields it names, the line's name saying whose. */
+  private function about(HouseObject $object, Activity $activity): string
+  {
+    $named = $object->item === HouseItem::Collection && $activity->action === ActionType::Update
+      ? count(array_unique(array_merge(...array_map(fn (string $what): array
+        => $activity->result?->list($what) ?? [], array_keys(self::ARRANGED))))) : 0;
+
+    return match (true) {
+      $named === 1 => 'change.about.field',
+      $named > 1 => 'change.about.fields',
+      default => 'change.about.' . $object->item->value,
+    };
   }
 
   /** @return list<string> */
@@ -129,17 +151,14 @@ final readonly class HouseChanges
       : array_map(fn (string $key): string => $this->words->get($key, $role), $said);
   }
 
-  /* The fields by the names the reader's admin gives them, in the order the
-     log keeps: let out, withheld, added, removed.
+  /* The fields by the names the reader's admin gives them.
      @return list<string> */
   private function arranged(HouseObject $object, Props $kept): array
   {
     $collection = $this->collection(null, $object);
     $type = $collection === null ? null : $this->profile->byType($collection->type);
     $said = [];
-    $worded = ['let_out' => 'change.let_out', 'withheld' => 'change.withheld', 'added' => 'change.fields_added',
-      'removed' => 'change.fields_removed'];
-    foreach ($worded as $what => $word) {
+    foreach (self::ARRANGED as $what => $word) {
       $keys = array_filter($kept->list($what), is_string(...));
       if ($keys !== []) {
         $said[] = $this->words->get($word, ['fields' => implode(', ', array_map(

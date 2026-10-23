@@ -5,8 +5,8 @@ declare(strict_types=1);
 /* One tile of the grid view, drawn by the collection screen and by the answer
    to a new record's `POST`, as the table's rows are: the tick where the account
    writes, the picture where the collection carries an image or is the library,
-   and the label, both the link to the record, the spine chip beneath, then two
-   fields the type shows (`Admin\Glance`) as the table's cells. An asset's tile
+   and the label, both the link to the record, the spine chip beneath, then the
+   collection's first two fields (`Admin\Glance`) as the table's cells. An asset's tile
    says its pixels or its kind and how often it is used, under the reader's
    scope as its record screen counts it, and its one field is the description,
    titled alt text on a picture and marked where it is missing. Without a record

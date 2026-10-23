@@ -35,11 +35,11 @@ final readonly class Catalog
     private array $arranged = [],
   ) {}
 
-  /**
-   * @param list<Locale> $locales the house's, the first of them its default
-   * @return array<string, mixed>
-   */
-  public function locales(array $locales): array
+  /* The house's one date, said on the smallest document and on no entry, which
+     would claim a date per collection it is not (`Storage\Modified`).
+     @param list<Locale> $locales the house's, the first of them its default
+     @return array<string, mixed> */
+  public function locales(array $locales, string $modified): array
   {
     $datasets = [];
     foreach ($locales as $locale) {
@@ -48,7 +48,7 @@ final readonly class Catalog
     }
 
     return ['@context' => self::CONTEXT, '@id' => $this->origin . '/feed', '@type' => 'DataCatalog',
-      'name' => $this->name(), 'dataset' => $datasets];
+      'name' => $this->name(), 'dateModified' => $modified, 'dataset' => $datasets];
   }
 
   /**
