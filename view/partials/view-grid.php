@@ -22,7 +22,7 @@ $ending = $library ? $uploads : $creates;
 ?>
 <div data-ticked></div>
 <div data-sheet="grid">
-<?php if ($creates && $rows !== []): ?>
+<?php if ($creates && count($rows) > 1): ?>
   <label class="item-tick-all"><input type="checkbox"
     data-tick-all><?= $template->escape($words->get('sheet.tick_all')) ?></label>
 <?php endif ?>

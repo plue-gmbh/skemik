@@ -253,9 +253,10 @@ final readonly class CollectionController
       $field = $type->field($held->key);
       if ($field !== null) {
         $editable = $writes && $field->writtenBy->hasEditor();
+        $targets = $this->profile->referring($field)?->targets ?? $field->targets;
         $columns[] = new Column($field, $field->label, $held->feed, $editable,
           (string) $this->schema->parameterName($field->key),
-          $editable && $uploads && array_intersect($field->targets, $this->schema->emittedAs('MediaObject')) !== [],
+          $editable && $uploads && array_intersect($targets, $this->schema->emittedAs('MediaObject')) !== [],
           $this->schema->propertyUrl($field->key), $this->schema->objectUrl($field));
       }
     }

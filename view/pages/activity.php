@@ -37,26 +37,16 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
 <?php endif ?>
   <ul class="record-rows">
 <?php foreach ($lines as $index => $line):
-  $trashed = $line->row?->state === 'trashed';
-  $public = $line->row?->reach === Profile\Reach::Public;
-  $state = $line->row === null || $trashed ? null
-    : ($public ? $words->get('status.' . $line->row->state) : $line->row->own);
   $who = ($line->byKey ? '<span class="grant-key">' . $template->render('partials/glyph', ['name' => 'key'])
     . '</span>' : '') . $template->escape($line->who);
   $named = ($line->by === null || $by !== null ? $who
     : '<a href="?' . $template->escape(http_build_query(['by' => $line->by])) . '">' . $who . '</a>')
     . ($line->state === null ? '' : ' ' . $template->escape($line->state));
-  $mark = $trashed ? '<span title="' . $template->escape($words->get('status.trashed')) . '">'
-    . $template->render('partials/icon', ['name' => 'trash']) . '</span><span class="visually-hidden">'
-    . $template->escape($words->get('status.trashed')) . '</span>'
-    : $template->render($line->glyph === 'export' ? 'partials/icon' : 'partials/glyph', ['name' => $line->glyph]);
+  $mark = $template->render($line->glyph === 'export' ? 'partials/icon' : 'partials/glyph', ['name' => $line->glyph]);
   $dialog = 'redact-' . $index ?>
     <li class="record-row<?= $line->href === null ? ' is-missing' : '' ?>">
-      <span class="record-row-glyph"><?php if ($state !== null): ?><span
-        class="state-dot <?= $public ? 'state-' . $template->escape($line->row->state) : 'state-own' ?>"
-        title="<?= $template->escape($state) ?>"></span><span
-        class="visually-hidden"><?= $template->escape($state) ?></span><?php else: ?><?= $line->glyph === 'key'
-        ? '<span class="grant-key">' . $mark . '</span>' : $mark ?><?php endif ?></span>
+      <span class="record-row-glyph"><?= $line->glyph === 'key' ? '<span class="grant-key">' . $mark . '</span>'
+        : $mark ?></span>
 <?php if ($line->href === null): ?>
       <span class="record-row-name"><?= $template->escape($line->label) ?></span>
 <?php else: ?>

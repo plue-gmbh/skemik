@@ -22,12 +22,17 @@ use Support\Uuid;
    `Feed\JsonLd` emits a term by its code. `outbound` is the list the `Validator`
    is handed on the save path and in `HoldingsCheck` alike, so both ask the same
    question of the same shape. `inbound` and `inboundToGroup` are what
-   `Admin\Showing` counts, read through `relation_object`. */
+   `Admin\Showing` counts, read through `relation_object`. An edge under a
+   predicate no type declares any more, left by a release that dropped the field,
+   is read by nobody, since a `Relation` refuses it and a 500 on every screen
+   mends nothing: `strays` names it to the holdings check, and the record's next
+   save leaves it out, as `replace` writes the list a read gave. */
 final readonly class RelationRepository
 {
   private const SELECT = 'select r.subject_id, r.predicate, r.object_id, r.position,'
     . " r.props, t.type as object_type, json_extract(t.props, '$.term_code') as object_term"
-    . ' from relation r join entity t on t.id = r.object_id';
+    . ' from relation r join entity t on t.id = r.object_id'
+    . ' where r.predicate in (select value from json_each(:predicates))';
 
   public function __construct(
     private \PDO $db,
@@ -40,7 +45,7 @@ final readonly class RelationRepository
   /** @return list<Relation> */
   public function outbound(EntityId $subject): array
   {
-    return $this->select(' where r.subject_id = :id order by r.predicate, r.position, r.id', $subject);
+    return $this->select(' and r.subject_id = :id order by r.predicate, r.position, r.id', $subject);
   }
 
   /** @return array<string, list<Relation>> the same, by predicate and in their stored order */
@@ -57,15 +62,25 @@ final readonly class RelationRepository
   /** @return list<Relation> */
   public function inbound(EntityId $object): array
   {
-    return $this->select(' where r.object_id = :id order by r.subject_id, r.predicate', $object);
+    return $this->select(' and r.object_id = :id order by r.subject_id, r.predicate', $object);
   }
 
   /* To any member of a translation group, a trashed one too, whose link still serves the others.
      @return list<Relation> */
   public function inboundToGroup(EntityId $root): array
   {
-    return $this->select(' where r.object_id in (select id from entity'
+    return $this->select(' and r.object_id in (select id from entity'
       . ' where id = :id or translation_of = :id) order by r.subject_id, r.predicate', $root);
+  }
+
+  /** @return list<string> the predicates of the subject's edges that no type declares, each once */
+  public function strays(EntityId $subject): array
+  {
+    $statement = $this->db->prepare('select distinct predicate from relation where subject_id = :id'
+      . ' and predicate not in (select value from json_each(:predicates)) order by predicate');
+    $statement->execute(['id' => $subject->value, 'predicates' => $this->json->encode($this->predicates->names)]);
+
+    return $statement->fetchAll(\PDO::FETCH_COLUMN);
   }
 
   /**
@@ -192,7 +207,7 @@ final readonly class RelationRepository
   private function select(string $where, EntityId $id): array
   {
     $statement = $this->db->prepare(self::SELECT . $where);
-    $statement->execute(['id' => $id->value]);
+    $statement->execute(['id' => $id->value, 'predicates' => $this->json->encode($this->predicates->names)]);
 
     return array_map($this->relation(...), $statement->fetchAll(\PDO::FETCH_ASSOC));
   }

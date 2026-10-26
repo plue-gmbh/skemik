@@ -34,6 +34,7 @@ function openFieldPopover(trigger) {
   });
   const shown = (selector) => [...element.querySelectorAll(selector)].find((each) => !each.closest("[hidden]"));
   focusField(shown("input:not([type=hidden])") ?? shown("button:not(:disabled)"), element);
+  return element;
 }
 
 /* A field's grants open under their one line, and close again under it. */
@@ -63,7 +64,15 @@ function narrowFields(element) {
   });
 }
 
+/* The name that opened a popover closes it again, as the view menu's button does. */
+let fieldOpened = null;
+
 document.addEventListener("click", (event) => {
   const trigger = event.target.closest("[data-field-popover]");
-  if (trigger) openFieldPopover(trigger);
+  if (!trigger) return;
+  if (fieldOpened?.trigger === trigger && fieldOpened.element.isConnected) {
+    fieldOpened.element.dispatchEvent(new Event("close"));
+    return;
+  }
+  fieldOpened = { trigger, element: openFieldPopover(trigger) };
 });

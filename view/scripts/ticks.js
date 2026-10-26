@@ -45,19 +45,23 @@ function ticked(table, data, spineData) {
         this.ticked = boxes().filter((each) => each.checked)
           .map((each) => each.closest("[data-record]").dataset.record);
         const all = table.querySelector("[data-tick-all]");
-        all.checked = this.ticked.length > 0 && this.ticked.length === boxes().length;
-        all.indeterminate = this.ticked.length > 0 && !all.checked;
+        if (all) {
+          all.checked = this.ticked.length > 0 && this.ticked.length === boxes().length;
+          all.indeterminate = this.ticked.length > 0 && !all.checked;
+        }
         announce(fill(this.words["sheet.ticked"], { n: this.ticked.length }));
       },
       takers(key) {
         return this.ticked.filter((id) => table.querySelector(
           `[data-record="${id}"] [data-field="${key}"]:not([data-off]) [data-edit]`));
       },
+      /* A page of one record draws no tick for all, so focus returns to its own. */
       untick() {
-        const all = table.querySelector("[data-tick-all]");
-        all.checked = false;
-        this.tick(all);
-        all.focus();
+        const back = table.querySelector("[data-tick-all]") ?? boxes()[0];
+        boxes().forEach((each) => { each.checked = false; });
+        back.checked = false;
+        this.tick(back);
+        back.focus();
       },
       held(key) {
         const held = new Set(this.ticked.map((id) => this.current(id, key)));

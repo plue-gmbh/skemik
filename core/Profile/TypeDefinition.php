@@ -180,4 +180,15 @@ final readonly class TypeDefinition
   {
     return array_values(array_filter($this->fields(), fn (FieldDefinition $f): bool => $f->cardinality->isEdge()));
   }
+
+  /* The document without a value under an edge's key, left by a release that
+     made the field one: no screen shows it, and kept it refuses every save,
+     since the `Validator` reads it as a second home for the fact.
+     @param array<string, mixed> $document @return array<string, mixed> */
+  public function valued(array $document): array
+  {
+    $edges = array_map(fn (FieldDefinition $f): string => $f->key, $this->edges());
+
+    return array_diff_key($document, array_flip($edges));
+  }
 }

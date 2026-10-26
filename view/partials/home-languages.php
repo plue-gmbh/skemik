@@ -17,6 +17,7 @@ if (!isset($template)) {
   return;
 }
 $said = fn (string $key, string $tag): string => $template->escape($words->get($key, ['tag' => $tag]));
+$trash = $template->render('partials/icon', ['name' => 'trash']);
 ?>
 <?php if ($refused !== '') { ?>
       <p class="page-note is-refused" role="alert"><?= $template->escape($refused) ?></p>
@@ -38,13 +39,12 @@ $said = fn (string $key, string $tag): string => $template->escape($words->get($
           <span class="locale-tag"><?= $template->escape($row->tag) ?></span>
 <?php if ($index > 0 && $row->refusal === null) { ?>
           <button type="button" class="button-quiet is-danger" data-dialog="<?= $id ?>-remove" aria-haspopup="dialog"
-            aria-label="<?= $said('locale.remove_label',
-            $row->tag) ?>"><?= $template->escape($words->get('locale.remove')) ?></button>
+            aria-label="<?= $said('locale.remove_label', $row->tag) ?>"
+            title="<?= $said('locale.remove_label', $row->tag) ?>"><?= $trash ?></button>
 <?php } elseif ($index > 0) { ?>
           <button type="button" class="button-quiet" aria-disabled="true"
             aria-label="<?= $said('locale.remove_label', $row->tag) ?>" title="<?= $template->escape($row->refusal) ?>"
-            data-toast="<?= $template->escape($row->refusal) ?>"><?= $template->escape($words->get('locale.remove'))
-              ?></button>
+            data-toast="<?= $template->escape($row->refusal) ?>"><?= $trash ?></button>
 <?php } ?>
           <span class="locale-count"><?= $template->escape($row->count) ?></span>
 <?php if ($index > 0) { ?>

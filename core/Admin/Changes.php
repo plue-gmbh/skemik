@@ -7,7 +7,6 @@ namespace Admin;
 use Auth\Account;
 use Auth\TokenRepository;
 use Domain\ActionType;
-use Domain\Entity;
 use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
 use Profile\Profile;
@@ -110,12 +109,10 @@ final readonly class Changes
     if ($trashed && !$this->rows->opensTrash($account, $collection)) {
       return null;
     }
-    $row = $this->row($account, $entity);
-
-    return new Change($row, $row->label,
+    return new Change($this->sheet->rows($account, [], [$entity])[0]->label,
       $trashed ? '/trash/' . $collection->slug->value : Rows::address($collection, $entity),
       $this->what($entity->typeName(), $activity, $this->named($account, $collection, $activity)),
-      ...$this->said($activity));
+      ...$this->said($activity), glyph: SidebarEntry::glyphOf($entity->type));
   }
 
   /* A record purged since, or an account whose person is gone, as the log
@@ -126,7 +123,7 @@ final readonly class Changes
     $what = $activity->target instanceof HouseObject ? $this->house->what($activity->target, $activity)
       : $this->what((string) $activity->result?->string('type'), $activity);
 
-    return new Change(null, $this->words->get('change.gone'), null, $what, ...$this->said($activity),
+    return new Change($this->words->get('change.gone'), null, $what, ...$this->said($activity),
       glyph: 'gone');
   }
 
@@ -134,7 +131,7 @@ final readonly class Changes
   {
     $label = $this->house->label($account, $object, $activity);
 
-    return $label === null ? null : new Change(null, $label, $this->house->href($object),
+    return $label === null ? null : new Change($label, $this->house->href($object),
       $this->house->what($object, $activity), ...$this->said($activity),
       glyph: $this->house->glyph($object));
   }
@@ -209,15 +206,6 @@ final readonly class Changes
       $minutes < 10080 => $this->words->get('change.days', ['n' => (string) intdiv($minutes, 1440)]),
       default => $this->moments->day($at),
     };
-  }
-
-  /* A record in the trash says so where its state would stand, as the trash's own notice does. */
-  private function row(Account $account, Entity $entity): SheetRow
-  {
-    $row = $this->sheet->rows($account, [], [$entity])[0];
-
-    return $entity->deletedAt === null ? $row
-      : new SheetRow($entity, $row->label, 'trashed', $row->reach, [], changed: $row->changed);
   }
 
   /* Read from what the log kept: the trash and its undo are updates of

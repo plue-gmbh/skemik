@@ -188,7 +188,8 @@ final readonly class JsonLd
 
   /* A row's reference, or a flattened key's, leaves as any target does, through
      the same gates and at the same depth, or not at all; a word leaves as a
-     thing of that name, so a consumer reads `name` either way.
+     thing of that name, so a consumer reads `name` either way, unless the key
+     is a link, where the word is an address and leaves as one.
      @param array<string, mixed> $row
      @return array<string, mixed> */
   private function referring(FieldDefinition $field, array $row, ?Depth $below): array
@@ -199,19 +200,26 @@ final readonly class JsonLd
       return $row;
     }
     $id = $object->referredBy($row);
-    $row[$key] = $id === null ? ['@type' => $object->wordType(), 'name' => $row[$key]]
-      : $this->target(new EntityId($id), $below);
+    $linked = ($object->kinds[$key] ?? null) === FieldKind::Link;
+    $row[$key] = match (true) {
+      $id !== null => $this->target(new EntityId($id), $below),
+      $linked => $row[$key],
+      default => ['@type' => $object->wordType(), 'name' => $row[$key]],
+    };
 
     return array_filter($row, fn (mixed $value): bool => $value !== null);
   }
 
-  /* @param array<string, list<Relation>> $edges the record's, by predicate, in their stored order
+  /* A record among its own targets, a live list that lists itself, is its
+     address alone: rendered, it would carry the document once more inside it.
+     @param array<string, list<Relation>> $edges the record's, by predicate, in their stored order
      @return array<array-key, mixed>|string|Rendered|null */
   private function edge(FieldDefinition $field, array $edges, ?Depth $below): array|string|Rendered|null
   {
     $values = [];
     foreach ($edges[(string) $this->schema->propertyName($field->key)] ?? [] as $relation) {
-      $target = $this->targetOf($field, $relation, $below);
+      $itself = $relation->object->value === $relation->subject->value;
+      $target = $this->targetOf($field, $relation, $itself ? null : $below);
       if ($target !== null) {
         $values[] = $this->wrapped($relation, $target);
       }

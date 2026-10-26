@@ -1,6 +1,6 @@
 {
   "source":"https://schema.org/version/latest/schemaorg-current-https.jsonld",
-  "distilled":"2026-10-20",
+  "distilled":"2026-10-26",
   "note":"Every class the released vocabulary publishes with its parents, every property with its domainIncludes and its rangeIncludes, every enumeration member with its enumerations, and every name superseded with its successor. Not pruned to the profile: a snapshot cut to what the profile already names cannot tell a property the profile newly adds from a name nobody published. Committed, refreshed deliberately, never fetched at runtime.",
   "superseded":{
     "Code":"SoftwareSourceCode",

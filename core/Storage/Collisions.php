@@ -42,14 +42,22 @@ final readonly class Collisions
 
   public function requireFreeSlug(Entity $entity): void
   {
-    $statement = $this->db->prepare('select 1 from entity where type = :type'
+    if ($this->slugHolder($entity) !== null) {
+      throw SlugTaken::named($entity->slug->value, $entity->locale->tag);
+    }
+  }
+
+  /* The record holding this slug where the entity would answer, in the trash too. */
+  public function slugHolder(Entity $entity): ?EntityId
+  {
+    $statement = $this->db->prepare('select id from entity where type = :type'
       . ' and slug = :slug and id <> :id and ' . self::IN_LOCALE);
     $statement->execute(['type' => $entity->type,
       'slug' => $entity->slug->value, 'id' => $entity->id->value,
       ...$this->localeScope($entity->type, $entity->locale)]);
-    if ($statement->fetchColumn() !== false) {
-      throw SlugTaken::named($entity->slug->value, $entity->locale->tag);
-    }
+    $holder = $statement->fetchColumn();
+
+    return $holder === false ? null : new EntityId((string) $holder);
   }
 
   /* The first spelling of a new record's slug that nothing of its type in its

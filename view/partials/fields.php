@@ -6,10 +6,11 @@ declare(strict_types=1);
    collection: one list under one search, the fields it carries first, in order,
    each opening the popover a column's name opens (`partials/field-popover`),
    since only the table has columns to click. Under them, for `manageFields`,
-   every field the type still offers, each under its schema.org name so a field
-   has its name before it exists, a value object one line with its count of
-   fields. Those lines are one form's submit buttons, so a field is added without
-   a script; the script only narrows the list (`view/scripts/fields.js`). */
+   every field the type still offers, a value object one line with its count of
+   fields. Every line stands beside its schema.org name, so a field has it
+   before it exists. The offers are one form's submit buttons, so a field is
+   added without a script; the script only narrows the list
+   (`view/scripts/fields.js`). */
 
 if (!isset($template)) {
   return;
@@ -39,7 +40,8 @@ $search = $words->get('field.search', ['n' => (string) (count($columns) + count(
         class="visually-hidden">, <?= $template->escape($words->get('sheet.public')) ?></span><?php endif ?><?php
         if ($names !== ''): $here = $words->get('grant.here', ['names' => $names]) ?><span class="grant-mark"
         title="<?= $template->escape($here) ?>"><?= $template->render('partials/glyph', ['name' => 'key'])
-        ?></span><span class="visually-hidden">, <?= $template->escape($here) ?></span><?php endif ?></button>
+        ?></span><span class="visually-hidden">, <?= $template->escape($here) ?></span><?php endif ?><span
+        class="option-term"><?= $template->escape($column->parameter) ?></span></button>
 <?php endforeach ?>
 <?php foreach ($offers as $offer): ?>
       <button type="submit" class="option is-offer" name="key" value="<?= $template->escape($offer->key) ?>"

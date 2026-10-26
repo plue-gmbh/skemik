@@ -10,7 +10,6 @@ use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\ForbiddenTransition;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\SlugTaken;
-use Domain\Exceptions\UnknownPredicate;
 use Domain\Exceptions\UnknownType;
 use Domain\Exceptions\ValueTaken;
 use Domain\LocalisedText;
@@ -30,7 +29,8 @@ use Support\JsonFailed;
    row its own type refuses, stands what a release or a rotted derivative leaves
    on a sound one — a † or ! the type gained after rows existed (counted on the
    home screen by `Admin\NeedsLook`), a key the profile no longer names, which the
-   `Validator` keeps on save, and `sort_keys`, `words` and the index, which are
+   `Validator` keeps on save, an edge under a predicate it no longer declares,
+   which every read leaves out, and `sort_keys`, `words` and the index, which are
    repaired by rewriting. */
 final readonly class HoldingsCheck
 {
@@ -142,8 +142,8 @@ final readonly class HoldingsCheck
       $entity->status->to($entity->status, $type);
       $this->collisions->requireFreeSlug($entity);
       $this->collisions->requireFreeTranslation($entity);
-    } catch (MalformedValue|UnknownType|UnknownPredicate|ForbiddenTransition|EntityNotFound|SlugTaken
-      |ValueTaken|JsonFailed $failure) {
+    } catch (MalformedValue|UnknownType|ForbiddenTransition|EntityNotFound|SlugTaken|ValueTaken
+      |JsonFailed $failure) {
       return [new Violation('row', $failure->getMessage(), record: $id)];
     }
 
@@ -166,6 +166,9 @@ final readonly class HoldingsCheck
         $reason = 'a key ' . $type->name . ' does not name';
         $found[] = new Violation((string) $key, $reason, $entity->id);
       }
+    }
+    foreach ($this->relations->strays($entity->id) as $predicate) {
+      $found[] = new Violation($predicate, 'an edge ' . $type->name . ' does not name', $entity->id);
     }
 
     return $found;

@@ -132,8 +132,9 @@ final readonly class Grants
         $capability === GrantCapability::Arrange => $this->words->get('grant.arrange_note'),
         default => null,
       };
-      $offers[] = new GrantOffer($capability, $this->reaches($capability, $collection, $field),
-        $note, $read && $public ? $this->words->get('grant.unpublished_offer') : null);
+      $offers[] = new GrantOffer($capability, $subject === null ? $this->reaches($capability, $collection, $field)
+        : $this->words->get('grant.offer_' . $capability->value . '_record'), $note,
+        $read && $public ? $this->words->get('grant.unpublished_offer') : null);
     }
 
     return $offers;
@@ -148,7 +149,7 @@ final readonly class Grants
     return implode(' · ', [$said, ...$this->qualifiers($rule, $account)]);
   }
 
-  /* An offer stands after its verb, so it names only what the verb reaches; a record's reaches its collection. */
+  /* An offer stands after its verb, so it names only what the verb reaches; a record's reaches the record alone. */
   private function reaches(GrantCapability $capability, Collection $collection, ?string $field): string
   {
     return $this->words->get('grant.offer_' . $capability->value . ($field === null ? '' : '_field'),

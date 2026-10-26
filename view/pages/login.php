@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /* The login (`Admin\LoginController`): the chrome before the paper, one card,
-   two steps. The sentence under the code field is the same whatever happened. */
+   two steps. The sentence under the code field is the same whatever happened,
+   and the house's own line under it is `config.php`'s, the same on both steps. */
 
 if (!isset($template)) {
   return;
@@ -36,6 +37,10 @@ ob_start();
 <?php endif ?>
 <?php if ($sentence !== null): ?>
   <p id="login-sentence" class="login-sentence" role="status"><?= $template->escape($sentence) ?></p>
+<?php endif ?>
+<?php if ($note !== null): ?>
+  <p class="login-note"><?php if ($link !== null): ?><a href="<?= $template->escape($link) ?>"><?=
+    $template->escape($note) ?></a><?php else: ?><?= $template->escape($note) ?><?php endif ?></p>
 <?php endif ?>
 </main>
 <?= $template->render('partials/footer', ['words' => $words, 'ground' => true]) ?>

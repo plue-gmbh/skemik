@@ -129,11 +129,12 @@ final readonly class Targets
   {
     $set = $field->cardinality === Cardinality::T ? $this->schema->termSet($field) : null;
     $class = $record->typeName() === 'MediaObject' ? Media::emittedType($record) : null;
+    $targets = $this->profile->referring($field)?->targets ?? $field->targets;
 
     return match (true) {
       $set !== null && $this->setOf($record) !== $set => 'term in the set ' . $set,
-      $class !== null && !$this->schema->within($field->targets, $class)
-        => 'file of the class ' . implode(' or ', $field->targets),
+      $class !== null && !$this->schema->within($targets, $class)
+        => 'file of the class ' . implode(' or ', $targets),
       default => null,
     };
   }

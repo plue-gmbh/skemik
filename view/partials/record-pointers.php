@@ -7,9 +7,13 @@ declare(strict_types=1);
    what stands and never whether a delete is harmless: an account holding the
    person refuses it whatever points here, and a retention duty is no edge. A
    work's translations are one row with a link per language, and the count is
-   of records, since each is one more that a delete leaves pointing nowhere. */
+   of records, since each is one more that a delete leaves pointing nowhere.
+   Nothing pointing and no account holding it draws no card at all. */
 
 if (!isset($template)) {
+  return;
+}
+if ($pointers === [] && $held === null) {
   return;
 }
 ?>

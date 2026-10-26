@@ -29,7 +29,9 @@ use Support\Words;
    posted from another site it arrives without the `SameSite=Lax` cookie, and the
    session it began would replace that browser's login. A script sends no
    `Origin` and passes. The mail speaks the asking browser's language, the
-   account's being known only once it is in. */
+   account's being known only once it is in. The house's own line under the
+   form is `config.php`'s and never the request's, so the page stays the same
+   whoever asks. */
 final readonly class LoginController
 {
   public function __construct(
@@ -45,7 +47,7 @@ final readonly class LoginController
     private Csrf $csrf,
     private Template $template,
     private Words $words,
-    private string $origin,
+    private Premises $premises,
   ) {}
 
   /* Straight to the code step for the owner a first run just made. A colleague
@@ -85,7 +87,7 @@ final readonly class LoginController
   private function deliver(Account $account, string $key, bool $mails): void
   {
     $name = (string) $this->people->find($account->person)->props->string('name');
-    $mail = (new LoginMail($this->template, $this->words, $name, $this->origin))
+    $mail = (new LoginMail($this->template, $this->words, $name, $this->premises->address))
       ->with($this->codes->issue($account, $key));
     $mails ? $this->delivery->send($account, $mail) : $this->delivery->floor($account, $mail);
   }
@@ -160,6 +162,7 @@ final readonly class LoginController
   /** @param array<string, ?string> $values */
   private function page(array $values, int $status): Response
   {
-    return Response::html($this->template->render('pages/login', ['words' => $this->words, ...$values]), $status);
+    return Response::html($this->template->render('pages/login', ['words' => $this->words,
+      'note' => $this->premises->loginNote, 'link' => $this->premises->loginLink, ...$values]), $status);
   }
 }

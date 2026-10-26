@@ -212,9 +212,9 @@ final readonly class RecordController
      @return array{Entity, list<Relation>} */
   private function edited(Account $account, Request $request, Collection $collection, Entity $entity): array
   {
-    $sent = $this->fields->sent($request);
-    [$props, $edges] = $this->fields->applied($account, $collection, $this->profile->byType($entity->type),
-      $entity->id, $entity->props, $this->relations->outbound($entity->id),
+    [$sent, $type] = [$this->fields->sent($request), $this->profile->byType($entity->type)];
+    [$props, $edges] = $this->fields->applied($account, $collection, $type, $entity->id,
+      new Props($type->valued($entity->props->document())), $this->relations->outbound($entity->id),
       array_diff_key($sent, ['spine' => true, LocalisedText::KEY => true]));
     [$worded, $edges] = $this->fields->worded($collection, $entity->withProps($props), $edges,
       $sent[LocalisedText::KEY] ?? null);

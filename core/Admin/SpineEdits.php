@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Admin;
 
 use Domain\Entity;
+use Domain\EntityId;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\LocalisedText;
@@ -23,10 +24,10 @@ use Support\Words;
    screen made of it. The locale moves on a work only: a labelled thing's locale
    names the words it was authored in, and moving it would relabel them.
    What the dialog cannot prevent comes back as a violation on the `spine.` key it
-   names: a slug its locales already hold, a locale its group already has, in
-   the trash too, and on a type with both mechanisms a locale its own words are
-   already kept in, since the authored words would then claim a language another
-   set of them holds. Anything else malformed is a request no screen sends, and
+   names: a slug its locales already hold and a locale its group already has,
+   each in the trash too and saying so, and on a type with both mechanisms a
+   locale its own words are already kept in, since the authored words would then
+   claim a language another set of them holds. Anything else malformed is a request no screen sends, and
    is refused whole. */
 final readonly class SpineEdits
 {
@@ -70,17 +71,21 @@ final readonly class SpineEdits
     if ($moved && in_array($edited->locale->tag, (new LocalisedText($type))->locales($edited), true)) {
       $violations[] = new Violation('spine.locale', $this->words->get('spine.locale_worded'));
     }
-    if ($this->collisions->freeSlug($edited)->value !== $edited->slug->value) {
-      $violations[] = new Violation('spine.slug', $this->words->get('spine.slug_taken'));
-    }
-    $holder = $type->locale->forks() ? $this->collisions->translationHolder($edited) : null;
-    if ($holder !== null) {
-      $trashed = $this->entities->find($holder)->deletedAt !== null;
-      $violations[] = new Violation('spine.locale',
-        $this->words->get($trashed ? 'spine.locale_trashed' : 'spine.locale_taken'));
-    }
+    $violations[] = $this->heldBy('slug', $this->collisions->slugHolder($edited));
+    $violations[] = $this->heldBy('locale',
+      $type->locale->forks() ? $this->collisions->translationHolder($edited) : null);
 
-    return $violations;
+    return array_values(array_filter($violations));
+  }
+
+  private function heldBy(string $key, ?EntityId $holder): ?Violation
+  {
+    if ($holder === null) {
+      return null;
+    }
+    $trashed = $this->entities->find($holder)->deletedAt !== null;
+
+    return new Violation('spine.' . $key, $this->words->get('spine.' . $key . ($trashed ? '_trashed' : '_taken')));
   }
 
   /* The group's member in the locale a translation is asked in, to open in

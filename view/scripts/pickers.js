@@ -73,16 +73,21 @@ const listPicker = {
    row held as a text, as a field holds it from before it took rows, opens as its `value`, the
    key a row of one value names it by. The key that refers takes a word, and offers the records
    the word finds: a pick replaces the word by the record, ✕ returns the line to a word. */
+/* A row's referring key is met as a reference is: its records offered as the key
+   is focused, the newest first, and a file key, a step's image, with previews
+   and, where the account writes the library, an upload beside them, what lands
+   picked as a hit is, marked a draft. */
 const objectsPicker = {
   template: "#objects-picker-template",
   mixins: [ordered],
-  props: ["field", "value", "words", "terms", "collection", "locale"],
+  props: ["field", "value", "words", "terms", "collection", "locale", "csrf", "limit"],
   emits: ["draft", "done"],
   data() {
     const items = (this.value ?? []).map((entry) => (this.shaped(entry) ? { ...entry } : { value: entry }));
     const numbers = (entry) => Object.keys(entry).filter((key) => typeof entry[key] === "number");
-    const numeric = new Set([...this.field.numbers, ...items.flatMap(numbers)]);
-    return { items, numeric, hits: [], asking: null };
+    const declared = Object.keys(this.field.kinds).filter((key) => this.field.kinds[key] === "number");
+    const numeric = new Set([...declared, ...items.flatMap(numbers)]);
+    return { items, numeric, hits: [], asking: null, sending: false, refused: "" };
   },
   mounted() {
     if (this.items.length === 0) return this.add();
@@ -91,14 +96,29 @@ const objectsPicker = {
   methods: {
     shaped: (value) => value !== null && typeof value === "object",
     refers: (value) => value !== null && typeof value === "object" && "label" in value,
+    long(key) { return ["longtext", "markdown"].includes(this.field.kinds[key]); },
+    file(key) { return key === this.field.reference && this.field.kinds[key] === "link"; },
     typing(index, key) {
       this.changed();
+      this.entering(index, key);
+    },
+    entering(index, key) {
       if (key !== this.field.reference) return;
       window.clearTimeout(this.timer);
       this.timer = window.setTimeout(() => this.find(index, String(this.items[index][key] ?? "")), 200);
     },
+    /* The hits go when the key is left, a moment later, so a press on one of them still lands. */
+    leaving(index) {
+      window.clearTimeout(this.timer);
+      this.timer = window.setTimeout(() => this.asking === index && ([this.hits, this.asking] = [[], null]), 200);
+    },
+    hint() { return this.words["picker.refers_file"].split("{upload}"); },
+    /* Enter takes the first hit offered, as a reference's does, and ends the entry otherwise. */
+    enter(index, key) {
+      if (this.asking === index && this.hits.length > 0) return this.refer(this.items[index], this.hits[0]);
+      this.$emit("done");
+    },
     async find(index, typed) {
-      if (typed.trim() === "") return ([this.hits, this.asking] = [[], null]);
       const query = new URLSearchParams({
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
       });
@@ -107,7 +127,26 @@ const objectsPicker = {
       [this.hits, this.asking] = [answer.hits ?? [], index];
     },
     refer(entry, hit) {
-      entry[this.field.reference] = { id: hit.id, label: hit.label, glyph: hit.glyph, gone: false };
+      entry[this.field.reference] = { id: hit.id, label: hit.label, glyph: hit.glyph, preview: hit.preview,
+        gone: false };
+      [this.hits, this.asking] = [[], null];
+      this.changed();
+    },
+    async upload(index, event) {
+      const file = event.target.files[0];
+      if (file === undefined) return;
+      const body = new FormData();
+      body.set("file", file);
+      body.set("picks", this.field.accept.join());
+      [this.sending, this.refused] = [true, ""];
+      announce(this.words["media.sending"]);
+      const answer = await fetch("/media", { method: "POST", body,
+        headers: { Accept: "application/json", "X-CSRF-Token": this.csrf } })
+        .then((response) => response.json()).catch(() => ({}));
+      [this.sending, event.target.value] = [false, ""];
+      if (!answer.picked) return (this.refused = answer.error ?? fill(this.words["media.lost"], { limit: this.limit }));
+      this.items[index][this.field.reference] = { ...answer.picked, gone: false, draft: true };
+      announce(this.words["picker.draft"]);
       [this.hits, this.asking] = [[], null];
       this.changed();
     },

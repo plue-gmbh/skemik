@@ -15,7 +15,8 @@ use Profile\TypeDefinition;
    that closes before it opens, an uploaded file repointed by an edit, an instant not in the one stored spelling, which
    `Status::isPublicAt` compares as text. Version and the `updated_` stamps are
    written by `Storage\EntityRepository::save`, never by a `with` here, because a
-   version bumped twice for one save is an `If-Match` that can never succeed. */
+   version bumped twice for one save is an `If-Match` that can never succeed;
+   `created_at` is the record's own, which only a replaced file moves. */
 final readonly class Entity
 {
   private const SCHEMA_ORG = 'https://schema.org/';
@@ -99,10 +100,12 @@ final readonly class Entity
   }
 
   /* `Admin\Intake`'s repointing: a new file at a new address, so the bytes at
-     an address still never change. */
-  public function withFile(Props $props): self
+     an address still never change. A replaced file is a new upload, so the
+     record is made anew at `$at` and orders as one, its log keeping when it was first. */
+  public function withFile(Props $props, string $at): self
   {
-    $edited = clone($this, ['props' => $props]);
+    $edited = clone($this, ['props' => $props, 'createdAt' => $at]);
+    $edited->checkInstants([$at]);
 
     return $edited->holdsFile() ? $edited : throw ForbiddenTransition::fileKept('content_url');
   }

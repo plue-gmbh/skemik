@@ -18,7 +18,7 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/card',
 ?>
 <div data-ticked></div>
 <div data-sheet="cards">
-<?php if ($creates && $rows !== []): ?>
+<?php if ($creates && count($rows) > 1): ?>
   <label class="item-tick-all"><input type="checkbox"
     data-tick-all><?= $template->escape($words->get('sheet.tick_all')) ?></label>
 <?php endif ?>

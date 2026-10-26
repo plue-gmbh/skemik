@@ -11,8 +11,9 @@ namespace Admin;
    holdings is taken daily, which a host that backs up properly switches off
    there, whether a release is installed by itself, which a copy ahead of the
    release declines, whether it is taken before the day a staged one is held
-   back to, and who a security report about this site goes to first, the house
-   or its agency, since all of them are facts about the machine. */
+   back to, who a security report about this site goes to first, the house
+   or its agency, and the house's one line under the login form, where to turn
+   without an account, beside the contact since it changes as rarely. */
 final readonly class Premises
 {
   public function __construct(
@@ -22,5 +23,7 @@ final readonly class Premises
     public bool $updates = true,
     public bool $early = false,
     public ?string $securityContact = null,
+    public ?string $loginNote = null,
+    public ?string $loginLink = null,
   ) {}
 }

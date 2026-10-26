@@ -128,14 +128,19 @@ final readonly class CollectionStore
       'feed' => $field->feed], $collection->fields));
   }
 
-  /** @param array<string, string|int|null> $row */
+  /* A key the type no longer names, left by a release that dropped the field, is
+     left out as the row is read, since carried it would refuse every save of the
+     collection; the next save writes the fields without it.
+     @param array<string, string|int|null> $row */
   private function collection(array $row): Collection
   {
+    $type = $this->profile->byType((string) $row['type']);
     $fields = array_map(fn (array $field): CollectionField => new CollectionField((string) $field['key'],
       $field['feed'] === true), $this->json->decode((string) $row['fields']));
+    $named = array_filter($fields, fn (CollectionField $field): bool => $type->field($field->key) !== null);
 
     return new Collection((string) $row['id'], (string) $row['type'],
-      $this->words->get('type.' . basename((string) $row['type'])), $fields);
+      $this->words->get('type.' . basename((string) $row['type'])), array_values($named));
   }
 
   private function everyTypeIsPlaced(): bool

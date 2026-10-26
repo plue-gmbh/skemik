@@ -21,7 +21,7 @@ $held = $rows !== [] && $rows[0]->held;
   <header class="collection-head">
     <div class="collection-title">
       <h1><?= $template->escape($title) ?></h1>
-      <p class="page-shape"><?= $template->escape($words->get($purges ? 'trash.explain_owner' : 'trash.explain')) ?></p>
+      <p class="page-shape"><?= $template->escape($words->get('trash.explain')) ?></p>
       <a class="tool-button is-wide trash-back"
         href="<?= $template->escape($address) ?>"><?= $template->escape($words->get('trash.back',
         ['collection' => $collection->name])) ?></a>
@@ -55,8 +55,10 @@ $held = $rows !== [] && $rows[0]->held;
       ['name' => 'close']) ?><span
       class="visually-hidden"><?= $template->escape($words->get('sheet.untick')) ?></span></button>
   </div>
+<?php if (count($rows) > 1): ?>
   <label class="item-tick-all"><input type="checkbox"
     data-tick-all><?= $template->escape($words->get('sheet.tick_all')) ?></label>
+<?php endif ?>
 <?php endif ?>
   <ul class="record-rows">
 <?php foreach ($rows as $row): $id = $row->entity->id->value ?>

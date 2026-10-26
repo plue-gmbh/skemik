@@ -32,7 +32,7 @@ $before = null;
 <div data-ticked></div>
 <div class="sheet-card">
   <div data-sheet="timeline" data-dated="<?= $template->escape((string) $dated?->field->key) ?>">
-<?php if ($creates && $rows !== []): ?>
+<?php if ($creates && count($rows) > 1): ?>
     <label class="item-tick-all"><input type="checkbox"
       data-tick-all><?= $template->escape($words->get('sheet.tick_all')) ?></label>
 <?php endif ?>

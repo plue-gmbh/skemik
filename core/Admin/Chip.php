@@ -30,14 +30,15 @@ final readonly class Chip
 
   /* As a picker lists it: by its place in the field's list, which is what a save
      sends back to keep it (`FieldEdits`), and never by its target, since a chip
-     drawn as gone must not name what it hides. An edge's words come as its lines
+     drawn as gone must not name what it hides; its link is the cell's, which an
+     edited cell does not draw. An edge's words come as its lines
      take them, and in another locale that locale's own, the ones it was written
      with as their placeholders.
      @return array<string, mixed> */
   public function held(int $index, ?Locale $words = null): array
   {
     $drawn = ['edge' => $index, 'label' => $this->label, 'glyph' => $this->glyph, 'gone' => $this->gone,
-      'preview' => $this->preview];
+      'preview' => $this->preview, 'href' => $this->href];
     if ($this->edge === null) {
       return $drawn;
     }

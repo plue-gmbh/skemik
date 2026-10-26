@@ -108,9 +108,10 @@ $relay = (string) ($config['relay']['host'] ?? '') !== '' ? new Auth\Smtp((strin
   (int) $config['relay']['port'], (string) $config['relay']['user'], (string) $config['relay']['password'],
   (string) $config['relay']['sender'], (string) parse_url($address, PHP_URL_HOST)) : null;
 $logger = new Http\Logger($data . '/log', $utc);
+$named = fn (string $key): ?string => (string) ($config[$key] ?? '') !== '' ? (string) $config[$key] : null;
 $premises = new Admin\Premises($data, $address, (bool) ($config['daily_backups'] ?? true),
   (bool) ($config['updates'] ?? true), ($config['updates'] ?? true) === 'early',
-  (string) ($config['security_contact'] ?? '') !== '' ? (string) $config['security_contact'] : null);
+  $named('security_contact'), $named('login_note'), $named('login_link'));
 $halt = (new Admin\Probes($data,
   new Admin\DataLayout(__DIR__, new Admin\Proofs(new Support\Fetch(), $words), $words),
   new Support\Fetch(), $utc, $words, new Update\UpdateCheck($data, new Support\Fetch(), $utc)))

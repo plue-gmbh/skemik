@@ -180,7 +180,7 @@ final readonly class IngestController
   {
     $stored = $this->isStored($record);
     $type = $this->profile->byType($record->type);
-    $written = $payload->onto($record);
+    $written = $payload->onto($record->withProps(new Props($type->valued($record->props->document()))));
     $entity = $written->withProps(new Props($type->named($record->props->document(),
       $written->props->document())));
     $edges = $payload->edges($record, $stored ? $this->relations->outbound($record->id) : []);

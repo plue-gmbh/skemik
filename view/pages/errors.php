@@ -6,7 +6,8 @@ declare(strict_types=1);
    since a person quoting six characters is why anybody opens it, then the
    entries newest first, each one line, its incident, when, the status and the
    address asked for, and what failed, with where in the code and the trace
-   folded under it for whoever the owner forwards it to. */
+   folded under it for whoever the owner forwards it to. An empty log offers
+   no search, since there is nothing to find. */
 
 if (!isset($template)) {
   return;
@@ -17,6 +18,7 @@ if (!isset($template)) {
     <h1><?= $template->escape($words->get('errors.title')) ?></h1>
     <p class="page-shape"><?= $template->escape($words->get('errors.explain', ['n' => (string) $shown])) ?></p>
   </header>
+<?php if ($incident !== '' || $entries !== []): ?>
   <form class="error-search" method="get" action="/settings/errors" role="search">
     <input class="query-search" type="search" name="incident" value="<?= $template->escape($incident) ?>"
       placeholder="<?= $template->escape($words->get('errors.search')) ?>"
@@ -26,6 +28,7 @@ if (!isset($template)) {
     <a class="button-quiet" href="/settings/errors"><?= $template->escape($words->get('errors.all')) ?></a>
 <?php endif ?>
   </form>
+<?php endif ?>
 <?php if ($incident !== ''): ?>
   <p class="page-note" role="status"><?= $template->escape($words->get($entries === [] ? 'errors.not_found'
     : 'errors.found', ['incident' => $incident, 'n' => (string) count($entries)])) ?></p>

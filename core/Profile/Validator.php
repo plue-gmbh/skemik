@@ -221,7 +221,9 @@ final readonly class Validator
       return sprintf('%s is a word or a record', $key);
     }
 
-    return in_array($held, [null, ''], true) ? null : $this->heldFails($object, $key, $held);
+    $record = $key === $object->reference && is_array($held);
+
+    return in_array($held, [null, ''], true) || $record ? null : $this->heldFails($object, $key, $held);
   }
 
   /* A row's value is read as the same value in a field would be. */

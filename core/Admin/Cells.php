@@ -36,14 +36,15 @@ final readonly class Cells
     private Profile $profile,
   ) {}
 
-  /** @param list<Chip> $chips the field's edges, when it is one */
-  public function html(Entity $entity, FieldDefinition $field, array $chips = []): string
+  /** @param list<Chip> $chips the field's edges, when it is one, linked where the reader does not edit them */
+  public function html(Entity $entity, FieldDefinition $field, array $chips = [], bool $linked = true): string
   {
     $value = $field->cardinality->isEdge() ? null : ($entity->props->document()[$field->key] ?? null);
     $empty = in_array($value, [null, '', []], true) && $chips === [];
 
     return $this->template->render('partials/cell', ['words' => $this->words, 'locale' => $entity->locale->tag,
       'kind' => $field->kind, 'many' => $field->holdsMany(), 'value' => $value, 'chips' => $chips, 'empty' => $empty,
+      'linked' => $linked,
       'says' => array_map(fn (Chip $chip): string => $this->says($chip, $entity->locale), $chips),
       'shown' => match (true) {
         $empty => '',
@@ -157,17 +158,24 @@ final readonly class Cells
     return implode(' ', $shown);
   }
 
-  /* @param array<array-key, mixed> $items
+  /* Every row by its bearing key, so rows told apart by their names are told apart in the cell too.
+     @param array<array-key, mixed> $items
      @param array<int, Chip> $chips the records its rows refer to, by row */
   private function objects(FieldDefinition $field, array $items, array $chips): string
   {
-    $bearing = $this->profile->valueObject((string) $field->ref)?->bearing[0] ?? null;
-    $first = $items[0][$bearing] ?? null;
-    if (is_array($first) && isset($chips[0])) {
-      $first = $chips[0]->gone ? $this->words->get('cell.gone') : $chips[0]->label;
+    $bearing = (string) ($this->profile->valueObject((string) $field->ref)?->bearing[0] ?? '');
+    $names = [];
+    foreach ($items as $index => $item) {
+      $name = is_array($item) ? $item['name'] ?? $item[$bearing] ?? null : null;
+      if (is_array($name) && isset($chips[$index])) {
+        $name = $chips[$index]->gone ? $this->words->get('cell.gone') : $chips[$index]->label;
+      }
+      if (is_scalar($name) && (string) $name !== '') {
+        $names[] = (string) $name;
+      }
     }
     $count = $this->words->get('cell.entries', ['n' => (string) count($items)]);
 
-    return is_scalar($first) ? $count . ' · ' . $first : $count;
+    return $names === [] ? $count : $count . ' · ' . implode(', ', $names);
   }
 }

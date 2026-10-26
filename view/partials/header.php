@@ -22,7 +22,7 @@ $avatar = $menu->picture === null
   ? '<span class="avatar" aria-hidden="true">' . $template->escape(mb_strtoupper($initials)) . '</span>'
   : '<img class="avatar" src="' . $template->escape($menu->picture) . '" alt="">';
 ?>
-<header class="header" data-material="chrome">
+<header class="header" data-material="chrome-deep">
   <button type="button" class="header-menu" aria-controls="sidebar" aria-expanded="false"
     aria-label="<?= $template->escape($words->get('header.menu')) ?>"><?= $template->render('partials/icon',
       ['name' => 'menu']) ?></button>

@@ -12,7 +12,8 @@ declare(strict_types=1);
    not two, and the type says which field is prose, so no install configures it.
    The words locale is `words` beside `in`, so a link and the reload after a save
    keep it; each option says Words, since on a type that also forks the Languages
-   card offers a record of its own in the same locales. */
+   card offers a record of its own in the same locales, and names the language
+   alone, uppercase as the spine does, unless two offered share it. */
 
 use Profile\FieldKind;
 
@@ -65,13 +66,12 @@ foreach ($blocks as $block) {
 $joins = fn (int $index): bool => isset($parts[$index]) && $parts[$index]['block']->heading === null
   && $parts[$index]['kind'] === 'lines';
 $back = '/c/' . $collection->slug->value . ($query === '' ? '' : '?' . $query);
-$line = function (Admin\FieldBlock $block, Admin\Column $column) use ($template, $words, $row): string {
-  $intern = $column->feed ? '' : ' <span class="tag-intern">' . $template->escape($words->get('record.intern'))
-    . '</span>';
-
-  return sprintf('<div class="record-line"><dt>%s%s</dt><dd>%s</dd></div>', $template->escape($block->labelOf($column)),
-    $intern, $row->cells[$column->field->key]);
-};
+$public = fn (Admin\Column $column): string => !$column->feed ? '' : '<span class="public-mark" title="'
+  . $template->escape($words->get('sheet.public')) . '">' . $template->render('partials/icon', ['name' => 'unlocked'])
+  . '</span><span class="visually-hidden">, ' . $template->escape($words->get('sheet.public')) . '</span>';
+$line = fn (Admin\FieldBlock $block, Admin\Column $column): string => sprintf(
+  '<div class="record-line"><dt>%s%s</dt><dd>%s</dd></div>', $template->escape($block->labelOf($column)),
+  $public($column), $row->cells[$column->field->key]);
 $tool = function (?string $href, string $icon, string $word, string $end) use ($template, $words): string {
   $name = $template->escape($words->get($word));
   $drawn = $template->render('partials/icon', ['name' => $icon]);
@@ -97,14 +97,17 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         class="tag-never"><?= $template->escape($words->get('record.private')) ?></span><?php endif ?></p>
     </div>
     <div class="collection-tools">
-<?php if (count($offered) > 1): ?>
+<?php if (count($offered) > 1):
+  $languages = array_count_values(array_map(fn (Domain\Locale $each): string => explode('-', $each->tag)[0], $offered));
+  $named = fn (string $tag): string => $languages[explode('-', $tag)[0]] > 1 ? $tag
+    : strtoupper(explode('-', $tag)[0]) ?>
       <select class="words-select<?= $locale === null ? '' : ' is-on' ?>"
         aria-label="<?= $template->escape($words->get('record.words_in')) ?>"<?= $translations === null ? ''
         : ' title="' . $template->escape($words->get('record.words_same')) . '"' ?> data-words-select>
 <?php foreach ($offered as $index => $each): $current = $each->tag === ($locale ?? $entity->locale)->tag ?>
         <option value="<?= $template->escape(Admin\Rows::address($collection, $entity,
           ltrim($query . ($index === 0 ? '' : '&words=' . rawurlencode($each->tag)),
-          '&'))) ?>"<?= $current ? ' selected' : '' ?>><?= $template->escape($each->tag) ?></option>
+          '&'))) ?>"<?= $current ? ' selected' : '' ?>><?= $template->escape($named($each->tag)) ?></option>
 <?php endforeach ?>
       </select>
 <?php endif ?>
@@ -180,7 +183,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
     </figure>
 <?php endforeach; endforeach; elseif ($part === 'prose'): foreach ($block->columns as $each): ?>
     <section class="record-prose">
-      <h2 class="record-label"><?= $template->escape($each->label) ?></h2>
+      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $public($each) ?></h2>
       <div lang="<?= $template->escape($shownIn) ?>"><?= $prose[$each->field->key] ?></div>
     </section>
 <?php endforeach; else: ?>
@@ -218,7 +221,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         data-field="<?= $template->escape($key) ?>" id="edit-<?= $template->escape($key) ?>">
         <label class="record-label"
           for="prose-<?= $template->escape($key) ?>"><?= $template->escape($column->label) ?><?= $markdown
-          ? ' · Markdown' : '' ?></label>
+          ? ' · Markdown' : '' ?><?= $public($column) ?></label>
         <textarea id="prose-<?= $template->escape($key) ?>" class="record-textarea"
           lang="<?= $template->escape($shownIn) ?>" data-prose<?= $locale === null ? '' : ' placeholder="'
           . $template->escape((string) $authored->props->string($key))
@@ -236,18 +239,12 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php endif ?>
       </section>
 <?php else: ?>
-      <div class="record-line is-edit<?= $column->feed ? '' : ' is-withheld' ?>"
-        id="edit-<?= $template->escape($key) ?>">
+      <div class="record-line is-edit" id="edit-<?= $template->escape($key) ?>">
         <span class="record-edit-label"
           id="label-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
-          ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?></span>
-<?php if ($column->editable && !$entity->keeps($key) && $column->field->kind->isReference()): ?>
-        <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"
-          data-field="<?= $template->escape($key) ?>"<?= $column->kindMarks($edit->entity) ?>><span
-          class="cell cell-held"><span class="cell-shown"><?= $edit->cells[$key] ?></span></span><button type="button"
-          class="cell-edit" data-edit><span class="visually-hidden"><?= $template->escape($block->labelOf($column)
-          . ': ' . $words->get('record.edit')) ?></span></button></span>
-<?php elseif ($column->editable && !$entity->keeps($key)): ?>
+          ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?><?= $public($column)
+          ?></span>
+<?php if ($column->editable && !$entity->keeps($key)): ?>
         <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"
           data-field="<?= $template->escape($key) ?>"<?= $column->kindMarks($edit->entity) ?>><button type="button"
           class="cell" data-edit aria-labelledby="label-<?= $template->escape($key) ?>"><span

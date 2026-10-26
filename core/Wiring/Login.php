@@ -33,6 +33,6 @@ final readonly class Login
       $common->codes(),
       new CodeDelivery($common->premises->data . '/login', $common->relay),
       $common->limit(10, 3600), $common->limit(5, 900), $common->limit(30, 900), $common->limit(20, 3600),
-      $common->csrf, $common->template, $common->words, $common->premises->address);
+      $common->csrf, $common->template, $common->words, $common->premises);
   }
 }

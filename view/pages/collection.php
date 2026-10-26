@@ -40,7 +40,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
         rel="noreferrer" title="<?= $template->escape($words->get('collection.proof',
         ['type' => $type])) ?>">schema.org/<?= $template->escape($type) ?></a> · <button type="button"
         class="shape-fields" aria-haspopup="dialog" data-field-popover="fields"><?= $template->escape($shown) ?><span
-        class="shape-public"> · <?= $template->escape($letOut) ?></span></button></p>
+        class="shape-public">, <?= $template->escape($letOut) ?></span></button></p>
     </div>
     <div class="collection-tools">
       <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu

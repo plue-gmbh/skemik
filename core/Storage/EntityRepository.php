@@ -217,8 +217,8 @@ final readonly class EntityRepository
     $this->db->prepare('update entity set props = :props, sort_keys = :sort_keys,'
       . ' words = :words, status = :status, locale = :locale, translation_of = :translation_of,'
       . ' slug = :slug, publish_from = :publish_from, publish_to = :publish_to, version = version + 1,'
-      . ' updated_at = :now where id = :id')
-      ->execute([...$this->columns($entity, $type)]);
+      . ' created_at = :created_at, updated_at = :now where id = :id')
+      ->execute([...$this->columns($entity, $type), 'created_at' => $entity->createdAt]);
   }
 
   /** @return array<string, string|null> */

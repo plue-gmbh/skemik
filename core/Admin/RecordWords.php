@@ -57,24 +57,24 @@ final readonly class RecordWords
   }
 
   /**
-   * The row read draws, the row edit draws, and the columns edit offers.
+   * The row read draws, its references links, the row edit draws, and the columns edit offers.
    *
    * @param list<Column> $columns
    * @return array{SheetRow, SheetRow, list<Column>}
    */
   public function rows(Account $account, array $columns, Entity $entity, ?Locale $locale): array
   {
+    $reading = array_map(fn (Column $column): Column => $column->readOnly(), $columns);
     if ($locale === null) {
-      $row = $this->sheet->rows($account, $columns, [$entity])[0];
-
-      return [$row, $row, $columns];
+      return [$this->sheet->rows($account, $reading, [$entity])[0],
+        $this->sheet->rows($account, $columns, [$entity])[0], $columns];
     }
     $localised = new LocalisedText($this->profile->byType($entity->type));
     /* Drawn as that locale reads it, a select's word and a target's name
        included, while the row still names the record as it is written. */
     $drawn = fn (array $shownColumns, Entity $shown): SheetRow
       => $this->sheet->rows($account, $shownColumns, [$shown->withLocale($locale)])[0]->withEntity($shown);
-    $read = $drawn($columns, $localised->shown($entity, $locale));
+    $read = $drawn($reading, $localised->shown($entity, $locale));
     $editing = array_values(array_filter($columns, fn (Column $column): bool => $column->editable
       && (in_array($column->field->key, $localised->fields(), true)
         || ($column->field->cardinality === Cardinality::E && ($read->chips[$column->field->key] ?? []) !== []))));

@@ -71,7 +71,8 @@ if (!isset($template)) {
       </template>
       <edge-picker v-else-if="mode === 'edge'" :field="editing.field" :value="editing.value" :words="words"
         :collection="editing.collection" :locale="editing.locale" :record="editing.id" :fixed="Boolean(editing.words)"
-        :csrf="editing.csrf" :limit="editing.limit" @draft="draft = $event" @done="finish($event, null)"></edge-picker>
+        :csrf="editing.csrf" :limit="editing.limit" :all="editing.all" @draft="draft = $event"
+        @done="finish($event, null)"></edge-picker>
       <list-picker v-else-if="mode === 'list'" :field="editing.field" :value="editing.value" :hints="editing.hint"
         :words="words"
         :terms="editing.terms" @draft="draft = $event" @done="finish(draft, null)"></list-picker>
@@ -79,8 +80,8 @@ if (!isset($template)) {
         :collection="editing.collection" :locale="editing.locale" @draft="draft = $event"
           @done="finish($event, null)"></refer-picker>
       <objects-picker v-else :field="editing.field" :value="editing.value" :words="words" :terms="editing.terms"
-        :collection="editing.collection" :locale="editing.locale" @draft="draft = $event"
-          @done="finish(draft, null)"></objects-picker>
+        :collection="editing.collection" :locale="editing.locale" :csrf="editing.csrf" :limit="editing.limit"
+        @draft="draft = $event" @done="finish(draft, null)"></objects-picker>
     </div>
   </teleport>
 </script>

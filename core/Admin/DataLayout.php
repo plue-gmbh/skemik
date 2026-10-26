@@ -115,7 +115,8 @@ final readonly class DataLayout
       'address' => $premises->address, 'sentinel' => $sentinel,
       'relay' => ['host' => '', 'port' => 587, 'user' => '', 'password' => '', 'sender' => ''],
       'daily_backups' => $premises->dailyBackups, 'updates' => $premises->updates,
-      'security_contact' => $premises->securityContact], true) . ";\n");
+      'security_contact' => $premises->securityContact,
+      'login_note' => $premises->loginNote, 'login_link' => $premises->loginLink], true) . ";\n");
     chmod($draft, 0600);
     rename($draft, $path);
     $this->proveHidden($premises->address . '/config.php', $sentinel, $premises->data);

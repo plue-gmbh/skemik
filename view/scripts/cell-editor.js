@@ -184,7 +184,7 @@ function listShown(field, value, terms, words) {
     value.forEach((item, index) => span.append(chipShown(item, field.many ? index + 1 : null, words)));
     return span;
   }
-  const first = field.kind === "objects" ? value[0][field.bearing[0]] : null;
+  const first = field.kind === "objects" ? value[0].name ?? value[0][field.bearing[0]] : null;
   const word = (each) => (field.kind === "select" ? terms[each] ?? each : String(each));
   span.textContent = field.kind !== "objects" ? value.map(word).join(", ")
     : fill(words["cell.entries"], { n: value.length })

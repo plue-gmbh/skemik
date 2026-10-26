@@ -94,7 +94,8 @@ final readonly class HomeController
 
     return ['timezone' => $this->settings->timezone()->getName(), 'language' => $this->adminLanguage(),
       'address' => $this->premises->address, 'mail' => $this->mail(),
-      'contact' => $this->premises->securityContact,
+      'contact' => $this->premises->securityContact, 'note' => $this->premises->loginNote,
+      'link' => $this->premises->loginLink,
       'backups' => $this->backups(), 'backupsHealth' => $this->backupsHealth(),
       'files' => $this->shipped(), 'filesHealth' => $this->shippedHealth(),
       'errors' => $errors ? $this->failing() : null, 'errorsHealth' => $errors ? $this->errorsHealth() : null];

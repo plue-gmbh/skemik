@@ -136,12 +136,14 @@ final readonly class LocaleController
     return array_values(array_filter($locales, fn (Locale $each): bool => $each->tag !== $leaving->tag));
   }
 
-  /* The count is of live records, and a locale the refusal still finds held
-     through the trash or an edge's words is never called empty beside it. */
+  /* The count is of live records written in the locale or holding words in it,
+     so a record in two counts in both and says so, beside the house's total. A
+     locale the refusal still finds held through the trash or an edge's words is
+     never called empty beside it. */
   private function counted(int $n, bool $held): string
   {
     return $n === 0 ? $this->words->get($held ? 'locale.kept' : 'locale.empty')
-      : $this->words->count('home', 'records', $n);
+      : $this->words->count('locale', 'records', $n);
   }
 
   private function refused(string $sentence): Response

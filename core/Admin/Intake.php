@@ -81,7 +81,7 @@ final readonly class Intake
     $named = self::fileName((string) $asset->props->string('name'),
       (string) $asset->props->string('encoding_format'));
     $described = $named ? $file->document() : array_diff_key($file->document(), ['name' => true]);
-    $replaced = $asset->withFile(new Props([...$kept, ...$described]));
+    $replaced = $asset->withFile(new Props([...$kept, ...$described]), (string) $file->string('upload_date'));
     $type = $this->profile->byType($asset->type);
     if ($this->validator->check($type, $replaced->props->document(), $edges) !== []) {
       $this->drop($file);

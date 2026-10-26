@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.6](https://img.shields.io/badge/version-1.0.6-1f6feb)
+![Version 1.0.7](https://img.shields.io/badge/version-1.0.7-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -8,7 +8,7 @@ The database that ships its own data model: 30 curated schema.org types, the
 same in every install, their fields named and typed before you start — no empty
 tool to design first, no column called `Date2`.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.5)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.7)
 
 Like a headless CMS or a spreadsheet database, except the model is already
 there, and it is schema.org.
@@ -21,7 +21,8 @@ curl https://demo.skemik.org/feed/en-GB/events
 
 [skemik.de](https://skemik.de) in German,
 [skemik.com](https://skemik.com) in English,
-[skemik.fr](https://skemik.fr) in French.
+[skemik.fr](https://skemik.fr) in French,
+[skemik.nl](https://skemik.nl) in Dutch.
 
 ---
 
@@ -62,7 +63,7 @@ login address. The first login code is mailed and also written to `login/` in
 the data folder.
 
 **3. Publish a record.** In the admin, open *Events*. Every field stays inside
-the house until it is made public: the line under the name, *… fields · 0
+the house until it is made public: the line under the name, *… fields, 0
 public*, lists them: tick *Public* on *Name* and on *Starts*. Then add an
 event with a name and a start, and set its status to *Published*.
 
@@ -252,7 +253,8 @@ index.php     the front controller
 config.php    written by /install, never shipped and never touched by an
               update: the data folder, the install's address, the mail
               relay, whether a snapshot is taken daily, whether updates
-              install and how early, the security contact
+              install and how early, the security contact, the line under
+              the login form
 core/         the application, one folder per layer
 view/         the admin's pages, its Vue islands and its stylesheet, and vendor/
               with Vue and the Inter fonts pinned beside their licences
@@ -303,6 +305,13 @@ region writes them, *€ 1.234,50* in `de-AT`.
   host's `mail()` delivers nothing, name a relay in `config.php`: `'relay' =>
   ['host' => …, 'port' => 587, 'user' => …, 'password' => …, 'sender' => …]`.
   It must offer STARTTLS; implicit TLS on 465 is not spoken.
+
+- **A line of the house's own under the login form**, for whoever lands there
+  without an account: `'login_note' => 'No account? Ask here'` in
+  `config.php`, the whole line a link where `'login_link' => 'https://…'`
+  stands beside it. It is shown as written, on both steps of the login, and
+  the home screen's Settings card names it; without it the page says nothing
+  but Skemik's name.
 
 - **Apache reads the shipped `.htaccess`** and needs `mod_rewrite` and an
   `AllowOverride` of at least `FileInfo` and `AuthConfig`. Where `/install`
@@ -383,7 +392,9 @@ what its type asks, five hundred records every ten minutes until all are read,
 each slice after an answer has left, so nobody waits for it. What is found, an
 edge into nothing or a required field a release added to records that stood, is
 a line of Needs a look, and the Holdings check screen behind it names each
-record.
+record. A record holding an edge under a field a release dropped, or a value
+under one it made an edge, stays reachable everywhere, the holdings check names
+both, and the record's next save drops them.
 
 **Needs a look, a card on the home screen, finds what somebody should take up
 or mend**, each line counting it and opening where that starts: a message a
@@ -638,8 +649,9 @@ As `/feed/de-DE/events/test-exercise` answers a stranger:
 A record's targets are written into it one level deep, with the fields the
 reader may read, and theirs as addresses; a list nested in it still arrives with
 its members, but a list among those brings its own as addresses, to be read at
-its address. A listing's member is the record's own document, to the same depth,
-so a page drawn from a listing reads no member a second time. `eventStatus`
+its address, and a record among its own targets, a list that lists itself, is
+its address alone. A listing's member is the record's own document, to the same
+depth, so a page drawn from a listing reads no member a second time. `eventStatus`
 holds a value from schema.org's fixed list, spelt as the member's address,
 `https://schema.org/EventScheduled`, whose words in each language the catalogue
 holds under the code, `EventScheduled`, which a filter names and a write may
@@ -1010,7 +1022,9 @@ Copy the PHP below into a page on ordinary webspace and it reads the feed with
 nothing else: no library, no build step, and one folder `cache/` beside the
 script that PHP may write. The blocks are general to any house and free to
 copy, as *Licence and trademark* says, and every release runs them against a
-trial install, so none breaks them unnoticed.
+trial install, so none breaks them unnoticed. They need PHP 8.0 or newer, years
+behind what Skemik itself asks, so a site on the host's older PHP reads the
+feed as well.
 
 **The documents a page needs, in one call.** A copy is kept while the house's
 `dateModified` stands, which `changed()` asks of `/feed` at most once a minute,
@@ -1020,12 +1034,15 @@ answered more than a minute after the move was seen, since a cache between may
 hold what came before for that minute and a write in the same second moves no
 date. It is stamped before it is fetched again, so two pages asked in the same
 second refresh it once and a feed that fails is asked again a minute later; the
-last copy stands while the feed fails and goes when the address answers `404`.
-A key reads what a stranger cannot, an invoice by the bookkeeping's, and its
-copies are kept apart from the stranger's. `reads()` takes every address a page
-needs and fetches the ones not kept together, so the page waits for the slowest
-answer and not for each in turn: against a house on another host the round trip
-is what costs, a `304` as much as a `200`. `read()` is one address.
+last copy stands while the feed fails, an answer cut off by the timeout among
+the failures, and goes when the address answers `404`. A key reads what a
+stranger cannot, an invoice by the bookkeeping's, and its copies are kept apart
+from the stranger's. `reads()` takes every address a page needs and fetches the
+ones not kept four at once, so the page waits for a quarter of its answers in
+turn and not for each: against a house on another host the round trip is what
+costs, a `304` as much as a `200`. On the same host the site and its house share
+one pool of PHP workers, and four keep a page to five of them, however many
+addresses it asks. `read()` is one address.
 
 ```php
 function fetching(string $address, string $file, array $headers): CurlHandle
@@ -1049,11 +1066,13 @@ function fetching(string $address, string $file, array $headers): CurlHandle
 function kept(string $file, int $status, ?string $body): void
 {
   if ($status === 200 && $body !== null) {
-    file_put_contents($file, $body);
+    file_put_contents($file . '.part', $body);
+    rename($file . '.part', $file);
   } elseif ($status === 404) {
     array_map('unlink', glob($file . '*') ?: []);
-  } elseif (is_file($file)) {
-    touch($file);
+  } else {
+    $status === 0 && is_file($file . '.etag') && unlink($file . '.etag');
+    is_file($file) && touch($file);
   }
 }
 
@@ -1064,8 +1083,9 @@ function changed(string $address): int
   [$date, $since] = is_file($file) ? explode("\n", (string) file_get_contents($file)) + ['', '0'] : ['', '0'];
   if (!is_file($file) || filemtime($file) <= time() - 60) {
     file_put_contents($file, $date . "\n" . $since);
-    $catalogue = curl_exec(fetching($house, $file, ['Accept: application/ld+json']));
-    $seen = json_decode((string) $catalogue, true)['dateModified'] ?? $date;
+    $curl = fetching($house, $file, ['Accept: application/ld+json']);
+    $seen = json_decode((string) curl_exec($curl), true)['dateModified'] ?? $date;
+    curl_errno($curl) === 0 || !is_file($file . '.etag') || unlink($file . '.etag');
     if ($seen !== $date) {
       [$date, $since] = [$seen, time() + 60];
       file_put_contents($file, $date . "\n" . $since);
@@ -1083,6 +1103,8 @@ function reads(array $addresses, string $key = ''): array
     $files[$address] = __DIR__ . '/cache/' . md5($key . $address);
   }
   $multi = curl_multi_init();
+  curl_multi_setopt($multi, CURLMOPT_MAX_TOTAL_CONNECTIONS, 4);
+  curl_multi_setopt($multi, CURLMOPT_PIPELINING, CURLPIPE_NOTHING);
   $fetching = [];
   foreach ($files as $address => $file) {
     $stale = !is_file($file . '.etag') || filemtime($file . '.etag') <= changed($address);
@@ -1096,8 +1118,10 @@ function reads(array $addresses, string $key = ''): array
     curl_multi_exec($multi, $running);
     $running && curl_multi_select($multi);
   } while ($running);
-  foreach ($fetching as $file => $curl) {
-    kept($file, curl_getinfo($curl, CURLINFO_RESPONSE_CODE), curl_multi_getcontent($curl));
+  while ($done = curl_multi_info_read($multi)) {
+    $curl = $done['handle'];
+    kept(array_search($curl, $fetching, true), $done['result'] === CURLE_OK
+      ? curl_getinfo($curl, CURLINFO_RESPONSE_CODE) : 0, curl_multi_getcontent($curl));
   }
   return array_map(fn (string $file): ?array
     => is_file($file) ? json_decode((string) file_get_contents($file), true) : null, $files);

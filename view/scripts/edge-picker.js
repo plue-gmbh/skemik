@@ -29,12 +29,14 @@ const edgeSays = {
    order. `fixed` is another locale's words: the targets stand as the authored
    record holds them, and only what they say there is written. A file field
    uploads too, and what lands is picked as a hit is, marked a draft; a single
-   target stays shown with that said, where a pick would end the picker unread. */
+   target stays shown with that said, where a pick would end the picker unread.
+   Set on `all` the ticked records, it opens empty and still removes a single
+   target, from each of them. */
 const edgePicker = {
   template: "#edge-picker-template",
   mixins: [ordered],
   components: { edgeSays },
-  props: ["field", "value", "words", "collection", "locale", "record", "fixed", "csrf", "limit"],
+  props: ["field", "value", "words", "collection", "locale", "record", "fixed", "csrf", "limit", "all"],
   emits: ["draft", "done"],
   data() {
     const items = (this.value ?? []).map((item) => (item.qualifiers

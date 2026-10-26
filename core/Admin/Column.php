@@ -34,6 +34,12 @@ final readonly class Column
     public ?string $objectUrl = null,
   ) {}
 
+  /* The same field on a screen that only reads it, where a reference stays a link to its record. */
+  public function readOnly(): self
+  {
+    return clone($this, ['editable' => false, 'uploads' => false]);
+  }
+
   /* Every field sorts but a list of objects, which has no one value to order by. */
   public function sorts(): bool
   {

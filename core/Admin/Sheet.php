@@ -40,12 +40,11 @@ final readonly class Sheet
     'cell.yes', 'cell.no', 'duration.unit.Y', 'duration.unit.M', 'duration.unit.W', 'duration.unit.D',
     'duration.unit.H', 'duration.unit.m', 'duration.unit.S', 'duration.years', 'duration.months', 'duration.weeks',
     'duration.days', 'duration.hours', 'duration.minutes', 'duration.seconds', 'record.link_insert',
-    'record.link_search', 'record.link', 'record.link_address',
+    'record.link_search', 'record.link', 'record.link_address', 'picker.add_term', 'picker.refers_upload',
     'record.link_none', 'record.link_done', 'sheet.new', 'cell.gone', 'cell.entries', 'picker.search',
     'picker.add_search', 'picker.none', 'picker.type', 'picker.remove_relation', 'picker.up', 'picker.down',
-    'picker.add_term',
     'picker.remove', 'picker.no_targets', 'picker.no_values', 'picker.no_entries', 'picker.add_value',
-    'picker.add_entry', 'picker.entry', 'picker.bearing', 'picker.refers', 'picker.unrefer',
+    'picker.add_entry', 'picker.entry', 'picker.bearing', 'picker.refers', 'picker.refers_file', 'picker.unrefer',
     'picker.says', 'picker.done', 'sheet.ticked', 'sheet.ticked_count', 'sheet.ticked_actions', 'sheet.set_status',
     'sheet.set_field', 'sheet.set_to', 'sheet.set_none', 'sheet.set_locale', 'sheet.set_locale_kept', 'sheet.untick',
     'delete.confirm', 'delete.question_many', 'delete.many', 'dialog.cancel', 'media.upload', 'media.upload_up_to',
@@ -82,7 +81,7 @@ final readonly class Sheet
       $cells = [];
       foreach ($columns as $column) {
         $key = $column->field->key;
-        $cells[$key] = $this->cells->html($entity, $column->field, $chips[$key] ?? []);
+        $cells[$key] = $this->cells->html($entity, $column->field, $chips[$key] ?? [], !$column->editable);
       }
       $label = $this->label->of($entity, $this->profile->byType($entity->type));
 
@@ -151,7 +150,7 @@ final readonly class Sheet
      what its input suggests where they are the world's list or a record's kinds,
      a reference's targets — which collections hold them, named in the picker's
      heading — and whether it uploads and which kinds of file, and an object's
-     keys and those of them that take a closed list.
+     keys, their kinds where they are not text, and those that take a closed list.
      @return array<string, mixed> */
   private function field(Column $column, TypeDefinition $type): array
   {
@@ -166,12 +165,12 @@ final readonly class Sheet
       'kind' => $field->kind->value, 'options' => $field->options, 'suggested' => $suggested,
       'prose' => $column->prose(), 'many' => $field->holdsMany(), 'whole' => $field->whole,
       'edge' => $edge, 'any' => $field->targets === ['*'], 'upload' => $column->uploads,
-      'accept' => $this->schema->fileKinds($field->targets),
+      'accept' => $this->schema->fileKinds($object?->targets ?? $field->targets),
       'term' => $field->cardinality === Cardinality::T,
       'target' => $edge ? $this->targets($field) : '', 'lines' => $this->lines($field),
       'keys' => $keys, 'bearing' => $object?->bearing ?? [], 'reference' => $object?->reference,
       'refers' => $object === null && $this->profile->referring($field) !== null,
-      'numbers' => array_values(array_intersect(array_keys($object?->kinds ?? [], FieldKind::Number, true), $keys)),
+      'kinds' => (object) array_map(fn (FieldKind $kind): string => $kind->value, $object?->kinds ?? []),
       'choices' => (object) $this->terms->rowOptions($field)];
   }
 
@@ -295,6 +294,6 @@ final readonly class Sheet
   {
     return $this->words->get($key, ['n' => '{n}', 'label' => '{label}', 'name' => '{name}',
       'field' => '{field}', 'reason' => '{reason}', 'term' => '{term}', 'value' => '{value}', 'tag' => '{tag}',
-      'limit' => '{limit}']);
+      'limit' => '{limit}', 'upload' => '{upload}']);
   }
 }
