@@ -12,7 +12,10 @@ namespace Admin;
    original deleted. The record named is joined to this one's root and never the
    other way, so two groups are never merged; `Storage\Collisions` refuses what
    the group cannot hold, in the save. The root is never let go, since its
-   members name it. */
+   members name it. On a type that also labels, a locale's words stand on the
+   member authored in it and on no other, props and edges alike: a translation
+   takes them with it and a link drops them from both sides in the same save,
+   since the words switch hides a locale the group holds a member in. */
 
 use Auth\Account;
 use Auth\Authorizer;
@@ -68,7 +71,7 @@ final readonly class TranslationController
     [$collection, $entity] = $this->aimed($account, $request, $slug, $id);
     $locale = $this->spine->locale($entity, $request->form('locale'));
     $saved = $this->transaction->saved($this->db, fn (): Entity
-      => $this->spine->member($entity, $locale) ?? $this->translation($entity, $locale));
+      => $this->spine->member($entity, $locale) ?? $this->disjoined($this->translation($entity, $locale)));
 
     return Response::redirect(Rows::address($collection, $saved));
   }
@@ -80,8 +83,8 @@ final readonly class TranslationController
 
     return $this->copied($entity, new Entity(new EntityId($this->uuid->generate()), $entity->type, $locale,
       Slug::from((new Label())->of($entity, $type), 'record'),
-      (new LocalisedText($type))->forked($entity, $locale), $now, $now, Status::Draft,
-      TranslationGroup::rootOf($entity)));
+      LocalisedText::folded($entity->props, $locale), $now, $now, Status::Draft,
+      TranslationGroup::rootOf($entity)), $locale);
   }
 
   /* A record to change into one of its own, an event's next date, a product's
@@ -105,14 +108,32 @@ final readonly class TranslationController
     return Response::redirect(Rows::address($collection, $saved) . '#edit');
   }
 
-  /* The draft saved with the record's own edges, as they point now. */
-  private function copied(Entity $entity, Entity $draft): Entity
+  /* The draft saved with the record's own edges, as they point now, each
+     saying what it says in the draft's locale where a translation is made. */
+  private function copied(Entity $entity, Entity $draft, ?Locale $folded = null): Entity
   {
     $edges = array_map(fn (Relation $edge): Relation => new Relation($this->predicates, $draft->id,
-      $edge->predicate, $edge->object, $edge->objectType, $edge->objectTerm, $edge->position, $edge->qualifiers),
+      $edge->predicate, $edge->object, $edge->objectType, $edge->objectTerm, $edge->position,
+      $folded === null ? $edge->qualifiers : LocalisedText::folded($edge->qualifiers, $folded)),
       $this->relations->outbound($entity->id));
 
     return $this->entities->save($draft, $edges);
+  }
+
+  /* The member's group with every other member's locale stripped off each,
+     a save that changes nothing writing nothing. */
+  private function disjoined(Entity $member): Entity
+  {
+    $group = $this->entities->group($member);
+    foreach ($group->members as $each) {
+      $locales = array_map(fn (Entity $other): Locale => $other->locale, $group->others($each));
+      $stripped = fn (Props $words): Props => array_reduce($locales, LocalisedText::stripped(...), $words);
+      $edges = array_map(fn (Relation $edge): Relation => $edge->withQualifiers($stripped($edge->qualifiers)),
+        $this->relations->outbound($each->id));
+      $this->entities->save($each->withProps($stripped($each->props)), $edges);
+    }
+
+    return $this->entities->find($member->id);
   }
 
   public function link(Account $account, Request $request, string $slug, string $id): Response
@@ -120,7 +141,8 @@ final readonly class TranslationController
     [$collection, $entity] = $this->aimed($account, $request, $slug, $id);
     $joining = $this->record($collection, $this->named($request));
     $this->spine->locale($entity, $joining->locale->tag);
-    $this->regrouped($joining->withTranslationOf(TranslationGroup::rootOf($entity)));
+    $this->transaction->saved($this->db, fn (): Entity
+      => $this->disjoined($this->regrouped($joining->withTranslationOf(TranslationGroup::rootOf($entity)))));
 
     return Response::redirect(Rows::address($collection, $entity));
   }
@@ -132,15 +154,14 @@ final readonly class TranslationController
     if ($leaving->translationOf?->value !== TranslationGroup::rootOf($entity)->value) {
       throw MalformedValue::named('translation in this group', $leaving->id->value);
     }
-    $this->regrouped($leaving->withTranslationOf(null));
+    $this->transaction->saved($this->db, fn (): Entity => $this->regrouped($leaving->withTranslationOf(null)));
 
     return Response::redirect(Rows::address($collection, $entity));
   }
 
-  private function regrouped(Entity $member): void
+  private function regrouped(Entity $member): Entity
   {
-    $this->transaction->saved($this->db,
-      fn (): Entity => $this->entities->save($member, $this->relations->outbound($member->id)));
+    return $this->entities->save($member, $this->relations->outbound($member->id));
   }
 
   private function named(Request $request): string

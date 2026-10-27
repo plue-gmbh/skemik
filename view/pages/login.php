@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /* The login (`Admin\LoginController`): the chrome before the paper, one card,
    two steps. The sentence under the code field is the same whatever happened,
-   and the house's own line under it is `config.php`'s, the same on both steps. */
+   and the house's own line, `config.php`'s, stands under the address step alone. */
 
 if (!isset($template)) {
   return;

@@ -227,7 +227,7 @@ final readonly class EntityRepository
     return [...$query->bindings($type, $this->schema, $this->sortKeys), 'locale' => null, 'across' => '[]',
       ...($query->locale === null ? [] : $this->collisions->localeScope($type->name, $query->locale)),
       'now' => $this->now(),
-      'match' => $query->search === '' ? null : $this->search->match($query->search, $query->searchIn)];
+      'match' => $query->search === '' ? null : $this->search->match($query->search, $type, $query)];
   }
 
   /** @return array<string, string|null> */

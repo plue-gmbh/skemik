@@ -8,8 +8,11 @@ function openGrant(badge) {
   focusField(mountGrant(element) ?? element.querySelector("button, a"), element);
 }
 
-/* The issue form, where the reader may issue: answers its name field, or null. */
+/* The panel where the reader may issue, on the badge's popover and a field's
+   (`view/scripts/fields.js`): each take-back, then the issue form, whose name
+   field it answers, or null. */
 function mountGrant(element) {
+  mountRevoke(element);
   const form = element.querySelector("[data-grant-issue]");
   if (!form) return null;
   const [name, submit] = [form.querySelector("[data-grant-label]"), form.querySelector("[type=submit]")];
@@ -48,14 +51,19 @@ function issuable(form, submit) {
 }
 
 /* The secret stands alone and locks the popover: only its done button closes
-   it, and the page is read afresh so the marks show what was issued. */
+   it, and the page is read afresh so the marks show what was issued. A press on
+   the secret copies it; the stylesheet selects it whole, which is the way to
+   copy where no clipboard is there, HTTP on a LAN. */
 function showSecret(element, body) {
   const secret = element.querySelector("[data-grant-secret]");
   for (let node = secret; node !== element; node = node.parentElement) {
     [...node.parentElement.children].forEach((sibling) => { sibling.hidden ||= sibling !== node; });
   }
   secret.querySelectorAll("[data-grant-name]").forEach((each) => { each.textContent = body.label; });
-  secret.querySelector("[data-grant-secret-value]").textContent = body.secret;
+  const value = secret.querySelector("[data-grant-secret-value]");
+  value.textContent = body.secret;
+  value.addEventListener("click", () => navigator.clipboard?.writeText(body.secret).then(() =>
+    toast(value.dataset.copied)));
   element.dataset.locked = "";
   secret.hidden = false;
   announce(secret.querySelector("p").textContent);
@@ -99,15 +107,17 @@ function mountReissue(form) {
   });
 }
 
-/* Revoking asks once more, beside when the key was last used. */
-function mountRevoke(dialog) {
-  const ask = dialog.querySelector("[data-grant-revoke-ask]");
-  const revoking = dialog.querySelector("[data-grant-revoking]");
-  ask.addEventListener("click", () => {
-    [ask.hidden, revoking.hidden] = [true, false];
-    revoking.querySelector("[type=submit]").focus();
+/* Taking a key back asks once more, beside when the key was last used: once on
+   the Grants card's dialog, once per key the badge's popover reviews. */
+function mountRevoke(scope) {
+  scope.querySelectorAll("[data-grant-revoke-ask]").forEach((ask) => {
+    const revoking = ask.closest(".grant, .grant-dialog").querySelector("[data-grant-revoking]");
+    ask.addEventListener("click", () => {
+      [ask.hidden, revoking.hidden] = [true, false];
+      revoking.querySelector("[type=submit]").focus();
+    });
+    scope.addEventListener("close", () => { [ask.hidden, revoking.hidden] = [false, true]; });
   });
-  dialog.addEventListener("close", () => { [ask.hidden, revoking.hidden] = [false, true]; });
 }
 
 /* The set-up key's dialog on the Grants card (`partials/home-grants` holds its

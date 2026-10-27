@@ -78,7 +78,8 @@ if ($entries === []) { ?>
         </form>
         <div class="grant-secret" data-grant-secret hidden>
           <p><?= $named($words->get('grant.secret', ['name' => Admin\Grants::NAME])) ?></p>
-          <code data-grant-secret-value></code>
+          <code data-grant-secret-value
+      data-copied="<?= $template->escape($words->get('grant.copied')) ?>"></code>
           <button type="button" class="button-primary"
             data-grant-done><?= $template->escape($words->get('grant.done')) ?></button>
         </div>

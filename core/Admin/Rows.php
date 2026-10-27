@@ -19,6 +19,7 @@ use Profile\SchemaOrg;
 use Storage\Collection;
 use Storage\CollectionField;
 use Storage\EntityRepository;
+use Storage\Query;
 use Storage\RelationRepository;
 use Support\Clock;
 
@@ -159,6 +160,23 @@ final readonly class Rows
   {
     return $this->authorizer->readsAsPublic($account, $collection->type) ? $this->filter->fields($collection)
       : $collection->fields;
+  }
+
+  /* What this account reads of each collection, as the query narrowing to it:
+     all of a type in the read scope, and outside it what the public reads.
+     @param list<Collection> $collections
+     @return array<string, Query> by type */
+  public function readings(Account $account, array $collections): array
+  {
+    $readings = [];
+    foreach ($collections as $collection) {
+      $keys = array_map(fn (CollectionField $field): string => $field->key, $collection->fields);
+      $readings += $this->authorizer->readsAsPublic($account, $collection->type)
+        ? $this->filter->readings([$collection])
+        : [$collection->type => new Query($collection->type, searchIn: $keys)];
+    }
+
+    return $readings;
   }
 
   /* Whoever writes a collection and reads it as staff takes a record back out of its trash. */

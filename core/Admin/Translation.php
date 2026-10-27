@@ -7,7 +7,9 @@ namespace Admin;
 use Domain\Entity;
 
 /* One house locale of a work on its record screen: the member written in it, or
-   none yet and the records in that locale that could be linked in its place. */
+   none yet and the records in that locale that could be linked in its place.
+   Its age is how much older or newer the member was last saved than the record
+   viewed, empty within the hour. */
 final readonly class Translation
 {
   /** @param list<Translation> $candidates */
@@ -18,5 +20,6 @@ final readonly class Translation
     public string $state = '',
     public ?string $href = null,
     public array $candidates = [],
+    public string $age = '',
   ) {}
 }

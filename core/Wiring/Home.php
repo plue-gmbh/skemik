@@ -76,8 +76,8 @@ final readonly class Home
       $common->template, $common->words, $common->moments, $common->session, $this->needsLook(), $this->changes(),
       new Colleagues($common->accounts, $common->entities, $common->profile, $common->filter, $common->rows,
         $common->moments, $common->words),
-      new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts(),
-        $common->words), $common->locales(), $common->backup(),
+      new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts()),
+      $common->locales(), $common->backup(),
       $common->files(), $common->errors(), $common->relay, $common->premises);
   }
 

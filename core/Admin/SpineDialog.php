@@ -113,17 +113,34 @@ final readonly class SpineDialog
           fn (Entity $one): Translation => $this->translation($collection, $one), $linkable)));
       }
 
-      return $this->rows->readable($account, $member) ? $this->translation($collection, $member)
+      return $this->rows->readable($account, $member) ? $this->translation($collection, $member, $entity)
         : new Translation($locale->tag);
     }, $this->settings->locales());
   }
 
-  private function translation(Collection $collection, Entity $member): Translation
+  private function translation(Collection $collection, Entity $member, ?Entity $viewed = null): Translation
   {
     $label = $this->label->of($member, $this->profile->byType($member->type));
 
     return new Translation($member->locale->tag, $member, $label, $this->sheet->state($member),
-      Rows::address($collection, $member));
+      Rows::address($collection, $member), age: $viewed === null ? '' : $this->age($member, $viewed));
+  }
+
+  /* Read from the row's timestamp, which a status change and a restore move too,
+     so it claims nothing about which language holds the newer words. Within the
+     hour it says nothing, a translation made right after its original. */
+  private function age(Entity $member, Entity $viewed): string
+  {
+    $minutes = intdiv((new \DateTimeImmutable($member->updatedAt))->getTimestamp()
+      - (new \DateTimeImmutable($viewed->updatedAt))->getTimestamp(), 60);
+    $side = $minutes < 0 ? 'older' : 'newer';
+    $minutes = abs($minutes);
+    if ($minutes < 60) {
+      return '';
+    }
+
+    return $minutes < 1440 ? $this->words->count('age', 'hours_' . $side, intdiv($minutes, 60))
+      : $this->words->count('age', 'days_' . $side, intdiv($minutes, 1440));
   }
 
   /* Where the type has no public state, the sentence standing in for the missing

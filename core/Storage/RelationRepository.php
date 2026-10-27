@@ -84,27 +84,6 @@ final readonly class RelationRepository
   }
 
   /**
-   * The targets one predicate reaches from the live rows of a type — what the query
-   * bar offers to filter by, since a filter no row can match is not offered. The
-   * most pointed at first, so what a long list leaves out is the rarest.
-   *
-   * @param ?string $publicAt only from rows public at this instant; null for every row
-   * @return list<EntityId>
-   */
-  public function targets(string $type, string $predicate, ?string $publicAt): array
-  {
-    $statement = $this->db->prepare('select r.object_id from relation r join entity e'
-      . ' on e.id = r.subject_id'
-      . ' where e.type = :type and r.predicate = :predicate'
-      . ' and e.deleted_at is null and (:now is null or ' . Query::PUBLIC . ')'
-      . ' group by r.object_id order by count(*) desc, r.object_id limit 200');
-    $statement->execute(['type' => $type, 'predicate' => $predicate,
-      'now' => $publicAt]);
-
-    return array_map(fn (string $id): EntityId => new EntityId($id), $statement->fetchAll(\PDO::FETCH_COLUMN));
-  }
-
-  /**
    * Every outbound edge of the subject, as it will stand: what the list leaves
    * out is removed. Inside the caller's transaction when there is one.
    *

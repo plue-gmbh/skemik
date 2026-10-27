@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /* The record screen's Languages card, on a work alone: one row per house locale,
-   the record's own marked, a missing one offered to whoever writes, made or
-   linked from a record already written in it, and a member let go where it is
-   not the one the others name. */
+   the record's own marked, every other with how much older or newer it is, a
+   missing one offered to whoever writes, made or linked from a record already
+   written in it, and a member let go where it is not the one the others name. */
 
 if (!isset($template)) {
   return;
@@ -32,9 +32,10 @@ $address = '/c/' . $collection->slug->value . '/' . $entity->id->value;
           'record.translation_unlink_named', ['locale' => $each->locale])) ?>"><?=
           $template->escape($words->get('record.translation_unlink')) ?></button></form>
 <?php endif ?>
-        <span class="state-dot state-<?= $template->escape($each->state) ?>"></span><span
+        <span class="record-row-state"><span class="state-dot state-<?= $template->escape($each->state) ?>"></span><span
         class="record-row-note"><?= $template->escape($current ? $words->get('record.this_one') : $words->get('status.'
-        . $each->state)) ?></span><span
+        . $each->state)) ?></span></span><?= $each->age === '' ? '' : '<span class="record-row-note record-row-age">'
+        . $template->escape($each->age) . '</span>' ?><span
         class="record-row-mono">/<?= $template->escape($each->record->slug->value) ?></span></li>
 <?php else: ?>
       <li><div class="record-row is-missing"><span

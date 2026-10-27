@@ -291,7 +291,7 @@ a {
 }
 
 .button-quiet {
-  padding: 5px 9px;
+  padding: 7px 9px;
   border-radius: var(--radius-medium);
   color: var(--text-secondary);
 }
@@ -990,6 +990,17 @@ button:disabled {
   min-width: 0;
 }
 
+.change-head .record-row-glyph,
+.page > .record-rows .record-row-glyph {
+  font-size: 14px;
+}
+
+.change-head .record-row-glyph .icon,
+.page > .record-rows .record-row-glyph .icon {
+  width: 14px;
+  height: 14px;
+}
+
 .change-go {
   margin-left: auto;
   color: var(--text-tertiary);
@@ -1185,16 +1196,6 @@ h2#home-needs_look ~ .home-empty {
 .account-person,
 .account-scope,
 .account-removing,
-.grant-revoking {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.grant-revoking {
-  margin-top: 20px;
-}
-
 .account-person {
   gap: 4px;
 }
@@ -2589,11 +2590,11 @@ a.chip {
 }
 
 .record-row.is-missing .button-quiet {
-  margin: -5px -9px;
+  margin: -7px -9px;
 }
 
 .record-row.is-missing .record-row-action {
-  margin: -5px 0;
+  margin: -7px 0;
 }
 
 .record-row-note {
@@ -2915,6 +2916,10 @@ a.cell {
 }
 
 .grant form {
+  margin-top: 8px;
+}
+
+.grant > .grant-revoke {
   margin-top: 8px;
 }
 
@@ -3609,10 +3614,11 @@ a.cell {
     grid-row: 2;
     grid-column: 3 / -1;
     justify-self: end;
+    align-self: baseline;
   }
 
   .side-card .record-row.is-linked .record-row-action {
-    margin: -5px -9px;
+    margin: -7px -9px;
   }
 
   .side-card .record-row.is-linked > form ~ .record-row-mono {
@@ -3632,6 +3638,25 @@ a.cell {
   }
 
   .side-card .record-row-locales ~ .record-row-mono {
+    grid-column: 2;
+  }
+
+  .side-card .record-row-age {
+    grid-row: 2;
+    grid-column: 3 / -1;
+    justify-self: end;
+    align-self: baseline;
+  }
+
+  .side-card .record-row.is-linked > form:has(~ .record-row-age) {
+    grid-column: 4;
+  }
+
+  .side-card .record-row.is-linked > form ~ .record-row-age {
+    grid-column: 3;
+  }
+
+  .side-card .record-row-age ~ .record-row-mono {
     grid-column: 2;
   }
 
@@ -3746,6 +3771,22 @@ a.cell {
   }
 
   .ticked-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+@media (max-width: 369px) {
+  .view-switch button[aria-pressed="false"][data-record-mode] {
+    width: 31px;
+    padding: 0;
+  }
+
+  .view-switch button[aria-pressed="false"][data-record-mode] .view-switch-word {
     position: absolute;
     width: 1px;
     height: 1px;

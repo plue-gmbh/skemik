@@ -142,6 +142,10 @@ try {
   $session = new Auth\Session($data . '/sessions', $request->https, $utc);
   $sessioned = !$route->endpoint->isMachine();
   $sessioned && $session->resume($request->cookie('session'));
+  if ($sessioned && $route->endpoint->isFile()) {
+    session_write_close();
+    $sessioned = false;
+  }
   $common = new Wiring\Common(__DIR__, $premises, $relay, $request, $session, $template, $utc);
   $response = (new Wiring\Dispatch($common))->answer($route);
 } catch (Throwable $failure) {

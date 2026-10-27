@@ -18,20 +18,18 @@ use Storage\RateLimit;
 use Support\Template;
 use Support\Words;
 
-/* The two steps of a login and the way out. An ask answers one sentence whoever
-   asks and issues its code once the answer has left, so no address is told apart
-   by what is said or, where PHP can end an answer first (`DataLayout::costs`), by
-   time. `Storage\RateLimit` is asked first, per address and client at half what
-   one mailbox is sent, so a colleague's mail is withheld only while several
-   clients ask, and past the mailbox's own the floor is still written for the
-   operator. Only an ask within them begins a session, so `/login` writes no file
-   per visitor and its form carries no CSRF token. The ask's `Origin` stands in:
-   posted from another site it arrives without the `SameSite=Lax` cookie, and the
-   session it began would replace that browser's login. A script sends no
-   `Origin` and passes. The mail speaks the asking browser's language, the
-   account's being known only once it is in. The house's own line under the
-   form is `config.php`'s and never the request's, so the page stays the same
-   whoever asks. */
+/* The two steps of a login and the way out. An ask answers one sentence and
+   issues its code once the answer has left, so no address is told apart by what
+   is said or, where PHP can end an answer first (`DataLayout::costs`), by time.
+   `Storage\RateLimit` is asked first, per address and client at half what one
+   mailbox is sent, so a colleague's mail is withheld only while several clients
+   ask, and past the mailbox's own the floor is still written, for the operator.
+   Only an ask within them begins a session, so `/login` writes no file per
+   visitor and its form carries no CSRF token; the ask's `Origin` stands in, since
+   a form posted from another site arrives without the `SameSite=Lax` cookie, and
+   a script sends none and passes. The mail speaks the browser's language, the
+   account not being known yet. The line under the form is `config.php`'s, never
+   the request's, and the address step's alone, for whoever has no account. */
 final readonly class LoginController
 {
   public function __construct(
@@ -155,8 +153,8 @@ final readonly class LoginController
 
   private function code(?string $sentence, int $status = 200): Response
   {
-    return $this->page(['step' => 'code', 'to' => null, 'sentence' => $sentence, 'csrf' => $this->csrf->token()],
-      $status);
+    return $this->page(['step' => 'code', 'to' => null, 'sentence' => $sentence, 'csrf' => $this->csrf->token(),
+      'note' => null, 'link' => null], $status);
   }
 
   /** @param array<string, ?string> $values */

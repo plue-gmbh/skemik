@@ -34,17 +34,18 @@ final readonly class Query
   /* The keys read off the row's columns: `slug` the address the caller writes, `id`
      the one a subject-bound grant binds to, `locale` the language the row is in. */
   private const COLUMNS = ['slug', 'id', 'locale'];
-  private const RANGED = [FieldKind::Number, FieldKind::Date, FieldKind::DateTime];
-  private const SHAPES = ['date' => '/^\d{4}(-\d{2}){0,2}$/',
-    'date_time' => '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/'];
   public const PUBLIC = "(e.status = 'published' and (e.publish_from is null or e.publish_from <= :now)"
     . ' and (e.publish_to is null or :now < e.publish_to))';
+  /* The one status a row shows a reader now, which `:statuses` is read against. */
+  public const STATUS = 'case when ' . self::PUBLIC . " then 'published' when e.status <> 'published'"
+    . ' then e.status end';
 
   /**
    * @param array<string, list<string>> $filters a field key or a column to the values any of which matches
    * @param list<Status> $statuses none for every status
    * @param ?string $sort a field or spine key; null is best match first under a search, else newest first
    * @param list<string> $searchIn the field keys the reader reads, which alone a search is asked of
+   * @param array<string, Query> $searchThrough by type, what the reader reads of each, as a search reaches edges
    */
   public function __construct(
     public string $type,
@@ -57,6 +58,7 @@ final readonly class Query
     public int $page = 1,
     public int $perPage = self::PER_PAGE,
     public array $searchIn = [],
+    public array $searchThrough = [],
     public bool $trashed = false,
     private Json $json = new Json(),
   ) {
@@ -78,13 +80,18 @@ final readonly class Query
     return clone($this, ['trashed' => true]);
   }
 
+  /** @param array<string, Query> $readings */
+  public function through(array $readings): self
+  {
+    return clone($this, ['searchThrough' => $readings]);
+  }
+
   public function where(TypeDefinition $type): string
   {
     $clauses = ['e.type = :type',
       'e.deleted_at is ' . ($this->trashed ? 'not null' : 'null'),
       '(:locale is null or ' . Collisions::IN_LOCALE . ')',
-      "(:statuses = '[]' or case when " . self::PUBLIC . " then 'published'"
-        . " when e.status <> 'published' then e.status end in (select value from json_each(:statuses)))",
+      "(:statuses = '[]' or " . self::STATUS . ' in (select value from json_each(:statuses)))',
       '(:match is null or e.id in (select entity_id from (' . Search::hits() . ')))'];
     foreach (array_keys($this->filters) as $index => $key) {
       $clauses[] = $this->filterClause($type, $key, $index);
@@ -128,7 +135,7 @@ final readonly class Query
       $field = $this->field($type, $key);
       $named = (string) $schema->parameterName($field->key);
       $typed = fn (string $value): string|int|float|bool|array => match (true) {
-        in_array($field->kind, self::RANGED, true) => $this->range($field, $value, $named),
+        in_array($field->kind, Range::KINDS, true) => Range::bounds($field, $value, $named),
         str_contains($value, '..') && !$field->cardinality->isEdge()
           => throw MalformedValue::named('number or date for a range on ' . $named, $value),
         SortKeys::keys($field) || SortKeys::listed($field) => $keys->key($value),
@@ -167,7 +174,7 @@ final readonly class Query
         . " where substr({$this->keyed(":k$index")}, 1, length(v.value)) = v.value)",
       SortKeys::listed($field) => "exists (select 1 from json_each({$this->keyed(":k$index")}) x,"
         . " json_each(:f$index) v where substr(x.value, 1, length(v.value)) = v.value)",
-      in_array($field->kind, self::RANGED, true) => $this->rangeClause($field, $index),
+      in_array($field->kind, Range::KINDS, true) => Range::clause($field, $index),
       $field->repeatable => "exists (select 1 from json_each(e.props, :k$index) x where "
         . $this->cased($field, 'x.value') . " in $values)",
       default => $this->cased($field, "json_extract(e.props, :k$index)") . " in $values",
@@ -185,43 +192,6 @@ final readonly class Query
   {
     return "coalesce(json_extract(e.sort_keys, '$." . LocalisedText::KEY . ".' || :locale"
       . " || substr($path, 2)), json_extract(e.sort_keys, $path))";
-  }
-
-  private function rangeClause(FieldDefinition $field, int $index): string
-  {
-    $each = $field->repeatable ? "json_each(e.props, :k$index) x, " : '';
-    $value = $field->repeatable ? 'x.value' : "json_extract(e.props, :k$index)";
-
-    return "exists (select 1 from {$each}json_each(:f$index) v where "
-      . $this->end($field, $value, 0, '>=') . ' and ' . $this->end($field, $value, 1, '<=') . ')';
-  }
-
-  /* One end of a range, open where the bound is null. A date compares cut to
-     the bound's length, so `2026` holds every day of that year. */
-  private function end(FieldDefinition $field, string $value, int $end, string $operator): string
-  {
-    $bound = "json_extract(v.value, '$[$end]')";
-    $compared = $field->kind === FieldKind::Number ? $value : "substr($value, 1, length($bound))";
-
-    return "($bound is null or $compared $operator $bound)";
-  }
-
-  /* `from..to`, one end left empty for open; a bare value is both ends, and no
-     end at all asks nothing, so it is refused rather than matching every row.
-     @return list<string|int|float|null> */
-  private function range(FieldDefinition $field, string $value, string $named): array
-  {
-    $ends = str_contains($value, '..') ? explode('..', $value, 2) : [$value, $value];
-    if ($ends === ['', '']) {
-      throw MalformedValue::named('bound for ' . $named, $value);
-    }
-
-    return array_map(fn (string $end): string|int|float|null => $end === '' ? null : match (true) {
-      $field->kind === FieldKind::Number => is_numeric($end) && is_finite($end + 0) ? $end + 0
-        : throw MalformedValue::named('number for ' . $named, $end),
-      preg_match(self::SHAPES[$field->kind->value], $end) === 1 => $end,
-      default => throw MalformedValue::named($field->kind->value . ' for ' . $named, $end),
-    }, $ends);
   }
 
   /* Many values sort by the first, which is the one a list shows, and an edge by

@@ -9,6 +9,7 @@ use Domain\Exceptions\AskedTooMuch;
 use Domain\LocalisedText;
 use Domain\Props;
 use Domain\Slug;
+use Domain\Status;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
@@ -22,11 +23,12 @@ use Support\Json;
    SQLite may be built without. A search is asked of the fields its reader reads,
    as a filter is, so a `?q=` cannot find a record by a word the reading
    withholds. The words are derived from `props`, each translation's too, and
-   the slug, which every reading's address shows. A tag is matched through its
-   edge when asked and never copied into the tagged record, since a renamed
-   code would leave every copy stale. A tag counts by its code, the one word of
-   it the record's document shows, and only where the term is public, the
-   reading every reader shares, so a draft term finds nothing for anybody. What
+   the slug, which every reading's address shows. What a record points at is
+   matched through its edge when asked and never copied, since a renamed target
+   would leave every copy stale: a tag by its code where the term is public, the
+   reading every reader shares, and a reference's target by its name, one edge
+   deep, only where this reader reads that name, since a customer is a draft
+   person and a stranger must not learn one's name from a review's author. What
    is typed matches as prefixes through an indexed range and never `like`, so a
    stray quote finds nothing rather than failing. */
 final readonly class Search
@@ -42,10 +44,11 @@ final readonly class Search
 
   /* The records matching a question, the placeholder holding what `match()`
      answers and `:now` the clock: every term as a prefix in any of the reader's
-     fields or tags, all of them met, the most matching words first. The upper
-     bound is the prefix followed by the last code point, below which every
-     longer word with it sorts. The terms lead by `cross join`, which SQLite never
-     reorders: led by the word table, it scans every word of the house per search. */
+     fields, its tags or the names of what it points at, all of them met, the
+     most matching words first. The upper bound is the prefix followed by the
+     last code point, below which every longer word with it sorts. The terms
+     lead by `cross join`, which SQLite never reorders: led by the word table, it
+     scans every word of the house per search. */
   public static function hits(string $placeholder = ':match'): string
   {
     $words = "json_each($placeholder, '\$.terms') t cross join entity_word w"
@@ -57,8 +60,27 @@ final readonly class Search
       . " cross join relation r on r.object_id = w.entity_id and w.field = 'term_code'"
       . " where r.predicate in (select value from json_each($placeholder, '\$.tags'))"
       . ' and exists (select 1 from entity e where e.id = w.entity_id and e.deleted_at is null and '
-      . Query::PUBLIC . ')) group by entity_id'
+      . Query::PUBLIC . ')' . self::pointed($placeholder, $words) . ') group by entity_id'
       . " having count(distinct term) = json_array_length($placeholder, '\$.terms')";
+  }
+
+  /* A word of a target's name reaches each record pointing at it under a predicate
+     `match()` named, where the target is of the type and in the reading it named.
+     The naming fields are asked of the word first, so a long text's words probe
+     no edge. */
+  private static function pointed(string $placeholder, string $words): string
+  {
+    $named = "(select json_extract(n.value, '\$.named') from json_each($placeholder, '\$.edges') n)";
+
+    return " union all select r.subject_id, t.key from $words"
+      . ' cross join relation r on r.object_id = w.entity_id'
+      . " cross join json_each($placeholder, '\$.edges') g on r.predicate = json_extract(g.value, '\$.predicate')"
+      . " and w.field = json_extract(g.value, '\$.named')"
+      . " cross join entity e on e.id = w.entity_id and e.type = json_extract(g.value, '\$.type')"
+      . ' and e.deleted_at is null'
+      . " where w.field in $named and (json_array_length(g.value, '\$.statuses') = 0 or " . Query::STATUS
+      . " in (select value from json_each(g.value, '\$.statuses')))"
+      . " and (json_array_length(g.value, '\$.ids') = 0 or e.id in (select value from json_each(g.value, '\$.ids')))";
   }
 
   /* The authored words and every translation of them, per field, and the slug's. */
@@ -81,18 +103,20 @@ final readonly class Search
   }
 
   /**
-   * @param array<string, list<string>> $readings per type URL, the field keys its reader reads
+   * @param array<string, Query> $readings per type, what the reader reads of it, its fields among that
    * @return list<EntityId> best match first, trashed records left out
    */
   public function search(string $typed, array $readings): array
   {
     $arms = [];
     $bindings = ['now' => $this->clock->now()->format(Clock::STORED)];
-    foreach (array_keys($readings) as $index => $type) {
+    foreach (array_values($readings) as $index => $reading) {
+      $type = $this->profile->byType($reading->type);
       $arms[] = sprintf('select e.id, s.hits from (%1$s) s join entity e on e.id = s.entity_id'
         . ' where e.type = :type%2$d and e.deleted_at is null',
         self::hits(":match$index"), $index);
-      $bindings += ["match$index" => $this->match($typed, $readings[$type]), "type$index" => $type];
+      $bindings += ["match$index" => $this->match($typed, $type, $reading->through($readings)),
+        "type$index" => $type->url()];
     }
     if ($arms === []) {
       return [];
@@ -105,31 +129,63 @@ final readonly class Search
   }
 
   /* Nothing typed that is a word, or nothing read that holds words, matches
-     nothing rather than failing.
-     @param list<string> $read the field keys the reader reads */
-  public function match(string $typed, array $read): string
+     nothing rather than failing. The query says which fields of the type the
+     reader reads and what they read of every type an edge may reach. */
+  public function match(string $typed, TypeDefinition $type, Query $query): string
   {
     $terms = $this->tokens($typed);
     if (count($terms) > self::WORDS) {
       throw AskedTooMuch::words(self::WORDS);
     }
+    $read = array_values(array_filter($type->fields(), fn (FieldDefinition $field): bool
+      => in_array($field->key, $query->searchIn, true)));
 
     return $this->json->encode(['terms' => $terms,
-      'fields' => ['slug', ...array_values(array_intersect($this->profile->searchedKeys(), $read))],
-      'tags' => $this->tags($read)]);
+      'fields' => ['slug', ...array_values(array_intersect($this->profile->searchedKeys(), $query->searchIn))],
+      'tags' => $this->tags($read), 'edges' => $this->edges($read, $query->searchThrough)]);
   }
 
-  /* @param list<string> $read
+  /* @param list<FieldDefinition> $read
      @return list<string> the predicates of the term fields among them, as the edges hold them */
   private function tags(array $read): array
   {
-    $fields = array_merge(...array_map(fn (TypeDefinition $type): array => $type->fields(),
-      $this->profile->types()));
-    $tags = array_filter($fields, fn (FieldDefinition $field): bool
-      => $field->cardinality === Cardinality::T && in_array($field->key, $read, true));
+    $tags = array_filter($read, fn (FieldDefinition $field): bool => $field->cardinality === Cardinality::T);
 
     return array_values(array_unique(array_map(fn (FieldDefinition $field): string
       => (string) $this->schema->propertyName($field->key), $tags)));
+  }
+
+  /* Each reference field among the read, once per type it points at whose name the reader reads: a
+     name the reading withholds is not found through what points at it either.
+     @param list<FieldDefinition> $read
+     @param array<string, Query> $through
+     @return list<array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>}> */
+  private function edges(array $read, array $through): array
+  {
+    $edges = [];
+    foreach ($read as $field) {
+      $reference = $field->kind === FieldKind::Ref || $field->kind === FieldKind::Refs;
+      foreach ($reference ? $through : [] as $reading) {
+        $target = $this->profile->byType($reading->type);
+        $named = in_array($target->namedBy(), $reading->searchIn, true);
+        if ($named && $this->schema->takes($field->targets, $target->name)) {
+          $edges[] = $this->edge($field, $target, $reading);
+        }
+      }
+    }
+
+    return $edges;
+  }
+
+  /* The target's type, the field it is named by and the reading: every status
+     where the list is empty, and every record where the ids are.
+     @return array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>} */
+  private function edge(FieldDefinition $field, TypeDefinition $target, Query $reading): array
+  {
+    return ['predicate' => (string) $this->schema->propertyName($field->key), 'type' => $target->url(),
+      'named' => $target->namedBy(),
+      'statuses' => array_map(fn (Status $status): string => $status->value, $reading->statuses),
+      'ids' => $reading->filters['id'] ?? []];
   }
 
   /* Lower-case words with their diacritics folded, as a search is typed, so

@@ -141,7 +141,25 @@ final readonly class PublicFilter
     $filters = $subjects === [] ? $query->filters : [...$query->filters, 'id' => $subjects];
 
     return new Query($query->type, $filters, $statuses, $query->locale, $query->sort,
-      $query->descending, $query->search, $query->page, $query->perPage, $query->searchIn);
+      $query->descending, $query->search, $query->page, $query->perPage, $query->searchIn, $query->searchThrough);
+  }
+
+  /* What this caller reads of each collection, as the query narrowing to it and
+     the fields it reads of it; a collection it has no reading of is left out.
+     @param list<Collection> $collections
+     @return array<string, Query> by type */
+  public function readings(array $collections): array
+  {
+    $readings = [];
+    foreach ($collections as $collection) {
+      $keys = array_map(fn (CollectionField $field): string => $field->key, $this->fields($collection));
+      $reading = $this->query(new Query($collection->type, searchIn: $keys), $collection);
+      if ($reading !== null) {
+        $readings[$collection->type] = $reading;
+      }
+    }
+
+    return $readings;
   }
 
   /**

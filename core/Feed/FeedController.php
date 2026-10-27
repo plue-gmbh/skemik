@@ -109,8 +109,8 @@ final readonly class FeedController
     /* A collection this caller may read always narrows to something: `readable`
        has already answered the question `query` would return null for. */
     $read = $held->carrying($filter->fields($held));
-    $asked = $this->targets->filtered($this->parameters->query($request, $read, $locale), [$locale],
-      $this->reads(...));
+    $asked = $this->targets->filtered($this->parameters->query($request, $read, $locale)
+      ->through($filter->readings($this->collections->all())), [$locale], $this->reads(...));
     $query = $filter->query($asked, $held) ?? throw EntityNotFound::withId($held->slug->value);
     $format = $this->format($request, $route, $filter, $locale);
     $body = $format->listing($this->entities->list($query), $held, $this->entities->count($query),

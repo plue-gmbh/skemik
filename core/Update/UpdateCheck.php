@@ -16,9 +16,9 @@ use Support\JsonFailed;
    static `User-Agent` every fetch of the house sends, so the address the request
    comes from is all that leaves it and the comparison is local; a personalised
    manifest is impossible and not merely unused, which is why the manifest is a
-   static file served with request logging off, and why installs we cannot
-   count are what *no further processor* rests on. A check that fails is a
-   sentence on the owner's screen and nothing else changes. */
+   static file, and why installs we cannot count are what *no further
+   processor* rests on. A check that fails is a sentence on the owner's screen
+   and nothing else changes. */
 final readonly class UpdateCheck
 {
   public const FILE = 'update.json';

@@ -24,7 +24,6 @@ use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
 use Storage\Collection;
-use Storage\CollectionField;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\Query;
@@ -153,23 +152,17 @@ final readonly class SearchController
     return $found;
   }
 
-  /* Each type the search may offer, with the fields this account reads of it in
-     the first collection holding it, since a match on any other field would
-     name a record by a word the reader is not shown.
+  /* Each type the search may offer, as this account reads it, since a match on
+     any other field would name a record by a word the reader is not shown.
      @param list<Collection> $house
      @param ?list<string> $targets null for any type
-     @return array<string, list<string>> */
+     @return array<string, Query> */
   private function readings(Account $account, array $house, ?array $targets): array
   {
-    $readings = [];
-    foreach ($house as $collection) {
-      if ($targets === null || in_array(basename($collection->type), $targets, true)) {
-        $readings[$collection->type] ??= array_map(fn (CollectionField $field): string => $field->key,
-          $this->rows->fields($account, $collection));
-      }
-    }
+    $offered = array_filter($house, fn (Collection $collection): bool
+      => $targets === null || in_array(basename($collection->type), $targets, true));
 
-    return $readings;
+    return $this->rows->readings($account, array_values($offered));
   }
 
   /* The field a picker searches for; null for the link search. */

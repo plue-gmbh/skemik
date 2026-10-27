@@ -189,7 +189,7 @@ final readonly class RecordPage
   private function page(Query $query, int $page): array
   {
     $paged = new Query($query->type, $query->filters, $query->statuses, $query->locale, $query->sort,
-      $query->descending, $query->search, $page, $query->perPage, $query->searchIn);
+      $query->descending, $query->search, $page, $query->perPage, $query->searchIn, $query->searchThrough);
     $ids = [];
     foreach ($this->entities->list($paged) as $entity) {
       $ids[$entity->id->value] = [$entity, $page];

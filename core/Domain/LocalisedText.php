@@ -103,15 +103,24 @@ final readonly class LocalisedText
   }
 
   /* What a translation starts from on a type with both mechanisms: the words
-     kept for its locale become its authored ones, so no record holds words under
-     its own locale twice. */
-  public function forked(Entity $entity, Locale $locale): Props
+     kept for its locale become its authored ones, on a record's props and an
+     edge's qualifiers alike, and the other locales' stay with the source alone,
+     whose routes serve them, so no words stand on two members. */
+  public static function folded(Props $props, Locale $locale): Props
   {
-    $translations = $this->translations($entity);
-    $props = $entity->props;
-    foreach ($translations[$locale->tag] ?? [] as $key => $value) {
+    foreach (self::wordsOf($props)[$locale->tag] ?? [] as $key => $value) {
       $props = $props->with((string) $key, $value);
     }
+
+    return $props->with(self::KEY, null);
+  }
+
+  /* The same less that locale's words, for every other member of a group: a
+     locale a member is authored in is that member's to word, and words standing
+     on a second one are words the switch hides and nobody can clear. */
+  public static function stripped(Props $props, Locale $locale): Props
+  {
+    $translations = self::wordsOf($props);
     unset($translations[$locale->tag]);
 
     return $props->with(self::KEY, $translations === [] ? null : $translations);
@@ -129,7 +138,13 @@ final readonly class LocalisedText
   /** @return array<string, array<string, string|list<string|array<string, mixed>>>> */
   private function translations(Entity $entity): array
   {
-    $translations = $entity->props->document()[self::KEY] ?? [];
+    return self::wordsOf($entity->props);
+  }
+
+  /** @return array<string, array<string, string|list<string|array<string, mixed>>>> */
+  private static function wordsOf(Props $props): array
+  {
+    $translations = $props->document()[self::KEY] ?? [];
     if (!is_array($translations)) {
       throw MalformedValue::notA('a map of locales', self::KEY);
     }

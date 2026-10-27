@@ -8,8 +8,9 @@ declare(strict_types=1);
    and a stale one not, so renewing a key is one press and a rule left out on
    the way is the narrowing a live key cannot take. Its secret is shown once, as
    the badge shows it, and the dialog then closes only by reloading the page.
-   Revoking asks once more, saying when the key was last used, since nothing
-   takes it back and only a new secret handed to the integration replaces it. */
+   Revoking asks once more, the confirm standing where the press was, since
+   nothing takes it back and only a new secret handed to the integration
+   replaces it; when the key was last used stands in the facts line. */
 
 if (!isset($template)) {
   return;
@@ -52,15 +53,12 @@ $named = fn (string $sentence): string => str_replace($template->escape(Admin\Gr
     <p class="grant-error" role="alert" data-grant-error></p>
   </form>
 <?php endif ?>
-  <form class="grant-revoking" method="post"
-    action="/settings/tokens/<?= $template->escape($entry->token->id) ?>/revoke" data-grant-revoking hidden>
-    <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-    <p id="<?= $template->escape($id) ?>-revoking"><?= $template->escape($entry->revoking) ?></p>
-    <button type="submit" class="button-danger"
-      aria-describedby="<?= $template->escape($id) ?>-revoking"><?= $template->escape($words->get('grant.revoke_now'))
-        ?></button>
-  </form>
   <div class="dialog-actions">
+    <form class="grant-revoke" method="post"
+      action="/settings/tokens/<?= $template->escape($entry->token->id) ?>/revoke" data-grant-revoking hidden>
+      <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+      <button type="submit" class="button-danger"><?= $template->escape($words->get('grant.revoke_now')) ?></button>
+    </form>
     <button type="button" class="button-quiet is-danger grant-revoke"
       data-grant-revoke-ask><?= $template->escape($words->get('grant.revoke')) ?></button>
     <button type="button" class="button-quiet"
@@ -73,7 +71,8 @@ $named = fn (string $sentence): string => str_replace($template->escape(Admin\Gr
 <?php if ($entry->replaced === null): ?>
   <div class="grant-secret" data-grant-secret hidden>
     <p><?= $named($words->get('grant.secret', ['name' => Admin\Grants::NAME])) ?></p>
-    <code data-grant-secret-value></code>
+    <code data-grant-secret-value
+      data-copied="<?= $template->escape($words->get('grant.copied')) ?>"></code>
     <button type="button" class="button-primary"
       data-grant-done><?= $template->escape($words->get('grant.done')) ?></button>
   </div>

@@ -200,8 +200,8 @@ final readonly class Records
   {
     $common = $this->common;
     return new QueryBar($common->parameters, $common->filter, $common->authorizer, $common->entities,
-      $common->relations, $common->collections, $common->counts, $common->settings, $common->rows,
-      $common->named, $common->schema, $common->terms, $common->targets, $common->clock, $common->words);
+      $common->collections, $common->counts, $common->settings, $common->rows, $common->named, $common->terms,
+      $common->targets, $common->words);
   }
 
   private function recordWords(): RecordWords

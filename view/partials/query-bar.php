@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /* Above the view (`Admin\QueryBar`), one form whose fields are the address. A
-   filter value no row carries is not offered, and a field's group names its type
+   language no row is in is not offered, and a field's group names its type
    beside it, since a field may be called Status too. Search matches what the
    feed's `?q=` matches, so its placeholder names the collection and not a field.
    A select at its default reads as quietly as the placeholder, so what narrows or

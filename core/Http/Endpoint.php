@@ -86,6 +86,14 @@ enum Endpoint
       self::Robots, self::SecurityText], true);
   }
 
+  /* A file's answer reads who asks and writes nothing: the session it resumed
+     is let go before the file is read, since a screen's thumbnails would otherwise
+     queue on its lock one by one, each holding a worker meanwhile. */
+  public function isFile(): bool
+  {
+    return $this === self::MediaFile || $this === self::MediaThumb;
+  }
+
   /* The first run starts its own session once it has settled the data folder,
      since until then there is nowhere to keep one. */
   public function isFirstRun(): bool

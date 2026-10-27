@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-/* A grant anchor's reviews and issue form (`Admin\TokenController`). Everyone who
-   sees the screen sees a live grant's review, a fact about the holdings, and
-   `manageTokens` adds the form and take-it-back, not the information. The form is
-   the grant as a sentence: a name the log will sign with, what it may do, one box
-   per rule, so create and read are one key with one secret, and until when, since
-   every token expires and a form without the date would lie. A name already live
-   is answered with every rule the new secret then holds, the newest secret being
-   the whole key. The secret is shown once, in a state an outside press does not
-   close. Where nothing is granted yet and the form is offered, the popover opens
-   on the form alone: a heading above it would say what the form already says. */
+/* A grant anchor's reviews and issue form (`Admin\TokenController`): everyone who
+   sees the screen sees a live grant's review, and `manageTokens` adds the form
+   and take-it-back, not the information. The form is the grant as a sentence, a
+   name the log will sign with, what it may do, one box per rule, so create and
+   read are one key with one secret, and until when, since every token expires and
+   a form without the date would lie. A name already live is answered with every
+   rule the new secret then holds, the newest secret being the whole key; with
+   nothing granted yet the form stands alone. The secret is shown once, in a state
+   an outside press does not close, and a press copies it where a clipboard is
+   there, HTTPS and localhost, and selects it whole anywhere. Take-it-back asks
+   once more where the press was, since a rule taken back returns only with a new
+   secret. */
 
 if (!isset($template)) {
   return;
@@ -45,15 +47,17 @@ $bare = $badge->reviews === [] && $badge->offers !== [];
 <?php endforeach ?>
     </ul>
 <?php endif ?>
-<?php if ($badge->offers !== []): ?>
+<?php if ($badge->offers !== []): $taking = $review->others === [] ? 'revoke' : 'remove' ?>
     <form method="post"
       action="/settings/tokens/<?= $template->escape($review->token->id) ?>/rules/<?= $template->escape(
-        $review->rule->id) ?>/remove">
+        $review->rule->id) ?>/remove" data-grant-revoking hidden>
       <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
       <input type="hidden" name="back" value="<?= $template->escape($back) ?>">
-      <button type="submit" class="button-quiet is-danger"><?= $template->escape($words->get($review->others === []
-        ? 'grant.revoke' : 'grant.remove')) ?></button>
+      <button type="submit" class="button-danger"><?= $template->escape($words->get('grant.' . $taking . '_now'))
+        ?></button>
     </form>
+    <button type="button" class="button-quiet is-danger grant-revoke"
+      data-grant-revoke-ask><?= $template->escape($words->get('grant.' . $taking)) ?></button>
 <?php endif ?>
   </div>
 <?php endforeach ?>
@@ -99,7 +103,8 @@ $bare = $badge->reviews === [] && $badge->offers !== [];
   </form>
   <div class="grant-secret" data-grant-secret hidden>
     <p><?= $named($words->get('grant.secret', ['name' => Admin\Grants::NAME])) ?></p>
-    <code data-grant-secret-value></code>
+    <code data-grant-secret-value
+      data-copied="<?= $template->escape($words->get('grant.copied')) ?>"></code>
     <button type="button" class="button-primary"
       data-grant-done><?= $template->escape($words->get('grant.done')) ?></button>
   </div>

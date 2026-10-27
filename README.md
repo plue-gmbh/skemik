@@ -1,19 +1,18 @@
 # Skemik
 
-![Version 1.0.7](https://img.shields.io/badge/version-1.0.7-1f6feb)
+![Version 1.0.8](.0.8-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
 The database that ships its own data model: 30 curated schema.org types, the
-same in every install, their fields named and typed before you start — no empty
-tool to design first, no column called `Date2`.
+same in every install, their fields named and typed before you start. No empty
+tool to design first, no column called `Date2`. What an organisation keeps
+stands there once. Everything that works with it reads it there and writes back
+there, at one address.
 
 ![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.7)
 
-Like a headless CMS or a spreadsheet database, except the model is already
-there, and it is schema.org.
-
-The demo house's events, read with no key:
+The demo install's events, read with no key:
 
 ```sh
 curl https://demo.skemik.org/feed/en-GB/events
@@ -26,21 +25,18 @@ curl https://demo.skemik.org/feed/en-GB/events
 
 ---
 
-[Quickstart](#quickstart) ·
-[What it is](#what-it-is) ·
-[Requirements](#requirements) ·
-[Install](#install) ·
-[Running it](#running-it) ·
-[Updating](#updating) ·
-[Addresses](#addresses) ·
-[Collections](#collections) ·
-[Reading the feed](#reading-the-feed) ·
+**Start:** [Quickstart](#quickstart) · [What it is](#what-it-is)
+
+**For whoever runs it:** [Requirements](#requirements) · [Install](#install) ·
+[Running it](#running-it) · [Updating](#updating) · [Security](#security)
+
+**For whoever builds on the address:** [Addresses](#addresses) ·
+[Collections](#collections) · [Reading the feed](#reading-the-feed) ·
 [Writing through the feed](#writing-through-the-feed) ·
 [Reading it from PHP](#reading-it-from-php) ·
-[How to build a website](#how-to-build-a-website) ·
-[Decisions](#decisions) ·
-[Security](#security) ·
-[Contributing](#contributing) ·
+[How to build a website](#how-to-build-a-website)
+
+**Why:** [Decisions](#decisions) · [Contributing](#contributing) ·
 [Licence and trademark](#licence-and-trademark)
 
 ---
@@ -50,12 +46,17 @@ curl https://demo.skemik.org/feed/en-GB/events
 From an empty folder to a record read at its address, and one written by a
 program, on your own machine.
 
-**1. Run it.** In a folder holding a copy of `index.php`, `.htaccess`, `core/`,
+**1. Run it.** Download the newest release from
+[github.com/plue-gmbh/skemik/releases](https://github.com/plue-gmbh/skemik/releases)
+and unpack it. In a folder holding a copy of `index.php`, `.htaccess`, `core/`,
 `view/`, `language/` and `migrations/`, start PHP's built-in server:
 
 ```sh
 PHP_CLI_SERVER_WORKERS=2 php -S localhost:8080 index.php
 ```
+
+The second worker answers the installer's fetch of its own address while the
+first still answers the form.
 
 **2. Install.** Make an empty data folder outside that one, open
 `http://localhost:8080/install` and give it the folder, your name and your
@@ -63,7 +64,7 @@ login address. The first login code is mailed and also written to `login/` in
 the data folder.
 
 **3. Publish a record.** In the admin, open *Events*. Every field stays inside
-the house until it is made public: the line under the name, *… fields, 0
+the install until it is made public: the line under the name, *… fields, 0
 public*, lists them: tick *Public* on *Name* and on *Starts*. Then add an
 event with a name and a start, and set its status to *Published*.
 
@@ -98,7 +99,7 @@ answers, for an event *Open evening* at 18:00 in Berlin:
 ```
 
 `en-US` is the locale `/install` took from your browser, and `/feed` names
-those the house holds. `.md`, `.csv` or `.html` after `events` picks another
+those the install holds. `.md`, `.csv` or `.html` after `events` picks another
 format, and `?sort=startDate`, `?q=open` or `?startDate=2026-11` orders and
 narrows the list.
 
@@ -112,8 +113,8 @@ curl -X POST http://localhost:8080/feed/en-US/events \
   -d '{"@type":"Event","name":"Open day","startDate":"2026-11-02T10:00:00Z"}'
 ```
 
-It answers `201` and lands as a draft, which the house publishes in the admin;
-from then on it is read at the address in `Location`.
+It answers `201` and lands as a draft, which the organisation publishes in the
+admin; from then on it is read at the address in `Location`.
 
 **6. Build on it.** A website reads the feed as *Reading it from PHP* and *How
 to build a website* show, and `/feed/en-US/profile` says what each type can
@@ -121,14 +122,16 @@ hold.
 
 ## What it is
 
-A house — the company, club or organisation that runs Skemik — types its data
+The organisation that runs Skemik, a company, a club or a school, types its data
 once, and its website, catalogue and assistant work with it at one address.
 Skemik holds the data, edits it in the admin and serves it at that address. A
-frontend is not part of it: that stays the house's own, built on the address.
+frontend is not part of it: that stays the organisation's own, built on the
+address.
 
-It is for any house whose website or shop would otherwise run on WordPress, and
-whose members, courses, orders or bookings would sit in spreadsheets beside it:
-a company, a shop, a club or a school, and the agency that builds their sites.
+It is for any organisation whose website or shop would otherwise run on
+WordPress, and whose members, courses, orders or bookings would sit in
+spreadsheets beside it: a company, a shop, a club or a school, and the agency
+that builds their sites.
 
 - **The model.** Thirty schema.org types, each a collection with its own
   address, statuses from draft to archived and its own permissions, their
@@ -144,20 +147,18 @@ a company, a shop, a club or a school, and the agency that builds their sites.
   and an edge carries words of its own, *CTO from 2021 to 2024*. A list
   replaces every custom collection, and a set of terms every taxonomy table.
 
-- **The admin.** A collection per type from the first day, seen as a list, a
-  table, cards, a grid or a timeline, since the type says what is a date and
-  what an image. Every view edits the fields it shows in place, the table all
-  of them, and acts on the records ticked in it together, a status, one value
-  or the trash across them, each logged per record. The trash's rows are
-  ticked the same way and restored or purged together, one dialog counting the
-  references over the lot, and a lot holding one record a required edge names
-  stays as it was, naming that record. Beside them a record screen, a media
-  library, a search across every collection, and next to a list or a record
-  the address it is read at, with the document as the public reads it, or as a
-  key reading what the person logged in reads.
+- **The admin.** A finished program, not a construction kit: since every type
+  is known, the admin knows what is a date and what an image. A collection per
+  type from the first day, seen as a list, a table, cards, a grid or a
+  timeline, and every view edits the fields it shows in place. The town goes
+  out and the street stays in: an organisation publishes per field. Beside the
+  collections a record screen, a media library, a search across every
+  collection, and next to a list or a record the address it is read at, with
+  the document as the public reads it, or as a key reading what the person
+  logged in reads.
 
-- **The address.** Everything the house publishes is read at `/feed`, in four
-  formats, by anything.
+- **The address.** Everything the organisation publishes is read at `/feed`, in
+  four formats, by anything.
 
 - **The grant.** The same address takes writes from a key, a secret a program
   sends with each request, and the key's grant says what it may do, down to one
@@ -203,7 +204,9 @@ Ask the host for these before you copy anything.
 - **Two settings that cost time** and refuse nothing, each named by `/install`
   where it stands: without the opcode cache PHP compiles the tree anew for
   every answer, and with `zend.assertions` left at `1` the self-tests run on
-  every page and slow each answer.
+  every page and slow each answer. On your own machine, where a development
+  `php.ini` sets it, they halt a page loudly, naming what they guard, so a halt
+  there is a defect to report and not a setup to fix.
 
 - **One that gives something away** and costs no time: run as CGI or FastCGI,
   without `fastcgi_finish_request`, PHP cannot end an answer before the work
@@ -212,29 +215,28 @@ Ask the host for these before you copy anything.
 
 ## Install
 
-Copy everything the release's folder holds into the folder your domain points
-at: `index.php`, `.htaccess`, `core/`, `view/`, `language/` and `migrations/`,
-and the four papers beside them, since the house checks its files against
-`SHA256SUMS` and a paper left out reads as missing. Then open `/install` on it
-by hand: nothing links there, and until it has run no other address answers.
-Run it the minute the files are copied: it answers only while the house has no
-account, and until then the house belongs to whoever runs it first, who needs
-nothing but the path of an empty data folder.
-
-A release is one zip named after its tag, `skemik-1.0.0.zip`, holding that
-folder under the same name, the code and four papers, this README, the
-`LICENSE`, `SECURITY.md` and `SHA256SUMS`, and beside it its signature,
-minisign's, which the updater checks against the key in the source before it
-unpacks anything.
-Both are downloaded from the release's page at
+Download the newest release from
 [github.com/plue-gmbh/skemik/releases](https://github.com/plue-gmbh/skemik/releases),
-where every release stands under its tag, and the updater fetches the same two
-from `releases.skemik.org`. Check it by hand with the same key before you open
-the folder:
+where every release stands under its tag. A release is one zip named after its
+tag, `skemik-1.0.0.zip`, and beside it its signature, minisign's, which the
+updater checks against the key in the source before it unpacks anything; the
+updater fetches the same two from `releases.skemik.org`. Check it by hand with
+the same key before you open the folder:
 
 ```sh
 minisign -Vm skemik-1.0.0.zip -P RWTcPiN2NJok7rtTpL5Ipn/LHlDpGfDQGT2ZHkbGp1Lry05p4J71nMzW
 ```
+
+The zip holds a folder of the same name with the code and four papers, this
+README, the `LICENSE`, `SECURITY.md` and `SHA256SUMS`. Copy everything that
+folder holds into the folder your domain points at: `index.php`, `.htaccess`,
+`core/`, `view/`, `language/` and `migrations/`, and the four papers beside
+them. The install checks its files against `SHA256SUMS`, so a paper left out
+reads as missing. Then open `/install` by hand: nothing links there, and until
+it has run no other address answers. Run it the minute the files are copied. It
+answers only while the install has no account, and until then the install
+belongs to whoever runs it first, who needs nothing but the path of an empty
+data folder.
 
 `SHA256SUMS` lists every file the release ships but `.htaccess`, whose lines
 outside the Skemik block are the hoster's, so once the files are copied this
@@ -271,17 +273,17 @@ SHA256SUMS    the hash of every file shipped but .htaccess
 
 The installer checks the server first and stores nothing until every check
 passes. One check is a `PATCH` of its own address: every save is one, and a
-front that refuses the method would otherwise be learnt at the house's first
+front that refuses the method would otherwise be learnt at the install's first
 save. PHP writes in two places, the data folder and the folder holding
 `index.php`: `config.php` at the first run, the whole tree when a release
 installs itself. Where it cannot, the check's line says so, with the user PHP
 runs as where the host lets that be asked. Then it asks for the data folder,
 unless `config.php` already names one, the owner's name and login address, the
-house's timezone and the admin's language. That is also the first language the
-house publishes in, in the region the installing browser names for it, `de-AT`,
-else the one it is most at home in, `de-DE` or `en-US`; the admin's own words
-are the language's, in a region's spelling where a file for it ships, Swiss
-German's *Strasse*, and its dates and numbers are written as the browser's
+install's timezone and the admin's language. That is also the first language the
+organisation publishes in, in the region the installing browser names for it,
+`de-AT`, else the one it is most at home in, `de-DE` or `en-US`; the admin's own
+words are the language's, in a region's spelling where a file for it ships,
+Swiss German's *Strasse*, and its dates and numbers are written as the browser's
 region writes them, *€ 1.234,50* in `de-AT`.
 
 - **Make the data folder beforehand**, empty, best above the domain root. The
@@ -297,8 +299,8 @@ region writes them, *€ 1.234,50* in `de-AT`.
   it. A login mail names it, the hourly probe of the data folder fetches it and
   an update asks the new code under it, whatever name a later request carries: a
   server that answers any name would otherwise mail a colleague, anybody with an
-  account, a stranger's address to log in at. A house moving its domain changes
-  it there. The feed's documents keep the name each request came under.
+  account, a stranger's address to log in at. An organisation moving its domain
+  changes it there. The feed's documents keep the name each request came under.
 
 - **The first login code** is mailed and always also written to `login/` in the
   data folder, so a host whose mail does not work still lets you in. Where the
@@ -306,12 +308,12 @@ region writes them, *€ 1.234,50* in `de-AT`.
   ['host' => …, 'port' => 587, 'user' => …, 'password' => …, 'sender' => …]`.
   It must offer STARTTLS; implicit TLS on 465 is not spoken.
 
-- **A line of the house's own under the login form**, for whoever lands there
-  without an account: `'login_note' => 'No account? Ask here'` in
-  `config.php`, the whole line a link where `'login_link' => 'https://…'`
-  stands beside it. It is shown as written, on both steps of the login, and
-  the home screen's Settings card names it; without it the page says nothing
-  but Skemik's name.
+- **A line of the organisation's own under the login form**, for whoever lands
+  there without an account: `'login_note' => 'No account? Ask here'` in
+  `config.php`, the whole line a link where `'login_link' => 'https://…'` stands
+  beside it. It is shown as written on the first step of the login, where the
+  address is asked, and the home screen's Settings card names it; without it the
+  page says nothing but Skemik's name.
 
 - **Apache reads the shipped `.htaccess`** and needs `mod_rewrite` and an
   `AllowOverride` of at least `FileInfo` and `AuthConfig`. Where `/install`
@@ -326,35 +328,22 @@ region writes them, *€ 1.234,50* in `de-AT`.
   front, the install sees plain HTTP from one address, since any client can
   send the headers a proxy adds: every `@id` reads `http://` and every visitor
   shares one rate limit. A setting in `config.php` naming the proxy comes when a
-  house behind one asks. Served over HTTPS itself, every answer asks the
+  organisation behind one asks. Served over HTTPS itself, every answer asks the
   browser to stay on it for a year, so a plain `http://` beside it is not
   opened again once the admin was.
 
-To try the first run on your own machine, start PHP's built-in server in the
-folder holding `index.php`:
-
-```sh
-PHP_CLI_SERVER_WORKERS=2 php -S localhost:8080 index.php
-```
-
-and open `http://localhost:8080/install`. The second worker is needed because
-the installer fetches its own address while still answering the form. With
-`zend.assertions=1`, which a development `php.ini` sets, the self-tests halt a
-page loudly, naming what they guard, so a halt on your machine is a defect to
-report and not a setup to fix.
-
 ## Running it
 
-**One install serves one house**: two houses are two installs, never one data
-folder. In the data folder `config.php` names, `holdings/` holds the house's
-data, its holdings: the database, and `media/` with the uploads. Beside it
-stands what is derived or must not survive a restore: `backups/`, `staging/`,
-`log/`, `login/`, `sessions/` and `cache/`. A copy of `holdings/` is a backup
-and a move to another host; the rest is rebuilt or, for a login code and a
-session, rightly gone.
+**One install serves one organisation**: two organisations are two installs,
+never one data folder. In the data folder `config.php` names, `holdings/` holds
+the organisation's data, its holdings: the database, and `media/` with the
+uploads. Beside it stands what is derived or must not survive a restore:
+`backups/`, `staging/`, `log/`, `login/`, `sessions/` and `cache/`. A copy of
+`holdings/` is a backup and a move to another host; the rest is rebuilt or, for
+a login code and a session, rightly gone.
 
 **One snapshot a day is taken automatically**, on the first request of the day
-in the house's timezone, with no daemon and no cron to set up: the database
+in the install's timezone, with no daemon and no cron to set up: the database
 settled into one file by `VACUUM INTO`, never a copy of the live WAL, and the
 media tree beside it, hardlinked where the disk allows. Seven daily and four
 weekly are kept, about thirty days, in `backups/` beside the holdings. Where a
@@ -372,7 +361,7 @@ lists each with its path and its download, one zip that unpacked into `backups/`
 is that snapshot again, and restores one whole: what was written since is kept
 as a snapshot named *before the restore*, and everybody is logged out. Who may
 get in is the exception: an account or a key the snapshot holds comes back only
-where the house still holds it, as the house has it. So a key revoked or an
+where the install still holds it, as the install has it. So a key revoked or an
 account removed since stays out, and one made since is gone as a record made
 since is, but for the owner restoring, who keeps theirs. A database copied back
 by hand is none of that: its accounts and keys come back with it, a key revoked
@@ -396,17 +385,23 @@ record. A record holding an edge under a field a release dropped, or a value
 under one it made an edge, stays reachable everywhere, the holdings check names
 both, and the record's next save drops them.
 
-**Needs a look, a card on the home screen, finds what somebody should take up
-or mend**, each line counting it and opening where that starts: a message a
-contact form wrote until somebody marks it read, the oldest first; an order a
-till wrote and a reservation a booking service wrote while they stand open by
-their own status, one delivered or confirmed on arrival never; a record
-waiting in review and one pointing at a record in the trash; a draft begun
-over a week ago of a type meant to be published, never a person, whom a house
-holds as a draft on purpose; and an image without alt text, opening the
-library's pictures. For whoever issues keys it counts a key running out within
-30 days, until a new one is issued under its name. A colleague is told only of
-what they read, and each line leaves once what it counts is taken up or mended.
+**A view acts on the records ticked in it together**, a status, one value or
+the trash across them, each logged per record, and the table edits all of its
+fields in place. The trash's rows are ticked the same way and restored or
+purged together, one dialog counting the references over the lot, and a lot
+holding one record a required edge names stays as it was, naming that record.
+
+**Needs a look, a card on the home screen, finds what somebody should take up or
+mend**, each line counting it and opening where that starts: a message a contact
+form wrote until somebody marks it read, the oldest first; an order a till wrote
+and a reservation a booking service wrote while they stand open by their own
+status, one delivered or confirmed on arrival never; a record waiting in review
+and one pointing at a record in the trash; a draft begun over a week ago of a
+type meant to be published, never a person, whom an organisation holds as a
+draft on purpose; and an image without alt text, opening the library's pictures.
+For whoever issues keys it counts a key running out within 30 days, until a new
+one is issued under its name. A colleague is told only of what they read, and
+each line leaves once what it counts is taken up or mended.
 
 **The release's files are compared with its `SHA256SUMS` once a day**, and at
 once after an update: a file changed, one missing, and one added where only the
@@ -435,7 +430,7 @@ failure.
 **A release is installed automatically**, with nobody pressing: once an hour,
 after an answer has left and from any request, the install reads the manifest
 at `releases.skemik.org`, which names the newest release and nothing older, and
-installs what it finds at once. So a house where nobody opens the admin is
+installs what it finds at once. So an install where nobody opens the admin is
 current, and the address answers *being updated* for the seconds of the swap.
 
 - **The check sends nothing that identifies the install**, no version, no
@@ -461,7 +456,7 @@ current, and the address answers *being updated* for the seconds of the swap.
   nothing, so its update screen names the release that came out.
 
 - **A release may be held back until a day** the manifest names, so it reaches
-  a few houses before all of them: an install whose `config.php` says
+  a few installs before all of them: an install whose `config.php` says
   `'updates' => 'early'` takes it the hour it goes up.
 
 - **Where it cannot run**, the tree not PHP's to write on a host where the
@@ -491,44 +486,66 @@ stranger reads, whose words can name a path. A release is not undone by copying
 the older files back: the database stays at its number and the older code
 refuses it, so the way back is the snapshot.
 
+## Security
+
+Report a vulnerability in Skemik to security@skemik.org, in German or English,
+and not in a public issue. plue GmbH is the manufacturer of every release and
+answers there, whoever installed it and under whichever licence.
+
+Every install answers `/.well-known/security.txt` automatically, as RFC 9116
+words it, for the researcher or the scanner who finds an install and not us. Its
+first `Contact` is the one `config.php` names, `'security_contact' =>
+'it@example.com'`, an address or a link, the organisation or the agency that
+runs the install. Ours follows as the manufacturer's of the software, never as
+the site's owner, and stands alone where `config.php` names none. Its `Expires`
+is a year after the day of the release the install runs, so one that has not
+updated for a year says of itself that it is stale. A `.well-known/security.txt`
+the operator writes into the domain root is answered in its place, as written.
+
+A fix arrives as the next release and nowhere else: there is one line, the
+newest, and nothing is carried back to an older one. An install that follows
+updates has the fix within the hour, its update screen saying that it was a
+security release, and one that declines them takes it by copying the newest
+release. A vulnerability reported in a release before its Change Date, three
+years after its day as its `LICENSE` names, is fixed in the newest release.
+
 ## Addresses
 
 A website or an app needs every address below but two: the profile, which
 tells a program what each type holds, and a collection's configuration, which a
-script setting a house up writes. Reading needs no key; a key reads what its
+script setting an install up writes. Reading needs no key; a key reads what its
 rules name beyond that and is needed for every write, sent as
 `Authorization: Bearer …`, from a server or from a page on any domain, whose
 browser's preflight is answered.
 
 | Method | Address | Answers |
 |---|---|---|
-| `GET` | `/feed` | the locales the house holds, and `dateModified`, when anything a reading shows last changed |
+| `GET` | `/feed` | the locales the install holds, and `dateModified`, when anything a reading shows last changed |
 | `GET` | `/feed/{locale}` | the catalogue: the collections this reader reads, the names of their fields in that language and the words for every value a field takes from a fixed list, such as `EventScheduled` |
-| `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this house carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
+| `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this install carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
 | `GET` | `/feed/{locale}/{collection}` | a page of its records |
 | `GET` | `/feed/{locale}/{collection}/{slug}` | one record |
 | `POST` | `/feed/{locale}/{collection}` | a new record, a draft, `201` with its address in `Location` |
 | `PATCH` | `/feed/{locale}/{collection}/{slug}` | the fields sent, under the `If-Match` its reading gave |
 | `PATCH` | `/feed/{locale}/{collection}` | the collection's configuration, the fields it carries and publishes, from a key that may configure it |
 
-A collection or a record answers JSON-LD, or a page to a browser, and
-`.jsonld`, `.html`, `.csv` or `.md` after the collection or the slug picks the
-format; the locales, the collections and the profile are JSON-LD only. Every
-reading carries an `ETag`, and `If-None-Match` with it answers `304` while
-nothing changed. An asset's file at its `contentUrl`, and the preview at
-`/thumb` behind it, carry the file's name as their tag, since that address
-names bytes that never change, and answer `304` only to whoever may read the
-file: a stranger revalidating a draft is refused, never told it is there. A
-refusal is JSON whatever was asked: `error` says what went wrong, a `422` on a
-write adds `violations`, a `field` and a `reason` for each property as the
-document spells it, and a `500` gives an `incident` to quote to the house. A
-list takes these parameters and refuses any other, as *Reading the feed* says
-in full:
+A collection or a record answers JSON-LD, or a page to a browser, and `.jsonld`,
+`.html`, `.csv` or `.md` after the collection or the slug picks the format; the
+locales, the collections and the profile are JSON-LD only. Every reading carries
+an `ETag`, and `If-None-Match` with it answers `304` while nothing changed. An
+asset's file at its `contentUrl`, and the preview at `/thumb` behind it, carry
+the file's name as their tag, since that address names bytes that never change,
+and answer `304` only to whoever may read the file: a stranger revalidating a
+draft is refused, never told it is there. A refusal is JSON whatever was asked:
+`error` says what went wrong, a `422` on a write adds `violations`, a `field`
+and a `reason` for each property as the document spells it, and a `500` gives an
+`incident` to quote to the organisation. A list takes these parameters and
+refuses any other, as *Reading the feed* says in full:
 
 | Parameter | Asks for |
 |---|---|
 | `?{field}=` | records whose field matches: a text from its start, a link whole, a range `a..b`, a month `2026-10`, any of `a,b`, an edge by its address `organizations/acme` |
-| `?q=` | records holding the words, in the fields this reader reads or in their slug |
+| `?q=` | records holding the words, in the fields this reader reads, in their slug or in the name of a record they point at |
 | `?sort=` | the order by a field, `-` before it for the other way |
 | `?page=` | a page of 50 records, from `1` |
 | `?per_page=` | up to 200 records a page |
@@ -536,18 +553,21 @@ in full:
 
 ## Collections
 
-The collections are the same thirty in every install, one per type. Each type
-is the schema.org class it is named after, and every field has the name
-schema.org gives it. A house chooses which of a type's fields its collection
+The collections are the same thirty in every install, one per type. Each type is
+the schema.org class it is named after, and every field has the name schema.org
+gives it. An organisation chooses which of a type's fields its collection
 carries, the ones its admin edits, and which of those it publishes, the ones a
 stranger reads: the catalogue at `/feed/{locale}` says both, and the profile at
 `/feed/{locale}/profile` every field each type has. A creative work has **a
-record per language**, each with its own slug and status. Every other
-type is one record on every locale, with **words per language** where it has
-words to translate and **no translation** where a second language would be a
-second one of it, a review or an order. A medium or a dataset is **either**, a
-record per language where the file differs. Four are **never** public and
-answer a key alone.
+record per language**, each with its own slug and status. Every other type is
+one record on every locale, with **words per language** where it has words to
+translate and **no translation** where a second language would be a second one
+of it, a review or an order. A medium or a dataset is **either**, a record per
+language where the file differs, and a language's words stand on one of its
+records: a translation made takes its language's words along, and a record
+linked into a group gives up its words in the languages the other members are
+written in, as they give up theirs in its. Four are **never** public and answer
+a key alone.
 
 | Type | Collection | Languages | Public |
 |---|---|---|---|
@@ -585,32 +605,32 @@ answer a key alone.
 ## Reading the feed
 
 Open `https://example.com/feed/en-GB/events?sort=startDate` in a browser, with
-no key: what the house has published of its events, in English and soonest
-first. The address is the house, its `/feed`, a locale the house holds, the
-collection and the question. A stranger reads the published records, each with
-the fields the house publishes, and an address with nothing to read, a typo or a
-collection that is never public, is the same `404`. A record is a draft, in
-review, published or archived. A published record may carry a window: while its
-start lies ahead the admin shows it as scheduled, it is read from that minute
-with no job having run, and no longer once the window's end has passed. Any
-cache between may keep what a stranger reads for a minute, so a record taken
-offline can still be served for sixty seconds. `/robots.txt` sends every crawler
-away, from the feed's pages too: a search engine should find the house's
-website.
+no key. It answers what the organisation has published of its events, in English
+and soonest first. The address is the install, its `/feed`, a locale it holds,
+the collection and the question. A stranger reads the published records, each
+with the fields the organisation publishes. An address with nothing to read, a
+typo or a collection that is never public, is the same `404`. A record is a
+draft, in review, published or archived. A published record may carry a window.
+While its start lies ahead the admin shows it as scheduled, it is read from that
+minute with no job having run, and it is read no longer once the window's end
+has passed. Any cache between may keep what a stranger reads for a minute, so a
+record taken offline can still be served for sixty seconds. `/robots.txt` sends
+every crawler away, from the feed's pages too: a search engine should find the
+organisation's website.
 
-`/feed`, the smallest document the address answers, carries the house's
+`/feed`, the smallest document the address answers, carries the install's
 `dateModified`, so one cheap request says whether a frontend's copies still
-stand. It is one date for the whole house and never older than what any reading
-shows: it moves with every write the house logs, a draft or an account among
-them, as a record's window opens or closes, as an offer runs out and with a
-release. So it moves for more than changed, and anybody can tell when the house
-last wrote and, asking often, how often, a till's orders an hour among it,
-though never what. A data folder copied back by hand can move it back, so a
-frontend compares it for a difference and never as newer. It counts whole
+stand. It is one date for the whole install and never older than what any
+reading shows: it moves with every write the install logs, a draft or an account
+among them, as a record's window opens or closes, as an offer runs out and with
+a release. So it moves for more than changed, and anybody can tell when the
+organisation last wrote and, asking often, how often, a till's orders an hour
+among it, though never what. A data folder copied back by hand can move it back,
+so a frontend compares it for a difference and never as newer. It counts whole
 seconds, and a write in the second it already names leaves it standing, so what
 a frontend fetched in the minute after it saw the date move is fetched once more
 after that minute. The feed dates no record itself: a work's `dateModified` is
-what the house typed, and a record's `ETag` says whether it changed.
+what the organisation typed, and a record's `ETag` says whether it changed.
 
 From `1.0` on, every release's tag in the public repository carries its notes:
 one line per addition at the address and per change a frontend has to act on.
@@ -660,7 +680,7 @@ an action each say how they stand in such a list of their own, `orderStatus`,
 `paymentStatus`, `reservationStatus`, `eventStatus` and `actionStatus`.
 `remainingAttendeeCapacity` and `offers` are computed as the
 document is written and never stored. A time leaves in UTC, as `startDate` does
-here, and a date as the day it is. No answer names the house's timezone, so a
+here, and a date as the day it is. No answer names the install's timezone, so a
 frontend that shows a time is configured with it once.
 
 Two lines of consumer contract hold in all four formats: read a list member as
@@ -691,11 +711,11 @@ for a meta tag is read from the document as stored. An image is a field and
 never part of the text: the `.html` shows a record's first image under its
 heading, and a `![…](…)` in a text is printed as written.
 
-A text's link to a record of the house leaves as that record's `@id`, in every
+A text's link to a record of the install leaves as that record's `@id`, in every
 format and at every depth, rendered as `<a href="…">` and nothing else on the
 tag, and as its words alone where the reader may not read the record. It is
 held by the record and not by its address, so it follows a changed slug, and a
-link a key posts to an address of the house is held the same way.
+link a key posts to an address of the install is held the same way.
 
 Past a site's home page, `url` is the address of a thing that lives on somebody
 else's domain and stays empty for one held here: where a page is published is
@@ -721,10 +741,10 @@ a thing of that name, since a one-off item and an outside examiner have no
 record here, and a record the reader may not read leaves the key out.
 
 A term leaves as its code, `"keywords": ["gluten-free"]`, and its word in each
-language is its record in `defined-terms`, where the house publishes those:
-the catalogue holds words for schema.org's own fixed values only. A word typed
-into a term field in the admin becomes a term of that field's set, made with it,
-and the same word typed again is that term.
+language is its record in `defined-terms`, where the organisation publishes
+those: the catalogue holds words for schema.org's own fixed values only. A word
+typed into a term field in the admin becomes a term of that field's set, made
+with it, and the same word typed again is that term.
 
 A record's kind is its `additionalType`, beside an `@type` that stays one of
 the thirty: a product group is a `Product` whose `additionalType` is
@@ -740,13 +760,13 @@ range of its runs. An offer's own `price` is one number beside `priceCurrency`;
 where it recurs, its `priceSpecification` repeats both and adds the billing
 period and whether tax is included, and `?sort=price` orders by it.
 The offers themselves are asked for by what they offer,
-`/feed/{locale}/offers?itemOffered=events/test-exercise`, where the house
+`/feed/{locale}/offers?itemOffered=events/test-exercise`, where the organisation
 publishes `itemOffered`.
 
 That holds wherever a whole has parts: a record never lists what points at it.
 An event's parts are `events?superEvent=…`, an article's comments
-`comments?about=…`, a product's reviews `reviews?itemReviewed=…`, a site's
-pages `web-pages?isPartOf=…`, each where the house publishes that field. What a
+`comments?about=…`, a product's reviews `reviews?itemReviewed=…`, a site's pages
+`web-pages?isPartOf=…`, each where the organisation publishes that field. What a
 whole does state is what is computed over its parts: the price range, and a
 rating over the reviews that name it, on a product, a service, a brand, an
 event, a place, an organisation and a work other than a review, a comment, a
@@ -758,15 +778,14 @@ message or a question.
 a page past the end is empty under the same count, and the `.html` and `.md`
 listings link their next page.
 
-A filter on a number, a date or a time asks a range with `..`, either end
-open: `?startDate=2026-10-10..` for what comes,
-`?maximumAttendeeCapacity=10..12`, and `?startDate=2026-10` for a month. A
-month, a day or a wall time is the house's, in its timezone:
-`?startDate=2026-11-07` is that day in the house's timezone, and the event above
-is `?startDate=2026-10-02T18:00` in Berlin. A comma asks for any of its values,
-`?keywords=vegan,organic`, fifty at most, and is the one way to: a parameter
-given twice is refused, as is one the address does not know, so a campaign's
-`?utm_source=` stays on the page's own address.
+A filter on a number, a date or a time asks a range with `..`, either end open:
+`?startDate=2026-10-10..` for what comes, `?maximumAttendeeCapacity=10..12`, and
+`?startDate=2026-10` for a month. A month, a day or a wall time is the
+install's, in its timezone: `?startDate=2026-11-07` is that day in the install's
+timezone, and the event above is `?startDate=2026-10-02T18:00` in Berlin. A
+comma asks for any of its values, `?keywords=vegan,organic`, fifty at most, and
+is the one way to: a parameter given twice is refused, as is one the address
+does not know, so a campaign's `?utm_source=` stays on the page's own address.
 
 A text matches from its start, `?name=mar` finding *Maria*, in the words the
 route shows: the English route finds a person by her English name and never by
@@ -774,18 +793,26 @@ her German one. A link matches whole, as the record states it and without case,
 since a link names one thing and its start names many:
 `?url=https://www.example.com` finds the site stating that address and not the
 one stating `https://www.example.com/en`. An edge is named as a document names
-it, `?worksFor=organizations/acme`, a bare slug being refused. A link a
-record holds under the house's own address is kept as its path and served
-whole, so a house that moves its domain keeps every link, and the address finds
-it by either spelling.
+it, `?worksFor=organizations/acme`, a bare slug being refused. A link a record
+holds under the install's own address is kept as its path and served whole, so
+an install that moves its domain keeps every link, and the address finds it by
+either spelling.
 
 `?q=` finds the records holding every word typed, each as the start of a word
 in a field the reader reads: a text in any of its languages, a link, so a
 customer is found by an email address, the code of a public term a record is
 tagged with, so `?q=bakery` finds what carries `Bakery`, and its slug, which
 every address shows, so `?q=imprint` finds `web-pages/imprint` whatever the
-page is named. In a short field of words, a name or a title, a word typed is
-found anywhere inside a word too, since a name is often one compound word:
+page is named. A record is found by the name of what it points at too, through
+each reference field the reader reads and one edge deep, so `?q=brandt` finds
+Lea Brandt's order, whose own fields never say her name, and finds it by her
+new name once she is renamed, since nothing is copied. The target counts only
+where this reader reads its name: a review whose author is a draft person is
+found by her name for whoever reads drafts and for a stranger not at all, and a
+hall whose name is withheld from the feed finds none of its events, so no name
+leaves the install through a search that the record itself withholds. In a
+short field of words, a name or a title, a word typed is found anywhere inside
+a word too, since a name is often one compound word:
 `?q=kurs` finds *Grundkurs* and `?q=list` *itemlist.jpg*, while a long text is
 matched from the start of its words. Case and accents do not count, `ca` finding
 *Café*, and *Müller* is found as `muller` and as `mueller`. A field holding a
@@ -812,7 +839,7 @@ a session, and a draft is seen in the admin.
 `/feed/{locale}/profile` is what every collection can hold, the same to every
 reader and in every install: the thirty, the four never public among them, each
 with every field of its type, where the catalogue says what its reader reads of
-what this house carries. A type is the `Class` it is `about`, and a field is
+what this install carries. A type is the `Class` it is `about`, and a field is
 the catalogue's entry, named and worded alike, typed a `Property` too: its
 `rangeIncludes` is its kind, `Text`, `DateTime`, `URL`, `Integer` for a count,
 the enumeration a fixed list's values are members of, or what an edge points
@@ -892,23 +919,22 @@ events, cut to five of their fields as `/feed/en-GB/profile` answers:
 
 ### The dump
 
-A dump, taken in the admin by any account of what it reads, reads the same
-way, with three differences it states about itself.
-`jsonld/{locale}/index.jsonld` is that locale's catalogue as its taker reads
-it, so the names of the fields and the words of the fixed values leave with the
-house, and each collection the taker may configure is its entry as a key that
-configures it reads it, every published field flagged `isAccessibleForFree`.
-Which fields are published is the one thing the records cannot say, so the
-entries written back by a key that configures there configure the next house
-alike.
-`manifest.jsonld` at its root names JSON-LD as the authoritative format, since
-CSV drops edge qualifiers and HTML is a rendering, and carries what the
-documents cannot — slug, locale, status, type and version per record, and who
-took the dump under which scope. And every link inside the box is the file
-beside it (`../organizations/acme.html`), so the folder opens in a browser with
-no server and nothing installed. The JSON-LD files are byte for byte what the
-address serves, a listing's page under the `?per_page=200` it names, and what
-answers on every locale is a file in each locale's tree.
+A dump, taken in the admin by any account of what it reads, reads the same way,
+with three differences it states about itself. `jsonld/{locale}/index.jsonld` is
+that locale's catalogue as its taker reads it, so the names of the fields and
+the words of the fixed values leave with the organisation, and each collection
+the taker may configure is its entry as a key that configures it reads it, every
+published field flagged `isAccessibleForFree`. Which fields are published is the
+one thing the records cannot say, so the entries written back by a key that
+configures there configure the next install alike. `manifest.jsonld` at its root
+names JSON-LD as the authoritative format, since CSV drops edge qualifiers and
+HTML is a rendering, and carries what the documents cannot — slug, locale,
+status, type and version per record, and who took the dump under which scope.
+And every link inside the box is the file beside it
+(`../organizations/acme.html`), so the folder opens in a browser with no server
+and nothing installed. The JSON-LD files are byte for byte what the address
+serves, a listing's page under the `?per_page=200` it names, and what answers on
+every locale is a file in each locale's tree.
 
 ## Writing through the feed
 
@@ -950,17 +976,17 @@ follows a new `familyName` until a name is typed, which then stands.
   or an event, it
   is the field of that name, as a German contact form writes `de`. A currency,
   a country and a language are their ISO code, `EUR`, `DE`, `de`, and need
-  nothing set up: the house holds no term for what the world closes.
+  nothing set up: the install holds no term for what the world closes.
 
 - **A new record lands as a draft**, with a slug made from its name (`till`,
   then `till-2`). Status, slug and version never travel in a document, and no
-  key publishes or trashes: what a script wrote, the house sees before the
-  world does, and a stray record leaves as a draft nobody saw. A run that
+  key publishes or trashes: what a script wrote, the organisation sees before
+  the world does, and a stray record leaves as a draft nobody saw. A run that
   leaves eighty drafts across ten collections is not eighty visits: each
-  collection filtered to *draft*, in whichever view, is ticked as a page and
-  set to *published*, or trashed, in one bar, and a key allowed to *read* with
-  *also what is not published* reads its drafts back meanwhile, an asset's file
-  at its `contentUrl` among them.
+  collection filtered to *draft*, in whichever view, is ticked as a page and set
+  to *published*, or trashed, in one bar, and a key allowed to *read* with *also
+  what is not published* reads its drafts back meanwhile, an asset's file at its
+  `contentUrl` among them.
 
 - **A `PATCH` echoes the `ETag` its record was read under**, as `If-Match`, and
   every write answers with the new one. Without it the answer is `428`, and a
@@ -978,11 +1004,12 @@ follows a new `familyName` until a name is typed, which then stands.
 
 - **An order arriving twice is one order.** A `POST` repeating an order number
   under the same `seller` answers that order as held and writes nothing, `200`
-  and not `201`, so a retry cannot undo the house's correction; changing it is
-  a `PATCH`. One the house has put in the trash answers `422` and stays there.
-  The `seller` is an organisation or a branch, since a `LocalBusiness` is one.
-  An invoice number under its `provider` and a term's code in its set are held
-  once too, and a second is refused with `422` naming the field.
+  and not `201`, so a retry cannot undo the organisation's correction; changing
+  it is a `PATCH`. One the organisation has put in the trash answers `422` and
+  stays there. The `seller` is an organisation or a branch, since a
+  `LocalBusiness` is one. An invoice number under its `provider` and a term's
+  code in its set are held once too, and a second is refused with `422` naming
+  the field.
 
 - **A refusal names what was missing**: `401` for a missing, revoked or expired
   key alike, `403` naming the field no grant covers, asked before the record is
@@ -999,37 +1026,37 @@ follows a new `familyName` until a name is typed, which then stands.
   `PATCH` on the collection's own address takes that `variableMeasured` back.
   What is named is carried and what is left out is taken off, its values kept
   for when it is added again. A value object is published key by key, since a
-  house may publish the town and keep the street internal. A required field left
-  out, a name the type does not have, a field published on a type that is never
-  public or a value object flagged whole or sent without its keys is refused
-  with `422` naming it, and a key not allowed to *configure* there with `403`.
-  So an agency's script configures a fresh install in minutes, and what one
-  house's entry shows is written to the next.
+  organisation may publish the town and keep the street internal. A required
+  field left out, a name the type does not have, a field published on a type
+  that is never public or a value object flagged whole or sent without its keys
+  is refused with `422` naming it, and a key not allowed to *configure* there
+  with `403`. So an agency's script configures a fresh install in minutes, and
+  what one install's entry shows is written to the next.
 
 - **The set-up key is issued on the home screen's Grants card**, a rule per
   collection for configuring and, where ticked, for creating, modifying and
-  reading, since a script that sets a house up brings its records in too; a
+  reading, since a script that sets an install up brings its records in too; a
   single collection's rule on its badge. Publishing a field weighs what setting
   a public price does: a changed configuration is logged under the key's name,
   the fields published named first, as a field published, made internal, added
   or taken off in the admin is logged under the colleague's, and the key's
-  sentence in the admin says it may. What stays by hand: the house's languages
+  sentence in the admin says it may. What stays by hand: the install's languages
   and settings, which no collection carries, and publishing and trashing.
 
 ## Reading it from PHP
 
 Copy the PHP below into a page on ordinary webspace and it reads the feed with
 nothing else: no library, no build step, and one folder `cache/` beside the
-script that PHP may write. The blocks are general to any house and free to
+script that PHP may write. The blocks are general to any install and free to
 copy, as *Licence and trademark* says, and every release runs them against a
 trial install, so none breaks them unnoticed. They need PHP 8.0 or newer, years
 behind what Skemik itself asks, so a site on the host's older PHP reads the
 feed as well.
 
-**The documents a page needs, in one call.** A copy is kept while the house's
+**The documents a page needs, in one call.** A copy is kept while the install's
 `dateModified` stands, which `changed()` asks of `/feed` at most once a minute,
-so a house nobody writes to is read from its copies for days. Once the date has
-moved, a copy is revalidated by its `ETag`, and counts as current only when
+so an install nobody writes to is read from its copies for days. Once the date
+has moved, a copy is revalidated by its `ETag`, and counts as current only when
 answered more than a minute after the move was seen, since a cache between may
 hold what came before for that minute and a write in the same second moves no
 date. It is stamped before it is fetched again, so two pages asked in the same
@@ -1039,10 +1066,10 @@ the failures, and goes when the address answers `404`. A key reads what a
 stranger cannot, an invoice by the bookkeeping's, and its copies are kept apart
 from the stranger's. `reads()` takes every address a page needs and fetches the
 ones not kept four at once, so the page waits for a quarter of its answers in
-turn and not for each: against a house on another host the round trip is what
-costs, a `304` as much as a `200`. On the same host the site and its house share
-one pool of PHP workers, and four keep a page to five of them, however many
-addresses it asks. `read()` is one address.
+turn and not for each: against an install on another host the round trip is what
+costs, a `304` as much as a `200`. On the same host the site and its install
+share one pool of PHP workers, and four keep a page to five of them, however
+many addresses it asks. `read()` is one address.
 
 ```php
 function fetching(string $address, string $file, array $headers): CurlHandle
@@ -1078,12 +1105,12 @@ function kept(string $file, int $status, ?string $body): void
 
 function changed(string $address): int
 {
-  $house = preg_replace('#(?<!/)/feed\b.*#', '/feed', $address);
-  $file = __DIR__ . '/cache/' . md5($house) . '.date';
+  $root = preg_replace('#(?<!/)/feed\b.*#', '/feed', $address);
+  $file = __DIR__ . '/cache/' . md5($root) . '.date';
   [$date, $since] = is_file($file) ? explode("\n", (string) file_get_contents($file)) + ['', '0'] : ['', '0'];
   if (!is_file($file) || filemtime($file) <= time() - 60) {
     file_put_contents($file, $date . "\n" . $since);
-    $curl = fetching($house, $file, ['Accept: application/ld+json']);
+    $curl = fetching($root, $file, ['Accept: application/ld+json']);
     $seen = json_decode((string) curl_exec($curl), true)['dateModified'] ?? $date;
     curl_errno($curl) === 0 || !is_file($file . '.etag') || unlink($file . '.etag');
     if ($seen !== $date) {
@@ -1311,7 +1338,7 @@ imprint may as well be a page whose `text` is typed whole.
 - **The home page** is the site's `WebPage` stating the site's `url` as its
   own, the one page that states one: `web-pages?isPartOf=web-sites/…&url=…`.
   Every other page's path is its slug, `/imprint` being `web-pages/imprint`, so
-  two sites of one house cannot both have an `/imprint`.
+  two sites of one install cannot both have an `/imprint`.
 
 - **A page's sections** are its `hasPart`, lists in their order, each member
   drawn by its type. A list of terms is chips, alphabetical in the page's
@@ -1328,11 +1355,11 @@ imprint may as well be a page whose `text` is typed whole.
   inline on any record as rows of `name` and `target`, and is not a record of
   the `Action` collection, which holds what somebody did.
 
-- **The look** is the `Brand` the site is `about`. Its colours and typefaces
-  are rows of its `additionalProperty`, a `name` and a `value` each, and four
-  names are our convention, `color-primary`, `color-ink`, `font-body` and
-  `font-display`, so a frontend built for one house finds the same tokens at
-  the next. None is required and none is closed. A font's value is the
+- **The look** is the `Brand` the site is `about`. Its colours and typefaces are
+  rows of its `additionalProperty`, a `name` and a `value` each, and four names
+  are our convention, `color-primary`, `color-ink`, `font-body` and
+  `font-display`, so a frontend built for one organisation finds the same tokens
+  at the next. None is required and none is closed. A font's value is the
   typeface's name, and its files are the woff2 `MediaObject`s that are `about`
   the brand, `media?encodingFormat=font/woff2&about=brands/…`.
 
@@ -1354,11 +1381,11 @@ imprint may as well be a page whose `text` is typed whole.
 
 - **Pictures and fonts** are served from the frontend's own copies, never from
   the feed's address in an `<img>`: a file at its `contentUrl` comes through the
-  house's PHP, a worker per picture per visitor, while a copy costs the house
-  one read per file in fifteen minutes. The copy is made once the page has
-  left, never on a visitor's path, and a file the feed no longer serves, `404`,
-  loses its copy, so a picture taken offline leaves the site within the quarter
-  hour. skemik.com keeps its copies under its own `media/`.
+  install's PHP, a worker per picture per visitor, while a copy costs the
+  install one read per file in fifteen minutes. The copy is made once the page
+  has left, never on a visitor's path, and a file the feed no longer serves,
+  `404`, loses its copy, so a picture taken offline leaves the site within the
+  quarter hour. skemik.com keeps its copies under its own `media/`.
 
 - **Words** such as *Licence* are the catalogue's names of the fields. The site
   has none of its own.
@@ -1378,19 +1405,20 @@ what it spends.
 
 - **Thirty types and one address, tried on paper before any server code was
   written**, both being cheaper to refute there than in a product. *Do thirty
-  types carry real cases?* Five small German organisations, one per kind of
-  house, were mapped onto the profile item by item, and no snag asked for a
+  types carry real cases?* Five small German organisations, one of each kind,
+  were mapped onto the profile item by item, and no snag asked for a
   thirty-first type. More than half the snags were ours: properties schema.org
   publishes and the profile had left out, found by reading the vocabulary and
-  not by walking a sixth house, which is why the reconciliation is a check that
-  runs. Two stand, recorded and not solved: a title two people hold jointly,
-  and a membership that makes you a member of a third body. We drew the types
-  and also sorted the items, which only an independent evaluation can close.
-  *Does the address carry a page?* Three houses' real pages were rebuilt with
-  `fetch` and nothing else, while changes were still edits and not migrations.
-  A card's *from €129*, two records away and a request per date, became a price
-  range computed when the document is written, what must not leave the house
-  went through one filter at every depth, and no `expand` parameter was wanted.
+  not by walking a sixth organisation, which is why the reconciliation is a
+  check that runs. Two stand, recorded and not solved: a title two people hold
+  jointly, and a membership that makes you a member of a third body. We drew the
+  types and also sorted the items, which only an independent evaluation can
+  close. *Does the address carry a page?* Three organisations' real pages were
+  rebuilt with `fetch` and nothing else, while changes were still edits and not
+  migrations. A card's *from €129*, two records away and a request per date,
+  became a price range computed when the document is written, what must not
+  leave the install went through one filter at every depth, and no `expand`
+  parameter was wanted.
 
 ### The stack
 
@@ -1402,10 +1430,10 @@ what it spends.
   webspace, where Node or Go would make a process to supervise. The app is
   written for PHP 8.5 and runs on each one after it, 8.6 and 9 as they ship,
   and no release asks for more, since an install updates itself: one that did
-  would refuse every address of a house whose hoster had not moved. What this
+  would refuse every address of an install whose hoster had not moved. What this
   spends is a second version kept straight, the oldest beside the newest, and
   whatever a later PHP adds, which the code does without. And reach at the
-  cheap end: a house on shared webspace can only ask its hoster for the
+  cheap end: an organisation on shared webspace can only ask its hoster for the
   version, and an install on an older one is refused on the first request,
   naming what it found and what it needs, down to 8.2: below that the page
   naming them cannot be parsed either, and the host's own 500 is the whole
@@ -1491,7 +1519,7 @@ what it spends.
   only a first publication unless a live record may not be edited either, and
   its honest form is a draft beside the published record, which is a second
   product. Rights per field or per record are for machines, not sliced between
-  colleagues, and two departments sharing one type are two houses.
+  colleagues, and two departments sharing one type are two installs.
 
 - **An account is held by a person and is not one.** A colleague is an ordinary
   `Person` record, and the account beside it holds what this install knows of
@@ -1508,8 +1536,8 @@ what it spends.
   account saved under another address, or disabled, loses its logins and the
   codes on their way, so neither outlives the mailbox it was proven for. The
   reset is the login, so there is nothing to reuse from another site's breach
-  and no forgotten-owner dead end in a house with one owner and nobody to reset
-  them, and the last owner cannot be demoted, disabled or deleted. The
+  and no forgotten-owner dead end in an install with one owner and nobody to
+  reset them, and the last owner cannot be demoted, disabled or deleted. The
   Accounts screen says when each last logged in, so an account nobody uses is
   seen.
 
@@ -1532,7 +1560,7 @@ what it spends.
   credential, and a restore onto another host loses the relay, as it should.
 
 - **Refused, because both will be proposed again.** Encrypting the holdings
-  with a key the hoster cannot use defends the door of a house whose walls are
+  with a key the hoster cannot use defends the door while the walls are
   glass: the server filters, sorts and indexes the holdings in plaintext, so
   whoever has the machine needs no login. A second factor hardens one case, the
   mailbox being taken, and sells a lockout to an owner who is one person.
@@ -1595,60 +1623,35 @@ what it spends.
 
 ### Words
 
-- **The words come in files per language, English the source.** A word
-  missing from a translation falls back to English, so another language is
-  three files, its words, its field names and what a select's options are
-  called, and no code. English rather than German, although the first houses
-  are German: every later language would otherwise be translated out of one
-  most translators do not have. German, French, Spanish, Italian, Polish and
-  Dutch ship beside it, and Swiss German as a region's file, `de-CH.php`
-  beside `de.php`, holding only the words its spelling differs in and read
-  first, word by word, in the admin and in the profile's field names, so a
-  browser asking for `de-CH`, and the profile of a `de-CH` route, read
-  *Strasse* and German everywhere else; a region ships as its chrome file, its
-  field names beside it.
-  The language is the reader's and not the house's, since a bookkeeper and an
-  editor need not share one: the browser's decides, and the one chosen at
-  `/install` stands where the browser names none a file ships for. It is no
-  content language: a house publishing German and English may be edited in
-  French, and none of the admin's own words reaches a document. The one crossing
-  is the first run, since a house set up in English should not write its first
-  record as German. The region is the reader's too, and writes the admin's dates
-  and numbers whether or not it spells differently, *€ 1.234,50* in `de-AT` and
-  *16 Jan 2026, 14:05* in `en-GB`: a spelling is a file somebody keeps, while
-  every region's formats come with PHP's `intl`.
+- **The words come in files per language, English the source.** A word missing
+  from a translation falls back to English, so another language is three files,
+  its words, its field names and what a select's options are called, and no
+  code. English rather than German, although the first organisations are German:
+  every later language would otherwise be translated out of one most translators
+  do not have. German, French, Spanish, Italian, Polish and Dutch ship beside
+  it, and Swiss German as a region's file, `de-CH.php` beside `de.php`, holding
+  only the words its spelling differs in and read first, word by word, in the
+  admin and in the profile's field names, so a browser asking for `de-CH`, and
+  the profile of a `de-CH` route, read *Strasse* and German everywhere else; a
+  region ships as its chrome file, its field names beside it. The language is
+  the reader's and not the organisation's, since a bookkeeper and an editor need
+  not share one: the browser's decides, and the one chosen at `/install` stands
+  where the browser names none a file ships for. It is no content language: an
+  organisation publishing German and English may be edited in French, and none
+  of the admin's own words reaches a document. The one crossing is the first
+  run, since an install set up in English should not write its first record as
+  German. The region is the reader's too, and writes the admin's dates and
+  numbers whether or not it spells differently, *€ 1.234,50* in `de-AT` and *16
+  Jan 2026, 14:05* in `en-GB`: a spelling is a file somebody keeps, while every
+  region's formats come with PHP's `intl`.
 
-- **A field's name is ours, in every language.** The fields are named before
-  you start, and that holds for their words too: a file per language says what
-  the thirty types' fields are called, the admin shows them in the editor's
-  language and the feed's catalogue in the language of the content. A house
+- **A field's name is ours, in every language.** The fields are named before you
+  start, and that holds for their words too: a file per language says what the
+  thirty types' fields are called, the admin shows them in the editor's language
+  and the feed's catalogue in the language of the content. An organisation
   cannot rename one: a renamed field would say *Monthly fee* on the screen and
   `price` at the address, one word for every content language, and the next
   agency would read two vocabularies. The word a page shows is the page's.
-
-## Security
-
-Report a vulnerability in Skemik to security@skemik.org, in German or English,
-and not in a public issue. plue GmbH is the manufacturer of every release and
-answers there, whoever installed it and under whichever licence.
-
-Every install answers `/.well-known/security.txt` automatically, as RFC 9116
-words it, for the researcher or the scanner who finds a house and not us. Its
-first `Contact` is the one `config.php` names,
-`'security_contact' => 'it@example.com'`, an address or a link, the house or the
-agency that runs the install. Ours follows as the manufacturer's of the
-software, never as the site's owner, and stands alone where `config.php` names
-none. Its `Expires` is a year after the day of the release the install runs, so
-one that has not updated for a year says of itself that it is stale. A
-`.well-known/security.txt` the operator writes into the domain root is answered
-in its place, as written.
-
-A fix arrives as the next release and nowhere else: there is one line, the
-newest, and nothing is carried back to an older one. An install that follows
-updates has the fix within the hour, its update screen saying that it was a
-security release, and one that declines them takes it by copying the newest
-release. A vulnerability reported in a release before its Change Date, three
-years after its day as its `LICENSE` names, is fixed in the newest release.
 
 ## Contributing
 
