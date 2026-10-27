@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.8](.0.8-1f6feb)
+![Version 1.0.8](https://img.shields.io/badge/version-1.0.8-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
