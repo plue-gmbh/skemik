@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ingest;
 
+use Domain\Reason;
 use Domain\Violation;
 use Profile\FieldDefinition;
 use Profile\Reach;
@@ -51,7 +52,7 @@ final readonly class Arrangement
   {
     $name = is_array($variable) && is_string($variable['propertyID'] ?? null) ? $variable['propertyID'] : null;
     if ($name === null) {
-      return [new Violation('variableMeasured', 'names each field by its propertyID')];
+      return [Violation::stated('variableMeasured', 'names each field by its propertyID')];
     }
     $keyed = array_diff(array_keys($this->named($variable['valueReference'] ?? null)), ['']) !== [];
     $own = $keyed ? null : $this->own($type, $name);
@@ -75,10 +76,10 @@ final readonly class Arrangement
   {
     $out = $variable['isAccessibleForFree'] ?? false;
     if (!is_bool($out)) {
-      return [new Violation($spelt, 'says with true or false whether it is let out')];
+      return [Violation::stated($spelt, 'says with true or false whether it is let out')];
     }
     if ($out && $type->reach !== Reach::Public) {
-      return [new Violation($spelt, $type->name . ' has no public state, so nothing of it leaves')];
+      return [Violation::stated($spelt, $type->name . ' has no public state, so nothing of it leaves')];
     }
 
     return [new CollectionField($field->key, $out)];
@@ -93,10 +94,10 @@ final readonly class Arrangement
     $keys = array_values(array_filter($type->fields(),
       fn (FieldDefinition $field): bool => $field->valueObjectOf === $name));
     if ($keys === []) {
-      return [new Violation($name, 'is no field of ' . $type->name)];
+      return [Violation::stated($name, 'is no field of ' . $type->name)];
     }
     if (isset($variable['isAccessibleForFree']) || !isset($variable['valueReference'])) {
-      return [new Violation($name, 'lets its keys out one by one, each named under valueReference')];
+      return [Violation::stated($name, 'lets its keys out one by one, each named under valueReference')];
     }
     $named = $this->named($variable['valueReference']);
     $entry = [];
@@ -107,7 +108,7 @@ final readonly class Arrangement
       unset($named[$spelt]);
     }
 
-    return [...$entry, ...array_map(fn (string $stray): Violation => new Violation($name . '.' . $stray,
+    return [...$entry, ...array_map(fn (string $stray): Violation => Violation::stated($name . '.' . $stray,
       'is no key of ' . $name), array_keys($named))];
   }
 
@@ -130,7 +131,7 @@ final readonly class Arrangement
   {
     $keys = array_map(fn (CollectionField $field): string => $field->key, $fields);
 
-    return array_map(fn (string $key): Violation => new Violation($this->schema->spelt($type, $key),
+    return array_map(fn (string $key): Violation => Violation::stated($this->schema->spelt($type, $key),
       'is named twice'), array_keys(array_filter(array_count_values($keys), fn (int $n): bool => $n > 1)));
   }
 
@@ -143,6 +144,6 @@ final readonly class Arrangement
     $keys = array_map(fn (CollectionField $field): string => $field->key, $fields);
 
     return array_map(fn (string $key): Violation => new Violation($this->schema->spelt($type, $key),
-      Violation::REQUIRED), array_values(array_diff($type->requiredKeys(), $keys)));
+      Reason::Required), array_values(array_diff($type->requiredKeys(), $keys)));
   }
 }

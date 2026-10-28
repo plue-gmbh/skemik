@@ -177,10 +177,12 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
       <div>
 <?php foreach ($chips[$each->field->key] as $chip): ?>
         <figure class="record-figure">
-          <span class="record-image" aria-hidden="true"><?php if (!$chip->gone && $chip->preview !== null): ?><img
+          <?= $chip->href === null ? '<span class="record-image" aria-hidden="true">' : '<a class="record-image" href="'
+            . $template->escape($chip->href) . '">' ?><?php if (!$chip->gone && $chip->preview !== null): ?><img
             src="<?= $template->escape($chip->preview) ?>" alt=""
             loading="lazy"><?php else: ?><?= $template->render('partials/glyph', ['name' => $chip->glyph])
-            ?><?php endif ?></span>
+            ?><?php endif ?><?= $chip->href === null ? '</span>' : '<span class="visually-hidden">'
+            . $template->escape($chip->label) . '</span></a>' ?>
           <figcaption><?= $template->escape($chip->gone ? $words->get('cell.gone')
             : ($chip->caption !== '' ? $chip->caption : $chip->label)) ?><?php if ($chip->noAlt): ?> <span
             class="no-alt"><?= $template->escape($words->get('record.no_alt')) ?></span><?php endif ?></figcaption>

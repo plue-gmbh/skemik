@@ -187,7 +187,7 @@ function mountSheet(root) {
         const first = data.fields.find((field) => cellOf(id, field.key)?.querySelector("[data-edit]"));
         first && this.edit(id, first.key);
       },
-      discard() {
+      discard(event) {
         const pending = this.pending;
         this.pending = {};
         [...rows.keys()].filter(isNew).forEach((id) => {
@@ -200,7 +200,7 @@ function mountSheet(root) {
         });
         this.unmarkAll();
         this.refusals = [];
-        toast(this.words["sheet.discarded"]);
+        toast(this.words["sheet.discarded"], event.currentTarget);
         this.keepFocus();
       },
       /* Ctrl or ⌘ S saves from anywhere on the screen, since the bar is the last stop of a

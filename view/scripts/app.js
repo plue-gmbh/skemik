@@ -16,11 +16,15 @@ function announce(text) {
   }
 }
 
-function toast(text) {
+/* On what it answers, since a word at the foot of a wide screen is missed by the eye that is on
+   the key it copied, and one beside it covers what is still to read or do, the key's sentence or
+   its Done. Placed when called, so a button a re-render takes along, the save bar's, still holds it. */
+function toast(text, near) {
   document.querySelector(".toast")?.remove();
   const element = Object.assign(document.createElement("div"), { className: "toast" });
   element.textContent = text;
   document.body.append(element);
+  Object.assign(element.style, centred(near, element));
   announce(text);
   window.setTimeout(() => element.remove(), 2000);
 }
@@ -172,6 +176,14 @@ function placement(anchor, box = { width: 0, height: 0 }, below = null) {
     maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
 }
 
+/* Over the middle of the anchor, in the page's coordinates as a popover is, and inside the window's width. */
+function centred(anchor, element) {
+  const [at, box] = [anchor.getBoundingClientRect(), element.getBoundingClientRect()];
+  const left = Math.max(8, Math.min(at.left + (at.width - box.width) / 2,
+    document.documentElement.clientWidth - box.width - 8));
+  return { left: window.scrollX + left + "px", top: window.scrollY + at.top + (at.height - box.height) / 2 + "px" };
+}
+
 /* The paper scrolls under the page, not the page, so a popover goes along with its
    anchor as any container scrolls, on the side it opened and as tall as it was
    placed, since only its place changes; `apply` takes the place, as the element's
@@ -191,7 +203,7 @@ document.addEventListener("click", (event) => {
     + " [data-view-menu]");
   if (trigger?.dataset.viewMenu !== undefined) openViewMenu(trigger);
   if (trigger?.dataset.grant !== undefined) openGrant(trigger);
-  if (trigger?.dataset.toast !== undefined) toast(trigger.dataset.toast);
+  if (trigger?.dataset.toast !== undefined) toast(trigger.dataset.toast, trigger);
   if (trigger?.dataset.dialog !== undefined) document.getElementById(trigger.dataset.dialog)?.showModal();
   if (trigger?.dataset.dialogClose !== undefined) trigger.closest("dialog").close();
 });

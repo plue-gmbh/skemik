@@ -197,7 +197,7 @@ final readonly class Ranges
     foreach (array_keys($held) as $where) {
       [$wrapper, $name] = explode('.', $where, 2);
       if (!$this->schema->belongsTo($name, $wrapper)) {
-        $violations[] = new Violation($where, 'the vocabulary does not declare this property on this type');
+        $violations[] = Violation::stated($where, 'the vocabulary does not declare this property on this type');
       }
     }
 
@@ -231,11 +231,11 @@ final readonly class Ranges
         fn (string $class): bool => !$this->schema->within($range, $class)));
       $declared = isset(self::OFF_RANGE[$where]);
       if ($range !== [] && $outside !== [] && !$declared) {
-        $violations[] = new Violation($where, sprintf('holds %s where the vocabulary gives it %s',
+        $violations[] = Violation::stated($where, sprintf('holds %s where the vocabulary gives it %s',
           implode(' or ', $outside), implode(', ', $range)));
       }
       if ($range !== [] && $outside === [] && $declared) {
-        $violations[] = new Violation($where, 'declared outside its range, and the vocabulary now takes it');
+        $violations[] = Violation::stated($where, 'declared outside its range, and the vocabulary now takes it');
       }
     }
 

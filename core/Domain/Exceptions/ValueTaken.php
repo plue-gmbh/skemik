@@ -13,6 +13,6 @@ final class ValueTaken extends \RuntimeException
 {
   public function __construct(public readonly Violation $violation)
   {
-    parent::__construct(sprintf('%s: %s', $violation->field, $violation->reason));
+    parent::__construct(sprintf('%s: %s', $violation->field, $violation->said()));
   }
 }

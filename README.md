@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.9](https://img.shields.io/badge/version-1.0.9-1f6feb)
+![Version 1.0.10](https://img.shields.io/badge/version-1.0.10-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -1484,9 +1484,9 @@ what it spends.
   fields and its edges kept, and the old bytes leave with the last record
   holding them. That is how a translated asset gets its own, since a
   translation starts on the original's file. A name ending in the file's
-  extension, `photo.jpg`, counts as the upload's and follows the new file, even
-  where it was typed by hand; any other name stays, and a download is saved
-  under it with the extension it lacks.
+  extension, `photo.jpg`, counts as the upload's and follows the new file, its
+  address with it, even where it was typed by hand; any other name stays, and
+  a download is saved under it with the extension it lacks.
 
 - **One preview size, made on first view.** With one size and no parameter the
   work a stranger can provoke is the library, once. Photographs only: rendering

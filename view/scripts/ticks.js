@@ -76,13 +76,15 @@ function ticked(table, data, spineData) {
         if (!value) return;
         const kept = this.ticked.filter((id) => spineData.rows[id].worded.includes(value));
         this.ticked.filter((id) => !kept.includes(id)).forEach((id) => this.change(id, "spine.locale", value));
-        if (kept.length > 0) toast(fill(this.words["sheet.set_locale_kept"], { n: kept.length, tag: value }));
+        if (kept.length > 0) {
+          toast(fill(this.words["sheet.set_locale_kept"], { n: kept.length, tag: value }), event.target);
+        }
       },
       setField(event) {
         const [key, flag] = event.target.value.split(":");
         event.target.value = "";
         const takers = key ? this.takers(key) : [];
-        if (key && takers.length === 0) return toast(this.words["sheet.set_none"]);
+        if (key && takers.length === 0) return toast(this.words["sheet.set_none"], event.target);
         if (flag !== undefined) return takers.forEach((id) => this.change(id, key, flag === "1"));
         if (!key) return;
         /* The cell the editor opens on may be scrolled out of the table's view. */

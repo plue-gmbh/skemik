@@ -69,7 +69,7 @@ final readonly class SpineEdits
     $type = $this->profile->byType($edited->type);
     $moved = $stored->locale->tag !== $edited->locale->tag;
     if ($moved && in_array($edited->locale->tag, (new LocalisedText($type))->locales($edited), true)) {
-      $violations[] = new Violation('spine.locale', $this->words->get('spine.locale_worded'));
+      $violations[] = Violation::stated('spine.locale', $this->words->get('spine.locale_worded'));
     }
     $violations[] = $this->heldBy('slug', $this->collisions->slugHolder($edited));
     $violations[] = $this->heldBy('locale',
@@ -85,7 +85,7 @@ final readonly class SpineEdits
     }
     $trashed = $this->entities->find($holder)->deletedAt !== null;
 
-    return new Violation('spine.' . $key, $this->words->get('spine.' . $key . ($trashed ? '_trashed' : '_taken')));
+    return Violation::stated('spine.' . $key, $this->words->get('spine.' . $key . ($trashed ? '_trashed' : '_taken')));
   }
 
   /* The group's member in the locale a translation is asked in, to open in

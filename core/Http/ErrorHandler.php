@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Http;
 
+use Admin\Reasons;
 use Auth\AccountRefused;
 use Auth\NotAuthenticated;
 use Auth\NotPermitted;
@@ -111,7 +112,7 @@ final readonly class ErrorHandler
         => $this->words->get('record.held', ['email' => $failure->held->email]),
       $failure instanceof TargetRequired => $this->words->get('purge.required',
         ['record' => $failure->record, 'records' => implode(', ', $failure->records)]),
-      $failure instanceof ValueTaken => $failure->violation->reason,
+      $failure instanceof ValueTaken => Reasons::worded($this->words, $failure->violation),
       $failure instanceof AskedTooMuch => $failure->filter === null
         ? $this->words->get('failure.search_words', ['limit' => (string) $failure->limit])
         : $this->words->get('failure.filter_values', ['filter' => $failure->filter,

@@ -45,17 +45,16 @@ $what = fn (string $text, ?Admin\Health $health = null): string => sprintf('<spa
 <?php if ($note !== null): $open = $link === null ? '<div class="change">'
   : '<a class="change" href="' . $template->escape($link) . '" target="_blank" rel="noreferrer">' ?>
         <li><?= $open ?><span class="change-head"><span
-          class="change-name"><?= $template->escape($words->get('home.login_note')) ?></span><?= $link === null ? ''
-          : $go ?></span><span class="change-line"><?= $what($note) ?></span><?= $link === null ? '</div>'
-          : '</a>' ?></li>
+          class="change-name"><?= $template->escape($words->get('home.login_note')) ?></span></span><span
+          class="change-line"><?= $what($note) ?></span><?= $link === null ? '</div>' : $go . '</a>' ?></li>
 <?php endif ?>
         <li><a class="change" href="/settings/backups"><span class="change-head"><span
-          class="change-name"><?= $template->escape($words->get('home.backups')) ?></span><?= $go ?></span><span
-          class="change-line"><?= $what($backups, $backupsHealth) ?></span></a></li>
+          class="change-name"><?= $template->escape($words->get('home.backups')) ?></span></span><span
+          class="change-line"><?= $what($backups, $backupsHealth) ?></span><?= $go ?></a></li>
 <?php if ($errors !== null): ?>
         <li><a class="change" href="/settings/errors"><span class="change-head"><span
-          class="change-name"><?= $template->escape($words->get('errors.title')) ?></span><?= $go ?></span><span
-          class="change-line"><?= $what($errors, $errorsHealth) ?></span></a></li>
+          class="change-name"><?= $template->escape($words->get('errors.title')) ?></span></span><span
+          class="change-line"><?= $what($errors, $errorsHealth) ?></span><?= $go ?></a></li>
 <?php endif ?>
 <?php if ($files !== null): ?>
         <li><div class="change"><span class="change-head"><span

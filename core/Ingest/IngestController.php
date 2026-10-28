@@ -209,9 +209,9 @@ final readonly class IngestController
     try {
       $this->collisions->requireFreeTranslation($entity);
     } catch (MalformedValue | EntityNotFound $refusal) {
-      return [new Violation('translationOfWork', $refusal->getMessage())];
+      return [Violation::stated('translationOfWork', $refusal->getMessage())];
     } catch (ValueTaken $taken) {
-      return [new Violation('translationOfWork', $taken->violation->reason)];
+      return [new Violation('translationOfWork', $taken->violation->reason, $taken->violation->values)];
     }
 
     return [];
@@ -261,7 +261,7 @@ final readonly class IngestController
   {
     $said = [];
     foreach ($violations as $violation) {
-      $said[$this->schema->spelt($type, $violation->field)] ??= $violation->reason;
+      $said[$this->schema->spelt($type, $violation->field)] ??= $violation->said();
     }
     $listed = array_map(fn (string $field, string $reason): array => ['field' => $field, 'reason' => $reason],
       array_keys($said), $said);

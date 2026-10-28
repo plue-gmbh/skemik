@@ -120,7 +120,7 @@ final readonly class AccountRepository
   {
     $holder = $this->byEmail($account->email);
     if ($holder !== null && $holder->id !== $account->id) {
-      throw new ValueTaken(new Violation('email', 'taken'));
+      throw new ValueTaken(Violation::stated('email', 'taken'));
     }
   }
 

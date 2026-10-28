@@ -17,6 +17,7 @@ use Profile\Profile;
 use Profile\Seed\Media;
 use Profile\Validator;
 use Storage\Collection;
+use Storage\Collisions;
 use Storage\EntityRepository;
 use Storage\Query;
 use Storage\SettingStore;
@@ -53,6 +54,7 @@ final readonly class Intake
     private Clock $clock,
     private Words $words,
     private Thumbnail $thumbnail,
+    private Collisions $collisions,
     private string $directory,
     private SvgGuard $guard = new SvgGuard(),
   ) {}
@@ -73,7 +75,8 @@ final readonly class Intake
       $now), []);
   }
 
-  /* The record's file exchanged for this one, taken by `file`, its other fields and its edges kept.
+  /* The record's file exchanged for this one, taken by `file`, its other fields and its edges kept,
+     and its slug renamed where its name follows the file (`slugged`).
      @param list<Relation> $edges the asset's, as they stand */
   public function replaced(Entity $asset, Props $file, array $edges): Entity
   {
@@ -82,6 +85,7 @@ final readonly class Intake
       (string) $asset->props->string('encoding_format'));
     $described = $named ? $file->document() : array_diff_key($file->document(), ['name' => true]);
     $replaced = $asset->withFile(new Props([...$kept, ...$described]), (string) $file->string('upload_date'));
+    $replaced = $named ? $this->slugged($asset, $replaced) : $replaced;
     $type = $this->profile->byType($asset->type);
     if ($this->validator->check($type, $replaced->props->document(), $edges) !== []) {
       $this->drop($file);
@@ -93,6 +97,20 @@ final readonly class Intake
       $this->drop($file);
       throw $failed;
     }
+  }
+
+  /* A slug the old file's name gave, `photo-jpg` or `photo-jpg-2`, follows the new file's, as an
+     upload's does, so a translation's own picture is not addressed by the original's name; a slug
+     set by hand stays. */
+  private function slugged(Entity $asset, Entity $replaced): Entity
+  {
+    $given = preg_quote(Slug::from((string) $asset->props->string('name'), 'file')->value, '/');
+    if (preg_match('/^' . $given . '(?:-\d+)?$/', $asset->slug->value) !== 1) {
+      return $replaced;
+    }
+
+    return $replaced->withSlug($this->collisions->freeSlug(
+      $replaced->withSlug(Slug::from((string) $replaced->props->string('name'), 'file'))));
   }
 
   /* Whether an asset's name is a file's, ending in its format's extension as an
@@ -183,7 +201,7 @@ final readonly class Intake
   private function drawing(Upload $upload, array $said): ?string
   {
     $violations = $this->guard->check((string) file_get_contents($upload->path));
-    $reasons = implode('; ', array_map(fn (Violation $violation): string => $violation->reason, $violations));
+    $reasons = implode('; ', array_map(fn (Violation $violation): string => $violation->said(), $violations));
 
     return $violations === [] ? null : $this->words->get('media.drawing', [...$said, 'reasons' => $reasons]);
   }

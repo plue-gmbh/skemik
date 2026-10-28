@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Profile;
 
 use Domain\Exceptions\UnknownPredicate;
+use Domain\Reason;
 use Domain\Relation;
 use Domain\Violation;
 
@@ -37,7 +38,7 @@ final readonly class EdgeValidator
     }
     foreach ($edges as $edge) {
       if (!in_array($edge->predicate, $declared, true)) {
-        $violations[] = new Violation($edge->predicate, sprintf('%s has no such edge', $type->name));
+        $violations[] = new Violation($edge->predicate, Reason::NoSuchEdge, ['type' => $type->name]);
       }
     }
 
@@ -60,8 +61,7 @@ final readonly class EdgeValidator
         ? in_array($this->schema->propertyName($field->key), $predicates, true)
         : !in_array($props[$field->key] ?? null, [null, '', []], true);
       if ($field->ofKind !== null && $held && !in_array($field->ofKind, $kinds, true)) {
-        $violations[] = new Violation($field->key,
-          sprintf('a %s holds this, and the record is not marked as one', $field->ofKind));
+        $violations[] = new Violation($field->key, Reason::NotMarked, ['kind' => $field->ofKind]);
       }
     }
 
@@ -74,9 +74,8 @@ final readonly class EdgeValidator
     $unknown = array_filter((array) $kinds,
       fn (mixed $kind): bool => !is_string($kind) || !$this->schema->specialises($kind, $type->name));
 
-    return array_map(fn (mixed $kind): Violation => new Violation(TypeDefinition::KIND,
-      sprintf('%s is no kind of %s schema.org knows', is_string($kind) ? $kind : 'this', $type->name)),
-      array_values($unknown));
+    return array_map(fn (mixed $kind): Violation => new Violation(TypeDefinition::KIND, Reason::NoSuchKind,
+      ['kind' => is_string($kind) ? $kind : 'this', 'type' => $type->name]), array_values($unknown));
   }
 
   /**
@@ -87,13 +86,13 @@ final readonly class EdgeValidator
   private function checkField(FieldDefinition $field, array $props, array $held): array
   {
     if (array_key_exists($field->key, $props)) {
-      return [new Violation($field->key, 'an edge, held as a relation and never in props')];
+      return [new Violation($field->key, Reason::EdgeInProps)];
     }
     if ($held === []) {
-      return $field->required ? [new Violation($field->key, Violation::REQUIRED)] : [];
+      return $field->required ? [new Violation($field->key, Reason::Required)] : [];
     }
     if (count($held) > 1 && !$field->holdsMany()) {
-      return [new Violation($field->key, 'holds one target, not ' . count($held))];
+      return [new Violation($field->key, Reason::OneTarget, ['count' => (string) count($held)])];
     }
 
     return array_merge(...array_map(fn (Relation $edge): array
@@ -110,8 +109,10 @@ final readonly class EdgeValidator
       $qualifier = Qualifier::tryFrom((string) $key);
       $fits = $qualifier === null ? $this->isWords($value) : $this->kinds->fits($qualifier->kind(), $value);
       if (!$fits) {
-        $violations[] = new Violation($field->key, sprintf('%s is not %s', $key,
-          $qualifier === null ? 'a map of locales holding words' : 'a ' . $qualifier->kind()->value));
+        $violations[] = $qualifier === null
+          ? new Violation($field->key, Reason::QualifierNotWords, ['key' => (string) $key])
+          : new Violation($field->key, Reason::KeyNotAKind,
+            ['key' => (string) $key, 'kind' => $qualifier->kind()->value]);
       }
     }
 
@@ -129,8 +130,8 @@ final readonly class EdgeValidator
   private function checkTarget(FieldDefinition $field, Relation $edge): array
   {
     if (!$this->schema->accepts($field, $edge->objectType)) {
-      return [new Violation($field->key, sprintf('points at %s and takes %s', $edge->objectType,
-        implode(' or ', $field->targets)))];
+      return [new Violation($field->key, Reason::WrongTarget,
+        ['target' => $edge->objectType, 'targets' => implode(' or ', $field->targets)])];
     }
 
     return [];

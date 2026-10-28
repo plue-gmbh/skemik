@@ -13,6 +13,7 @@ use Domain\Exceptions\SlugTaken;
 use Domain\Exceptions\UnknownType;
 use Domain\Exceptions\ValueTaken;
 use Domain\LocalisedText;
+use Domain\Reason;
 use Domain\Relation;
 use Domain\Violation;
 use Profile\Profile;
@@ -84,7 +85,7 @@ final readonly class HoldingsCheck
   /** @return list<Violation> */
   private function shape(): array
   {
-    return array_map(fn (string $difference): Violation => new Violation('schema', $difference),
+    return array_map(fn (string $difference): Violation => Violation::stated('schema', $difference),
       $this->schema->differences($this->db));
   }
 
@@ -94,7 +95,7 @@ final readonly class HoldingsCheck
     $violations = [];
     foreach ($this->db->query('pragma foreign_key_check')->fetchAll(\PDO::FETCH_ASSOC) as $key) {
       $reason = 'row ' . $key['rowid'] . ' names a row that is gone';
-      $violations[] = new Violation((string) $key['table'], $reason);
+      $violations[] = Violation::stated((string) $key['table'], $reason);
     }
 
     return $violations;
@@ -111,7 +112,7 @@ final readonly class HoldingsCheck
     $statement->execute();
 
     return (int) $statement->fetchColumn() === 0 ? []
-      : [new Violation('entity_word', Violation::STALE)];
+      : [new Violation('entity_word', Reason::Stale)];
   }
 
   /* A sampled pass wraps to the start once it reads fewer rows than it asked for.
@@ -144,7 +145,7 @@ final readonly class HoldingsCheck
       $this->collisions->requireFreeTranslation($entity);
     } catch (MalformedValue|UnknownType|ForbiddenTransition|EntityNotFound|SlugTaken|ValueTaken
       |JsonFailed $failure) {
-      return [new Violation('row', $failure->getMessage(), record: $id)];
+      return [Violation::stated('row', $failure->getMessage(), $id)];
     }
 
     return [...$this->againstType($entity, $type, $edges), ...$this->derived($entity, $type)];
@@ -154,21 +155,22 @@ final readonly class HoldingsCheck
   private function againstType(Entity $entity, TypeDefinition $type, array $edges): array
   {
     $document = $entity->props->document();
+    $named = ['type' => $type->name];
     $found = array_map(fn (Violation $violation): Violation => new Violation($violation->field,
-      $violation->reason, $entity->id), $this->validator->check($type, $document, $edges));
+      $violation->reason, $violation->values, $entity->id), $this->validator->check($type, $document, $edges));
     try {
       $this->collisions->requireUnique($entity, $edges);
     } catch (ValueTaken $taken) {
-      $found[] = new Violation($taken->violation->field, $taken->violation->reason, $entity->id);
+      $found[] = new Violation($taken->violation->field, $taken->violation->reason, $taken->violation->values,
+        $entity->id);
     }
     foreach (array_keys($document) as $key) {
       if ($key !== LocalisedText::KEY && $type->field((string) $key) === null) {
-        $reason = 'a key ' . $type->name . ' does not name';
-        $found[] = new Violation((string) $key, $reason, $entity->id);
+        $found[] = new Violation((string) $key, Reason::KeyNotNamed, $named, $entity->id);
       }
     }
     foreach ($this->relations->strays($entity->id) as $predicate) {
-      $found[] = new Violation($predicate, 'an edge ' . $type->name . ' does not name', $entity->id);
+      $found[] = new Violation($predicate, Reason::EdgeNotNamed, $named, $entity->id);
     }
 
     return $found;
@@ -182,10 +184,10 @@ final readonly class HoldingsCheck
     $stored = $statement->fetch(\PDO::FETCH_ASSOC);
     $found = [];
     if ($stored['sort_keys'] !== $this->sortKeys->of($type, $entity->props)) {
-      $found[] = new Violation('sort_keys', Violation::STALE, $entity->id);
+      $found[] = new Violation('sort_keys', Reason::Stale, record: $entity->id);
     }
     if ($stored['words'] !== $this->search->words($type, $entity->props, $entity->slug)) {
-      $found[] = new Violation('words', Violation::STALE, $entity->id);
+      $found[] = new Violation('words', Reason::Stale, record: $entity->id);
     }
 
     return $found;

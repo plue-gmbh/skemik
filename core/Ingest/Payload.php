@@ -48,7 +48,7 @@ final readonly class Payload
   public function refusedOn(Entity $record): array
   {
     $stated = $this->language === null || $this->language === $record->locale->tag ? []
-      : [new Violation('inLanguage', 'not the language of this record: ' . $this->language)];
+      : [Violation::stated('inLanguage', 'not the language of this record: ' . $this->language)];
 
     return [...$this->refused, ...$stated];
   }

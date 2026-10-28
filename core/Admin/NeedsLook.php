@@ -10,6 +10,7 @@ use Auth\Capability;
 use Auth\GrantRepository;
 use Domain\EntityId;
 use Domain\Exceptions\UnknownType;
+use Domain\Reason;
 use Domain\Status;
 use Domain\Violation;
 use Profile\Profile;
@@ -168,7 +169,7 @@ final readonly class NeedsLook
   {
     $report = $this->settings->holdingsReport();
     $listed = array_filter(array_map(fn (Violation $violation): ?EntityId
-      => $violation->reason === Violation::REQUIRED ? $violation->record : null, $report?->violations ?? []));
+      => $violation->reason === Reason::Required ? $violation->record : null, $report?->violations ?? []));
     $ids = [];
     $since = $report?->at->format(Clock::STORED) ?? '';
     foreach ($this->oversights->listed(array_values($listed), $read, $since) as $type => $records) {
@@ -190,7 +191,7 @@ final readonly class NeedsLook
     $found = $this->validator->check($this->profile->byType($entity->type), $entity->props->document(),
       $this->relations->outbound($id));
 
-    return array_any($found, fn (Violation $violation): bool => $violation->reason === Violation::REQUIRED);
+    return array_any($found, fn (Violation $violation): bool => $violation->reason === Reason::Required);
   }
 
   /* What the report holds beyond a missing required field, which has its own line,
@@ -199,7 +200,7 @@ final readonly class NeedsLook
   private function reported(): ?Finding
   {
     $found = array_filter($this->settings->holdingsReport()?->violations ?? [],
-      fn (Violation $violation): bool => $violation->reason !== Violation::REQUIRED);
+      fn (Violation $violation): bool => $violation->reason !== Reason::Required);
 
     return $found === [] ? null : new Finding(Overlooked::Reported, count($found), '/settings/checks', 'alert', '', 0);
   }

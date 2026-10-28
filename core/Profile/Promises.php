@@ -44,7 +44,7 @@ final readonly class Promises
     $members = $this->field('ItemList', 'item_list_element');
     $holds = $members?->kind === FieldKind::Refs && $members->targets === ['*'];
 
-    return $holds ? [] : [new Violation('ItemList.item_list_element', 'not an ordered edge to any type')];
+    return $holds ? [] : [Violation::stated('ItemList.item_list_element', 'not an ordered edge to any type')];
   }
 
   /* A vocabulary is data only while every controlled value is a term and a term
@@ -53,11 +53,11 @@ final readonly class Promises
   {
     $code = $this->field('DefinedTerm', 'term_code');
     $violations = $code?->unique?->edge === 'in_defined_term_set' ? []
-      : [new Violation('DefinedTerm.term_code', 'not unique within its set')];
+      : [Violation::stated('DefinedTerm.term_code', 'not unique within its set')];
     foreach ($this->profile->types() as $type) {
       foreach ($type->fields() as $field) {
         if ($field->cardinality === Cardinality::T && $field->targets !== ['DefinedTerm']) {
-          $violations[] = new Violation($type->name . '.' . $field->key,
+          $violations[] = Violation::stated($type->name . '.' . $field->key,
             'a controlled value that is no term');
         }
       }
@@ -74,7 +74,7 @@ final readonly class Promises
     foreach (self::STANDING as $type => $key) {
       $status = $this->field($type, $key);
       if ($status?->kind !== FieldKind::Select || $status->options === []) {
-        $violations[] = new Violation($type . '.' . $key, 'no closed list saying how the record stands');
+        $violations[] = Violation::stated($type . '.' . $key, 'no closed list saying how the record stands');
       }
     }
 
@@ -89,7 +89,7 @@ final readonly class Promises
     foreach ($this->profile->types() as $type) {
       foreach ($type->fields() as $field) {
         if (in_array($field->key, self::SPINE, true)) {
-          $violations[] = new Violation($type->name . '.' . $field->key, 'takes the name of a spine column');
+          $violations[] = Violation::stated($type->name . '.' . $field->key, 'takes the name of a spine column');
         }
       }
     }

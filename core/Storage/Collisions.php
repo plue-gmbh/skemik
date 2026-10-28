@@ -11,6 +11,7 @@ use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\SlugTaken;
 use Domain\Exceptions\ValueTaken;
 use Domain\Locale;
+use Domain\Reason;
 use Domain\Relation;
 use Domain\Slug;
 use Domain\TranslationGroup;
@@ -90,10 +91,13 @@ final readonly class Collisions
       $holder = $this->heldBy($entity, $field, $edges);
       if ($holder !== null) {
         $scope = $type->field((string) $field->unique?->edge);
-        $where = 'this ' . ($scope === null ? 'house' : mb_strtolower($scope->label));
-        $trash = $this->inTrash($holder) ? ', in the trash' : '';
-        $reason = sprintf('another %s in %s holds it%s', $type->name, $where, $trash);
-        throw new ValueTaken(new Violation($field->key, $reason));
+        $trashed = $this->inTrash($holder);
+        $reason = match (true) {
+          $scope === null => $trashed ? Reason::HeldInHouseTrashed : Reason::HeldInHouse,
+          default => $trashed ? Reason::HeldInScopeTrashed : Reason::HeldInScope,
+        };
+        $named = $scope === null ? [] : ['scope' => $scope->label, 'key' => $scope->key];
+        throw new ValueTaken(new Violation($field->key, $reason, ['type' => $type->name, ...$named]));
       }
     }
   }
@@ -125,9 +129,8 @@ final readonly class Collisions
     }
     $holder = $this->translationHolder($entity);
     if ($holder !== null) {
-      $trash = $this->inTrash($holder->value) ? ', in the trash' : '';
-      $reason = sprintf('another %s in this group holds it%s', $entity->typeName(), $trash);
-      throw new ValueTaken(new Violation('locale', $reason));
+      $reason = $this->inTrash($holder->value) ? Reason::HeldInGroupTrashed : Reason::HeldInGroup;
+      throw new ValueTaken(new Violation('locale', $reason, ['type' => $entity->typeName()]));
     }
   }
 

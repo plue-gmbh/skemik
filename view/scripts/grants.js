@@ -63,7 +63,7 @@ function showSecret(element, body) {
   const value = secret.querySelector("[data-grant-secret-value]");
   value.textContent = body.secret;
   value.addEventListener("click", () => navigator.clipboard?.writeText(body.secret).then(() =>
-    toast(value.dataset.copied)));
+    toast(value.dataset.copied, value)));
   element.dataset.locked = "";
   secret.hidden = false;
   announce(secret.querySelector("p").textContent);

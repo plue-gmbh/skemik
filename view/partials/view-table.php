@@ -25,8 +25,8 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
       <thead>
         <tr>
 <?php if ($creates): ?>
-          <th scope="col" class="sheet-tick"><input type="checkbox" data-tick-all
-            aria-label="<?= $template->escape($words->get('sheet.tick_all')) ?>"></th>
+          <th scope="col" class="sheet-tick"><?php if (count($rows) > 1): ?><input type="checkbox" data-tick-all
+            aria-label="<?= $template->escape($words->get('sheet.tick_all')) ?>"><?php endif ?></th>
 <?php endif ?>
           <th scope="col" class="sheet-open"><span
             class="visually-hidden"><?= $template->escape($words->get('sheet.actions')) ?></span></th>

@@ -94,7 +94,7 @@ final readonly class PayloadMapper
         $values = [...$values, ...$this->values($collection, $found)];
         $relations = [...$relations, ...$this->relations($collection, $subject, $found)];
       } catch (MalformedValue $refusal) {
-        $refused[] = new Violation((string) $property, $refusal->getMessage());
+        $refused[] = Violation::stated((string) $property, $refusal->getMessage());
       }
     }
     [$original, $spine] = $this->original($document['translationOfWork'] ?? null);
@@ -117,7 +117,7 @@ final readonly class PayloadMapper
     $read = $record !== null && ($this->reads)($record);
 
     return $read ? [$record->id, []]
-      : [null, [new Violation('translationOfWork', 'not the address of one record')]];
+      : [null, [Violation::stated('translationOfWork', 'not the address of one record')]];
   }
 
   /* @return array<string, mixed> field key to the value as sent: none for the spine

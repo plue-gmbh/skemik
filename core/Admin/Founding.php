@@ -95,7 +95,7 @@ final readonly class Founding
     $props = new Props(['name' => $name]);
     $violations = $this->validator->check($type, $props->document(), []);
     if ($violations !== []) {
-      throw MalformedValue::named($violations[0]->field, $violations[0]->reason);
+      throw MalformedValue::named($violations[0]->field, $violations[0]->said());
     }
     $now = $this->clock->now()->format(Clock::STORED);
 

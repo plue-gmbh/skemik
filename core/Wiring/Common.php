@@ -214,7 +214,7 @@ final readonly class Common
   public function intake(): Intake
   {
     return new Intake($this->entities, $this->validator, $this->profile, $this->settings, $this->uuid,
-      $this->clock, $this->words, $this->thumbnails, $this->premises->data . '/holdings/media');
+      $this->clock, $this->words, $this->thumbnails, $this->collisions, $this->premises->data . '/holdings/media');
   }
 
   public function locales(): LocaleController

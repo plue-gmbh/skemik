@@ -11,6 +11,7 @@ use Domain\Entity;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\UnknownType;
+use Domain\Reason;
 use Domain\Violation;
 use Http\Request;
 use Http\Response;
@@ -72,7 +73,7 @@ final readonly class ChecksController
   {
     $rank = fn (Violation $violation): int => match (true) {
       $violation->record === null => 0,
-      $violation->reason !== Violation::REQUIRED => 1,
+      $violation->reason !== Reason::Required => 1,
       default => 2,
     };
     usort($violations, fn (Violation $one, Violation $other): int => $rank($one) <=> $rank($other));
@@ -105,10 +106,11 @@ final readonly class ChecksController
      data for broken. */
   private function sentence(Violation $violation, ?TypeDefinition $type): string
   {
-    if ($violation->reason === Violation::STALE) {
+    if ($violation->reason === Reason::Stale) {
       return $this->words->get('checks.stale_' . $violation->field);
     }
-    $reason = $violation->reason === Violation::REQUIRED ? $this->words->get('checks.required') : $violation->reason;
+    $reason = $violation->reason === Reason::Required ? $this->words->get('checks.required')
+      : Reasons::worded($this->words, $violation);
 
     return ($type?->field($violation->field)?->label ?? $violation->field) . ': ' . $reason;
   }

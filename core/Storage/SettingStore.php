@@ -7,6 +7,7 @@ namespace Storage;
 use Domain\EntityId;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
+use Domain\Reason;
 use Domain\Violation;
 use Support\Clock;
 use Support\Json;
@@ -137,9 +138,7 @@ final readonly class SettingStore
       return null;
     }
     $report = $this->json->decode((string) $stored);
-    $violations = array_map(fn (array $found): Violation => new Violation((string) $found['field'],
-      (string) $found['reason'], $found['record'] === null ? null : new EntityId((string) $found['record'])),
-      $report['violations']);
+    $violations = array_map($this->found(...), $report['violations']);
 
     return new HoldingsReport($violations, new \DateTimeImmutable((string) $report['at']),
       (string) ($report['version'] ?? ''));
@@ -148,10 +147,23 @@ final readonly class SettingStore
   public function setHoldingsReport(HoldingsReport $report): void
   {
     $violations = array_map(fn (Violation $found): array => ['field' => $found->field,
-      'reason' => $found->reason, 'record' => $found->record?->value],
+      'reason' => $found->reason->value, 'values' => $found->values, 'record' => $found->record?->value],
       $report->violations);
     $this->write(self::HOLDINGS_REPORT, $this->json->encode(['violations' => $violations,
       'at' => $report->at->format(Clock::STORED), 'version' => $report->version]));
+  }
+
+  /* A report an older version wrote holds each reason spelt out, read back as stated until the
+     next pass writes it again.
+     @param array<string, mixed> $found */
+  private function found(array $found): Violation
+  {
+    $record = $found['record'] === null ? null : new EntityId((string) $found['record']);
+    $reason = Reason::tryFrom((string) $found['reason']);
+    $values = array_map(strval(...), (array) ($found['values'] ?? []));
+
+    return $reason === null ? Violation::stated((string) $found['field'], (string) $found['reason'], $record)
+      : new Violation((string) $found['field'], $reason, $values, $record);
   }
 
   /* Scalars come back as themselves and a list as its JSON text. */

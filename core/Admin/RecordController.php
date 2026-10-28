@@ -26,6 +26,7 @@ use Domain\Locale;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\StaleWrite;
+use Domain\Exceptions\ValueTaken;
 use Domain\LocalisedText;
 use Domain\Props;
 use Domain\Relation;
@@ -127,6 +128,8 @@ final readonly class RecordController
         fn (): Entity => $this->drafted($account, $request, $collection));
     } catch (SaveRefused $refused) {
       return $this->refused($refused->violations);
+    } catch (ValueTaken $taken) {
+      return $this->refused([$taken->violation]);
     }
 
     return $this->made($account, $collection, $saved, (string) $request->query('view'));
@@ -190,6 +193,8 @@ final readonly class RecordController
         fn (): Entity => $this->written($account, $request, $collection, $entity));
     } catch (SaveRefused $refused) {
       return $this->refused($refused->violations);
+    } catch (ValueTaken $taken) {
+      return $this->refused([$taken->violation]);
     } catch (StaleWrite) {
       return $this->stale($account, $request, $collection, $this->entities->find($entity->id));
     }
@@ -241,8 +246,7 @@ final readonly class RecordController
   private function refused(array $violations): Response
   {
     $said = array_map(fn (Violation $violation): array => ['field' => $violation->field,
-      'reason' => $violation->reason === Violation::REQUIRED
-        ? $this->words->get('violation.required') : $violation->reason], $violations);
+      'reason' => Reasons::worded($this->words, $violation)], $violations);
 
     return Response::json($this->json->encode(['error' => $this->words->get('sheet.refused_record'),
       'violations' => $said]), 422);

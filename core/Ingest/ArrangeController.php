@@ -133,7 +133,7 @@ final readonly class ArrangeController
   {
     $said = [];
     foreach ($violations as $violation) {
-      $said[$violation->field] ??= $violation->reason;
+      $said[$violation->field] ??= $violation->said();
     }
     $listed = array_map(fn (string $field, string $reason): array => ['field' => $field, 'reason' => $reason],
       array_keys($said), $said);

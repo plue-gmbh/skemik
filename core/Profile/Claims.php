@@ -88,7 +88,7 @@ final readonly class Claims
           $where = $type->name . '.' . $pooled->key;
           $reason = sprintf('re-declared as %s where the block writes it %s',
             $writer->value, $pooled->writtenBy->value);
-          $violations[] = new Violation($where, $reason);
+          $violations[] = Violation::stated($where, $reason);
         }
       }
     }
@@ -103,7 +103,7 @@ final readonly class Claims
 
     return $count === Profile::CEILING
       ? []
-      : [new Violation('profile', sprintf('%d types, and the ceiling is %d', $count, Profile::CEILING))];
+      : [Violation::stated('profile', sprintf('%d types, and the ceiling is %d', $count, Profile::CEILING))];
   }
 
   /* Every type is a class the vocabulary publishes, so no name is one a
@@ -114,7 +114,7 @@ final readonly class Claims
     $violations = [];
     foreach ($this->profile->types() as $type) {
       if (!$this->vocabulary->hasType($type->name)) {
-        $violations[] = new Violation($type->name, 'no such class in the released vocabulary');
+        $violations[] = Violation::stated($type->name, 'no such class in the released vocabulary');
       }
     }
 
@@ -132,16 +132,16 @@ final readonly class Claims
     foreach ($this->profile->types() as $type) {
       foreach (array_unique(array_filter(array_column($type->own, 'ofKind'))) as $name) {
         if (!$this->vocabulary->hasType($name)) {
-          $violations[] = new Violation(
+          $violations[] = Violation::stated(
             $type->name . ' → ' . $name, 'no such class in the released vocabulary');
           continue;
         }
         if (!in_array($type->name, $this->vocabulary->ancestorsOf($name), true)) {
-          $violations[] = new Violation(
+          $violations[] = Violation::stated(
             $type->name . ' → ' . $name, 'not a specialisation of this type');
         }
         if ($this->vocabulary->supersededBy($name) !== null) {
-          $violations[] = new Violation(
+          $violations[] = Violation::stated(
             $type->name . ' → ' . $name, 'superseded by ' . $this->vocabulary->supersededBy($name));
         }
       }
@@ -176,22 +176,22 @@ final readonly class Claims
     if (!$this->vocabulary->hasProperty($name)) {
       return isset(self::OUTSIDE[$name])
         ? []
-        : [new Violation($where, 'not in the released vocabulary, and not declared as a step outside it')];
+        : [Violation::stated($where, 'not in the released vocabulary, and not declared as a step outside it')];
     }
     if (isset(self::OUTSIDE[$name])) {
-      return [new Violation($where, 'declared outside the vocabulary, which now publishes it')];
+      return [Violation::stated($where, 'declared outside the vocabulary, which now publishes it')];
     }
     if ($this->vocabulary->supersededBy($name) !== null) {
-      return [new Violation($where, 'superseded by ' . $this->vocabulary->supersededBy($name))];
+      return [Violation::stated($where, 'superseded by ' . $this->vocabulary->supersededBy($name))];
     }
     if (!$this->belongsToAnyEmitted($name, $domain)) {
       return isset(self::OFF_DOMAIN[$where])
         ? []
-        : [new Violation($where, 'the vocabulary does not declare this property on this type')];
+        : [Violation::stated($where, 'the vocabulary does not declare this property on this type')];
     }
 
     return isset(self::OFF_DOMAIN[$where])
-      ? [new Violation($where, 'declared off-domain, and the vocabulary now lists it here')]
+      ? [Violation::stated($where, 'declared off-domain, and the vocabulary now lists it here')]
       : [];
   }
 
@@ -236,14 +236,14 @@ final readonly class Claims
     }
     $object = $this->profile->valueObject($name);
     if ($object === null) {
-      return [new Violation($where, sprintf('%s is no value object the profile declares', $name))];
+      return [Violation::stated($where, sprintf('%s is no value object the profile declares', $name))];
     }
     $violations = [];
     if ($field->valueObjectKey !== null && !$object->has($field->valueObjectKey)) {
-      $violations[] = new Violation($where, sprintf('%s has no key %s', $name, $field->valueObjectKey));
+      $violations[] = Violation::stated($where, sprintf('%s has no key %s', $name, $field->valueObjectKey));
     }
     if ($field->required && !$object->canBeRequired()) {
-      $violations[] = new Violation($where, sprintf('%s has no bearing key, so it cannot be required', $name));
+      $violations[] = Violation::stated($where, sprintf('%s has no bearing key, so it cannot be required', $name));
     }
     foreach ($object->keys as $key) {
       $stale = match (true) {
@@ -251,7 +251,7 @@ final readonly class Claims
         !$this->schema->belongsTo($key, $name) => 'not declared on ' . $name . ' in the vocabulary',
         default => null,
       };
-      $violations = $stale === null ? $violations : [...$violations, new Violation($where, "$name.$key $stale")];
+      $violations = $stale === null ? $violations : [...$violations, Violation::stated($where, "$name.$key $stale")];
     }
 
     return $violations;
@@ -266,7 +266,7 @@ final readonly class Claims
     $violations = [];
     foreach ((new Predicate($this->profile, $this->schema))->names as $name) {
       if (!$this->vocabulary->hasProperty($name) && !isset(self::OUTSIDE[$name])) {
-        $violations[] = new Violation($name, 'a predicate that is no property of the vocabulary');
+        $violations[] = Violation::stated($name, 'a predicate that is no property of the vocabulary');
       }
     }
 
@@ -288,7 +288,7 @@ final readonly class Claims
         $this->schema->belongsTo($name, $type) => 'declared off-domain, and the vocabulary now lists it here',
         default => null,
       };
-      $violations = $stale === null ? $violations : [...$violations, new Violation($where, $stale)];
+      $violations = $stale === null ? $violations : [...$violations, Violation::stated($where, $stale)];
     }
 
     return $violations;

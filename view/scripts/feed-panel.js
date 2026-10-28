@@ -90,7 +90,7 @@ function mountFeedPanel(panel, button) {
 async function copyAddress(text, link, said) {
   if (!navigator.clipboard) return getSelection().selectAllChildren(link);
   await navigator.clipboard.writeText(text);
-  toast(said);
+  toast(said, link);
 }
 
 function pretty(text) {

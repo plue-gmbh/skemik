@@ -73,7 +73,7 @@ final readonly class Checkup
     $kept = $last?->version === Version::APP ? $this->kept($last, $from, $this->settings->holdingsCursor()) : [];
     $unique = [];
     foreach ([...$kept, ...$found] as $violation) {
-      $unique[implode("\n", [$violation->field, $violation->reason, $violation->record?->value])] = $violation;
+      $unique[implode("\n", [$violation->field, $violation->said(), $violation->record?->value])] = $violation;
     }
     $this->settings->setHoldingsReport(new HoldingsReport(array_values($unique), $began, Version::APP));
   }

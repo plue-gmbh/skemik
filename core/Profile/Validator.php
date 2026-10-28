@@ -7,6 +7,7 @@ namespace Profile;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\LocalisedText;
+use Domain\Reason;
 use Domain\Relation;
 use Domain\Violation;
 use Support\Uuid;
@@ -26,7 +27,6 @@ final readonly class Validator
 {
   /* E.164, and the message names the writing, since it is what a person reads. */
   private const DIALLED = '/^\+[1-9][0-9]{6,14}$/';
-  private const NOT_DIALLED = 'not a number to dial, written like +4930123123';
 
   public function __construct(
     private Profile $profile,
@@ -66,7 +66,7 @@ final readonly class Validator
       return [];
     }
     if (!$type->locale->localises() || !is_array($translations) || array_is_list($translations)) {
-      return [new Violation(LocalisedText::KEY, 'not a map of locales on a type that localises')];
+      return [new Violation(LocalisedText::KEY, Reason::NotLocalising)];
     }
     $check = fn (int|string $tag, mixed $words): array => $this->checkLocale($type, (string) $tag, $words);
 
@@ -78,19 +78,19 @@ final readonly class Validator
   {
     $where = LocalisedText::KEY . '.' . $tag;
     if (!$this->isLocale($tag) || !is_array($words) || !$this->isMap($words)) {
-      return [new Violation($where, 'not a locale holding words')];
+      return [new Violation($where, Reason::NotALocale)];
     }
     $violations = [];
     foreach ($words as $key => $value) {
       $field = $type->field((string) $key);
       if (!$field?->holdsWords()) {
-        $violations[] = new Violation($where, sprintf('%s is not translatable', $key));
+        $violations[] = new Violation($where, Reason::NotTranslatable, ['key' => (string) $key]);
         continue;
       }
       $fallsBack = in_array($value, [null, '', []], true);   // empty reads the authored value
       $found = $fallsBack ? [] : $this->checkField($field, $words);
       foreach ($found as $violation) {
-        $violations[] = new Violation($where . '.' . $violation->field, $violation->reason);
+        $violations[] = new Violation($where . '.' . $violation->field, $violation->reason, $violation->values);
       }
     }
 
@@ -103,11 +103,11 @@ final readonly class Validator
     $present = array_key_exists($field->key, $props) && $props[$field->key] !== null
       && $props[$field->key] !== '' && $props[$field->key] !== [];
     if (!$present) {
-      return $field->required ? [new Violation($field->key, Violation::REQUIRED)] : [];
+      return $field->required ? [new Violation($field->key, Reason::Required)] : [];
     }
     $value = $props[$field->key];
     if ($field->repeatable && (!is_array($value) || $this->isMap($value))) {
-      $what = $field->kind === FieldKind::Objects ? 'not a list of value objects' : 'not a list';
+      $what = $field->kind === FieldKind::Objects ? Reason::NotAListOfObjects : Reason::NotAList;
 
       return [new Violation($field->key, $what)];   // every reader reads a list
     }
@@ -136,22 +136,22 @@ final readonly class Validator
       return $this->checkValueObject($field, $value);
     }
     if ($field->kind === FieldKind::Select && !in_array($value, $field->choices(), true)) {
-      return [new Violation($field->key, 'not one of this field\'s values')];
+      return [new Violation($field->key, Reason::NotAChoice)];
     }
     if ($this->profile->referring($field) !== null && $field->valueObject !== null) {
-      return $this->refers($value) ? [] : [new Violation($field->key, 'not a word or a record')];
+      return $this->refers($value) ? [] : [new Violation($field->key, Reason::NotAWordOrRecord)];
     }
     if ($this->schemed($field->key, $value)) {
-      return [new Violation($field->key, 'an email address is a bare address, without mailto:')];
+      return [new Violation($field->key, Reason::Schemed)];
     }
     if (!$this->kinds->fits($field->kind, $value)) {
-      return [new Violation($field->key, 'not a ' . $field->kind->value)];
+      return [new Violation($field->key, Reason::NotAKind, ['kind' => $field->kind->value])];
     }
     if ($field->whole && !is_int($value)) {
-      return [new Violation($field->key, 'not a whole number')];
+      return [new Violation($field->key, Reason::NotWhole)];
     }
     if ($field->dialled && preg_match(self::DIALLED, $value) !== 1) {
-      return [new Violation($field->key, self::NOT_DIALLED)];
+      return [new Violation($field->key, Reason::NotDialled)];
     }
 
     return [];
@@ -168,19 +168,19 @@ final readonly class Validator
   private function checkValueObject(FieldDefinition $field, mixed $value): array
   {
     if (!is_array($value) || !$this->isMap($value)) {
-      return [new Violation($field->key, 'not a value object')];
+      return [new Violation($field->key, Reason::NotAnObject)];
     }
     $object = $this->profile->valueObject((string) $field->ref)
       ?? throw MalformedValue::named('value object the profile declares', (string) $field->ref);
     if (isset($value['@id'])) {
-      return [new Violation($field->key, sprintf('%s is written inline, a row of %s, never a record named by @id',
-        $object->name, implode(', ', $object->keys)))];
+      return [new Violation($field->key, Reason::Inline,
+        ['object' => $object->name, 'keys' => implode(', ', $object->keys)])];
     }
     $violations = [];
     foreach ($value as $key => $held) {
-      $reason = $this->keyFails($field, $object, (string) $key, $held);
-      if ($reason !== null) {
-        $violations[] = new Violation($field->key, $reason);
+      $found = $this->keyFails($field, $object, (string) $key, $held);
+      if ($found !== null) {
+        $violations[] = new Violation($field->key, $found->reason, $found->values);
       }
     }
 
@@ -194,7 +194,7 @@ final readonly class Validator
     $violations = [];
     foreach ($object->bearing as $key) {
       if (!isset($value[$key]) || $value[$key] === '') {
-        $violations[] = new Violation($field->key, sprintf('%s needs %s', $this->named($object), $key));
+        $violations[] = new Violation($field->key, Reason::Unborne, ['object' => $this->named($object), 'key' => $key]);
       }
     }
 
@@ -208,17 +208,17 @@ final readonly class Validator
   }
 
   /* A key the field does not carry is refused as a property no field declares is: kept, it would be
-     stored where no screen shows it. */
-  private function keyFails(FieldDefinition $field, ValueObject $object, string $key, mixed $held): ?string
+     stored where no screen shows it. What fails is named by the key, and the caller names the field. */
+  private function keyFails(FieldDefinition $field, ValueObject $object, string $key, mixed $held): ?Violation
   {
     if (!$object->has($key)) {
-      return sprintf('%s has no key %s', $object->name, $key);
+      return new Violation($key, Reason::NoSuchKey, ['object' => $object->name, 'key' => $key]);
     }
     if (!in_array($key, $field->carried($object), true)) {
-      return sprintf('%s carries no %s', $field->key, $key);
+      return new Violation($key, Reason::NotCarried, ['field' => $field->key, 'key' => $key]);
     }
     if ($key === $object->reference && !$this->refers($held)) {
-      return sprintf('%s is a word or a record', $key);
+      return new Violation($key, Reason::KeyNotAWordOrRecord, ['key' => $key]);
     }
 
     $record = $key === $object->reference && is_array($held);
@@ -227,23 +227,25 @@ final readonly class Validator
   }
 
   /* A row's value is read as the same value in a field would be. */
-  private function heldFails(ValueObject $object, string $key, mixed $held): ?string
+  private function heldFails(ValueObject $object, string $key, mixed $held): ?Violation
   {
+    $fails = fn (Reason $reason, array $values = []): Violation => new Violation($key, $reason, ['key' => $key,
+      ...$values]);
     if ($this->schemed($key, $held)) {
-      return $key . ' is a bare address, without mailto:';
+      return $fails(Reason::KeySchemed);
     }
     if (in_array($key, $object->dialled, true)) {
-      return is_string($held) && preg_match(self::DIALLED, $held) === 1 ? null : $key . ' is ' . self::NOT_DIALLED;
+      return is_string($held) && preg_match(self::DIALLED, $held) === 1 ? null : $fails(Reason::KeyNotDialled);
     }
     if (isset($object->options[$key])) {
-      return in_array($held, $object->options[$key], true) ? null : $key . ' is not one of its values';
+      return in_array($held, $object->options[$key], true) ? null : $fails(Reason::KeyNotAChoice);
     }
     $kind = $object->kinds[$key] ?? null;
     if ($kind !== null && !$this->kinds->fits($kind, $held)) {
-      return sprintf('%s is not a %s', $key, $kind->value);
+      return $fails(Reason::KeyNotAKind, ['kind' => $kind->value]);
     }
 
-    return in_array($key, $object->whole, true) && !is_int($held) ? $key . ' is not a whole number' : null;
+    return in_array($key, $object->whole, true) && !is_int($held) ? $fails(Reason::KeyNotWhole) : null;
   }
 
   private function schemed(string $key, mixed $value): bool

@@ -177,6 +177,6 @@ final readonly class SvgGuard
 
   private function refuse(string $where, string $reason): Violation
   {
-    return new Violation($where, $reason);
+    return Violation::stated($where, $reason);
   }
 }

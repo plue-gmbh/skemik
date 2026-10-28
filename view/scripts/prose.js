@@ -120,7 +120,7 @@ function insertLink(button, words) {
     area.dispatchEvent(new Event("input", { bubbles: true }));
     close();
     focusField(area, button);
-    toast(fill(words["record.link_done"], { label: hit.label }));
+    toast(fill(words["record.link_done"], { label: hit.label }), button);
   };
   const paint = async () => {
     const typed = search.value;

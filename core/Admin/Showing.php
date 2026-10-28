@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Admin;
 
 use Domain\Entity;
+use Domain\Reason;
 use Domain\Relation;
 use Domain\TranslationGroup;
 use Domain\Violation;
@@ -73,7 +74,7 @@ final readonly class Showing
     $kind = (string) strtok((string) $asset->props->string('encoding_format'), '/');
 
     return $kinds === [] || in_array($kind, $kinds, true) ? []
-      : [new Violation('encoding_format', 'not ' . implode('/ or ', $kinds) . '/ where the file is shown as one')];
+      : [new Violation('encoding_format', Reason::NotShown, ['kinds' => implode('/ or ', $kinds)])];
   }
 
   /* A holder that forks is read in its own locale alone; every other type in each. */
