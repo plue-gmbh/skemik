@@ -89,7 +89,6 @@ function mountSheet(root) {
       edit(id, key, all = false) {
         const [field, cell] = [fieldOf(key), cellOf(id, key)];
         if (field.kind === "boolean") return cell.querySelector("[data-edit]").focus();
-        cell.dataset.editing = "";
         const terms = data.terms[rows.get(id).locale] ?? {};
         this.editing = { id, field, cell, terms, value: all ? null : this.current(id, key), collection: data.collection,
           locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone, words: wordsIn, all,
@@ -97,7 +96,6 @@ function mountSheet(root) {
       },
       close() {
         const { id, field, cell, all } = this.editing;
-        delete cell.dataset.editing;
         this.editing = null;
         last = cell;
         return { id, key: field.key, cell, all };

@@ -68,7 +68,7 @@ final readonly class Agents
       $f->refs('works_for', 'Works for', 'Organization'),
       $f->refs('affiliation', 'Affiliation', 'Organization'),
       $f->refs('member_of', 'Member of', 'Organization', 'MemberProgram'),
-      $f->refs('alumni_of', 'Alumnus of', 'Organization'),
+      $f->refs('alumni_of', 'Formerly at', 'Organization'),
       $f->ref('work_location', 'Work location', 'Place'),
       $f->refs('knows', 'Knows', 'Person'),
       $f->refs('brand', 'Brands', 'Brand'),
@@ -137,7 +137,7 @@ final readonly class Agents
 
     return [
       $f->objects('opening_hours_specification', 'Opening hours', 'OpeningHoursSpecification'),
-      $f->objects('special_opening_hours_specification', 'Holiday hours', 'OpeningHoursSpecification'),
+      $f->objects('special_opening_hours_specification', 'Special hours', 'OpeningHoursSpecification'),
       $f->text('price_range', 'Price range'),
       $f->listed('currencies_accepted', 'Currencies accepted', ClosedList::Currency)->repeatable(),
       $f->term('payment_accepted', 'Payment accepted', 'paymentMethod')->repeatable(),

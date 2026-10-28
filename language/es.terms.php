@@ -23,7 +23,7 @@ return [
   'ReservationHold' => 'En espera',
   'ReservationCancelled' => 'Cancelada',
   'FULL_TIME' => 'Jornada completa',
-  'PART_TIME' => 'Media jornada',
+  'PART_TIME' => 'Jornada parcial',
   'CONTRACTOR' => 'Autónomo',
   'INTERN' => 'Prácticas',
   'TEMPORARY' => 'Temporal',

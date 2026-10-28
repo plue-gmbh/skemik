@@ -66,12 +66,12 @@ foreach ($blocks as $block) {
 $joins = fn (int $index): bool => isset($parts[$index]) && $parts[$index]['block']->heading === null
   && $parts[$index]['kind'] === 'lines';
 $back = '/c/' . $collection->slug->value . ($query === '' ? '' : '?' . $query);
-$public = fn (Admin\Column $column): string => !$column->feed ? '' : '<span class="public-mark" title="'
+$feedMark = fn (Admin\Column $column): string => !$column->feed ? '' : '<span class="public-mark" title="'
   . $template->escape($words->get('sheet.public')) . '">' . $template->render('partials/icon', ['name' => 'unlocked'])
   . '</span><span class="visually-hidden">, ' . $template->escape($words->get('sheet.public')) . '</span>';
 $line = fn (Admin\FieldBlock $block, Admin\Column $column): string => sprintf(
   '<div class="record-line"><dt>%s%s</dt><dd>%s</dd></div>', $template->escape($block->labelOf($column)),
-  $public($column), $row->cells[$column->field->key]);
+  $feedMark($column), $row->cells[$column->field->key]);
 $tool = function (?string $href, string $icon, string $word, string $end) use ($template, $words): string {
   $name = $template->escape($words->get($word));
   $drawn = $template->render('partials/icon', ['name' => $icon]);
@@ -171,19 +171,26 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
     </figure>
 <?php endif ?>
 <?php foreach ($parts as $index => ['kind' => $part, 'block' => $block, 'headed' => $headed]): ?>
-<?php if ($part === 'figures'): foreach ($block->columns as $each): foreach ($chips[$each->field->key] as $chip): ?>
-    <figure class="record-figure">
-      <span class="record-image" aria-hidden="true"><?php if (!$chip->gone && $chip->preview !== null): ?><img
-        src="<?= $template->escape($chip->preview) ?>" alt=""
-        loading="lazy"><?php else: ?><?= $template->render('partials/glyph', ['name' => $chip->glyph])
-        ?><?php endif ?></span>
-      <figcaption><?= $template->escape($chip->gone ? $words->get('cell.gone') : ($chip->caption !== '' ? $chip->caption
-        : $chip->label)) ?><?php if ($chip->noAlt): ?> <span
-        class="no-alt"><?= $template->escape($words->get('record.no_alt')) ?></span><?php endif ?></figcaption>
-    </figure>
-<?php endforeach; endforeach; elseif ($part === 'prose'): foreach ($block->columns as $each): ?>
+<?php if ($part === 'figures'): foreach ($block->columns as $each): ?>
+    <section class="record-pictures">
+      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
+      <div>
+<?php foreach ($chips[$each->field->key] as $chip): ?>
+        <figure class="record-figure">
+          <span class="record-image" aria-hidden="true"><?php if (!$chip->gone && $chip->preview !== null): ?><img
+            src="<?= $template->escape($chip->preview) ?>" alt=""
+            loading="lazy"><?php else: ?><?= $template->render('partials/glyph', ['name' => $chip->glyph])
+            ?><?php endif ?></span>
+          <figcaption><?= $template->escape($chip->gone ? $words->get('cell.gone')
+            : ($chip->caption !== '' ? $chip->caption : $chip->label)) ?><?php if ($chip->noAlt): ?> <span
+            class="no-alt"><?= $template->escape($words->get('record.no_alt')) ?></span><?php endif ?></figcaption>
+        </figure>
+<?php endforeach ?>
+      </div>
+    </section>
+<?php endforeach; elseif ($part === 'prose'): foreach ($block->columns as $each): ?>
     <section class="record-prose">
-      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $public($each) ?></h2>
+      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
       <div lang="<?= $template->escape($shownIn) ?>"><?= $prose[$each->field->key] ?></div>
     </section>
 <?php endforeach; else: ?>
@@ -219,13 +226,15 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php if ($column->editable && $column->prose()): $markdown = $column->field->kind === FieldKind::Markdown ?>
       <section class="record-prose-edit<?= $markdown ? ' is-markdown' : '' ?>"
         data-field="<?= $template->escape($key) ?>" id="edit-<?= $template->escape($key) ?>">
-        <label class="record-label"
-          for="prose-<?= $template->escape($key) ?>"><?= $template->escape($column->label) ?><?= $markdown
-          ? ' · Markdown' : '' ?><?= $public($column) ?></label>
+        <label class="record-label record-edit-label"
+          for="prose-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
+          ['kind' => $column->field->kind])) ?><?= $template->escape($column->label) ?><?= $markdown
+          ? ' · Markdown' : '' ?><?= $feedMark($column) ?></label>
+<?php $fallback = $locale === null ? '' : (string) $authored->props->string($key) ?>
         <textarea id="prose-<?= $template->escape($key) ?>" class="record-textarea"
-          lang="<?= $template->escape($shownIn) ?>" data-prose<?= $locale === null ? '' : ' placeholder="'
-          . $template->escape((string) $authored->props->string($key))
-          . '"' ?>><?= $template->escape((string) $edit->entity->props->string($key)) ?></textarea>
+          lang="<?= $template->escape($shownIn) ?>" data-prose<?= $fallback === '' ? '' : '="authored"'
+          ?> placeholder="<?= $template->escape($fallback === '' ? '—' : $fallback) ?>"><?= $template->escape(
+          (string) $edit->entity->props->string($key)) ?></textarea>
 <?php if ($markdown): ?>
         <div class="record-prose-tools"><?php foreach (['heading' => 'data-mark="heading"',
           'bold' => 'data-mark="bold"', 'italic' => 'data-mark="italic"', 'quote' => 'data-mark="quote"',
@@ -242,7 +251,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
       <div class="record-line is-edit" id="edit-<?= $template->escape($key) ?>">
         <span class="record-edit-label"
           id="label-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
-          ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?><?= $public($column)
+          ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?><?= $feedMark($column)
           ?></span>
 <?php if ($column->editable && !$entity->keeps($key)): ?>
         <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"

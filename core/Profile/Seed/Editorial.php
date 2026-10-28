@@ -87,7 +87,7 @@ final readonly class Editorial
       /* A page's sections, which is where a site places what it shows. */
       $f->refs('has_part', 'Lists', 'ItemList')->starter(),
       $this->base->image()->starter(),
-      $f->term('specialty', 'Specialty'),
+      $f->term('specialty', 'Speciality'),
       /* How a page borrows another entity's content without duplicating it —
          an imprint is a view of an Organization, never a copy of one. */
       $f->ref('main_entity', 'Main entity', '*')->starter(),

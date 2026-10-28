@@ -39,7 +39,7 @@ final readonly class Base
       /* What lets a term stand for a thing outside every type here, an element
          or a legal form: its identity is Wikidata's or a register's, not ours. */
       $f->link('same_as', 'Same as')->repeatable(),
-      $f->text('additional_type', 'Specialisation')->repeatable(),
+      $f->text('additional_type', 'Specialization')->repeatable(),
       $f->ref('main_entity_of_page', 'Page about this', 'WebPage'),
       /* Thing's, as schema.org has it: an offer's *Book now* and an event's
          *Sign up* are buttons as much as a page's. */

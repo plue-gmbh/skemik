@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.8](https://img.shields.io/badge/version-1.0.8-1f6feb)
+![Version 1.0.9](https://img.shields.io/badge/version-1.0.9-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ tool to design first, no column called `Date2`. What an organisation keeps
 stands there once. Everything that works with it reads it there and writes back
 there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.7)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.9)
 
 The demo install's events, read with no key:
 
@@ -239,8 +239,8 @@ belongs to whoever runs it first, who needs nothing but the path of an empty
 data folder.
 
 `SHA256SUMS` lists every file the release ships but `.htaccess`, whose lines
-outside the Skemik block are the hoster's, so once the files are copied this
-checks each of them against the release, in the domain root:
+outside the Skemik block are the hosting provider's, so once the files are
+copied this checks each of them against the release, in the domain root:
 
 ```sh
 sha256sum -c SHA256SUMS
@@ -324,13 +324,13 @@ region writes them, *€ 1.234,50* in `de-AT`.
   is served; one requested anyway does nothing, since only `index.php` has side
   effects.
 
-- **Behind a proxy that speaks HTTPS for the host**, a CDN or a hoster's TLS
-  front, the install sees plain HTTP from one address, since any client can
-  send the headers a proxy adds: every `@id` reads `http://` and every visitor
-  shares one rate limit. A setting in `config.php` naming the proxy comes when a
-  organisation behind one asks. Served over HTTPS itself, every answer asks the
-  browser to stay on it for a year, so a plain `http://` beside it is not
-  opened again once the admin was.
+- **Behind a proxy that speaks HTTPS for the host**, a CDN or a hosting
+  provider's TLS front, the install sees plain HTTP from one address, since any
+  client can send the headers a proxy adds: every `@id` reads `http://` and
+  every visitor shares one rate limit. A setting in `config.php` naming the
+  proxy comes when an organisation behind one asks. Served over HTTPS itself,
+  every answer asks the browser to stay on it for a year, so a plain `http://`
+  beside it is not opened again once the admin was.
 
 ## Running it
 
@@ -445,10 +445,10 @@ current, and the address answers *being updated* for the seconds of the swap.
 
 - **A snapshot of the holdings is taken first** and the tree as it ran kept
   beside it, and both go back together where the new release cannot take over
-  the database. The lines a hoster had you add to `.htaccess` outside `# BEGIN
-  Skemik` and `# END Skemik` are kept. This README, the licence, the security
-  policy and `SHA256SUMS` beside the code are replaced by the release's own, so
-  what an install says of itself is the release it runs.
+  the database. The lines a hosting provider had you add to `.htaccess` outside
+  `# BEGIN Skemik` and `# END Skemik` are kept. This README, the licence, the
+  security policy and `SHA256SUMS` beside the code are replaced by the release's
+  own, so what an install says of itself is the release it runs.
 
 - **An install declines with `'updates' => false`** in `config.php`. A
   development copy says so too, since `0.3.0-dev` sorts below `0.3.0` and the
@@ -1430,14 +1430,14 @@ what it spends.
   webspace, where Node or Go would make a process to supervise. The app is
   written for PHP 8.5 and runs on each one after it, 8.6 and 9 as they ship,
   and no release asks for more, since an install updates itself: one that did
-  would refuse every address of an install whose hoster had not moved. What this
-  spends is a second version kept straight, the oldest beside the newest, and
-  whatever a later PHP adds, which the code does without. And reach at the
-  cheap end: an organisation on shared webspace can only ask its hoster for the
-  version, and an install on an older one is refused on the first request,
-  naming what it found and what it needs, down to 8.2: below that the page
-  naming them cannot be parsed either, and the host's own 500 is the whole
-  answer.
+  would refuse every address of an install whose hosting provider had not moved.
+  What this spends is a second version kept straight, the oldest beside the
+  newest, and whatever a later PHP adds, which the code does without. And reach
+  at the cheap end: an organisation on shared webspace can only ask its hosting
+  provider for the version, and an install on an older one is refused on the
+  first request, naming what it found and what it needs, down to 8.2: below that
+  the page naming them cannot be parsed either, and the host's own 500 is the
+  whole answer.
 
 - **Pages from the server, Vue as islands.** A page that is not reactive cannot
   break. Vue normally arrives with npm, a bundler and a lockfile, and that
@@ -1560,8 +1560,8 @@ what it spends.
   credential, and a restore onto another host loses the relay, as it should.
 
 - **Refused, because both will be proposed again.** Encrypting the holdings
-  with a key the hoster cannot use defends the door while the walls are
-  glass: the server filters, sorts and indexes the holdings in plaintext, so
+  with a key the hosting provider cannot use defends the door while the walls
+  are glass: the server filters, sorts and indexes the holdings in plaintext, so
   whoever has the machine needs no login. A second factor hardens one case, the
   mailbox being taken, and sells a lockout to an owner who is one person.
 

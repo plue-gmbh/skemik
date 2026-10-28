@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /* The export screen (`Admin\ExportController`): what a dump is, the button
-   above as on the backups screen, or the sentence why it cannot be taken, then
+   above as on the backups screen, or the sentence why it cannot be made, then
    which types come out complete and which as the public reads them, how many
    records it will hold, once per language each answers in and so more than the
    overview's total, how many files and about how large it is. The numbers carry

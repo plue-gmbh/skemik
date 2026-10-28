@@ -72,7 +72,7 @@ final readonly class Media
       $f->number('height', 'Height')->keyOf('QuantitativeValue', 'value', 'height'),
       $f->text('caption', 'Caption')->starter()->words(),
       $f->text('embedded_text_caption', 'Embedded caption')->words(),
-      $f->boolean('representative_of_page', 'Representative of the page'),
+      $f->boolean('representative_of_page', 'Represents the page'),
       $f->objects('exif_data', 'EXIF', 'PropertyValue'),
       $f->dateTime('upload_date', 'Uploaded')->starter(),
       $f->link('acquire_license_page', 'Licence page'),

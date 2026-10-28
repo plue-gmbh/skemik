@@ -88,7 +88,7 @@ return [
   'KeepProduct' => 'Behalten',
   'FreeReturn' => 'Kostenlos',
   'ReturnShippingFees' => 'Rücksendekosten',
-  'ReturnFeesCustomerResponsibility' => 'Trägt die Kundin',
+  'ReturnFeesCustomerResponsibility' => 'Trägt der Kunde',
   'OriginalShippingFees' => 'Ursprüngliche Versandkosten',
   'RestockingFees' => 'Wiedereinlagerungsgebühr',
   'Monday' => 'Montag',

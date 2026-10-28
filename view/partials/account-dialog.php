@@ -78,10 +78,9 @@ $last = $colleague !== null && $colleague->lastOwner;
     <div class="account-scope" data-scope="<?= $scope ?>"<?= ($scope === 'write' ? $role !== Auth\Role::Editor
       : $role === Auth\Role::Owner) ? ' hidden' : '' ?>>
       <label class="grant-offer"><input type="checkbox" data-scope-narrow<?= $narrowed === null ? ''
-        : ' checked' ?>><span><?= $template->escape($words->get('account.' . $scope . '_narrow')) ?></span></label>
-<?php if ($scope === 'read'): ?>
-      <p class="popover-hint"><?= $template->escape($words->get('account.read_hint')) ?></p>
-<?php endif ?>
+        : ' checked' ?>><span><?= $template->escape($words->get('account.' . $scope . '_narrow')) ?><?php
+        if ($scope === 'read'): ?><span class="grant-note"><?= $template->escape($words->get('account.read_hint'))
+        ?></span><?php endif ?></span></label>
       <fieldset class="account-types" data-scope-types<?= $narrowed === null ? ' hidden' : '' ?>>
         <legend class="visually-hidden"><?= $template->escape($words->get('account.' . $scope . '_types')) ?></legend>
 <?php foreach ($types as $type => $word): ?>

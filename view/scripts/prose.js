@@ -13,7 +13,7 @@ const previews = new WeakMap();
 function preview(area) {
   const shown = area.closest(".record-prose-edit")?.querySelector("[data-preview]");
   if (!shown) return;
-  const text = () => area.value || area.placeholder || "";
+  const text = () => area.value || (area.dataset.prose === "authored" ? area.placeholder : "");
   window.clearTimeout(previews.get(area));
   previews.set(area, window.setTimeout(async () => {
     const sent = text();

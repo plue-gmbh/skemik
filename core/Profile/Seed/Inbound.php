@@ -47,7 +47,7 @@ final readonly class Inbound
 
     return [
       $f->text('name', 'Name')->words(),               // a review is not titled
-      $f->longText('review_body', 'Review')->starter(),
+      $f->longText('review_body', 'Review text')->starter(),
       ...$vo->flatten('Rating', 'reviewRating', 'Rating', $f, starter: true),
       $f->term('review_aspect', 'Aspect reviewed'),
       $f->longText('positive_notes', 'In favour'),
@@ -107,7 +107,7 @@ final readonly class Inbound
       $f->refs('recipient', 'Recipient', 'Person', 'Organization')->starter(),
       $f->refs('cc_recipient', 'Cc', 'Person'),
       $f->refs('bcc_recipient', 'Bcc', 'Person'),
-      $f->ref('about', 'Concerns', '*'),
+      $f->ref('about', 'Regarding', '*'),
       $f->refs('message_attachment', 'Attachments', 'MediaObject'),
       $this->base->description(),
     ];

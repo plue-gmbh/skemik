@@ -69,7 +69,7 @@ final readonly class Structure
          position and nowhere else: a JSON-LD array is an unordered set. */
       $f->number('number_of_items', 'Items')->whole()
         ->derived(Derivation::over(Derived::Count, 'item_list_element')),
-      $f->refs('item_list_element', 'Members', '*')->required(),
+      $f->refs('item_list_element', 'Entries', '*')->required(),
       $this->base->description()->starter(),
     ];
   }
@@ -88,7 +88,7 @@ final readonly class Structure
       $f->ref('in_defined_term_set', 'Term set', 'DefinedTerm')->starter(),
       /* SKOS, not schema.org, and `Claims` names it as its exception,
          because a taxonomy without a hierarchy is a flat list. */
-      $f->ref('broader', 'Broader', 'DefinedTerm'),
+      $f->ref('broader', 'Broader term', 'DefinedTerm'),
       $f->objects('additional_property', 'Additional property', 'PropertyValue')->words(),
       $this->base->description(),
     ];
@@ -123,7 +123,7 @@ final readonly class Structure
       $f->text('work_hours', 'Working hours'),
       $f->date('job_start_date', 'Start date'),
       $f->number('total_job_openings', 'Openings')->whole(),
-      $f->boolean('direct_apply', 'Direct apply'),
+      $f->boolean('direct_apply', 'Direct application'),
       $f->term('occupational_category', 'Occupational category', 'occupation'),
       $f->term('industry', 'Industry'),
       $f->term('applicant_location_requirements', 'Applicant location', 'region')->repeatable(),
@@ -183,7 +183,7 @@ final readonly class Structure
     $vo = $this->vo;
 
     return [
-      $f->longText('text', 'Elaboration'),
+      $f->longText('text', 'Details'),
       $f->number('answer_count', 'Answers')->whole(),
       $f->number('upvote_count', 'Upvotes')->whole(),
       $f->term('edu_question_type', 'Question type'),
@@ -220,7 +220,7 @@ final readonly class Structure
       $f->text('error', 'What went wrong'),
       $f->ref('agent', 'Assignee', 'Person', 'Organization')->required(),
       $f->refs('participant', 'Participants', 'Person', 'Organization'),
-      $f->ref('object', 'Concerns', '*')->starter(),
+      $f->ref('object', 'Regarding', '*')->starter(),
       $f->ref('result', 'Result', '*'),
       $f->ref('instrument', 'Done with', '*'),
       $f->ref('location', 'Location', 'Place'),

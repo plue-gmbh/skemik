@@ -66,7 +66,7 @@ return [
   'MadeToOrder' => 'Fabriqué sur commande',
   'InStoreOnly' => 'En magasin uniquement',
   'OnlineOnly' => 'En ligne uniquement',
-  'Discontinued' => 'Arrêté',
+  'Discontinued' => 'Plus commercialisé',
   'OrderPaymentDue' => 'Paiement en attente',
   'OrderProcessing' => 'En traitement',
   'OrderInTransit' => 'En cours de livraison',

@@ -71,12 +71,16 @@ $held = $rows !== [] && $rows[0]->held;
       <span class="record-row-mono">/<?= $template->escape($row->entity->slug->value) ?></span>
       <form method="post" action="<?= $template->escape($address . '/' . $id) ?>/restore">
         <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-        <button type="submit" class="button-quiet"><?= $template->escape($words->get('record.restore')) ?><span
-          class="visually-hidden"> – <?= $template->escape($row->label) ?></span></button>
+        <button type="submit" class="tool-button"
+          title="<?= $template->escape($words->get('record.restore')) ?>"><?= $template->render('partials/icon',
+          ['name' => 'restore']) ?><span class="visually-hidden"><?= $template->escape($words->get('record.restore'))
+          ?> – <?= $template->escape($row->label) ?></span></button>
 <?php if ($purges): ?>
-        <button type="button" class="button-quiet is-danger" aria-haspopup="dialog"
-          data-dialog="purge-<?= $template->escape($id) ?>"><?= $template->escape($words->get('purge.confirm')) ?><span
-          class="visually-hidden"> – <?= $template->escape($row->label) ?></span></button>
+        <button type="button" class="tool-button is-danger" aria-haspopup="dialog"
+          title="<?= $template->escape($words->get('purge.confirm')) ?>"
+          data-dialog="purge-<?= $template->escape($id) ?>"><?= $template->render('partials/icon',
+          ['name' => 'trash']) ?><span class="visually-hidden"><?= $template->escape($words->get('purge.confirm'))
+          ?> – <?= $template->escape($row->label) ?></span></button>
 <?php endif ?>
       </form>
 <?php if ($purges): ?>

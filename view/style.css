@@ -415,7 +415,7 @@ button:disabled {
 
 .login-form input {
   padding: 9px 11px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-field);
   border-radius: var(--radius-large);
   background: var(--surface-sunken);
 }
@@ -520,7 +520,7 @@ button:disabled {
 
 .login-form select {
   padding: 9px 11px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-field);
   border-radius: var(--radius-large);
   background: var(--surface-sunken);
 }
@@ -1084,6 +1084,15 @@ h2#home-needs_look ~ .home-empty {
   margin: 0;
 }
 
+.account-form .popover-hint:not(:empty) {
+  margin-top: 6px;
+}
+
+.account-scope,
+.account-form > .grant-offer {
+  margin-top: 4px;
+}
+
 .account-flag {
   padding: 1px 7px;
   border-radius: var(--radius-medium);
@@ -1204,7 +1213,7 @@ h2#home-needs_look ~ .home-empty {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 4px;
-  margin: 0;
+  margin: 4px 0 0 24px;
   padding: 0;
   border: 0;
 }
@@ -1635,7 +1644,7 @@ button.cell:focus-visible {
   box-shadow: inset 0 0 0 2px var(--status-error);
 }
 
-.sheet-cell[data-editing] .cell {
+.sheet-cell:has(> .cell-editor) .cell {
   visibility: hidden;
 }
 
@@ -2146,6 +2155,10 @@ a.option {
   margin: 0 0 18px;
 }
 
+.record-card > .record-figure {
+  padding-left: 220px;
+}
+
 .record-image {
   display: flex;
   align-items: center;
@@ -2206,6 +2219,25 @@ a.option {
   line-height: 1.3;
 }
 
+.record-card > .record-prose,
+.record-card > .record-pictures {
+  display: grid;
+  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr);
+  max-width: none;
+  margin-bottom: 0;
+  padding: 7px 0 12px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.record-card > .record-prose > div {
+  max-width: 70ch;
+}
+
+.record-card > .record-prose > div > :last-child,
+.record-card > .record-pictures > div > :last-child {
+  margin-bottom: 0;
+}
+
 .record-prose blockquote {
   padding-left: 12px;
   border-left: 3px solid var(--border-strong);
@@ -2241,13 +2273,7 @@ a.chip {
   border-left: 2px solid var(--border);
 }
 
-.record-fields + .record-figure,
-.record-fields + .record-prose {
-  margin-top: 18px;
-}
-
-.record-card > .record-figure:last-child,
-.record-card > .record-prose:last-child {
+.record-card > .record-figure:last-child {
   margin-bottom: 0;
 }
 
@@ -2287,7 +2313,6 @@ a.chip {
   display: grid;
   grid-template-columns: minmax(120px, 220px) minmax(0, 1fr);
   align-items: center;
-  border-bottom: 1px solid var(--border-hairline);
 }
 
 .record-edit-label {
@@ -2307,9 +2332,26 @@ a.chip {
   padding-block: 8px;
 }
 
+.record-form button.cell {
+  margin-block: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-large);
+}
+
 .record-prose-edit {
   position: relative;
-  margin: 14px 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.record-prose-edit > .record-edit-label {
+  margin: 0;
+  padding-top: 16px;
+}
+
+.record-prose-edit > .record-textarea {
+  margin-block: 4px;
 }
 
 .record-textarea {
@@ -2325,6 +2367,22 @@ a.chip {
   font-size: 14px;
   line-height: 1.6;
   resize: vertical;
+}
+
+.record-prose-edit .record-textarea::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .record-form button.cell:hover,
+  .record-prose-edit .record-textarea:hover {
+    border-color: var(--text-tertiary);
+  }
+}
+
+.record-prose-edit .record-textarea:focus-visible {
+  outline-offset: -2px;
 }
 
 .record-prose-edit[data-pending] .record-textarea {
@@ -2360,11 +2418,8 @@ a.chip {
 }
 
 .record-prose-edit.is-markdown {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "label label" "area preview" "tools preview";
-  align-items: start;
-  column-gap: 18px;
+  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "label area preview" ". tools preview";
 }
 
 .record-prose-edit.is-markdown > .record-label {
@@ -2383,7 +2438,7 @@ a.chip {
   grid-area: preview;
   max-width: none;
   min-height: 120px;
-  margin-bottom: 0;
+  margin: 4px 0 0 18px;
   padding: 12px 14px;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-large);
@@ -2695,6 +2750,10 @@ a.chip {
   color: var(--text-secondary);
 }
 
+.dialog p#account-new-person {
+  margin-bottom: 6px;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -2707,9 +2766,17 @@ a.chip {
   height: 32px;
   margin-bottom: 8px;
   padding: 0 10px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-field);
   border-radius: var(--radius-medium);
   background: var(--surface-sunken);
+}
+
+@media (hover: hover) {
+  .popover-input:hover,
+  .login-form input:hover,
+  .login-form select:hover {
+    border-color: var(--text-tertiary);
+  }
 }
 
 .sheet .sheet-open {
@@ -2901,6 +2968,10 @@ a.cell {
   margin: 4px 0 0;
   color: var(--text-secondary);
   font-size: 11.5px;
+}
+
+.account-dialog .grant-note {
+  margin-top: 0;
 }
 
 .grant-note.is-stale,
@@ -3182,6 +3253,12 @@ a.cell {
   overflow-wrap: anywhere;
 }
 
+.feed-line {
+  display: block;
+  padding-left: calc((var(--indent) + 2) * 1ch);
+  text-indent: calc((var(--indent) + 2) * -1ch);
+}
+
 .feed-key {
   color: var(--text);
 }
@@ -3431,6 +3508,16 @@ a.cell {
   .toast {
     bottom: 116px;
   }
+
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+
+  .dialog-actions > .account-remove,
+  .dialog-actions > .grant-revoke {
+    flex-basis: 100%;
+    text-align: left;
+  }
 }
 
 @container paper (max-width: 700px) {
@@ -3471,7 +3558,7 @@ a.cell {
   }
 
   .record-preview {
-    margin-top: 12px;
+    margin: 12px 0 0;
   }
 
   .view-menu {
@@ -3582,6 +3669,15 @@ a.cell {
     white-space: nowrap;
   }
 
+  .page > .record-rows time.record-row-mono {
+    flex: none;
+  }
+
+  .page[data-trash] .record-row-note {
+    order: 3;
+    margin-left: auto;
+  }
+
   .update-page > .record-rows .record-row-mono {
     text-align: right;
   }
@@ -3637,6 +3733,14 @@ a.cell {
     align-items: start;
   }
 
+  .side-card .record-row-name:has(~ .record-row-locales) {
+    grid-column: 2 / 4;
+  }
+
+  .side-card .record-row-locales ~ .record-row-state {
+    grid-column: 4;
+  }
+
   .side-card .record-row-locales ~ .record-row-mono {
     grid-column: 2;
   }
@@ -3658,6 +3762,10 @@ a.cell {
 
   .side-card .record-row-age ~ .record-row-mono {
     grid-column: 2;
+  }
+
+  .side-card .record-row.is-missing > form:last-child {
+    grid-column: -2;
   }
 
   .side-card .record-row-link[open] {
@@ -3714,8 +3822,19 @@ a.cell {
   }
 
   .record-fields,
-  .record-form .record-line.is-edit {
+  .record-form .record-line.is-edit,
+  .record-prose-edit,
+  .record-card > .record-prose,
+  .record-card > .record-pictures {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .record-prose-edit > .record-edit-label {
+    padding-top: 8px;
+  }
+
+  .record-card > .record-figure {
+    padding-left: 0;
   }
 
   .record-line dt {

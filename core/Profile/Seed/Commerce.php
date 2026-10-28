@@ -73,7 +73,7 @@ final readonly class Commerce
       $f->date('release_date', 'Released'),
       $f->date('purchase_date', 'Purchased'),
       $f->listed('country_of_origin', 'Country of origin', ClosedList::Country),
-      $f->term('has_adult_consideration', 'Adult consideration'),
+      $f->term('has_adult_consideration', 'Adult content'),
       $f->text('in_product_group_with_id', 'Product group ID'),
       /* The group is a product marked as one, and it names its variants: the
          inverse, `isVariantOf`, would hold the same fact a second time, and this
@@ -93,7 +93,7 @@ final readonly class Commerce
       $f->refs('offers', 'Offers', 'Offer')->starter()
         ->derived(Derivation::over(Derived::Range, 'item_offered')->inbound()),
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
-      $f->refs('is_accessory_or_spare_part_for', 'Accessory for', 'Product'),
+      $f->refs('is_accessory_or_spare_part_for', 'Accessory or spare part for', 'Product'),
       $f->refs('is_consumable_for', 'Consumable for', 'Product'),
       $f->refs('is_related_to', 'Related to', 'Product'),
       $f->refs('is_similar_to', 'Similar to', 'Product'),
@@ -162,7 +162,7 @@ final readonly class Commerce
          step off-domain costs the proof link and nothing else. A font token's
          value is the typeface's name and free text: a fact about the brand that
          a frontend does with what it wants, matched against no file here. */
-      $f->objects('additional_property', 'Brand token', 'PropertyValue')->keys('name', 'value')->starter(),
+      $f->objects('additional_property', 'Brand attribute', 'PropertyValue')->keys('name', 'value')->starter(),
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
       $this->base->description(),
     ];

@@ -5,9 +5,9 @@
    consumer fetches it, or for the keyed reader from the same route behind the
    session, `/feed-panel/…`; JSON is printed in two-space indents and lightly
    coloured, HTML with its tags and attribute values coloured, every other
-   format as its bytes. Escape inside the panel closes it, after whatever a
-   popover's Escape closed first. The query bar replaces the address
-   as it filters and says so (`query-bar.js`). */
+   format as its bytes, and a long line wraps under its own indent. Escape inside
+   the panel closes it, after whatever a popover's Escape closed first. The query
+   bar replaces the address as it filters and says so (`query-bar.js`). */
 
 function mountFeedPanel(panel, button) {
   const part = (name) => panel.querySelector(`[data-feed-${name}]`);
@@ -30,8 +30,8 @@ function mountFeedPanel(panel, button) {
     part("status").textContent = code;
     part("status").classList.toggle("is-refused", code !== "" && code !== "200");
     const json = chosen.format === "" || code !== "200";
-    const nodes = json ? coloured(pretty(text)) : chosen.format === ".html" ? markedUp(text) : [text];
-    part("document").replaceChildren(...nodes);
+    const colour = json ? coloured : chosen.format === ".html" ? markedUp : (line) => [line];
+    part("document").replaceChildren(...lines(json ? pretty(text) : text, colour));
   };
   const load = async () => {
     const asked = fetched();
@@ -95,6 +95,17 @@ async function copyAddress(text, link, said) {
 
 function pretty(text) {
   try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
+}
+
+/* One block per line, its indentation kept as text so a copy keeps it, and its depth handed
+   to the style, which wraps a long line under itself and never back at the margin. */
+function lines(text, colour) {
+  return text.split("\n").map((line) => {
+    const block = Object.assign(document.createElement("span"), { className: "feed-line" });
+    block.style.setProperty("--indent", line.match(/^ */)[0].length);
+    block.append(...colour(line), "\n");
+    return block;
+  });
 }
 
 /* Keys, strings and bare values each a span; what is none of them stays text. */
