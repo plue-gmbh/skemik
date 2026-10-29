@@ -108,7 +108,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
 <?php endif ?>
   <div class="query-row">
 <?= $template->render('partials/query-bar', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
-  'filters' => $filters, 'parameters' => $parameters, 'narrowed' => $narrowed,
+  'filters' => $filters, 'parameters' => $parameters, 'narrowed' => $narrowed, 'named' => $named,
   'total' => $total, 'all' => $all, 'narrowing' => $narrowing, 'fixed' => $fixed]) ?>
 <?= $switch(false) ?>
   </div>

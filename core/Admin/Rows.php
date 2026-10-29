@@ -138,6 +138,15 @@ final readonly class Rows
       . http_build_query(['in' => $entity->locale->tag]) . ($query === '' ? '' : '&' . $query);
   }
 
+  /* The record screen of a record where the reader may open it, as its chip would link it.
+     @param list<Collection> $collections */
+  public function opened(Account $account, Entity $record, array $collections): ?string
+  {
+    $holder = array_find($collections, fn (Collection $collection): bool => $collection->type === $record->type);
+
+    return $holder !== null && $this->readable($account, $record) ? self::address($holder, $record) : null;
+  }
+
   /* The picture a screen shows for an asset, and the only one it loads: a raster
      image's preview, an SVG itself, which runs nothing in an `<img>`, and nothing
      for a file elsewhere, which `img-src 'self'` would refuse anyway. */

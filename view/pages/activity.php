@@ -19,7 +19,7 @@ if (!isset($template)) {
 $who = $by === null ? null : array_find($lines, fn (Admin\Change $line): bool => $line->by === $by)?->who;
 $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
 ?>
-<div class="page">
+<div class="page" data-log>
   <header class="page-head">
     <h1><?= $template->escape($words->get('change.all')) ?></h1>
     <p class="page-shape"><?= $template->escape($words->get('change.explain')) ?></p>

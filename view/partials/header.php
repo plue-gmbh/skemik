@@ -6,8 +6,9 @@ declare(strict_types=1);
    the link home and beside it the version, the owner's door to the update screen,
    marked while a release cannot be installed automatically, the reason being Needs a
    look's; then the house's own sites (`Storage\Sites`), where the row has room
-   for them, the Feed button and the account. Search, settings and help are no
-   header items, because each belongs to a screen. The admin has no light/dark
+   for them, the search, which opens into its field and answers on `/find`, the
+   Feed button and the account. Settings and help are no header
+   items, because each belongs to a screen. The admin has no light/dark
    switch but three materials, chrome, paper and terminal, each a scope redefining
    the same tokens in `view/style.css`, so a region says its role by its material
    and every component sits right on any ground; the scope sets `color` too, or
@@ -16,11 +17,8 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$initials = implode('', array_map(fn (string $part): string => mb_substr($part, 0, 1),
-  array_slice(preg_split('/\s+/u', trim($menu->name), -1, PREG_SPLIT_NO_EMPTY) ?: ['?'], 0, 2)));
-$avatar = $menu->picture === null
-  ? '<span class="avatar" aria-hidden="true">' . $template->escape(mb_strtoupper($initials)) . '</span>'
-  : '<img class="avatar" src="' . $template->escape($menu->picture) . '" alt="">';
+$avatar = trim($template->render('partials/avatar', ['name' => $menu->name, 'picture' => $menu->picture]));
+$who = $own === null ? 'p class="account-who"' : 'a class="account-who" href="' . $template->escape($own) . '"';
 ?>
 <header class="header" data-material="chrome-deep">
   <button type="button" class="header-menu" aria-controls="sidebar" aria-expanded="false"
@@ -44,6 +42,18 @@ $avatar = $menu->picture === null
 <?= $template->render('partials/site-links', ['sites' => $sites]) ?>
   </nav>
 <?php endif ?>
+  <form class="header-search" action="/find" method="get" role="search" data-header-search>
+    <button type="button" aria-expanded="false" aria-controls="header-search-field"
+      aria-label="<?= $template->escape($words->get('header.search')) ?>"
+      title="<?= $template->escape($words->get('header.search')) ?>"><?= $template->render('partials/icon',
+        ['name' => 'search']) ?></button>
+    <input type="search" name="q" id="header-search-field" autocomplete="off"
+      placeholder="<?= $template->escape($words->get('header.search')) ?>"
+      aria-label="<?= $template->escape($words->get('header.search')) ?>">
+    <button type="button" class="header-search-close" aria-label="<?= $template->escape(
+      $words->get('header.search_close')) ?>" data-header-search-close><?= $template->render('partials/icon',
+        ['name' => 'close']) ?></button>
+  </form>
   <button type="button" class="header-feed" aria-controls="feed-panel"
     aria-expanded="<?= $feed->open ? 'true' : 'false' ?>"
     data-feed-button><?= $template->escape($words->get('header.feed')) ?></button>
@@ -51,8 +61,8 @@ $avatar = $menu->picture === null
     <summary><?= $avatar ?><span class="account-name"><?= $template->escape($menu->name) ?></span></summary>
     <div class="account-menu">
       <p class="account-label"><?= $template->escape($words->get('header.logged_in')) ?></p>
-      <p class="account-who"><?= $avatar ?><span class="account-lines"><b><?= $template->escape($menu->name) ?></b><span
-        class="account-email"><?= $template->escape($menu->email) ?></span></span></p>
+      <<?= $who ?>><?= $avatar ?><span class="account-lines"><b><?= $template->escape($menu->name) ?></b><span
+        class="account-email"><?= $template->escape($menu->email) ?></span></span></<?= strtok($who, ' ') ?>>
       <form method="post" action="/logout">
         <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
         <button type="submit"><?= $template->escape($words->get('header.logout')) ?></button>

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.10](https://img.shields.io/badge/version-1.0.10-1f6feb)
+![Version 1.0.11](https://img.shields.io/badge/version-1.0.11-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ tool to design first, no column called `Date2`. What an organisation keeps
 stands there once. Everything that works with it reads it there and writes back
 there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.9)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.11)
 
 The demo install's events, read with no key:
 
@@ -398,7 +398,8 @@ and a reservation a booking service wrote while they stand open by their own
 status, one delivered or confirmed on arrival never; a record waiting in review
 and one pointing at a record in the trash; a draft begun over a week ago of a
 type meant to be published, never a person, whom an organisation holds as a
-draft on purpose; and an image without alt text, opening the library's pictures.
+draft on purpose; and an image in review or published without alt text,
+opening the library's pictures.
 For whoever issues keys it counts a key running out within 30 days, until a new
 one is issued under its name. A colleague is told only of what they read, and
 each line leaves once what it counts is taken up or mended.
@@ -458,6 +459,10 @@ current, and the address answers *being updated* for the seconds of the swap.
 - **A release may be held back until a day** the manifest names, so it reaches
   a few installs before all of them: an install whose `config.php` says
   `'updates' => 'early'` takes it the hour it goes up.
+
+- **The owner need not wait the hour**: *Check now* on the update screen asks
+  the manifest at once and installs what it finds as the hourly check would,
+  leaving a release held back until a day alone just as that does.
 
 - **Where it cannot run**, the tree not PHP's to write on a host where the
   files belong to the FTP account, an extension missing, the data folder short

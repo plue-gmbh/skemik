@@ -14,14 +14,6 @@ declare(strict_types=1);
 if (!isset($template)) {
   return;
 }
-$avatar = function (Admin\Colleague $each) use ($template): string {
-  $initials = implode('', array_map(fn (string $part): string => mb_substr($part, 0, 1),
-    array_slice(preg_split('/\s+/u', trim($each->name), -1, PREG_SPLIT_NO_EMPTY) ?: ['?'], 0, 2)));
-
-  return $each->picture === null
-    ? '<span class="avatar" aria-hidden="true">' . $template->escape(mb_strtoupper($initials)) . '</span>'
-    : '<img class="avatar" src="' . $template->escape($each->picture) . '" alt="">';
-};
 $dialog = fn (?Admin\Colleague $each): string => $manage ? $template->render('partials/account-dialog',
   ['words' => $words, 'colleague' => $each, 'types' => $types, 'unreadable' => $unreadable, 'csrf' => $csrf,
   'held' => array_map(fn (Admin\Colleague $row): string => $row->account->person->value, $colleagues)]) : '';
@@ -31,7 +23,8 @@ $dialog = fn (?Admin\Colleague $each): string => $manage ? $template->render('pa
         <li data-account="<?= $template->escape($each->account->id) ?>"><?php if ($manage) { ?><button type="button"
           class="change account-row" data-dialog="account-<?= $template->escape($each->account->id) ?>"
           aria-haspopup="dialog"><?php } else { ?><div class="change account-row"><?php } ?><span
-          class="change-head"><?= $avatar($each) ?><span
+          class="change-head"><?= trim($template->render('partials/avatar',
+          ['name' => $each->name, 'picture' => $each->picture])) ?><span
           class="change-name"><?= $template->escape($each->name) ?></span><?php
           if ($each->account->disabledAt !== null) { ?><span
           class="account-flag"><?= $template->escape($words->get('account.disabled')) ?></span><?php } ?></span><span

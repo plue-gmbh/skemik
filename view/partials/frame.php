@@ -17,7 +17,7 @@ ob_start();
 ?>
 <body class="admin">
 <a class="skip-link" href="#main"><?= $template->escape($words->get('frame.skip')) ?></a>
-<?= $template->render('partials/header', ['words' => $words, 'menu' => $menu, 'csrf' => $csrf,
+<?= $template->render('partials/header', ['words' => $words, 'menu' => $menu, 'own' => $own, 'csrf' => $csrf,
   'updates' => $account->can(Auth\Capability::RunUpdate), 'blocked' => $update, 'feed' => $feed,
   'open' => $open, 'sites' => $sites]) ?>
 <div class="admin-body">

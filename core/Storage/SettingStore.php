@@ -9,6 +9,8 @@ use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\Reason;
 use Domain\Violation;
+use Profile\Profile;
+use Profile\TypeDefinition;
 use Support\Clock;
 use Support\Json;
 
@@ -35,6 +37,7 @@ final readonly class SettingStore
   public function __construct(
     private \PDO $db,
     private Clock $clock,
+    private Profile $profile,
     private Json $json = new Json(),
   ) {}
 
@@ -88,17 +91,29 @@ final readonly class SettingStore
   /* Every tag something is written in: a record's own, the words a record or an
      edge keeps under `l10n`, in the trash too. Each with the records outside the
      trash written in it, one record counted once, for the Languages card: one
-     pass, since each walks every record's words.
+     pass, and a record's words read of the types that localise alone, through
+     the type index, since only those carry `l10n` (`Profile\Validator`) and a
+     grown house is mostly orders.
      @return array<string, int> by tag */
   public function held(): array
   {
     $statement = $this->db->prepare('select tag, count(distinct case when live then id end) from ('
       . 'select id, locale as tag, deleted_at is null as live from entity'
       . " union all select e.id, l.key, e.deleted_at is null from entity e, json_each(e.props, '$.l10n') l"
+      . ' where e.type in (select value from json_each(:localising))'
       . " union all select null, l.key, 0 from relation r, json_each(r.props, '$.l10n') l) group by tag");
-    $statement->execute();
+    $statement->execute(['localising' => $this->json->encode($this->localising())]);
 
     return array_map(intval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
+  }
+
+  /** @return list<string> the types whose records may hold words per language */
+  private function localising(): array
+  {
+    $localising = array_filter($this->profile->types(),
+      fn (TypeDefinition $type): bool => $type->locale->localises());
+
+    return array_values(array_map(fn (TypeDefinition $type): string => $type->url(), $localising));
   }
 
   /* The last row `HoldingsCheck`'s sampled pass reached, null before the first

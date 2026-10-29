@@ -32,13 +32,17 @@ final readonly class Oversights
       ['status' => $status->value, 'types' => $this->json->encode($types), 'before' => $before]);
   }
 
-  /* An image whose own words describe nothing, which is its alt text.
+  /* An image whose own words describe nothing, which is its alt text, while it is
+     public or on its way there: an upload is a draft, and asking of each its alt
+     text at once would count every picture still being sorted, as it would every
+     one put away.
      @return array<string, int> by type URL */
   public function withoutAlt(string $type): array
   {
     return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
-      . " and substr(json_extract(e.props, '$.encoding_format'), 1, 6) = 'image/'"
-      . " and trim(coalesce(json_extract(e.props, '$.description'), '')) = ''", ['type' => $type]);
+      . " and e.status in (:review, :published) and substr(json_extract(e.props, '$.encoding_format'), 1, 6) = 'image/'"
+      . " and trim(coalesce(json_extract(e.props, '$.description'), '')) = ''",
+      ['type' => $type, 'review' => Status::Review->value, 'published' => Status::Published->value]);
   }
 
   /* The records a report named, among the types asked and out of the trash, each

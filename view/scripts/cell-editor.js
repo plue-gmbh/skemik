@@ -184,13 +184,17 @@ function listShown(field, value, terms, words) {
     value.forEach((item, index) => span.append(chipShown(item, field.many ? index + 1 : null, words)));
     return span;
   }
-  const first = field.kind === "objects" ? value[0].name ?? value[0][field.bearing[0]] : null;
   const word = (each) => (field.kind === "select" ? terms[each] ?? each : String(each));
+  const names = field.kind === "objects" ? value.map((row) => rowName(row, field, words)).filter((name) => name) : [];
   span.textContent = field.kind !== "objects" ? value.map(word).join(", ")
-    : fill(words["cell.entries"], { n: value.length })
-      + (["string", "number"].includes(typeof first) ? " · " + first : "")
-      + (first?.label !== undefined ? " · " + (first.gone ? words["cell.gone"] : first.label) : "");
+    : names.join(", ") || fill(words["cell.entries"], { n: value.length });
   return span;
+}
+
+function rowName(row, field, words) {
+  const name = row?.name ?? row?.[field.bearing[0]];
+  if (["string", "number"].includes(typeof name)) return String(name);
+  return name?.label !== undefined ? (name.gone ? words["cell.gone"] : name.label) : "";
 }
 
 /* One target as `partials/cell` draws it: a list numbers its chips. */

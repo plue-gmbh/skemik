@@ -12,7 +12,8 @@ use Support\Fetched;
 use Support\FetchFailed;
 
 /* Runs by itself, with nobody pressing: once an hour after an answer nobody waits
-   for, as the daily snapshot runs, and installs what the check finds at once. The
+   for, as the daily snapshot runs, or sooner where the owner asks on the update
+   screen, and installs what the check finds at once. The
    migration is not run by this request, whose old classes are loaded while any it
    has not met would load from the new files: the new code is asked over the
    install's own address and moves the holdings as a copied release does. Where
@@ -52,13 +53,35 @@ final readonly class Updater
   public function run(): void
   {
     $this->backup->locked(function (): void {
-      if ($this->check->due()) {
-        $this->checked();
-      }
+      $found = $this->check->due() ? $this->checked() : null;
+      $found === null || $this->attempted($found);
     });
   }
 
-  private function checked(): void
+  /* Asked for on the update screen, whatever the hour: the check answers before the
+     page does, so the page names what it found, and the install runs after it as the
+     hourly one does. A day the manifest holds back is held to as it is every hour. */
+  public function asked(Response $response): Response
+  {
+    $found = null;
+    $this->backup->locked(function () use (&$found): void {
+      $found = $this->checked();
+    });
+
+    return $found === null ? $response : $response->after(function () use ($found): void {
+      $this->backup->locked(fn () => $this->attempted($found));
+    });
+  }
+
+  /* Whether a snapshot, an update or a restore holds the lock a check would take, which the
+     update screen's button waits out. */
+  public function busy(): bool
+  {
+    return !$this->backup->locked(static fn () => null);
+  }
+
+  /* The release to install, where one is offered and not refused for good. */
+  private function checked(): ?Manifest
   {
     [$now, $report] = [$this->clock->now(), $this->check->report()];
     if ($report->installed === Version::APP) {
@@ -69,15 +92,15 @@ final readonly class Updater
     } catch (UpdateRefused $failure) {
       $this->check->record($report->checkedAt($now->format(Clock::STORED), $failure->getMessage(), null));
 
-      return;
+      return null;
     }
     $today = $now->setTimezone($this->clock->zone)->format('Y-m-d');
     $offered = $manifest->offered(Version::APP, $today, $this->early);
     $report = $report->checkedAt($now->format(Clock::STORED), null, $offered ? $manifest->version : null);
     $this->check->record($report);
-    if ($this->enabled && $offered && ($report->refused !== $manifest->version || $report->again)) {
-      $this->attempted($manifest);
-    }
+
+    return $this->enabled && $offered && ($report->refused !== $manifest->version || $report->again)
+      ? $manifest : null;
   }
 
   /* A download that broke off and a snapshot without room are the machine's, as a refusal may be.

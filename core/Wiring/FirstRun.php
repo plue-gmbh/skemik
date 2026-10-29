@@ -87,7 +87,7 @@ final readonly class FirstRun
       new Search($db, $profile, $schema, $utc), $utc);
     return new Founding($db, new Migrator(new Schema($profile), $this->root . '/migrations'), $entities,
       $accounts, new CollectionStore($db, $profile, $uuid, $this->words),
-      new SettingStore($db, $utc), new Validator($profile, new EdgeValidator($schema)), $profile,
+      new SettingStore($db, $utc, $profile), new Validator($profile, new EdgeValidator($schema)), $profile,
       new Session($premises->data . '/sessions', $this->request->https, $utc),
       new LoginCode($db, $accounts, $uuid, $utc), new CodeDelivery($premises->data . '/login', null),
       $uuid, $utc);

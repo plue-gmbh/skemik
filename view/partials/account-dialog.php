@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* One account's dialog on the Accounts card, or a new account's where no colleague
    is handed in (`view/scripts/accounts.js`). A new one starts at its person, picked
    through the search every edge uses or named new, so there is no second form
-   for a name that already stands three collections away. Each scope editor is
+   for a name that already stands three collections away; a held one shows its
+   person, leading to the record where its name and picture are changed. Each scope editor is
    folded until asked for, since unscoped is the normal case for both and must
    not have to be dismissed to stay one: the write scope stands for an editor,
    the read scope for an editor and a viewer. The read scope's words say what it
@@ -55,7 +56,10 @@ $last = $colleague !== null && $colleague->lastOwner;
       <input type="hidden" name="name" value="">
       <p class="popover-hint"><?= $template->escape($words->get('account.person_hint')) ?></p>
     </div>
-<?php else: ?>
+<?php else: $tag = $colleague->person === null ? 'span' : 'a href="' . $template->escape($colleague->person) . '"' ?>
+    <p class="spine-label"><?= $template->escape($words->get('account.person')) ?></p>
+    <p class="picker-current"><<?= $tag ?> class="chip"><span class="chip-mark"><?= $template->render('partials/glyph',
+      ['name' => 'Person']) ?></span><?= $template->escape($colleague->name) ?></<?= strtok($tag, ' ') ?>></p>
     <p><?= $template->escape($colleague->sentence) ?></p>
 <?php endif ?>
     <label class="spine-label" for="<?= $id ?>-address"><?= $template->escape($words->get('account.email')) ?></label>

@@ -64,8 +64,13 @@ use Support\Thumbnail;
 use Support\Uuid;
 use Support\Words;
 use Update\Backup;
+use Update\Downloader;
 use Update\FileCheck;
+use Update\Installer;
+use Update\Release;
+use Update\Signature;
 use Update\UpdateCheck;
+use Update\Updater;
 
 /* What more than one area answers with, built once per request in the order it
    depends on: the actor before the holdings, because `ActivityLog` binds it when
@@ -177,10 +182,18 @@ final readonly class Common
     return new UpdateCheck($this->premises->data, new Fetch(), $this->clock);
   }
 
+  public function updater(): Updater
+  {
+    return new Updater($this->premises->updates, $this->premises->early, $this->premises->data,
+      $this->premises->address, $this->updates(), new Downloader($this->premises->data . '/staging', new Fetch()),
+      new Signature(Release::KEY), new Installer($this->root, $this->backup()), $this->backup(), new Fetch(),
+      $this->clock);
+  }
+
   public function frame(): Frame
   {
-    return new Frame($this->sidebar, $this->probes(), $this->session, $this->rows, $this->settings, $this->csrf,
-      $this->template, $this->words);
+    return new Frame($this->sidebar, $this->probes(), $this->session, $this->rows, $this->collections,
+      $this->settings, $this->csrf, $this->template, $this->words);
   }
 
   public function sheet(): Sheet
@@ -234,7 +247,7 @@ final readonly class Common
   private function house(): void
   {
     $this->db = (new Connection())->open($this->premises->data . '/holdings/data.sqlite');
-    $this->settings = new SettingStore($this->db, $this->utc);
+    $this->settings = new SettingStore($this->db, $this->utc, $this->profile);
     $this->clock = new Clock($this->settings->timezone());
     $this->uuid = new Uuid($this->clock);
   }

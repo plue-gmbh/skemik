@@ -158,7 +158,8 @@ final readonly class Cells
     return implode(' ', $shown);
   }
 
-  /* Every row by its bearing key, so rows told apart by their names are told apart in the cell too.
+  /* Every row by its bearing key, so rows told apart by their names are told apart in the cell too;
+     only rows with no name are counted, since the names already say how many there are.
      @param array<array-key, mixed> $items
      @param array<int, Chip> $chips the records its rows refer to, by row */
   private function objects(FieldDefinition $field, array $items, array $chips): string
@@ -174,8 +175,7 @@ final readonly class Cells
         $names[] = (string) $name;
       }
     }
-    $count = $this->words->get('cell.entries', ['n' => (string) count($items)]);
 
-    return $names === [] ? $count : $count . ' · ' . implode(', ', $names);
+    return $names === [] ? $this->words->get('cell.entries', ['n' => (string) count($items)]) : implode(', ', $names);
   }
 }

@@ -12,6 +12,7 @@ use Auth\TypeScope;
 use Feed\PublicFilter;
 use Profile\Profile;
 use Profile\TypeDefinition;
+use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Support\Words;
 
@@ -32,6 +33,7 @@ final readonly class Colleagues
     private Profile $profile,
     private PublicFilter $filter,
     private Rows $rows,
+    private CollectionStore $collections,
     private Moments $moments,
     private Words $words,
   ) {}
@@ -82,7 +84,7 @@ final readonly class Colleagues
     $last = $owners === 1 && $account->role === Role::Owner && $account->disabledAt === null;
 
     return new Colleague($account, $name, $this->sentence($account, $account->id === $reader->id),
-      $this->facts($account), $picture, $last);
+      $this->facts($account), $picture, $this->rows->opened($reader, $person, $this->collections->all()), $last);
   }
 
   private function facts(Account $account): string

@@ -51,6 +51,7 @@ final readonly class Settings
       Endpoint::BackupDownload => $this->backupController()->download($common->request, $segment('name')),
       Endpoint::Update => $this->updateController()->show($common->authorizer->requireAccount(),
         $common->requirePerson(), $common->request),
+      Endpoint::UpdateCheck => $this->updateController()->check($common->request),
       Endpoint::Errors => $this->errorLogController()->show($common->authorizer->requireAccount(),
         $common->requirePerson(), $common->request),
       Endpoint::Checks => $this->checksController()->show($common->authorizer->requireAccount(),
@@ -61,9 +62,9 @@ final readonly class Settings
   private function updateController(): UpdateController
   {
     $common = $this->common;
-    return new UpdateController($common->authorizer, $common->updates(), new Signature(Release::KEY),
-      $common->premises->updates, $common->premises->early, $common->frame(), $common->moments, $common->template,
-      $common->words);
+    return new UpdateController($common->authorizer, $common->updates(), $common->updater(),
+      new Signature(Release::KEY), $common->premises->updates, $common->premises->early, $common->frame(),
+      $common->csrf, $common->moments, $common->template, $common->words);
   }
 
   private function errorLogController(): ErrorLogController

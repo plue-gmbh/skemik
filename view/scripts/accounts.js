@@ -4,7 +4,8 @@
    anything is saved, since a list changing silently is a scope nobody chose. A
    person is picked from `/search`, as an edge's target is, or named new. A save
    or a delete reloads the page, the rows being the server's drawing of the
-   accounts, and a dialog left without saving opens again as it was. */
+   accounts, and a dialog left without saving opens again as it was. An address
+   naming one, as a person's record screen does, opens it. */
 
 function mountAccount(form) {
   const shown = () => {
@@ -150,4 +151,13 @@ function personOption(glyph, label, take) {
   return option;
 }
 
+/* The dialog an address names, as a person's record screen links it. */
+function openNamedAccount() {
+  const dialog = location.hash.startsWith("#account-") ? document.getElementById(location.hash.slice(1)) : null;
+  if (!dialog?.matches("dialog.account-dialog")) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  dialog.showModal();
+}
+
 document.querySelectorAll("[data-account-form]").forEach(mountAccount);
+openNamedAccount();

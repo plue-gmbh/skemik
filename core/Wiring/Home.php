@@ -8,6 +8,7 @@ use Admin\ActivityController;
 use Admin\Changes;
 use Admin\Colleagues;
 use Admin\ExportController;
+use Admin\FindController;
 use Admin\HomeController;
 use Admin\HouseChanges;
 use Admin\NeedsLook;
@@ -22,8 +23,8 @@ use Storage\Oversights;
 use Support\Zip;
 
 /* The home screen, whose cards show the accounts, keys and languages `Settings`
-   writes, the whole log its Last changed opens, and the export the sidebar's
-   foot opens on every screen. */
+   writes, the whole log its Last changed opens, the search the header opens and
+   the export the sidebar's foot opens on every screen. */
 final readonly class Home
 {
   public function __construct(private Common $common) {}
@@ -35,6 +36,7 @@ final readonly class Home
       Endpoint::Activity => $this->activity()->show($account(), $common->requirePerson(), $common->request),
       Endpoint::ActivityRedact => $this->activity()->redact($common->request, $route->parameter('id')),
       Endpoint::Home => $this->controller()->show($account(), $common->requirePerson(), $common->request),
+      Endpoint::Find => $this->find()->show($account(), $common->requirePerson(), $common->request),
       Endpoint::Export => $this->export($account())->show($account(), $common->requirePerson(), $common->request),
       Endpoint::ExportTake => $this->export($account())->take($common->requirePerson(), $common->request),
     };
@@ -62,6 +64,14 @@ final readonly class Home
       $common->words);
   }
 
+  private function find(): FindController
+  {
+    $common = $this->common;
+    return new FindController($common->search, $common->entities, $common->collections, $common->accounts,
+      $common->errors(), $common->rows, $common->sheet(), $common->profile, $common->frame(), $common->template,
+      $common->words);
+  }
+
   private function activity(): ActivityController
   {
     $common = $this->common;
@@ -75,7 +85,7 @@ final readonly class Home
     return new HomeController($common->frame(), $common->sidebar, $common->settings, $common->csrf,
       $common->template, $common->words, $common->moments, $common->session, $this->needsLook(), $this->changes(),
       new Colleagues($common->accounts, $common->entities, $common->profile, $common->filter, $common->rows,
-        $common->moments, $common->words),
+        $common->collections, $common->moments, $common->words),
       new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts()),
       $common->locales(), $common->backup(),
       $common->files(), $common->errors(), $common->relay, $common->premises);

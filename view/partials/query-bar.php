@@ -9,7 +9,10 @@ declare(strict_types=1);
    A select at its default reads as quietly as the placeholder, so what narrows or
    orders the view stands out. n of total is announced, since typing redraws the
    view where a screen reader does not look. What makes a record stands in the
-   header and not here, since this changes what is seen and nothing else. */
+   header and not here, since this changes what is seen and nothing else. A
+   narrowing the select cannot show, a value it does not offer or more than one
+   parameter as Needs a look links them, stands in its place in words, each
+   taken away by its own link, and the select returns once none is left. */
 
 if (!isset($template)) {
   return;
@@ -22,6 +25,8 @@ foreach ($filters as $filter) {
   $groups[$filter->group][] = $filter;
 }
 $offered = array_map(fn (Admin\Filter $filter): string => $filter->pair(), $filters);
+$single = count($narrowing) === 1 && in_array($chosen, $offered, true);
+$named = $single ? [] : $named;
 $search = $words->get('query.search', ['name' => $collection->name]);
 $descending = str_starts_with($sort, '-');
 $direction = $words->get($descending ? 'query.descending' : 'query.ascending');
@@ -35,12 +40,18 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
   <input type="hidden" name="<?= $template->escape($name) ?>" value="<?= $template->escape($value) ?>"
     data-query-filter>
 <?php endforeach ?>
+<?php if ($named !== []): ?>
+  <ul class="query-narrowed">
+<?php foreach ($named as $each): ?>
+    <li><?= $template->escape($each->word) ?><a href="<?= $template->escape($each->without) ?>"
+      aria-label="<?= $template->escape($words->get('query.unnarrow', ['filter' => $each->word]))
+      ?>"><?= $template->render('partials/icon', ['name' => 'close']) ?></a></li>
+<?php endforeach ?>
+  </ul>
+<?php else: ?>
   <select class="query-filter<?= $chosen === '' ? '' : ' is-on' ?>"
     aria-label="<?= $template->escape($words->get('query.filter')) ?>" data-query-choose>
     <?= $option('', $words->get('query.none'), $chosen === '') ?>
-<?php if ($chosen !== '' && !in_array($chosen, $offered, true)): ?>
-    <?= $option($chosen, urldecode($chosen), true) ?>
-<?php endif ?>
 <?php foreach ($groups as $group => $members): ?>
     <optgroup label="<?= $template->escape($group) ?>">
 <?php foreach ($members as $filter): ?>
@@ -49,6 +60,7 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
     </optgroup>
 <?php endforeach ?>
   </select>
+<?php endif ?>
   <input class="query-search" type="search" name="q" value="<?= $template->escape($parameters['q'] ?? '') ?>"
     placeholder="<?= $template->escape($search) ?>" aria-label="<?= $template->escape($search) ?>" autocomplete="off"
     data-query-search>

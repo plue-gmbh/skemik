@@ -95,6 +95,40 @@ final readonly class QueryBar
     return array_diff_key($request->query, array_flip([...self::FEED, 'in', 'words', 'view']));
   }
 
+  /* Each narrowing parameter in words, the field's name and its values, a closed set's by
+     their word and any other as the address spells it.
+     @param list<Column> $columns
+     @return list<Narrowed> */
+  public function narrowed(Request $request, array $columns): array
+  {
+    $narrowed = [];
+    foreach ($this->narrowing($request) as $parameter => $value) {
+      $column = array_find($columns, fn (Column $column): bool => $column->parameter === $parameter);
+      $values = array_map(fn (string $each): string => $this->valued($column, $parameter, $each),
+        explode(',', $value));
+      $without = http_build_query(array_diff_key($request->query, [$parameter => true, 'page' => true]));
+      $narrowed[] = new Narrowed($this->words->get('query.narrowed', ['field' => match ($parameter) {
+        'status' => $this->words->get('query.status_group'),
+        'locale' => $this->words->get('query.locale_group'),
+        default => $column->label ?? $parameter,
+      }, 'values' => implode(', ', $values)]), $request->path . ($without === '' ? '' : '?' . $without));
+    }
+
+    return $narrowed;
+  }
+
+  private function valued(?Column $column, string $parameter, string $value): string
+  {
+    $status = $parameter === 'status' ? Status::tryFrom($value) : null;
+
+    return match (true) {
+      $status !== null => $this->words->get('status.' . $status->value),
+      $column !== null && $column->field->options !== [] => $this->terms->word($column->field, $value,
+        $this->settings->locales()[0]),
+      default => $value,
+    };
+  }
+
   /**
    * @param list<Column> $columns
    * @return list<Filter> in the order the select groups them

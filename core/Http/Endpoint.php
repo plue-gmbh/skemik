@@ -18,6 +18,7 @@ enum Endpoint
   case Logout;
   case Collection;
   case Search;
+  case Find;
   case Preview;
   case Record;
   case RecordCreate;
@@ -56,6 +57,7 @@ enum Endpoint
   case BackupRestore;
   case BackupDownload;
   case Update;
+  case UpdateCheck;
   case Errors;
   case Checks;
   case Export;

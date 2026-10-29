@@ -138,6 +138,7 @@ final readonly class CollectionController
       ...$this->counted($account, $collection, $query),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
       'filters' => $this->bar->filters($account, $collection, $columns),
+      'named' => $this->bar->narrowed($request, $columns),
       'data' => $this->sheet->data($collection, $columns, $rows, $this->csrf->token()),
       'spine' => $this->dialog->data($collection, $rows)];
   }

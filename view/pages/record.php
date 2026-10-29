@@ -277,8 +277,10 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   'entity' => $entity, 'collection' => $collection, 'writes' => $writes, 'csrf' => $csrf]) ?>
 <?php endif ?>
 
+<?= $template->render('partials/record-account', ['words' => $words, 'held' => $writes ? $held : null,
+  'name' => $row->label, 'images' => $chips['image'] ?? [], 'manages' => $manages]) ?>
 <?= $template->render('partials/record-pointers', ['words' => $words, 'pointers' => $pointers,
-  'pointing' => $pointing, 'held' => $writes ? $held : null]) ?>
+  'pointing' => $pointing]) ?>
 <?php if ($writes && $held === null): ?>
 <?= $template->render('partials/delete-confirm', ['words' => $words, 'collection' => $collection, 'row' => $row,
   'csrf' => $csrf, 'query' => $query, 'pointing' => $pointing]) ?>

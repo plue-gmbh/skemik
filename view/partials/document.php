@@ -40,6 +40,7 @@ if (!isset($template)) {
 <?php endif ?>
 <script src="<?= $template->asset('scripts/query-bar.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/app.js') ?>" defer></script>
+<script src="<?= $template->asset('scripts/header-search.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/prose.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/trash.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/forms.js') ?>" defer></script>

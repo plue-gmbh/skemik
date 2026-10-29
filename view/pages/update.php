@@ -8,7 +8,9 @@ declare(strict_types=1);
    automatically and whether it was a security release, the release that cannot be
    installed with the reason and the copy by hand named, and last the key
    downloads are verified against, which a reader looks up and never acts on.
-   The check is red once a day passed without one (`UpdateCheck::stale`). */
+   The check is red once a day passed without one (`UpdateCheck::stale`), and
+   may be asked for now rather than within the hour, unless a snapshot or an update
+   holds the lock, which the button waits out. */
 
 if (!isset($template)) {
   return;
@@ -27,6 +29,14 @@ if (!isset($template)) {
   <p class="page-note is-refused"><?= $template->escape($words->get($report->again ? 'update.refused_again'
     : 'update.refused', ['version' => $report->refused, 'reason' => $report->reason ?? ''])) ?></p>
 <?php endif ?>
+  <form class="update-check" method="post" action="/settings/update/check">
+    <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+    <button type="submit" class="button-secondary"<?= $busy ? ' disabled' : '' ?>><?= $template->escape(
+      $words->get('update.check_now')) ?></button>
+<?php if ($busy): ?>
+    <p class="page-note"><?= $template->escape($words->get('update.check_busy')) ?></p>
+<?php endif ?>
+  </form>
   <ul class="record-rows">
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('update.check')) ?></span>

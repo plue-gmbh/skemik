@@ -5,26 +5,22 @@ declare(strict_types=1);
 /* The record screen's Points here: what refers to the record, read off the edges
    and never kept, each a link where the reader may open what points. It says
    what stands and never whether a delete is harmless: an account holding the
-   person refuses it whatever points here, and a retention duty is no edge. A
-   work's translations are one row with a link per language, and the count is
-   of records, since each is one more that a delete leaves pointing nowhere.
-   Nothing pointing and no account holding it draws no card at all. */
+   person refuses it whatever points here (`partials/record-account`), and a
+   retention duty is no edge. A work's translations are one row with a link per
+   language, and the count is of records, since each is one more that a delete
+   leaves pointing nowhere; a labelled thing's words in other languages are such
+   links too, drawn round, being one record. A row names its type in the
+   singular, since it is one record. Nothing pointing draws no card at all. */
 
 if (!isset($template)) {
   return;
 }
-if ($pointers === [] && $held === null) {
+if ($pointers === []) {
   return;
 }
 ?>
   <section class="record-card side-card" aria-labelledby="pointers-title">
     <h2 class="side-card-title" id="pointers-title"><?= $template->escape($words->get('record.pointers')) ?></h2>
-<?php if ($held !== null): ?>
-    <p class="side-card-sub"><?= $template->escape($words->get('record.held', ['email' => $held->email])) ?></p>
-<?php endif ?>
-<?php if ($pointers === []): ?>
-    <p class="side-card-sub"><?= $template->escape($words->get('record.no_pointers')) ?></p>
-<?php else: ?>
     <p class="side-card-sub"><?= $template->escape($words->get('record.pointers_count',
       ['n' => (string) $pointing])) ?></p>
     <ul class="record-rows">
@@ -32,8 +28,9 @@ if ($pointers === [] && $held === null) {
   $languages = '';
   foreach ($pointer->locales as $tag => $href) {
     $current = $href === $pointer->href;
-    $languages .= sprintf('<a class="locale-dot%s" href="%s"%s>%s</a>', $current ? ' is-current' : '',
-      $template->escape($href), $current ? ' aria-current="true"' : '', $template->escape($tag));
+    $languages .= sprintf('<a class="locale-dot%s%s" href="%s"%s>%s</a>', $pointer->worded ? ' is-words' : '',
+      $current ? ' is-current' : '', $template->escape($href), $current ? ' aria-current="true"' : '',
+      $template->escape($tag));
   }
   $named = sprintf($languages === '' ? '<span class="record-row-name">%2$s</span>'
     : '<a class="record-row-name" href="%s">%s</a>', $template->escape((string) $pointer->href),
@@ -53,5 +50,4 @@ if ($pointers === [] && $held === null) {
 <?php endif ?>
 <?php endforeach ?>
     </ul>
-<?php endif ?>
   </section>

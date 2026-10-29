@@ -33,7 +33,7 @@ use Support\Json;
    stray quote finds nothing rather than failing. */
 final readonly class Search
 {
-  private const LIMIT = 200;
+  public const LIMIT = 200;
   /* Every word scans its own stretch of the word table, so a search of more would
      cost a stranger's one question more than a page of 200 does. */
   private const WORDS = 20;

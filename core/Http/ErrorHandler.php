@@ -23,8 +23,9 @@ use Support\Words;
 
 /* Domain exceptions as status codes, in one place, for three audiences: a feed
    caller gets the status and one sentence naming the field where there is one, a
-   person the boot failure's page in their chrome language, and `Logger`
-   everything; nobody sees a stack trace. The incident id is the point of the
+   person the boot failure's page in their chrome language, the admin's islands
+   that page's sentence where a refusal has one, and `Logger` everything; nobody
+   sees a stack trace. The incident id is the point of the
    split: six characters on the page and in the log, so *there's an error* is one
    `grep` rather than a reproduction, the support call the hosting margin is made
    of. A logged-out person asking for a page is sent to the login, the next step
@@ -43,7 +44,8 @@ final readonly class ErrorHandler
     /* The one address family whose caller is a machine whatever it sends: a
        reader asking for `.csv` gets its refusal as JSON rather than a page, and
        a refused key as a `401` rather than as the login screen. */
-    $machine = $request->wantsJson() || str_starts_with($request->path, '/feed');
+    $feed = str_starts_with($request->path, '/feed');
+    $machine = $request->wantsJson() || $feed;
     if ($failure instanceof NotAuthenticated && $request->reads() && !$machine) {
       return $this->toLogin($request);
     }
@@ -53,7 +55,13 @@ final readonly class ErrorHandler
     }
     $sentence = $this->sentence($status, $incident, $failure);
     if ($machine) {
-      $detail = $status >= 500 ? $sentence : $failure->getMessage();
+      /* The admin's islands ask in JSON too, for a colleague who reads the sentence; a key's
+         script reads the message it always got. */
+      $detail = match (true) {
+        $status >= 500 => $sentence,
+        $feed => $failure->getMessage(),
+        default => $this->named($failure) ?? $failure->getMessage(),
+      };
 
       return Response::json((new Json())->encode(['error' => $detail, 'incident' => $incident]), $status);
     }
@@ -108,6 +116,13 @@ final readonly class ErrorHandler
   {
     return match (true) {
       $failure instanceof CsrfRefused => $this->words->get('failure.reload'),
+      $failure instanceof UnreadableTime => $failure->zone === null
+        ? $this->words->get('failure.time', ['value' => $failure->value])
+        : $this->words->get('failure.time_skipped', ['value' => $failure->value, 'zone' => $failure->zone]),
+      $failure instanceof ForbiddenTransition => $failure->status === null
+        ? $this->words->get('failure.file_kept', ['field' => $failure->named])
+        : $this->words->get('failure.no_state', ['type' => $this->words->get('type_one.' . $failure->named),
+          'status' => $this->words->get('status.' . $failure->status->value)]),
       $failure instanceof AccountRefused && $failure->held !== null
         => $this->words->get('record.held', ['email' => $failure->held->email]),
       $failure instanceof TargetRequired => $this->words->get('purge.required',

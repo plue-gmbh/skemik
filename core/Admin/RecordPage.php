@@ -23,6 +23,7 @@ use Profile\FieldDefinition;
 use Profile\FieldKind;
 use Profile\Profile;
 use Profile\SchemaOrg;
+use Profile\TypeDefinition;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
@@ -82,7 +83,8 @@ final readonly class RecordPage
       'limit' => Intake::size(Upload::limit()),
       'neighbours' => $this->neighbours($account, $request, $collection, $entity),
       'writes' => array_any($columns, fn (Column $column): bool => $column->editable),
-      'held' => $this->accounts->heldBy($entity->id), 'badge' => $this->badge($account, $collection, $entity),
+      'held' => $this->accounts->heldBy($entity->id), 'manages' => $account->can(Capability::ManageAccounts),
+      'badge' => $this->badge($account, $collection, $entity),
       'labels' => $this->keys->labels(), 'until' => $this->keys->until(),
       'back' => $request->path . ($request->query === [] ? '' : '?' . http_build_query($request->query)),
       'public' => in_array(Status::Published, Status::heldBy($type), true),
@@ -239,9 +241,32 @@ final readonly class RecordPage
       fn (FieldDefinition $edge): bool => $this->schema->propertyName($edge->key) === $predicate);
     $named = (new LocalisedText($type))->shown($subject, $in);
 
+    $records = $this->locales($members, $holder);
+    $words = $records === [] && $type->locale->localises() ? $this->worded($subject, $holder, $type) : [];
+
     return new Pointer(SidebarEntry::glyphOf($subject->type), $this->label->of($named, $type),
-      $this->sheet->state($subject), $holder?->name ?? $type->name, $field?->label ?? $predicate,
-      $holder === null ? null : Rows::address($holder, $subject), $this->locales($members, $holder));
+      $this->sheet->state($subject), $this->words->get('type_one.' . $type->name), $field?->label ?? $predicate,
+      $holder === null ? null : Rows::address($holder, $subject), $records ?: $words, $words !== []);
+  }
+
+  /* A labelled thing's languages, the authored one and each holding words of its own, every one opening
+     the record on its words, since what points here reads it in each of them.
+     @return array<string, string> */
+  private function worded(Entity $subject, ?Collection $holder, TypeDefinition $type): array
+  {
+    $held = (new LocalisedText($type))->locales($subject);
+    if ($holder === null || $held === []) {
+      return [];
+    }
+    $locales = [];
+    foreach ($this->settings->locales() as $locale) {
+      $own = $locale->tag === $subject->locale->tag;
+      if ($own || in_array($locale->tag, $held, true)) {
+        $locales[$locale->tag] = Rows::address($holder, $subject, $own ? '' : 'words=' . $locale->tag);
+      }
+    }
+
+    return $locales;
   }
 
   /* Each translation's address in the house's order of its locales.

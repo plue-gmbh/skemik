@@ -34,7 +34,8 @@ function mountQueryBar(form, mounted) {
     mounted.current = mountIslands();
   };
   form.addEventListener("submit", (event) => { event.preventDefault(); go(); });
-  chosen(form.querySelector("[data-query-choose]"), "[data-query-choose]", (select) => {
+  const choose = form.querySelector("[data-query-choose]");
+  if (choose) chosen(choose, "[data-query-choose]", (select) => {
     form.querySelectorAll("[data-query-filter]").forEach((input) => input.remove());
     new URLSearchParams(select.value).forEach((value, name) => {
       form.append(Object.assign(document.createElement("input"), { type: "hidden", name, value }));
