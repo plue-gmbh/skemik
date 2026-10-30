@@ -6,8 +6,7 @@ declare(strict_types=1);
    collections to the paper; the chrome's L of header and sidebar, the paper
    beside it and the feed panel to its right (`partials/feed-panel`), above the
    paper's content the sentence a screen may open with and the warning that the
-   data folder runs short, the header's version marked while a release cannot be
-   installed automatically (`Admin\Probes`), and at its foot the copyright line,
+   data folder runs short (`Admin\Probes`), and at its foot the copyright line,
    pushed to the bottom where a screen is short. */
 
 if (!isset($template)) {
@@ -18,8 +17,7 @@ ob_start();
 <body class="admin">
 <a class="skip-link" href="#main"><?= $template->escape($words->get('frame.skip')) ?></a>
 <?= $template->render('partials/header', ['words' => $words, 'menu' => $menu, 'own' => $own, 'csrf' => $csrf,
-  'updates' => $account->can(Auth\Capability::RunUpdate), 'blocked' => $update, 'feed' => $feed,
-  'open' => $open, 'sites' => $sites]) ?>
+  'feed' => $feed, 'sites' => $sites]) ?>
 <div class="admin-body">
 <?= $template->render('partials/sidebar', ['words' => $words, 'entries' => $entries, 'open' => $open,
   'locale' => $locale, 'exports' => $account->can(Auth\Capability::ExportHoldings), 'sites' => $sites]) ?>

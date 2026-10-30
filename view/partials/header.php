@@ -3,12 +3,11 @@
 declare(strict_types=1);
 
 /* On every admin page, one row: the menu button on a narrow screen, the mark as
-   the link home and beside it the version, the owner's door to the update screen,
-   marked while a release cannot be installed automatically, the reason being Needs a
-   look's; then the house's own sites (`Storage\Sites`), where the row has room
-   for them, the search, which opens into its field and answers on `/find`, the
-   Feed button and the account. Settings and help are no header
-   items, because each belongs to a screen. The admin has no light/dark
+   the link home; then the house's own sites (`Storage\Sites`), where the row has
+   room for them, the search, which opens into its field and answers on `/find`,
+   the Feed button and the account. Settings, updates and help are no header
+   items, because each belongs to a screen: the version and the door to the
+   update screen are the Settings card's files row. The admin has no light/dark
    switch but three materials, chrome, paper and terminal, each a scope redefining
    the same tokens in `view/style.css`, so a region says its role by its material
    and every component sits right on any ground; the scope sets `color` too, or
@@ -27,14 +26,6 @@ $who = $own === null ? 'p class="account-who"' : 'a class="account-who" href="' 
   <span class="header-brand">
     <a class="header-home" href="/"><?= $template->render('partials/mark', ['size' => 26]) ?><b>Skemik<span
       class="trademark">™</span></b></a>
-<?php if ($updates): $door = $blocked ?? $words->get('header.update') ?>
-    <a class="header-version<?= $blocked === null ? '' : ' is-marked' ?>" href="/settings/update"
-      <?= $open === 'update' ? 'aria-current="page" ' : '' ?>title="<?= $template->escape($door) ?>"><?=
-      $template->escape(Update\Version::APP) ?><span
-      class="visually-hidden"> – <?= $template->escape($door) ?></span></a>
-<?php else: ?>
-    <span class="header-version"><?= $template->escape(Update\Version::APP) ?></span>
-<?php endif ?>
   </span>
   <span class="header-space"></span>
 <?php if ($sites !== []): ?>

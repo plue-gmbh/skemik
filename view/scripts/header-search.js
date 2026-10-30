@@ -1,7 +1,7 @@
-/* The header's search (`view/partials/header.php`) opens into its field and closes once left
-   empty or by its ×, which a phone's field covering the header needs; an empty field asks
-   nothing. On its results, `/find`, the question stands in the field, which the page does not
-   repeat. */
+/* The header's search (`view/partials/header.php`) opens into its field, in the row on every
+   screen size, and closes once left empty or by its ×, which clears a question where a phone
+   has no Escape; an empty field asks nothing. On its results, `/find`, the question stands in
+   the field, which the page does not repeat. */
 function mountHeaderSearch(form) {
   const [button, field] = [form.querySelector("button"), form.querySelector("input")];
   const close = () => (field.value = "", open(false), button.focus());

@@ -24,7 +24,7 @@ function sending(sheet) {
         }
         this.saving = false;
         const clean = this.count === 0 && this.conflicts.length === 0;
-        if (clean && this.moved) return location.replace(this.moved);
+        if (clean && this.moved) return (keepScroll(), location.replace(this.moved));
         this.done = clean;
         this.keepFocus();
         window.setTimeout(() => { this.done = false; }, 1800);
@@ -80,11 +80,15 @@ function sending(sheet) {
         const chip = table.querySelector(`[data-spine="${id}"]`);
         chip && !Object.keys(values).some(isSpine) ? (chip.outerHTML = body.chip) : this.drawSpine(id);
       },
-      /* What the server drew replaces what the island made, keeping its place. */
+      /* What the server drew replaces what the island made, keeping its place; the cell
+         last edited, if it was in there, is its cell in the drawing, or the focus a save
+         gives back would go to the table's first cell and scroll a long page to its top. */
       made(id, body) {
         const drawn = table.querySelector(`[data-record="${id}"]`);
+        const key = drawn.contains(sheet.last) ? sheet.last.closest("[data-field]").dataset.field : null;
         drawn.insertAdjacentHTML("afterend", body.html);
         drawn.remove();
+        if (key) sheet.last = cellOf(body.id, key);
         rows.delete(id);
         rows.set(body.id, { id: body.id, version: body.version, locale: filtered ?? data.locale, label: body.label,
           values: body.values });

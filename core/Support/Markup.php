@@ -14,11 +14,14 @@ namespace Support;
    characters, an image being a field with a description somebody was asked for.
    A link's scheme is the caller's to allow, a link field's where nobody says,
    and a link to a record is `skemik:` and its id, which a slug change leaves
-   alone. A duration given words leaves as *1 month*, and ISO 8601 otherwise. */
+   alone. A fence of ``` lines holds its lines as typed, blank ones too, escaped
+   and never marked. A duration given words leaves as *1 month*, and ISO 8601
+   otherwise. */
 final readonly class Markup
 {
   public const RECORD = 'skemik:';
   private const LINK = '/(?<!!)\[([^\]]+)\]\(([^)\s]+)\)/';
+  private const FENCE = '/^```([^`\n]*)$\n((?:.*?\n)?)```[ \t]*$/ms';
   private const DURATION = '/^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/';
   private const DURATION_UNITS = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'];
 
@@ -46,16 +49,41 @@ final readonly class Markup
     }, $markdown);
   }
 
+  /* The fences are cut out first, since a blank line inside one is no block's end. */
   public function prose(string $markdown): Rendered
+  {
+    $parts = preg_split(self::FENCE, str_replace(["\r\n", "\r"], "\n", $markdown), -1,
+      PREG_SPLIT_DELIM_CAPTURE) ?: [];
+    $blocks = [];
+    foreach (array_chunk($parts, 3) as $chunk) {
+      $blocks[] = $this->blocks($chunk[0]);
+      $blocks[] = isset($chunk[2]) ? $this->fence($chunk[1], $chunk[2]) : '';
+    }
+
+    return new Rendered(implode("\n", array_filter($blocks)));
+  }
+
+  /* The blocks between two fences, split on blank lines, a heading or a list after prose standing alone. */
+  private function blocks(string $text): string
   {
     $blocks = [];
     $spaced = preg_replace(['/^#{1,6} .+$/m', '/^(?!- |\d+\. |> | )(.+)\n(?=- |1\. )/m'],
-      ["\n\n$0\n\n", "$1\n\n"], str_replace(["\r\n", "\r"], "\n", $markdown));
+      ["\n\n$0\n\n", "$1\n\n"], $text);
     foreach (preg_split('/\n{2,}/', trim((string) $spaced)) ?: [] as $block) {
       $blocks[] = $this->block(trim($block));
     }
 
-    return new Rendered(implode("\n", array_filter($blocks)));
+    return implode("\n", array_filter($blocks));
+  }
+
+  /* As CommonMark writes it, the first word a fence names as the code's class, so a highlighter finds it;
+     the code ends with its own line break, or is empty. */
+  private function fence(string $info, string $code): string
+  {
+    $language = explode(' ', trim(str_replace("\t", ' ', $info)), 2)[0];
+    $class = $language === '' ? '' : ' class="language-' . self::escape($language) . '"';
+
+    return '<pre><code' . $class . '>' . self::escape($code) . '</code></pre>';
   }
 
   public function text(string $plain): Rendered

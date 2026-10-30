@@ -85,7 +85,7 @@ final readonly class FieldController
     $this->logged($collection, 'added', array_map(fn (FieldDefinition $field): string => $field->key, $entry));
     $this->session->keep('fielded', $this->words->get('field.added', ['label' => $this->name($entry)]));
 
-    return Response::redirect('/c/' . $collection->slug->value);
+    return $this->backTo($collection, $request);
   }
 
   /* The body is a form's, not JSON: three strings, and nothing to decode into `mixed`. */
@@ -119,7 +119,17 @@ final readonly class FieldController
     $this->logged($collection, 'removed', $leaving);
     $this->session->keep('fielded', $this->words->get('field.removed', ['label' => $this->name($entry)]));
 
-    return Response::redirect('/c/' . $collection->slug->value);
+    return $this->backTo($collection, $request);
+  }
+
+  /* Back to the collection under the query the form carried, read as parameters only, so a view narrowed to
+     drafts or to one language stays narrowed. */
+  private function backTo(Collection $collection, Request $request): Response
+  {
+    parse_str((string) $request->form('back'), $parameters);
+    $back = http_build_query(array_filter($parameters, is_string(...)));
+
+    return Response::redirect('/c/' . $collection->slug->value . ($back === '' ? '' : '?' . $back));
   }
 
   /** @param list<string> $keys the fields, under the word the log keeps for what was done to them */

@@ -17,6 +17,7 @@ use Support\Template;
 use Support\Words;
 use Update\Backup;
 use Update\FileCheck;
+use Update\Version;
 
 /* The overview, decided rather than accumulated: the title, one line of totals,
    six cards and the feed panel. The totals are counted past `Feed\PublicFilter`
@@ -49,6 +50,7 @@ final readonly class HomeController
     private ErrorLog $errors,
     private ?Smtp $relay,
     private Premises $premises,
+    private Probes $probes,
   ) {}
 
   public function show(Account $account, Entity $person, Request $request): Response
@@ -87,7 +89,7 @@ final readonly class HomeController
     return array_filter($cards, fn (?array $card): bool => $card !== null);
   }
 
-  /** @return array<string, string|Health|null> the Settings card's rows, each status row with its health */
+  /** @return array<string, string|bool|Health|null> the Settings card's rows, each status row with its health */
   private function settingsCard(Account $account): array
   {
     $errors = $account->can(Capability::ReadLog);
@@ -98,6 +100,7 @@ final readonly class HomeController
       'link' => $this->premises->loginLink,
       'backups' => $this->backups(), 'backupsHealth' => $this->backupsHealth(),
       'files' => $this->shipped(), 'filesHealth' => $this->shippedHealth(),
+      'updates' => $account->can(Capability::RunUpdate),
       'errors' => $errors ? $this->failing() : null, 'errorsHealth' => $errors ? $this->errorsHealth() : null];
   }
 
@@ -127,9 +130,16 @@ final readonly class HomeController
     return $this->backup->report()?->failed === null ? Health::Ok : Health::Failing;
   }
 
-  /* The Settings card's files row as the daily run last compared them, none before its first run: each kind
-     of difference with its paths, so a release half copied names what is missing. */
-  private function shipped(): ?string
+  /* The Settings card's files row: the release that runs, how the daily run last found its files and the
+     release that could not be installed, which the screen behind the row explains. */
+  private function shipped(): string
+  {
+    return implode(' · ', array_filter(['Skemik ' . Version::APP, $this->compared(), $this->probes->update()]));
+  }
+
+  /* The files as the daily run last compared them, none before its first run: each kind of difference with
+     its paths, so a release half copied names what is missing. */
+  private function compared(): ?string
   {
     $report = $this->files->report();
     if ($report === null || !$report->listed || $report->differing() === []) {
@@ -143,10 +153,14 @@ final readonly class HomeController
       . $kind, ['paths' => implode(', ', $paths)]), array_keys($kinds), $kinds));
   }
 
-  /* No list is no state to judge, as a `-dev` install carries none. */
+  /* A release that cannot be installed outranks the files' state, since the row is the update screen's door.
+     No list is no state to judge, as a `-dev` install carries none. */
   private function shippedHealth(): ?Health
   {
     $report = $this->files->report();
+    if ($this->probes->update() !== null) {
+      return Health::Blocked;
+    }
     if ($report === null || !$report->listed) {
       return null;
     }

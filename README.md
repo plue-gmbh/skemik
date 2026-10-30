@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.11](https://img.shields.io/badge/version-1.0.11-1f6feb)
+![Version 1.0.12](https://img.shields.io/badge/version-1.0.12-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ tool to design first, no column called `Date2`. What an organisation keeps
 stands there once. Everything that works with it reads it there and writes back
 there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.11)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.12)
 
 The demo install's events, read with no key:
 
@@ -466,11 +466,11 @@ current, and the address answers *being updated* for the seconds of the swap.
 
 - **Where it cannot run**, the tree not PHP's to write on a host where the
   files belong to the FTP account, an extension missing, the data folder short
-  of room, or a release refused, the header's version is marked on every page
-  for the owner and Needs a look says the copy by hand is theirs. The update
-  screen behind the version says when the install last checked, what it
-  installed and whether that was a security release, or what it could not and
-  why.
+  of room, or a release refused, the Settings card's files row is marked on
+  the home screen for the owner and Needs a look says the copy by hand is
+  theirs. The update screen behind that row says when the install last
+  checked, what it installed and whether that was a security release, or what
+  it could not and why.
 
 **By hand, updating is copying the next release over the last**, `config.php`
 left alone and the data folder untouched; take a snapshot on the backups screen
@@ -619,9 +619,10 @@ draft, in review, published or archived. A published record may carry a window.
 While its start lies ahead the admin shows it as scheduled, it is read from that
 minute with no job having run, and it is read no longer once the window's end
 has passed. Any cache between may keep what a stranger reads for a minute, so a
-record taken offline can still be served for sixty seconds. `/robots.txt` sends
-every crawler away, from the feed's pages too: a search engine should find the
-organisation's website.
+record taken offline can still be served for sixty seconds. `/robots.txt` lets
+every robot read the feed and the media and keeps it out of the rest, so an
+assistant asked to read a record may; every answer says `noindex`, so a search
+engine finds the organisation's website and not the feed.
 
 `/feed`, the smallest document the address answers, carries the install's
 `dateModified`, so one cheap request says whether a frontend's copies still
@@ -703,10 +704,11 @@ stand in a `Role` around the target, the one class that declares them.
 
 Text is Markdown and only Markdown, so a heading is a heading and not a guess
 from blank lines. The subset is headings, `- ` and `1. ` lists, `> ` quotes,
-paragraphs, inline code, bold, italic and links: no fenced code, no tables, a
-line ending in two spaces breaks the line and any other line break inside a
-paragraph is a space. A heading is the level written, `##` an `<h2>`, never
-shifted: the record's name is the page's `<h1>`, so a body starts at `##`. A
+paragraphs, inline code, code fenced between lines of three backticks and kept
+as typed, bold, italic and links: no tables, a line ending in two spaces breaks
+the line and any other line break inside a paragraph is a space. A heading is
+the level written, `##` an `<h2>`, never shifted: the record's name is the
+page's `<h1>`, so a body starts at `##`. A
 consumer renders it, twenty lines for headings, paragraphs and links, or asks
 `?render=html` on any read and gets every text rendered at every depth by the
 renderer the `.html` uses, a duration too in the route's language, `P1M` as *1

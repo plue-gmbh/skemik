@@ -88,7 +88,7 @@ final readonly class Home
         $common->collections, $common->moments, $common->words),
       new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts()),
       $common->locales(), $common->backup(),
-      $common->files(), $common->errors(), $common->relay, $common->premises);
+      $common->files(), $common->errors(), $common->relay, $common->premises, $common->probes());
   }
 
   private function needsLook(): NeedsLook

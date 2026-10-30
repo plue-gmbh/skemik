@@ -4,7 +4,7 @@
    forms; this narrows the list as somebody types, sends a field's switch as it
    is flipped and its move as one `PATCH`, and shows the removal's confirmation
    only once it was asked for. A change redraws the page, since the columns are
-   the server's drawing of the collection. */
+   the server's drawing of the collection, where it was scrolled. */
 
 /* A field opened from Fields hangs where Fields does, since opening it closes the list it was in. */
 function openFieldPopover(trigger) {
@@ -21,7 +21,7 @@ function openFieldPopover(trigger) {
       ...(feed ? { feed: feed.checked ? "1" : "0" } : {}) });
     const response = await fetch(form.dataset.fieldEdit, { method: "PATCH", body,
       headers: { "X-CSRF-Token": form.dataset.csrf, Accept: "application/json" } });
-    if (response.ok) return location.reload();
+    if (response.ok) return (keepScroll(), location.reload());
     form.querySelector("[data-field-error]").textContent = (await response.json()).error ?? "";
   };
   form?.addEventListener("change", () => send());

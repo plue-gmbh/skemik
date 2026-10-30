@@ -16,7 +16,6 @@ function mountSheet(root) {
   const isNew = (id) => id.startsWith("new-");
   const filtered = new URLSearchParams(location.search).get("locale");
   let made = 0;
-  let last = null;
   const loaded = new Map();
   const cellOf = (id, key) => table.querySelector(`[data-record="${id}"] [data-field="${key}"]`);
   const fieldOf = (key) => data.fields.find((field) => field.key === key);
@@ -28,7 +27,7 @@ function mountSheet(root) {
   const original = (id, key) => (isSpine(key) ? spineData.rows[id][key.slice(6)] : rows.get(id).values[key]);
   const chipOf = (id) => document.querySelector(`[data-spine="${id}"]`);
   const sheet = { table, data, spineData, rows, loaded, wordsIn, dated, filtered, isNew, cellOf, fieldOf, same, isSpine,
-    chipOf };
+    chipOf, last: null };
 
   const app = Vue.createApp({
     template: "#save-bar-template",
@@ -97,7 +96,7 @@ function mountSheet(root) {
       close() {
         const { id, field, cell, all } = this.editing;
         this.editing = null;
-        last = cell;
+        sheet.last = cell;
         return { id, key: field.key, cell, all };
       },
       commit(value, move) {
@@ -125,7 +124,7 @@ function mountSheet(root) {
         this.draw(id, key);
       },
       /* A prose field is its own textarea: only its mark follows, and a discard puts
-         its text back, said as an `input` so its height and its preview follow; only
+         its text back, said as an `input` so its height follows; only
          where the text differs, since the event comes back here as a change. */
       draw(id, key) {
         const cell = cellOf(id, key);
@@ -218,7 +217,7 @@ function mountSheet(root) {
         this.$nextTick(() => {
           if (document.activeElement !== document.body) return;
           (document.querySelector(".save-bar button:not(:disabled)")
-            ?? (last?.isConnected ? last : table).querySelector("[data-edit]"))?.focus();
+            ?? (sheet.last?.isConnected ? sheet.last : table).querySelector("[data-edit]"))?.focus();
         });
       },
     },

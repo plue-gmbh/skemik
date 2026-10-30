@@ -1,28 +1,14 @@
 /* A Markdown field's help on the record screen (`view/pages/record.php`): the
-   marks put in or taken out at the cursor, a web link, Insert link, and a preview
-   beside the field. The preview is drawn by the server, since the renderer the
-   `.html` uses is PHP's and a second one here would disagree with it some day.
-   Each tool puts its text in through an `input` event, so the save bar and the
-   preview see it as typing. `view/scripts/app.js` owns what every screen shares
-   — `popover`, `focusField`, `toast`, `fill`. */
-
-const previews = new WeakMap();
-
-/* The preview of what the textarea holds, or of the authored words it falls back
-   to when empty; a reply to an earlier text than the field's is dropped. */
-function preview(area) {
-  const shown = area.closest(".record-prose-edit")?.querySelector("[data-preview]");
-  if (!shown) return;
-  const text = () => area.value || (area.dataset.prose === "authored" ? area.placeholder : "");
-  window.clearTimeout(previews.get(area));
-  previews.set(area, window.setTimeout(async () => {
-    const sent = text();
-    const csrf = JSON.parse(document.getElementById("sheet-data").textContent).csrf;
-    const answer = await fetch("/preview", { method: "POST", body: sent,
-      headers: { "Content-Type": "text/markdown; charset=utf-8", "X-CSRF-Token": csrf } }).catch(() => null);
-    if (answer?.ok && sent === text()) shown.innerHTML = await answer.text();
-  }, 300));
-}
+   marks put in or taken out at the cursor, code fencing the lines where the
+   selection spans more than one, a web link and Insert link, in a bar at
+   the top of the field's own frame, since they belong to the text and to nothing
+   beside it. No preview
+   stands beside the field, so the text has the width while it is typed; what it
+   renders as is the read mode's, drawn by the server after a save, since the
+   renderer the `.html` uses is PHP's and a second one here would disagree with it
+   some day. Each tool puts its text in through an `input` event, so the save bar
+   sees it as typing. `view/scripts/app.js` owns what every screen shares —
+   `popover`, `focusField`, `toast`, `fill`. */
 
 const MARKS = { heading: ["## ", /^#{1,6} /], quote: ["> ", /^> ?/], bold: ["**"], italic: ["*"], code: ["`"] };
 
@@ -65,17 +51,33 @@ function wrap(area, marks) {
   area.setSelectionRange(at + n, until + n);
 }
 
+/* A selection over more than one line is fenced whole, the fence on lines of its
+   own, and unfenced again where the lines around it are a bare fence. */
+function fence(area) {
+  const [value, from, to] = [area.value, area.selectionStart, area.selectionEnd];
+  const start = from === 0 ? 0 : value.lastIndexOf("\n", from - 1) + 1;
+  const stop = value.indexOf("\n", to);
+  const end = stop === -1 ? value.length : stop;
+  const lines = value.slice(start, end);
+  if (/(^|\n)```\n$/.test(value.slice(0, start)) && /^\n```(\n|$)/.test(value.slice(end))) {
+    return area.setRangeText(lines, start - 4, end + 4, "select");
+  }
+  area.setRangeText("```\n" + lines + "\n```", start, end, "select");
+  area.setSelectionRange(start + 4, start + 4 + lines.length);
+}
+
 function mark(button) {
   const area = button.closest("[data-field]").querySelector("[data-prose]");
   const [marks, pattern] = MARKS[button.dataset.mark];
-  pattern ? prefix(area, marks, pattern) : wrap(area, marks);
+  const spans = area.value.slice(area.selectionStart, area.selectionEnd).includes("\n");
+  button.dataset.mark === "code" && spans ? fence(area) : pattern ? prefix(area, marks, pattern) : wrap(area, marks);
   area.dispatchEvent(new Event("input", { bubbles: true }));
   focusField(area, button);
 }
 
 /* A web link around the selection, its address asked for; the address stands as
    the words where nothing is selected. The renderer allows the scheme, so one it
-   refuses shows as plain words in the preview. */
+   refuses shows as plain words once read. */
 function linkWeb(button, words) {
   const area = button.closest("[data-field]").querySelector("[data-prose]");
   const [from, to] = [area.selectionStart, area.selectionEnd];
@@ -156,5 +158,3 @@ document.addEventListener("click", (event) => {
   if (trigger.dataset.link !== undefined) linkWeb(trigger, words);
   if (trigger.dataset.linkInsert !== undefined) insertLink(trigger, words);
 });
-
-document.addEventListener("input", (event) => event.target.matches("[data-prose]") && preview(event.target));

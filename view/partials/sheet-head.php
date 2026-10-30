@@ -24,10 +24,10 @@ $state = $words->get($column->feed ? 'sheet.public' : 'sheet.internal');
 <th scope="col" class="sheet-field<?= $joined ? ' is-joined' : '' ?>"<?= $sorted === null ? '' : ' aria-sort="'
   . $sorted . '"' ?>><button type="button" class="sheet-head" aria-haspopup="dialog"
   data-field-popover="field-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
-  ['kind' => $column->field->kind])) ?><?= $template->escape($column->label) ?><?php if ($column->feed): ?><span
-  class="public-mark" title="<?= $template->escape($state) ?>"><?= $template->render('partials/icon',
-  ['name' => 'unlocked']) ?></span><?php endif ?><?php if ($sorted !== null): ?><?= $template->render('partials/icon',
-  ['name' => $sorted]) ?><?php endif ?><?php if ($names !== ''): $granted = $words->get('grant.here',
+  ['words' => $words, 'kind' => $column->field->kind])) ?><?= $template->escape($column->label) ?><?php
+  if ($column->feed): ?><span class="public-mark" title="<?= $template->escape($state) ?>"><?= $template->render(
+  'partials/icon', ['name' => 'unlocked']) ?></span><?php endif ?><?php if ($sorted !== null): ?><?= $template->render(
+  'partials/icon', ['name' => $sorted]) ?><?php endif ?><?php if ($names !== ''): $granted = $words->get('grant.here',
   ['names' => $names]) ?><span class="grant-mark" title="<?= $template->escape($granted) ?>"
   ><?= $template->render('partials/glyph', ['name' => 'key']) ?></span><span
   class="visually-hidden">, <?= $template->escape($granted) ?></span><?php endif ?><span

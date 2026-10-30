@@ -41,41 +41,12 @@ function glyphMark(name) {
   return mark;
 }
 
-/* A select that loads an address moves on a choice and not on a step: a closed
-   select walked with the arrow keys reports each step as a change in some
-   browsers, which would load a page per step, so a choice made by keyboard waits
-   for Enter or for focus to leave. The page it loads gives focus back to it. */
-function chosen(select, selector, act) {
-  let [stepped, held] = [false, select.value];
-  const take = () => {
-    stepped = false;
-    if (select.value === held) return;
-    held = select.value;
-    try { sessionStorage.setItem("refocus", selector); } catch { /* private window */ }
-    act(select);
-  };
-  select.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && stepped) return (event.preventDefault(), take());
-    stepped ||= event.key.length === 1 || /^(Arrow|Page|Home|End)/.test(event.key);
-  });
-  select.addEventListener("change", () => stepped || take());
-  select.addEventListener("blur", () => stepped && take());
-}
-
-function refocus() {
-  let kept = null;
-  try {
-    kept = sessionStorage.getItem("refocus");
-    sessionStorage.removeItem("refocus");
-  } catch { kept = null; }
-  if (kept) document.querySelector(kept)?.focus();
-}
-
 /* Read is the record screen's default and editing is entered on intent. Back
    from editing after a save, the page is read afresh, since the read view is the
    server's drawing of what is now stored. A copy just made arrives at `#edit`,
    opening in editing once, so a reload reads it. A language chosen loads its
-   address, as a query bar's choice does. */
+   address, as a query bar's choice does, and at `#edit` where editing was open,
+   since the words of the other language are what was being edited. */
 function mountRecord(screen, mounted) {
   const [read, edit] = [screen.querySelector("[data-record-read]"), screen.querySelector("[data-record-edit]")];
   const modes = screen.querySelectorAll("[data-record-mode]");
@@ -95,7 +66,10 @@ function mountRecord(screen, mounted) {
     show("edit");
   }
   const words = screen.querySelector("[data-words-select]");
-  if (words) chosen(words, "[data-words-select]", (select) => location.assign(select.value));
+  if (words) {
+    chosen(words, "[data-words-select]", (select) => location.assign(select.value + (edit?.hidden === false
+      ? "#edit" : "")));
+  }
   edit?.addEventListener("input", (event) => event.target.matches("[data-prose]") && grow(event.target));
 }
 
@@ -280,3 +254,4 @@ document.querySelectorAll("[data-query-bar]").forEach((form) => mountQueryBar(fo
 document.querySelectorAll("[data-record-screen]").forEach((screen) => mountRecord(screen, mounted));
 focusField(document.querySelector("[data-autofocus]"));
 refocus();
+restoreScroll();

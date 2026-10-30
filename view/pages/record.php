@@ -10,6 +10,8 @@ declare(strict_types=1);
    replaces, refused here rather than resisted later. A field that is not prose
    opens the table's own editor (`partials/cell-editor`), one implementation and
    not two, and the type says which field is prose, so no install configures it.
+   Every editable field's name is a label for its cell or textarea, so a click on
+   the name opens the field, prose or not.
    The words locale is `words` beside `in`, so a link and the reload after a save
    keep it; each option says Words, since on a type that also forks the Languages
    card offers a record of its own in the same locales, and names the language
@@ -69,9 +71,10 @@ $back = '/c/' . $collection->slug->value . ($query === '' ? '' : '?' . $query);
 $feedMark = fn (Admin\Column $column): string => !$column->feed ? '' : '<span class="public-mark" title="'
   . $template->escape($words->get('sheet.public')) . '">' . $template->render('partials/icon', ['name' => 'unlocked'])
   . '</span><span class="visually-hidden">, ' . $template->escape($words->get('sheet.public')) . '</span>';
+$term = fn (Admin\Column $column): string => ' title="' . $template->escape($column->term()) . '"';
 $line = fn (Admin\FieldBlock $block, Admin\Column $column): string => sprintf(
-  '<div class="record-line"><dt>%s%s</dt><dd>%s</dd></div>', $template->escape($block->labelOf($column)),
-  $feedMark($column), $row->cells[$column->field->key]);
+  '<div class="record-line"><dt%s>%s%s</dt><dd>%s</dd></div>', $term($column),
+  $template->escape($block->labelOf($column)), $feedMark($column), $row->cells[$column->field->key]);
 $tool = function (?string $href, string $icon, string $word, string $end) use ($template, $words): string {
   $name = $template->escape($words->get($word));
   $drawn = $template->render('partials/icon', ['name' => $icon]);
@@ -173,7 +176,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php foreach ($parts as $index => ['kind' => $part, 'block' => $block, 'headed' => $headed]): ?>
 <?php if ($part === 'figures'): foreach ($block->columns as $each): ?>
     <section class="record-pictures">
-      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
+      <h2 class="record-label"<?= $term($each) ?>><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
       <div>
 <?php foreach ($chips[$each->field->key] as $chip): ?>
         <figure class="record-figure">
@@ -192,7 +195,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
     </section>
 <?php endforeach; elseif ($part === 'prose'): foreach ($block->columns as $each): ?>
     <section class="record-prose">
-      <h2 class="record-label"><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
+      <h2 class="record-label"<?= $term($each) ?>><?= $template->escape($each->label) ?><?= $feedMark($each) ?></h2>
       <div lang="<?= $template->escape($shownIn) ?>"><?= $prose[$each->field->key] ?></div>
     </section>
 <?php endforeach; else: ?>
@@ -228,15 +231,10 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 <?php if ($column->editable && $column->prose()): $markdown = $column->field->kind === FieldKind::Markdown ?>
       <section class="record-prose-edit<?= $markdown ? ' is-markdown' : '' ?>"
         data-field="<?= $template->escape($key) ?>" id="edit-<?= $template->escape($key) ?>">
-        <label class="record-label record-edit-label"
+        <label class="record-label record-edit-label"<?= $term($column) ?>
           for="prose-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
-          ['kind' => $column->field->kind])) ?><?= $template->escape($column->label) ?><?= $markdown
+          ['words' => $words, 'kind' => $column->field->kind])) ?><?= $template->escape($column->label) ?><?= $markdown
           ? ' · Markdown' : '' ?><?= $feedMark($column) ?></label>
-<?php $fallback = $locale === null ? '' : (string) $authored->props->string($key) ?>
-        <textarea id="prose-<?= $template->escape($key) ?>" class="record-textarea"
-          lang="<?= $template->escape($shownIn) ?>" data-prose<?= $fallback === '' ? '' : '="authored"'
-          ?> placeholder="<?= $template->escape($fallback === '' ? '—' : $fallback) ?>"><?= $template->escape(
-          (string) $edit->entity->props->string($key)) ?></textarea>
 <?php if ($markdown): ?>
         <div class="record-prose-tools"><?php foreach (['heading' => 'data-mark="heading"',
           'bold' => 'data-mark="bold"', 'italic' => 'data-mark="italic"', 'quote' => 'data-mark="quote"',
@@ -245,20 +243,24 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
           $said = $template->escape($words->get('record.' . $word)) ?><button type="button" class="button-quiet"
           title="<?= $said ?>" <?= $marked ?>><?= $template->render('partials/icon', ['name' => $icon]) ?><span
           class="visually-hidden"><?= $said ?></span></button><?php endforeach ?></div>
-        <div class="record-preview record-prose" lang="<?= $template->escape($shownIn) ?>" data-preview role="group"
-          aria-label="<?= $template->escape($words->get('record.preview')) ?>"><?= $prose[$key] ?? '' ?></div>
 <?php endif ?>
+<?php $fallback = $locale === null ? '' : (string) $authored->props->string($key) ?>
+        <textarea id="prose-<?= $template->escape($key) ?>" class="record-textarea"
+          lang="<?= $template->escape($shownIn) ?>" data-prose<?= $fallback === '' ? '' : '="authored"'
+          ?> placeholder="<?= $template->escape($fallback === '' ? '—' : $fallback) ?>"><?= $template->escape(
+          (string) $edit->entity->props->string($key)) ?></textarea>
       </section>
 <?php else: ?>
+<?php $opens = $column->editable && !$entity->keeps($key) ?>
       <div class="record-line is-edit" id="edit-<?= $template->escape($key) ?>">
-        <span class="record-edit-label"
-          id="label-<?= $template->escape($key) ?>"><?= trim($template->render('partials/kind',
-          ['kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column)) ?><?= $feedMark($column)
-          ?></span>
-<?php if ($column->editable && !$entity->keeps($key)): ?>
+        <<?= $opens ? 'label for="cell-' . $template->escape($key) . '"' : 'span' ?> class="record-edit-label"<?=
+          $term($column) ?>><?= trim($template->render('partials/kind',
+          ['words' => $words, 'kind' => $column->field->kind])) ?><?= $template->escape($block->labelOf($column))
+          ?><?= $feedMark($column) ?></<?= $opens ? 'label' : 'span' ?>>
+<?php if ($opens): ?>
         <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"
           data-field="<?= $template->escape($key) ?>"<?= $column->kindMarks($edit->entity) ?>><button type="button"
-          class="cell" data-edit aria-labelledby="label-<?= $template->escape($key) ?>"><span
+          class="cell" id="cell-<?= $template->escape($key) ?>" data-edit><span
           class="cell-shown"><?= $edit->cells[$key] ?></span></button></span>
 <?php else: ?>
         <span class="sheet-cell kind-cell-<?= $template->escape($kind) ?>"<?= $column->kindMarks($edit->entity) ?>><span

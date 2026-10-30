@@ -27,7 +27,7 @@ final readonly class Dispatch
         => (new Login($this->common))->answer($route),
       Endpoint::Home, Endpoint::Find, Endpoint::Activity, Endpoint::ActivityRedact, Endpoint::Export,
         Endpoint::ExportTake => (new Home($this->common))->answer($route),
-      Endpoint::Collection, Endpoint::Search, Endpoint::Preview, Endpoint::Record, Endpoint::RecordCreate,
+      Endpoint::Collection, Endpoint::Search, Endpoint::Record, Endpoint::RecordCreate,
         Endpoint::RecordPatch, Endpoint::RecordTranslation, Endpoint::RecordDuplicate, Endpoint::RecordLink,
         Endpoint::RecordUnlink => $records->records($route),
       Endpoint::Trash, Endpoint::RecordDelete, Endpoint::RecordRestore, Endpoint::RecordPurge,

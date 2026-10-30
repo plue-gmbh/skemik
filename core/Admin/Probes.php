@@ -74,12 +74,12 @@ final readonly class Probes
       : $this->words->get('frame.space', ['free' => (string) intdiv($free, 1_000_000)]);
   }
 
-  /* The sentence behind the header's mark, or null while every release could be installed. */
+  /* The sentence the Settings card's files row is marked by, or null while every release could be installed. */
   public function update(): ?string
   {
     $refused = $this->updates->report()->refused;
 
-    return $refused === null ? null : $this->words->get('header.update_blocked', ['version' => $refused]);
+    return $refused === null ? null : $this->words->get('home.update_blocked', ['version' => $refused]);
   }
 
   /* A marker older than a restore can take was left by one that died, and leaves. */

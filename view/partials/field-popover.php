@@ -9,7 +9,8 @@ declare(strict_types=1);
    leaves is the house's and switched here; its name, key and kind are the type's
    and only shown. Remove names the grants it breaks, since their rules would fail
    closed and say nothing, and a † has no such button, since the collection could
-   not hold its type without it. */
+   not hold its type without it. Its form carries the screen's query, so the view
+   comes back as it was narrowed. */
 
 if (!isset($template)) {
   return;
@@ -70,6 +71,7 @@ $grants = !isset($badges[$key]) ? ''
 <?php if ($entry->removable): ?>
   <form class="field-remove" method="post" action="<?= $template->escape($action) ?>/remove">
     <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+    <input type="hidden" name="back" value="<?= $template->escape(http_build_query($parameters)) ?>">
     <button type="button" class="button-quiet is-danger"
       data-field-confirm><?= $template->escape($words->get('field.remove', ['label' => $entry->name,
       'collection' => $collection->name])) ?></button>
@@ -80,8 +82,7 @@ $grants = !isset($badges[$key]) ? ''
       <p class="popover-hint is-warning"><?= $template->escape($words->get('field.remove_breaks',
         ['names' => implode(', ', array_keys($breaks))])) ?></p>
 <?php endif ?>
-      <button type="submit"
-        class="button-quiet is-danger"><?= $template->escape($words->get('field.remove_now')) ?></button>
+      <button type="submit" class="button-danger"><?= $template->escape($words->get('field.remove_now')) ?></button>
     </div>
   </form>
 <?php endif ?>

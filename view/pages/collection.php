@@ -61,11 +61,11 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
     </div>
 <?= $switch(true) ?>
 <?= $template->render('partials/fields', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
-  'badges' => $badges, 'fields' => $fields, 'offers' => $offers, 'csrf' => $csrf]) ?>
+  'badges' => $badges, 'fields' => $fields, 'offers' => $offers, 'csrf' => $csrf, 'parameters' => $parameters]) ?>
 <?php foreach ($columns as $column): ?>
 <?= $template->render('partials/field-popover', ['words' => $words, 'collection' => $collection, 'column' => $column,
   'entry' => $entries[$column->field->key] ?? null, 'badges' => $badges, 'public' => $public, 'csrf' => $csrf,
-  'back' => $back, 'until' => $until]) ?>
+  'back' => $back, 'until' => $until, 'parameters' => $parameters]) ?>
 <?php endforeach ?>
   </header>
 <?php if ($uploading): ?>

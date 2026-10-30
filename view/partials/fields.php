@@ -9,7 +9,8 @@ declare(strict_types=1);
    every field the type still offers, a value object one line with its count of
    fields. Every line stands beside its schema.org name, so a field has it
    before it exists. The offers are one form's submit buttons, so a field is
-   added without a script; the script only narrows the list
+   added without a script, and the form carries the screen's query, so the view
+   comes back as it was narrowed; the script only narrows the list
    (`view/scripts/fields.js`). */
 
 if (!isset($template)) {
@@ -24,6 +25,7 @@ $search = $words->get('field.search', ['n' => (string) (count($columns) + count(
   <<?= $holder ?>>
 <?php if ($fields): ?>
     <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+    <input type="hidden" name="back" value="<?= $template->escape(http_build_query($parameters)) ?>">
 <?php endif ?>
     <input class="popover-input" type="search" autocomplete="off" data-field-search
       placeholder="<?= $template->escape($search) ?>" aria-label="<?= $template->escape($search) ?>">
@@ -33,7 +35,8 @@ $search = $words->get('field.search', ['n' => (string) (count($columns) + count(
   $names = isset($badges[$key]) ? $badges[$key]->names() : '' ?>
       <button type="button" class="option" aria-haspopup="dialog"
         data-field-popover="field-<?= $template->escape($key) ?>"
-        data-field-carried><?= trim($template->render('partials/kind', ['kind' => $column->field->kind]))
+        data-field-carried><?= trim($template->render('partials/kind', ['words' => $words,
+        'kind' => $column->field->kind]))
         ?><span><?= $template->escape($column->label) ?></span><?php if ($column->feed): ?><span class="public-mark"
         title="<?= $template->escape($words->get('sheet.public')) ?>"><?= $template->render('partials/icon',
         ['name' => 'unlocked']) ?></span><span
@@ -45,7 +48,7 @@ $search = $words->get('field.search', ['n' => (string) (count($columns) + count(
 <?php endforeach ?>
 <?php foreach ($offers as $offer): ?>
       <button type="submit" class="option is-offer" name="key" value="<?= $template->escape($offer->key) ?>"
-        data-field-offer><?= trim($template->render('partials/kind', ['kind' => $offer->kind]))
+        data-field-offer><?= trim($template->render('partials/kind', ['words' => $words, 'kind' => $offer->kind]))
         ?><span><?= $template->escape($offer->label) ?><?= $offer->fields > 1
           ? ' · ' . $template->escape($words->get('field.whole', ['n' => (string) $offer->fields])) : '' ?><?=
           $offer->computed ? ' · ' . $template->escape($words->get('field.computed')) : '' ?></span><span

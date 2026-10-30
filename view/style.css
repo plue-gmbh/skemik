@@ -184,8 +184,7 @@ a {
   a:not([class]):hover,
   .login-again:hover,
   .record-back:hover,
-  a.record-row-name:not(:has(+ .record-row-locales)):hover,
-  a.header-version:hover {
+  a.record-row-name:not(:has(+ .record-row-locales)):hover {
     text-decoration: underline;
   }
 }
@@ -540,6 +539,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   padding: 0 18px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -1079,6 +1079,10 @@ h2#home-needs_look ~ .home-empty {
 
 .change-what.is-failing {
   color: var(--status-error);
+}
+
+.change-what.is-blocked {
+  color: var(--status-warning);
 }
 
 .account-row,
@@ -2285,8 +2289,18 @@ a.option {
 .record-prose p,
 .record-prose ul,
 .record-prose ol,
+.record-prose pre,
 .record-prose blockquote {
   margin: 0 0 10px;
+}
+
+.record-prose pre {
+  padding: 8px 10px;
+  overflow-x: auto;
+  border-radius: var(--radius-medium);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
 }
 
 .record-prose h1,
@@ -2399,6 +2413,7 @@ a.chip {
   align-items: center;
   gap: 8px;
   color: var(--text-secondary);
+  cursor: default;
 }
 
 .record-form .sheet-cell {
@@ -2476,7 +2491,12 @@ a.chip {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 6px;
-  margin: 2px 0 10px;
+  margin: 4px 0 0;
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-bottom: 0;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: var(--surface-sunken);
 }
 
 .record-prose-tools .button-quiet {
@@ -2492,13 +2512,8 @@ a.chip {
   }
 }
 
-.record-preview > :first-child {
-  margin-top: 0;
-}
-
 .record-prose-edit.is-markdown {
-  grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "label area preview" ". tools preview";
+  grid-template-areas: "label tools" ". area";
 }
 
 .record-prose-edit.is-markdown > .record-label {
@@ -2507,20 +2522,14 @@ a.chip {
 
 .record-prose-edit.is-markdown > .record-textarea {
   grid-area: area;
+  min-height: 240px;
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .record-prose-edit.is-markdown > .record-prose-tools {
   grid-area: tools;
-}
-
-.record-preview {
-  grid-area: preview;
-  max-width: none;
-  min-height: 120px;
-  margin: 4px 0 0 18px;
-  padding: 12px 14px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-large);
 }
 
 .side-card-title {
@@ -3172,6 +3181,11 @@ a.cell {
   font-weight: 500;
 }
 
+.button-quiet.is-grant[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--hue-violet) 22%, transparent);
+  color: var(--text);
+}
+
 .grant-error:empty {
   display: none;
 }
@@ -3435,26 +3449,6 @@ a.cell {
   color: var(--hue-violet);
 }
 
-.header-version {
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.header-version[aria-current="page"] {
-  color: var(--accent);
-}
-
-.header-version.is-marked {
-  color: var(--status-warning);
-}
-
-.header-version.is-marked::after {
-  content: " !";
-}
-
 .sidebar-tools {
   display: flex;
   gap: 6px;
@@ -3613,14 +3607,18 @@ a.cell {
   }
 
   .header-search.is-open {
-    position: absolute;
-    inset: 10px 12px;
-    z-index: 1;
+    flex: 1;
+    min-width: 0;
   }
 
   .header-search.is-open input {
     flex: 1;
-    width: auto;
+    width: 0;
+    min-width: 0;
+  }
+
+  .header:has(.header-search.is-open) .header-space {
+    display: none;
   }
 
   .sidebar-sites {
@@ -3723,11 +3721,7 @@ a.cell {
 
   .record-prose-edit.is-markdown {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "label" "area" "tools" "preview";
-  }
-
-  .record-preview {
-    margin: 12px 0 0;
+    grid-template-areas: "label" "tools" "area";
   }
 
   .view-menu {
@@ -4085,10 +4079,6 @@ a.cell {
 @media (max-width: 369px) {
   .header-brand {
     align-items: center;
-  }
-
-  .header-version {
-    margin-left: 4px;
   }
 
   .header-home b {
@@ -5246,4 +5236,8 @@ button.spine-chip {
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--border-hairline);
+}
+
+.field-remove .button-danger {
+  margin-top: 10px;
 }

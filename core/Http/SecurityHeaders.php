@@ -13,7 +13,10 @@ namespace Http;
    and never with credentials: an anonymous reading is what `curl` fetches anyway,
    and a token is sent only because the page put it there. The admin sends no
    CORS header, which keeps its cookie same-origin. A per-install origin allowlist
-   is refused: a wrong value stays invisible until a frontend breaks in a browser. */
+   is refused: a wrong value stays invisible until a frontend breaks in a browser.
+   Every answer says `noindex`, the feed's too, since `robots.txt` lets a robot
+   read the feed and a page a crawler may not fetch can still be listed by its
+   address: the organisation's website is what a search should find. */
 final readonly class SecurityHeaders
 {
   private const ADMIN = "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self';"
@@ -26,12 +29,11 @@ final readonly class SecurityHeaders
   public function for(Request $request): array
   {
     $shared = ['X-Content-Type-Options' => 'nosniff', 'Referrer-Policy' => 'same-origin',
-      ...($request->https ? ['Strict-Transport-Security' => 'max-age=31536000'] : [])];
+      'X-Robots-Tag' => 'noindex', ...($request->https ? ['Strict-Transport-Security' => 'max-age=31536000'] : [])];
     $door = $request->path === '/feed' || str_starts_with($request->path, '/feed/')
       || str_starts_with($request->path, '/media/');
     if (!$door) {
-      return [...$shared, 'Content-Security-Policy' => self::ADMIN, 'X-Frame-Options' => 'DENY',
-        'X-Robots-Tag' => 'noindex'];
+      return [...$shared, 'Content-Security-Policy' => self::ADMIN, 'X-Frame-Options' => 'DENY'];
     }
 
     return [...$shared, 'Content-Security-Policy' => self::FEED, 'Access-Control-Allow-Origin' => '*',

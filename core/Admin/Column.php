@@ -40,6 +40,14 @@ final readonly class Column
     return clone($this, ['editable' => false, 'uploads' => false]);
   }
 
+  /* The schema.org name a label is hovered for: the property, after the value object it is a key of. */
+  public function term(): string
+  {
+    $property = $this->url === null ? $this->parameter : basename($this->url);
+
+    return $this->objectUrl === null ? $property : basename($this->objectUrl) . ' › ' . $property;
+  }
+
   /* Every field sorts but a list of objects, which has no one value to order by. */
   public function sorts(): bool
   {

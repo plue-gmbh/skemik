@@ -19,7 +19,6 @@ enum Endpoint
   case Collection;
   case Search;
   case Find;
-  case Preview;
   case Record;
   case RecordCreate;
   case RecordPatch;

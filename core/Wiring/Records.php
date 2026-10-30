@@ -9,7 +9,6 @@ use Admin\EdgeEdits;
 use Admin\FieldController;
 use Admin\FieldEdits;
 use Admin\MediaController;
-use Admin\PreviewController;
 use Admin\Prose;
 use Admin\QueryBar;
 use Admin\RecordController;
@@ -43,8 +42,6 @@ final readonly class Records
       Endpoint::Search => (new SearchController($common->search, $common->entities, $common->collections,
         $common->rows, $common->profile, $common->schema, $common->targets, $common->relations,
         $common->authorizer))->hits($account(), $common->request),
-      Endpoint::Preview => (new PreviewController($this->prose(), $common->csrf))->render($account(),
-        $common->request),
       Endpoint::Record => $this->recordController()->show($account(), $common->requirePerson(),
         $common->request, $segment('collection'), $segment('slug')),
       Endpoint::RecordCreate => $this->recordController()->create($account(), $common->request,

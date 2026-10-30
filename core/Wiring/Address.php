@@ -46,7 +46,10 @@ final readonly class Address
       Endpoint::PanelCollection => $this->staff()->list($request, $route),
       Endpoint::PanelRecord => $this->staff()->record($request, $route),
       Endpoint::FeedPreflight => new Response(204),
-      Endpoint::Robots => new Response(200, "User-agent: *\nDisallow: /\n", ['Content-Type' => 'text/plain']),
+      /* The feed and the media are open to robots, since an assistant asked to read them obeys this file; what
+         keeps them out of a search engine's results is the `noindex` every answer carries (`Http\SecurityHeaders`). */
+      Endpoint::Robots => new Response(200, "User-agent: *\nDisallow: /\nAllow: /feed\nAllow: /media/\n",
+        ['Content-Type' => 'text/plain']),
       Endpoint::SecurityText => (new SecurityText($this->common->root,
         $this->common->premises->securityContact, Version::RELEASED))->answer(),
     };

@@ -11,14 +11,14 @@ declare(strict_types=1);
    screen behind it is a door drawn on a wall. The one exception is the line's
    own address where `config.php` names one, which the row opens in a new tab,
    as the header's site links do, since it leaves the admin. The
-   relay's login is never shown, being the machine's credential. Backups and the
-   error log open their screens, an arrow telling them from the rows, and the
-   release's files have none, each green while it stands well and red once it
-   failed (`Admin\Health`). A row's text is its tooltip only once it is long
-   enough to be cut, since the card is narrow and a short one repeated says
-   nothing. Updates
-   have no row: the header's version is their door, marked once one is blocked.
-   A snapshot nobody has to take is a row and no card; what went wrong with one,
+   relay's login is never shown, being the machine's credential. Backups, the
+   error log and the files open their screens, an arrow telling them from the
+   rows, each green while it stands well and red once it failed (`Admin\Health`).
+   The files row names the release that runs and is the door to the update
+   screen for whoever may run one, marked once a release is blocked, the reason
+   being Needs a look's. A row's text is its tooltip only once it is long enough
+   to be cut, since the card is narrow and a short one repeated says nothing. A
+   snapshot nobody has to take is a row and no card; what went wrong with one,
    or with a file, is Needs a look's line. */
 
 if (!isset($template)) {
@@ -56,9 +56,8 @@ $what = fn (string $text, ?Admin\Health $health = null): string => sprintf('<spa
           class="change-name"><?= $template->escape($words->get('errors.title')) ?></span></span><span
           class="change-line"><?= $what($errors, $errorsHealth) ?></span><?= $go ?></a></li>
 <?php endif ?>
-<?php if ($files !== null): ?>
-        <li><div class="change"><span class="change-head"><span
+<?php $door = $updates ? '<a class="change" href="/settings/update">' : '<div class="change">' ?>
+        <li><?= $door ?><span class="change-head"><span
           class="change-name"><?= $template->escape($words->get('home.files')) ?></span></span><span
-          class="change-line"><?= $what($files, $filesHealth) ?></span></div></li>
-<?php endif ?>
+          class="change-line"><?= $what($files, $filesHealth) ?></span><?= $updates ? $go . '</a>' : '</div>' ?></li>
       </ul>
