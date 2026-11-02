@@ -39,10 +39,10 @@ final readonly class Edges
     private \Closure $reads,
   ) {}
 
-  /* A list member is a nested record, a bare `@id` or a term's code — the three
-     shapes `JsonLd` emits by depth — or any of them inside the wrapper that
-     carried its qualifiers. The list's order is the edges' order.
-     @return list<Relation> */
+  /** A list member is a nested record, a bare `@id` or a term's code — the three
+      shapes `JsonLd` emits by depth — or any of them inside the wrapper that
+      carried its qualifiers. The list's order is the edges' order.
+      @return list<Relation> */
   public function relations(FieldDefinition $field, EntityId $subject, mixed $raw): array
   {
     $members = is_array($raw) && array_is_list($raw) ? $raw : ($raw === null ? [] : [$raw]);
@@ -63,9 +63,9 @@ final readonly class Edges
     return $relations;
   }
 
-  /* Words sent empty are no words, as a field sent empty is no value. A wrapper
-     inside another, a role around a membership, carries its words in too.
-     @return array{mixed, array<string, mixed>} the target, and the qualifiers its wrapper carried */
+  /** Words sent empty are no words, as a field sent empty is no value. A wrapper
+      inside another, a role around a membership, carries its words in too.
+      @return array{mixed, array<string, mixed>} the target, and the qualifiers its wrapper carried */
   private function unwrapped(string $predicate, mixed $member): array
   {
     $wrapper = is_array($member) ? ($member['@type'] ?? null) : null;
@@ -97,11 +97,11 @@ final readonly class Edges
     return $this->addressed($field, $address);
   }
 
-  /* A term named by its address is held to the field's set as one named by its
-     code is, or a `keywords` edge would hold a gender that reads back as a code
-     the set does not know, and a picture field's target to a picture, as the
-     admin's save holds them (`Feed\Targets::misfit`).
-     @return array{EntityId, string, ?string} */
+  /** A term named by its address is held to the field's set as one named by its
+      code is, or a `keywords` edge would hold a gender that reads back as a code
+      the set does not know, and a picture field's target to a picture, as the
+      admin's save holds them (`Feed\Targets::misfit`).
+      @return array{EntityId, string, ?string} */
   private function addressed(FieldDefinition $field, string $address): array
   {
     $record = $this->targets->at($address);
@@ -117,10 +117,10 @@ final readonly class Edges
     return [$record->id, $record->typeName(), $term];
   }
 
-  /* A term by its code within the field's set, which the feed emits in place
-     of its address; a code the set does not hold is refused, not made, since a
-     typo would make a term.
-     @return array{EntityId, string, string} */
+  /** A term by its code within the field's set, which the feed emits in place
+      of its address; a code the set does not hold is refused, not made, since a
+      typo would make a term.
+      @return array{EntityId, string, string} */
   private function term(string $set, string $code): array
   {
     $term = $this->targets->term($set, $code);

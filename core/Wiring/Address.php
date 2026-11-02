@@ -79,7 +79,7 @@ final readonly class Address
     return new IngestController($common->authorizer, $this->feed(), $common->collections, $common->settings,
       $common->entities, $common->relations, $common->collisions,
       new PayloadMapper($common->profile, $common->schema, $targets, $common->collections,
-        new ObjectRows($common->profile, $common->schema, $targets, $reads),
+        new ObjectRows($common->profile, $common->schema, $targets, $reads, $origin),
         new Edges($common->schema, $common->predicates, $targets, $reads), $origin, $reads),
       $common->validator, $common->showing(), $common->profile, $common->schema, $common->limit(600, 60),
       $common->limit(600, 60),

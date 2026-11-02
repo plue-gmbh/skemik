@@ -104,6 +104,7 @@ final readonly class Thumbnail
     return min(self::MOST_PIXELS, intdiv(max(0, $free), self::BYTES_A_PIXEL));
   }
 
+  /** @psalm-taint-escape file `basename` keeps it under the previews folder, and the suffix is fixed */
   private function target(string $name): string
   {
     return $this->directory . '/' . basename($name) . '.webp';

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.12](https://img.shields.io/badge/version-1.0.12-1f6feb)
+![Version 1.0.13](https://img.shields.io/badge/version-1.0.13-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ tool to design first, no column called `Date2`. What an organisation keeps
 stands there once. Everything that works with it reads it there and writes back
 there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.12)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.13)
 
 The demo install's events, read with no key:
 

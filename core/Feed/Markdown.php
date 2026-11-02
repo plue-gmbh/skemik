@@ -47,7 +47,9 @@ final readonly class Markdown
     return implode("\n", [...$lines, ...$onward]) . "\n";
   }
 
-  /** @param array<string, mixed> $document */
+  /** @param array<string, mixed> $document
+      @psalm-taint-escape html sent as `text/markdown` with `nosniff`, so no browser reads it as a page
+      @psalm-taint-escape has_quotes */
   private function page(array $document): string
   {
     $text = Markup::relinked((string) ($document['text'] ?? ''), $this->address->of(...));

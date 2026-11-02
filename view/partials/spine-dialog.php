@@ -20,13 +20,14 @@ if (!isset($template)) {
     <dialog ref="dialog" class="spine-dialog" tabindex="-1" autofocus :aria-label="words['spine.open']"
       @close="$emit('close')"
       @click="outside">
+      <?= $template->render('partials/live-region') ?>
       <div class="spine-body">
         <label class="spine-label" for="spine-slug">{{ words['spine.slug'] }}</label>
         <input id="spine-slug" ref="slug" class="popover-input" type="text"
           :value="typed === null ? current('slug') : typed"
           autocomplete="off" spellcheck="false" aria-describedby="spine-address" @input="typeSlug"
           @keydown.enter.prevent="$refs.dialog.close()">
-        <p class="popover-hint" id="spine-address">{{ words['spine.address'] }}
+        <p class="popover-hint" id="spine-address">
           <a v-if="common.public && !moved" class="spine-mono" :href="address" target="_blank"
             rel="noreferrer">{{ address }}</a>
           <span v-else class="spine-mono">{{ address }}</span></p>

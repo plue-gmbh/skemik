@@ -69,9 +69,9 @@ final readonly class Rows
     return $chips;
   }
 
-  /* The records a value object's rows refer to, by field key and row, and the
-     one a flattened key refers to as its row 0, drawn as an edge's target is.
-     @return array<string, array<int, EntityId>> */
+  /** The records a value object's rows refer to, by field key and row, and the
+      one a flattened key refers to as its row 0, drawn as an edge's target is.
+      @return array<string, array<int, EntityId>> */
   private function referred(Entity $entity): array
   {
     $ids = [];
@@ -110,25 +110,35 @@ final readonly class Rows
     return $translation !== null && $this->readable($account, $translation) ? $translation : $target;
   }
 
-  /* Named in the words of the locale it is read from, as the feed names it on
-     that locale's route.
-     @param list<Collection> $collections */
+  /** Named in the words of the locale it is read from, as the feed names it on
+      that locale's route.
+      @param list<Collection> $collections */
   private function drawn(?Entity $target, Locale $in, array $collections): Chip
   {
     if ($target === null) {
       return Chip::gone();
     }
-    $type = $this->profile->byType($target->type);
     $holder = array_find($collections, fn (Collection $collection): bool => $collection->type === $target->type);
-    $shown = (new LocalisedText($type))->shown($target, $in);
+    $shown = $this->shown($target, $in);
     $title = ($holder?->name ?? $target->typeName()) . ' · ' . $target->slug->value;
     $description = $target->typeName() === 'MediaObject' ? trim((string) $shown->props->string('description')) : '';
     $noAlt = $description === '' && $target->typeName() === 'MediaObject'
       && str_starts_with((string) $target->props->string('encoding_format'), 'image/');
 
-    return new Chip($this->label->of($shown, $type), $title, SidebarEntry::glyphOf($target->type), noAlt: $noAlt,
+    return new Chip($this->named($target, $in), $title, SidebarEntry::glyphOf($target->type), noAlt: $noAlt,
       href: $holder === null ? null : self::address($holder, $target), caption: $description,
       preview: self::preview($target));
+  }
+
+  /* What a target is called in that locale's words, as its chip says it. */
+  public function named(Entity $target, Locale $in): string
+  {
+    return $this->label->of($this->shown($target, $in), $this->profile->byType($target->type));
+  }
+
+  private function shown(Entity $target, Locale $in): Entity
+  {
+    return (new LocalisedText($this->profile->byType($target->type)))->shown($target, $in);
   }
 
   /* The record screen of a record, in the locale it is written in. */
@@ -138,8 +148,8 @@ final readonly class Rows
       . http_build_query(['in' => $entity->locale->tag]) . ($query === '' ? '' : '&' . $query);
   }
 
-  /* The record screen of a record where the reader may open it, as its chip would link it.
-     @param list<Collection> $collections */
+  /** The record screen of a record where the reader may open it, as its chip would link it.
+      @param list<Collection> $collections */
   public function opened(Account $account, Entity $record, array $collections): ?string
   {
     $holder = array_find($collections, fn (Collection $collection): bool => $collection->type === $record->type);
@@ -162,19 +172,32 @@ final readonly class Rows
     };
   }
 
-  /* The fields of a collection this account reads: all it carries inside the
-     read scope, and outside it what the public reads.
-     @return list<CollectionField> */
+  /** The file an asset holds, as a link picked from the library writes it: its
+      address, a path of this house or the address elsewhere it stands at, with
+      the type and the size that go with it; null for any other record.
+      @return ?array{address: string, format: string, size: string} */
+  public static function file(Entity $asset): ?array
+  {
+    $address = (string) $asset->props->string('content_url');
+
+    return $asset->typeName() !== 'MediaObject' || $address === '' ? null
+      : ['address' => $address, 'format' => (string) $asset->props->string('encoding_format'),
+        'size' => (string) $asset->props->string('content_size')];
+  }
+
+  /** The fields of a collection this account reads: all it carries inside the
+      read scope, and outside it what the public reads.
+      @return list<CollectionField> */
   public function fields(Account $account, Collection $collection): array
   {
     return $this->authorizer->readsAsPublic($account, $collection->type) ? $this->filter->fields($collection)
       : $collection->fields;
   }
 
-  /* What this account reads of each collection, as the query narrowing to it:
-     all of a type in the read scope, and outside it what the public reads.
-     @param list<Collection> $collections
-     @return array<string, Query> by type */
+  /** What this account reads of each collection, as the query narrowing to it:
+      all of a type in the read scope, and outside it what the public reads.
+      @param list<Collection> $collections
+      @return array<string, Query> by type */
   public function readings(Account $account, array $collections): array
   {
     $readings = [];

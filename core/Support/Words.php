@@ -94,17 +94,17 @@ final readonly class Words
     return [self::SOURCE, ...array_values(array_diff($this->languages(), [self::SOURCE]))];
   }
 
-  /* The field names of a language, asked by a chrome language or a content
-     locale alike. Empty where none ships, English being the seed's own labels.
-     @return array<string, string> by `key`, or `Type.key` where a type differs */
+  /** The field names of a language, asked by a chrome language or a content
+      locale alike. Empty where none ships, English being the seed's own labels.
+      @return array<string, string> by `key`, or `Type.key` where a type differs */
   public function fields(string $tag): array
   {
     return $this->layered($this->firstShipped([$tag]), '.fields');
   }
 
-  /* Every shipped language's words for a select's options, empty where one ships
-     no file, so `Profile\Seed\Terms` names what it lacks.
-     @return array<string, array<string, string>> by language, then token */
+  /** Every shipped language's words for a select's options, empty where one ships
+      no file, so `Profile\Seed\Terms` names what it lacks.
+      @return array<string, array<string, string>> by language, then token */
   public function terms(): array
   {
     $terms = [];
@@ -115,8 +115,8 @@ final readonly class Words
     return $terms;
   }
 
-  /* The first tag a language ships for, its region kept: `de-AT` though only `de.php` ships.
-     @param list<?string> $tags */
+  /** The first tag a language ships for, its region kept: `de-AT` though only `de.php` ships.
+      @param list<?string> $tags */
   private function firstShipped(array $tags): string
   {
     foreach ($tags as $tag) {
@@ -129,7 +129,8 @@ final readonly class Words
     return self::SOURCE;
   }
 
-  /** @return list<string> the tag as `language/` would name its region's file, then its language's */
+  /** @return list<string> the tag as `language/` would name its region's file, then its language's
+      @psalm-taint-escape include only a tag matching the pattern becomes a name: letters and a dash */
   private function spellings(string $tag): array
   {
     if (preg_match(self::TAG, $tag, $parts) !== 1) {
@@ -140,10 +141,10 @@ final readonly class Words
     return isset($parts[2]) ? [$language . '-' . strtoupper($parts[2]), $language] : [$language];
   }
 
-  /* A region's words over its language's, so `de-CH` says Strasse and German
-     everywhere else; a tag its language ships for, so the language's file is
-     there and the region's may not be.
-     @return array<string, string> */
+  /** A region's words over its language's, so `de-CH` says Strasse and German
+      everywhere else; a tag its language ships for, so the language's file is
+      there and the region's may not be.
+      @return array<string, string> */
   private function layered(string $name, string $suffix): array
   {
     $words = [];

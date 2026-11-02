@@ -120,10 +120,10 @@ final readonly class NeedsLook
       SidebarEntry::glyphOf($first->type), $first->name, count($byType) - 1);
   }
 
-  /* No filter says which records these are, so it opens the first of them,
-     and the next once that one is mended.
-     @param array<string, list<EntityId>> $byType most first
-     @param list<Collection> $collections */
+  /** No filter says which records these are, so it opens the first of them,
+      and the next once that one is mended.
+      @param array<string, list<EntityId>> $byType most first
+      @param list<Collection> $collections */
   private function opened(Overlooked $look, array $byType, array $collections): ?Finding
   {
     if ($byType === []) {
@@ -137,11 +137,11 @@ final readonly class NeedsLook
       $first->name, count($byType) - 1);
   }
 
-  /* What a contact form wrote lands as a draft and stays one, so a message is
-     new until somebody sets the `dateRead` schema.org gives it, by hand or by
-     key, which no filter can name: the line opens the oldest instead.
-     @param list<string> $read the type URLs counted
-     @return array<string, list<EntityId>> by type URL */
+  /** What a contact form wrote lands as a draft and stays one, so a message is
+      new until somebody sets the `dateRead` schema.org gives it, by hand or by
+      key, which no filter can name: the line opens the oldest instead.
+      @param list<string> $read the type URLs counted
+      @return array<string, list<EntityId>> by type URL */
   private function unread(array $read): array
   {
     $message = $this->profile->byType('Message')->url();
@@ -240,8 +240,8 @@ final readonly class NeedsLook
       : new Finding(Overlooked::Update, 1, '/settings/update', 'alert', 'Skemik ' . $refused, 0);
   }
 
-  /* An integration that stops on a known date is one somebody meant to renew.
-     @param list<Collection> $collections */
+  /** An integration that stops on a known date is one somebody meant to renew.
+      @param list<Collection> $collections */
   private function expiring(array $collections): ?Finding
   {
     $now = $this->clock->now();

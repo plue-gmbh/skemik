@@ -89,16 +89,16 @@ final readonly class Fields
     );
   }
 
-  /* One key of a flattened value object. The value object and its key
-     are declared here, never inferred from the field name: SchemaOrg asks this
-     declaration before it spells anything, so `address_locality` resolves to
-     PostalAddress.addressLocality rather than to an `addressStreet` the
-     vocabulary has never published. What it holds is the caller's, because a
-     key is an ordinary field of the other kinds — a postcode is text, a country
-     the world's list, a return method the options of a select. Its block is
-     named by the English before the colon, `Address` of `Address: Street`, once
-     here, so a label said whole elsewhere leaves the block its name.
-     @param FieldKind|ClosedList|list<string> $holds a kind, the world's list or the options */
+  /** One key of a flattened value object. The value object and its key
+      are declared here, never inferred from the field name: SchemaOrg asks this
+      declaration before it spells anything, so `address_locality` resolves to
+      PostalAddress.addressLocality rather than to an `addressStreet` the
+      vocabulary has never published. What it holds is the caller's, because a
+      key is an ordinary field of the other kinds — a postcode is text, a country
+      the world's list, a return method the options of a select. Its block is
+      named by the English before the colon, `Address` of `Address: Street`, once
+      here, so a label said whole elsewhere leaves the block its name.
+      @param FieldKind|ClosedList|list<string> $holds a kind, the world's list or the options */
   public function valueOf(
     string $valueObject,
     string $valueObjectKey,

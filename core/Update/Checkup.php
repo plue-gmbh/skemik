@@ -35,11 +35,9 @@ final readonly class Checkup
     private Backup $backup,
   ) {}
 
-  /* An answer that has work of its own, or streams a file, leaves the slice to the next one. */
   public function after(Response $response): Response
   {
-    return $this->due() && $response->after === null && $response->file === null
-      ? $response->after($this->run(...)) : $response;
+    return $response->takesWork() && $this->due() ? $response->after($this->run(...)) : $response;
   }
 
   /* Under the lock a snapshot, an update and a restore take, and asked again inside it: the time is stamped
@@ -78,9 +76,9 @@ final readonly class Checkup
     $this->settings->setHoldingsReport(new HoldingsReport(array_values($unique), $began, Version::APP));
   }
 
-  /* What the last report said of the rows this slice did not read, those changed
-     since it was written read again.
-     @return list<Violation> */
+  /** What the last report said of the rows this slice did not read, those changed
+      since it was written read again.
+      @return list<Violation> */
   private function kept(HoldingsReport $last, ?string $from, ?string $to): array
   {
     $outside = array_filter($last->violations, fn (Violation $violation): bool

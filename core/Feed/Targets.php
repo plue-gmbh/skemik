@@ -36,16 +36,16 @@ final readonly class Targets
     private string $origin,
   ) {}
 
-  /* An edge is asked by what a document says of its target: its address, or a
-     term's code, in the feed and in the admin's query bar alike. A target the
-     caller does not read names nothing, as it is nothing in a document, or a
-     guessed slug would confirm an edge to a draft. What is no address at all, a
-     bare slug or an id, is refused alike for every value, so the refusal
-     confirms nothing and still names the mistake. An address is read against each
-     locale in turn: the feed's route, or the house's locales on the admin's path,
-     which names none.
-     @param list<Locale> $locales
-     @param \Closure(Entity): bool $reads whether the caller reads a target */
+  /** An edge is asked by what a document says of its target: its address, or a
+      term's code, in the feed and in the admin's query bar alike. A target the
+      caller does not read names nothing, as it is nothing in a document, or a
+      guessed slug would confirm an edge to a draft. What is no address at all, a
+      bare slug or an id, is refused alike for every value, so the refusal
+      confirms nothing and still names the mistake. An address is read against each
+      locale in turn: the feed's route, or the house's locales on the admin's path,
+      which names none.
+      @param list<Locale> $locales
+      @param \Closure(Entity): bool $reads whether the caller reads a target */
   public function filtered(Query $query, array $locales, \Closure $reads): Query
   {
     $type = $this->profile->byType($query->type);
@@ -61,10 +61,10 @@ final readonly class Targets
     return $query->filteredBy($filters);
   }
 
-  /* A document names a work in the reader's language wherever the edge holds another of its
-     translations, so a filter naming it finds an edge to any of them, as the document shows it.
-     @param array<Entity> $targets
-     @return list<string> */
+  /** A document names a work in the reader's language wherever the edge holds another of its
+      translations, so a filter naming it finds an edge to any of them, as the document shows it.
+      @param array<Entity> $targets
+      @return list<string> */
   private function ids(array $targets): array
   {
     $ids = [];
@@ -171,8 +171,8 @@ final readonly class Targets
     }
   }
 
-  /* The filter beneath compares text as a prefix, so `EU` would find `EUR`.
-     @return list<Entity> every term of exactly that code */
+  /** The filter beneath compares text as a prefix, so `EU` would find `EUR`.
+      @return list<Entity> every term of exactly that code */
   public function coded(string $code): array
   {
     $query = new Query('DefinedTerm', ['term_code' => [$code]], perPage: Query::MAX_PER_PAGE);

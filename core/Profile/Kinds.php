@@ -38,26 +38,12 @@ final readonly class Kinds
     };
   }
 
-  /* A link's one spelling, asked wherever one enters (`Feed\Spelling::held`): a
+  /* A link's one spelling, asked wherever one enters (`Feed\Spelling`): a
      space, which a mail's subject is typed with and no link can hold, is `%20`,
      as a browser would send it, so a button's `mailto:` saves as it was typed. */
   public static function spelled(string $link): string
   {
     return str_replace(' ', '%20', trim($link));
-  }
-
-  /* A value object's row, its link keys spelled as a field's link is.
-     @param array<array-key, mixed> $row
-     @return array<array-key, mixed> */
-  public static function spelledRow(?ValueObject $object, array $row): array
-  {
-    foreach ($object === null ? [] : $object->kinds as $key => $kind) {
-      if ($kind === FieldKind::Link && is_string($row[$key] ?? null)) {
-        $row[$key] = self::spelled($row[$key]);
-      }
-    }
-
-    return $row;
   }
 
   /* An address somebody can follow: a web URL with a host, a path the feed emits

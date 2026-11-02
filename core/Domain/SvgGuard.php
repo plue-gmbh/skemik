@@ -30,15 +30,18 @@ final readonly class SvgGuard
     'http://www.bohemiancoding.com/sketch/ns',
     'http://ns.adobe.com/',
   ];
-  /* No animation yet: a drawing that moves is admitted by weighing its elements
-     one by one, which is a later pass and not a refusal on principle. */
+  /* Each name weighed on its own, never admitted by family. Animation is SMIL's
+     five elements with their timing and values: `begin` naming an event, `click`,
+     is a time and no script, and an animated `href`, `xml:base` or handler is
+     refused by `attributeName`, since `to` and `values` are read by no link rule. */
   private const ELEMENTS =
     'svg g defs symbol use title desc metadata style path rect circle ellipse line polyline '
     . 'polygon text tspan textPath linearGradient radialGradient stop clipPath mask pattern '
     . 'marker image filter feBlend feColorMatrix feComponentTransfer feComposite feConvolveMatrix '
     . 'feDiffuseLighting feDisplacementMap feDistantLight feDropShadow feFlood feFuncA feFuncB '
     . 'feFuncG feFuncR feGaussianBlur feImage feMerge feMergeNode feMorphology feOffset '
-    . 'fePointLight feSpecularLighting feSpotLight feTile feTurbulence';
+    . 'fePointLight feSpecularLighting feSpotLight feTile feTurbulence '
+    . 'animate animateTransform animateMotion set mpath';
   private const ATTRIBUTES =
     'id class style lang tabindex role focusable version baseProfile zoomAndPan x y x1 x2 y1 y2 cx cy r rx '
     . 'ry fx fy fr dx dy d points width height viewBox preserveAspectRatio transform href fill '
@@ -58,7 +61,8 @@ final readonly class SvgGuard
     . 'xChannelSelector yChannelSelector tableValues slope intercept amplitude exponent order '
     . 'kernelMatrix divisor bias targetX targetY edgeMode preserveAlpha surfaceScale '
     . 'diffuseConstant specularConstant specularExponent lighting-color azimuth elevation z '
-    . 'pointsAtX pointsAtY pointsAtZ limitingConeAngle kernelUnitLength';
+    . 'pointsAtX pointsAtY pointsAtZ limitingConeAngle kernelUnitLength attributeName attributeType from to by '
+    . 'dur begin end repeatCount keyTimes keySplines calcMode additive accumulate path keyPoints restart';
 
   /** @return list<Violation> empty when the file may be kept */
   public function check(string $svg): array
@@ -123,18 +127,14 @@ final readonly class SvgGuard
   private function checkAttribute(\DOMAttr $attribute, string $element): array
   {
     $name = $attribute->nodeName;
-    $namespace = $attribute->namespaceURI;
     if (str_starts_with(strtolower($attribute->localName), 'on')) {
       return [$this->refuse($element, sprintf('%s on <%s> runs script', $name, $element))];
     }
-    $known = match ($namespace) {
-      null => preg_match('/^(aria|data)-/', $name) === 1 || in_array($name, $this->drawingAttributes(), true),
-      self::XML => in_array($attribute->localName, ['space', 'lang'], true),
-      self::XLINK => in_array($attribute->localName, ['href', 'title'], true),
-      default => $this->isEditorMetadata($namespace),
-    };
-    if (!$known) {
+    if (!$this->known($attribute)) {
       return [$this->refuse($element, sprintf('%s on <%s> is not for drawing', $name, $element))];
+    }
+    if ($name === 'attributeName' && preg_match('/^(\w+:)?(href$|base$|on)/i', trim($attribute->value)) === 1) {
+      return [$this->refuse($element, sprintf('<%s> animates %s, which no rule reads', $element, $attribute->value))];
     }
     $isLink = $attribute->localName === 'href' && !str_starts_with(ltrim($attribute->value), '#');
     if ($isLink || $this->reachesOut($attribute->value)) {
@@ -142,6 +142,18 @@ final readonly class SvgGuard
     }
 
     return [];
+  }
+
+  private function known(\DOMAttr $attribute): bool
+  {
+    $name = $attribute->nodeName;
+
+    return match ($attribute->namespaceURI) {
+      null => preg_match('/^(aria|data)-/', $name) === 1 || in_array($name, $this->drawingAttributes(), true),
+      self::XML => in_array($attribute->localName, ['space', 'lang'], true),
+      self::XLINK => in_array($attribute->localName, ['href', 'title'], true),
+      default => $this->isEditorMetadata($attribute->namespaceURI),
+    };
   }
 
   /* CSS escapes are refused outright: `u\72l(` is a `url(` no pattern sees. */

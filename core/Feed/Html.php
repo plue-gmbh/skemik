@@ -85,8 +85,8 @@ final readonly class Html
     return implode("\n", $head);
   }
 
-  /* One image or several, each a document of its own.
-     @param array<string, mixed> $document @return list<array<string, mixed>> */
+  /** One image or several, each a document of its own.
+      @param array<string, mixed> $document @return list<array<string, mixed>> */
   private function images(array $document): array
   {
     $image = $document['image'] ?? [];
@@ -164,7 +164,6 @@ final readonly class Html
     };
   }
 
-  /* A rendered text as the words it says, where an attribute or a title takes no markup. */
   private function plain(Rendered $text): string
   {
     return html_entity_decode(strip_tags($text->html), ENT_QUOTES, 'UTF-8');

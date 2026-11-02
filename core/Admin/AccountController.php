@@ -147,9 +147,9 @@ final readonly class AccountController
     }
   }
 
-  /* Which parts an edit changed, and the role it now holds, never the address,
-     which is personal and which the log keeps nothing of.
-     @return array<string, string|bool> */
+  /** Which parts an edit changed, and the role it now holds, never the address,
+      which is personal and which the log keeps nothing of.
+      @return array<string, string|bool> */
   private function changed(Account $held, Account $saved): array
   {
     return array_filter([
@@ -273,9 +273,9 @@ final readonly class AccountController
       $this->settings->locales()[0], Slug::from($name, 'person'), $props, $now, $now), []);
   }
 
-  /* The repository's two refusals, the last owner and an address another
-     account logs in with, in the reader's words.
-     @param \Closure(): array<string, string> $work */
+  /** The repository's two refusals, the last owner and an address another
+      account logs in with, in the reader's words.
+      @param \Closure(): array<string, string> $work */
   private function answered(\Closure $work, int $status = 200): Response
   {
     try {

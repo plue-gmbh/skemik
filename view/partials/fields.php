@@ -6,11 +6,13 @@ declare(strict_types=1);
    collection: one list under one search, the fields it carries first, in order,
    each opening the popover a column's name opens (`partials/field-popover`),
    since only the table has columns to click. Under them, for `manageFields`,
-   every field the type still offers, a value object one line with its count of
-   fields. Every line stands beside its schema.org name, so a field has it
-   before it exists. The offers are one form's submit buttons, so a field is
-   added without a script, and the form carries the screen's query, so the view
-   comes back as it was narrowed; the script only narrows the list
+   every field the type still offers, a value object's key alone as it is
+   carried, in the secondary colour rather than behind a divider, since the
+   search hides whole lines and a divider between two of them with it. Every
+   line stands beside its schema.org name, so a field has it before it exists.
+   The offers are one form's submit buttons, so a field is added without a
+   script, and the form carries the screen's query, so the view comes back as
+   it was narrowed; the script only narrows the list
    (`view/scripts/fields.js`). */
 
 if (!isset($template)) {
@@ -49,8 +51,7 @@ $search = $words->get('field.search', ['n' => (string) (count($columns) + count(
 <?php foreach ($offers as $offer): ?>
       <button type="submit" class="option is-offer" name="key" value="<?= $template->escape($offer->key) ?>"
         data-field-offer><?= trim($template->render('partials/kind', ['words' => $words, 'kind' => $offer->kind]))
-        ?><span><?= $template->escape($offer->label) ?><?= $offer->fields > 1
-          ? ' · ' . $template->escape($words->get('field.whole', ['n' => (string) $offer->fields])) : '' ?><?=
+        ?><span><?= $template->escape($offer->label) ?><?=
           $offer->computed ? ' · ' . $template->escape($words->get('field.computed')) : '' ?></span><span
         class="option-term"><?= $template->escape($offer->property) ?></span></button>
 <?php endforeach ?>

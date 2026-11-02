@@ -19,10 +19,10 @@ function openFieldPopover(trigger) {
     const feed = form.elements.feed;
     const body = new URLSearchParams({ ...(move ? { move } : {}),
       ...(feed ? { feed: feed.checked ? "1" : "0" } : {}) });
-    const response = await fetch(form.dataset.fieldEdit, { method: "PATCH", body,
-      headers: { "X-CSRF-Token": form.dataset.csrf, Accept: "application/json" } });
-    if (response.ok) return (keepScroll(), location.reload());
-    form.querySelector("[data-field-error]").textContent = (await response.json()).error ?? "";
+    const { ok, body: answer } = await answered(fetch(form.dataset.fieldEdit, { method: "PATCH", body,
+      headers: { "X-CSRF-Token": form.dataset.csrf, Accept: "application/json" } }));
+    if (ok) return (keepScroll(), location.reload());
+    form.querySelector("[data-field-error]").textContent = answer.error ?? "";
   };
   form?.addEventListener("change", () => send());
   element.querySelectorAll("[data-field-move]").forEach((button) =>

@@ -66,6 +66,7 @@ if (!isset($template)) {
         class="visually-hidden">{{ words['sheet.untick'] }}</span></button>
     </div>
     <dialog ref="trash" class="dialog" aria-labelledby="ticked-trash-title" @click="outside">
+      <?= $template->render('partials/live-region') ?>
       <form method="post" :action="'/c/' + collection + '/trash'">
         <input type="hidden" name="_csrf" :value="csrf">
         <input type="hidden" name="ids" :value="ticked.join(',')">

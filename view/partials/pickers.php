@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 /* The pickers inside the cell editor's popover (`partials/cell-editor`), their
-   components in `view/scripts/pickers.js` and a reference's in `edge-picker.js`.
+   components in `view/scripts/pickers.js`, a reference's in `edge-picker.js`
+   and a link's in `file-picker.js`, whose library search the list and the rows
+   share: a key taking a file offers the library's files beneath the address
+   typed, each pick writing the file's path.
    A reference picks a record of the collections the field points at, each
    target it holds a link to its record, since the cell it opened from is none.
    A term field searches its own set alone, and a word it lacks becomes a term
@@ -82,6 +85,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
         </button>
       </div>
       <p class="popover-hint" v-if="waits">{{ words['picker.type'] }}</p>
+      <p class="popover-hint is-error" v-else-if="unanswered">{{ unanswered }}</p>
       <p class="popover-hint" v-else-if="asked && typed.trim() !== '' && offered.length === 0 && !wordable">{{
         words['picker.none'] }}</p>
       <div class="options" v-if="wordable">
@@ -119,28 +123,74 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
 <script type="text/x-template" id="list-picker-template">
   <div class="picker">
     <ol class="picker-items">
-      <li v-for="(item, index) in items" :key="index" class="picker-item">
-        <input class="popover-input picker-value" :type="type" v-model="items[index]" @input="changed"
-          :aria-label="field.label + ' ' + (index + 1)" :placeholder="hints?.[index]"
-            @keydown.enter.prevent="$emit('done')"
-          :list="field.suggested.length > 0 ? 'picker-suggested' : null">
-        <span class="picker-tools">
-          <button type="button" class="picker-tool" :title="words['picker.up']" :aria-label="words['picker.up']"
-            :disabled="index === 0" @click="move(index, -1)"><?= $icon('up') ?></button>
-          <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
-            :disabled="index === items.length - 1" @click="move(index, 1)"><?= $icon('down') ?></button>
-          <button type="button" class="picker-tool" :title="words['picker.remove']" :aria-label="words['picker.remove']"
-            @click="remove(index)"><?= $icon('close') ?></button>
-        </span>
+      <li v-for="(item, index) in items" :key="index" class="picker-target">
+        <div class="picker-item">
+          <input class="popover-input picker-value" :type="type" v-model="items[index]" @input="typing(index)"
+            :aria-label="field.label + ' ' + (index + 1)" :placeholder="hints?.[index]"
+            @keydown.enter.prevent="$emit('done')" @focus="entering(index, field.key, items[index])"
+            @blur="leaving(index, field.key)" :aria-describedby="searches(field.key) ? 'picker-refers' : null"
+            :list="field.suggested.length > 0 ? 'picker-suggested' : null">
+          <span class="picker-tools">
+            <button type="button" class="picker-tool" :title="words['picker.up']" :aria-label="words['picker.up']"
+              :disabled="index === 0" @click="move(index, -1)"><?= $icon('up') ?></button>
+            <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
+              :disabled="index === items.length - 1" @click="move(index, 1)"><?= $icon('down') ?></button>
+            <button type="button" class="picker-tool" :title="words['picker.remove']"
+              :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('close') ?></button>
+          </span>
+        </div>
+        <p v-if="noted?.index === index" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
+        <div class="options" :class="{ 'is-pictures': pictures(field.key) }" v-if="asks(index, field.key)"
+          role="group" :aria-label="words['picker.search']">
+          <button v-for="hit in hits" :key="hit.id" type="button" class="option" @click="pick(index, hit)">
+            <img v-if="hit.preview" class="option-preview" :src="hit.preview" alt="">
+            <span v-else class="chip-mark"><svg class="glyph" aria-hidden="true"><use
+              :href="'#glyph-' + hit.glyph"></use></svg></span><span>{{ hit.label }}</span>
+            <span class="option-term" :title="hit.collection">{{ hit.slug }}</span>
+          </button>
+        </div>
       </li>
       <li v-if="items.length === 0" class="popover-hint">{{ words['picker.no_values'] }}</li>
     </ol>
     <datalist id="picker-suggested"><option v-for="each in field.suggested" :key="each"
       :value="terms?.[each] || each"></option></datalist>
+    <p v-if="searches(field.key)" class="popover-hint picker-refers" id="picker-refers"><template
+      v-if="uploads(field.key)">{{ hint(field.key)[0] }}<label class="picker-upload-word"
+      :title="fill(words['media.upload_up_to'], { limit })"><input type="file" class="visually-hidden"
+      :accept="kindsOf(field.key).map((kind) => kind + '/*').join() || null" :disabled="sending"
+      @change="upload">{{ sending ? words['media.sending'] : words['picker.refers_upload']
+      }}</label>{{ hint(field.key)[1] }}</template><template v-else>{{ hint(field.key)[0] }}</template></p>
+    <p class="popover-hint is-error" role="alert" v-if="refused">{{ refused }}</p>
     <div class="picker-foot">
       <button type="button" class="button-quiet"
         @click="add(items.length - 1)">+ {{ words['picker.add_value'] }}</button>
       <button type="button" class="button-primary" @click="$emit('done')">{{ words['picker.done'] }}</button>
+    </div>
+  </div>
+</script>
+<script type="text/x-template" id="link-picker-template">
+  <div class="picker">
+    <input ref="address" type="url" class="popover-input" v-model="typed" @input="typing" autocomplete="off"
+      :aria-label="field.label" aria-describedby="link-hint" @keydown.enter.prevent="$emit('done', result())">
+    <p class="popover-hint picker-refers" id="link-hint"><template
+      v-if="uploads(field.key)">{{ hint(field.key)[0] }}<label class="picker-upload-word"
+      :title="fill(words['media.upload_up_to'], { limit })"><input type="file" class="visually-hidden"
+      :accept="kindsOf(field.key).map((kind) => kind + '/*').join() || null" :disabled="sending"
+      @change="upload">{{ sending ? words['media.sending'] : words['picker.refers_upload']
+      }}</label>{{ hint(field.key)[1] }}</template><template v-else>{{ hint(field.key)[0] }}</template></p>
+    <p v-if="noted" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
+    <div class="options" :class="{ 'is-pictures': pictures(field.key) }" v-if="asks(0, field.key)" role="group"
+      :aria-label="words['picker.search']">
+      <button v-for="hit in hits" :key="hit.id" type="button" class="option" @click="pick(hit)">
+        <img v-if="hit.preview" class="option-preview" :src="hit.preview" alt="">
+        <span v-else class="chip-mark"><svg class="glyph" aria-hidden="true"><use
+          :href="'#glyph-' + hit.glyph"></use></svg></span><span>{{ hit.label }}</span>
+        <span class="option-term" :title="hit.collection">{{ hit.slug }}</span>
+      </button>
+    </div>
+    <p class="popover-hint is-error" role="alert" v-if="refused">{{ refused }}</p>
+    <div class="picker-foot">
+      <button type="button" class="button-primary" @click="$emit('done', result())">{{ words['picker.done'] }}</button>
     </div>
   </div>
 </script>
@@ -187,23 +237,24 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
           </select>
           <textarea v-else-if="long(key)" class="popover-input picker-value picker-text" rows="3"
             v-model="entry[key]" @input="typing(index, key)"></textarea>
-          <input v-else class="popover-input picker-value" :class="{ 'picker-refer': key === field.reference }"
+          <input v-else class="popover-input picker-value" :class="{ 'picker-refer': searches(key) }"
             v-model="entry[key]" @input="typing(index, key)" autocomplete="off"
-            @focus="entering(index, key)" @blur="leaving(index)"
+            @focus="entering(index, key, typedAt(index, key))" @blur="leaving(index, key)"
             @keydown.enter.prevent="enter(index, key)"
-            :aria-describedby="key === field.reference ? 'picker-refers-' + index : null">
+            :aria-describedby="searches(key) ? 'picker-refers-' + index + '-' + key : null">
         </label>
-        <template v-if="key === field.reference && !refers(entry[key])">
-          <p class="popover-hint picker-refers" :id="'picker-refers-' + index"><template
-            v-if="file(key) && field.upload">{{ hint()[0] }}<label class="picker-upload-word"
+        <template v-if="searches(key) && !refers(entry[key])">
+          <p class="popover-hint picker-refers" :id="'picker-refers-' + index + '-' + key"><template
+            v-if="uploads(key)">{{ hint(key)[0] }}<label class="picker-upload-word"
             :title="fill(words['media.upload_up_to'], { limit })"><input type="file" class="visually-hidden"
-            :accept="field.accept.map((kind) => kind + '/*').join() || null" :disabled="sending"
-            @change="upload(index, $event)">{{ sending ? words['media.sending'] : words['picker.refers_upload']
-            }}</label>{{ hint()[1] }}</template><template v-else>{{
-            words['picker.refers'] }}</template></p>
-          <div class="options" :class="{ 'is-pictures': file(key) }" v-if="asking === index" role="group"
+            :accept="kindsOf(key).map((kind) => kind + '/*').join() || null" :disabled="sending"
+            @change="upload(index, key, $event)">{{ sending ? words['media.sending'] : words['picker.refers_upload']
+            }}</label>{{ hint(key)[1] }}</template><template v-else>{{ hint(key)[0] }}</template></p>
+          <p v-if="noted?.index === index && noted?.key === key" class="popover-hint is-warning">{{
+            words['picker.draft'] }}</p>
+          <div class="options" :class="{ 'is-pictures': pictures(key) }" v-if="asks(index, key)" role="group"
             :aria-label="words['picker.search']">
-            <button v-for="hit in hits" :key="hit.id" type="button" class="option" @click="refer(entry, hit)">
+            <button v-for="hit in hits" :key="hit.id" type="button" class="option" @click="pick(entry, key, hit)">
               <img v-if="hit.preview" class="option-preview" :src="hit.preview" alt="">
               <span v-else class="chip-mark"><svg class="glyph" aria-hidden="true"><use
                 :href="'#glyph-' + hit.glyph"></use></svg></span><span>{{ hit.label }}</span>

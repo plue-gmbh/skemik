@@ -188,10 +188,10 @@ final readonly class Editorial
     ];
   }
 
-  /* The one specialisation that cannot be an `additionalType`, there being no
-     generic CreativeWork type to hang it on. The weakest keeper: if a slot is
-     ever needed, look here first.
-     @return list<FieldDefinition> */
+  /** The one specialisation that cannot be an `additionalType`, there being no
+      generic CreativeWork type to hang it on. The weakest keeper: if a slot is
+      ever needed, look here first.
+      @return list<FieldDefinition> */
   private function book(): array
   {
     $f = $this->f;

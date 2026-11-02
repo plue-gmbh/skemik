@@ -31,18 +31,25 @@ final readonly class Manifest
         throw UpdateRefused::manifest('names no ' . $key);
       }
     }
-    foreach (['archive', 'signature'] as $key) {
-      if (self::origin($decoded[$key]) !== self::origin($address)) {
-        throw UpdateRefused::manifest('names its ' . $key . ' on another server');
-      }
-    }
     $notBefore = $decoded['not_before'] ?? null;
     if ($notBefore !== null && (!is_string($notBefore) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $notBefore) !== 1)) {
       throw UpdateRefused::manifest('names no day under not_before');
     }
 
     return new self((string) $decoded['version'], (bool) ($decoded['security'] ?? false), $notBefore,
-      (string) $decoded['archive'], (string) $decoded['signature']);
+      self::onServer((string) $decoded['archive'], 'archive', $address),
+      self::onServer((string) $decoded['signature'], 'signature', $address));
+  }
+
+  /** @psalm-taint-escape ssrf an address on the manifest's own server, so a manifest changed on the way names
+      no other server to pull from */
+  private static function onServer(string $url, string $key, string $address): string
+  {
+    if (self::origin($url) !== self::origin($address)) {
+      throw UpdateRefused::manifest('names its ' . $key . ' on another server');
+    }
+
+    return $url;
   }
 
   private static function origin(string $url): string

@@ -87,9 +87,9 @@ final readonly class Csv
     };
   }
 
-  /* A wrapper is unwrapped to what it wraps, which is the one array-valued key
-     it has; everything else in it is the qualifiers that do not survive here.
-     @param array<string, mixed> $object */
+  /** A wrapper is unwrapped to what it wraps, which is the one array-valued key
+      it has; everything else in it is the qualifiers that do not survive here.
+      @param array<string, mixed> $object */
   private function flat(array $object): string
   {
     if (isset($object['@id'])) {

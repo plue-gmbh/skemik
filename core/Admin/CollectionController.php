@@ -143,9 +143,9 @@ final readonly class CollectionController
       'spine' => $this->dialog->data($collection, $rows)];
   }
 
-  /* What the page counts and what the whole reading does: the same question where the page's
-     query asks nothing beyond its order and page, so it is asked once and not twice.
-     @return array{total: int, all: int} */
+  /** What the page counts and what the whole reading does: the same question where the page's
+      query asks nothing beyond its order and page, so it is asked once and not twice.
+      @return array{total: int, all: int} */
   private function counted(Account $account, Collection $collection, ?Query $query): array
   {
     $total = $query === null ? 0 : $this->entities->count($query);
@@ -187,9 +187,9 @@ final readonly class CollectionController
     return $request->path . ($request->query === [] ? '' : '?' . http_build_query($request->query));
   }
 
-  /* The records a delete just moved to the trash, offered back once: deleting
-     is immediate rather than pending, so the undo is where it lands.
-     @return list<SheetRow> */
+  /** The records a delete just moved to the trash, offered back once: deleting
+      is immediate rather than pending, so the undo is where it lands.
+      @return list<SheetRow> */
   private function trashed(): array
   {
     $rows = [];
@@ -231,9 +231,9 @@ final readonly class CollectionController
     return $collection === null || $closed ? throw EntityNotFound::withId($slug) : $collection;
   }
 
-  /* What the views beside the table show of a row, read by a saved row's answer too. The table
-     asks none of it: which fields some record holds reads every row of the type to say none does.
-     @param list<Column> $columns */
+  /** What the views beside the table show of a row, read by a saved row's answer too. The table
+      asks none of it: which fields some record holds reads every row of the type to say none does.
+      @param list<Column> $columns */
   public function glance(Collection $collection, array $columns): Glance
   {
     return new Glance($columns, $this->profile->byType($collection->type), $this->profile,
@@ -241,8 +241,8 @@ final readonly class CollectionController
         $columns)));
   }
 
-  /* Outside the read scope the columns are the anonymous document's, gate 3 included.
-     @return list<Column> */
+  /** Outside the read scope the columns are the anonymous document's, gate 3 included.
+      @return list<Column> */
   public function columns(Account $account, Collection $collection): array
   {
     $outside = $this->authorizer->readsAsPublic($account, $collection->type);
@@ -255,10 +255,11 @@ final readonly class CollectionController
       if ($field !== null) {
         $editable = $writes && $field->writtenBy->hasEditor();
         $targets = $this->profile->referring($field)?->targets ?? $field->targets;
+        $files = array_intersect($targets, $this->schema->emittedAs('MediaObject')) !== []
+          || $this->schema->fileKeys($field, $this->profile->valueObject((string) $field->ref)) !== [];
         $columns[] = new Column($field, $field->label, $held->feed, $editable,
-          (string) $this->schema->parameterName($field->key),
-          $editable && $uploads && array_intersect($targets, $this->schema->emittedAs('MediaObject')) !== [],
-          $this->schema->propertyUrl($field->key), $this->schema->objectUrl($field));
+          (string) $this->schema->parameterName($field->key), $editable && $uploads && $files,
+          $this->schema->propertyUrl($field->key));
       }
     }
 

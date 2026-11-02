@@ -108,9 +108,9 @@ final readonly class RecordPage
       $entity->slug->value), true);
   }
 
-  /* Each prose field read as the page reads it, by key.
-     @param list<Column> $columns
-     @return array<string, string> */
+  /** Each prose field read as the page reads it, by key.
+      @param list<Column> $columns
+      @return array<string, string> */
   private function prose(Account $account, Entity $entity, array $columns): array
   {
     $prose = [];
@@ -146,9 +146,9 @@ final readonly class RecordPage
     return null;
   }
 
-  /* A work's translations pointing with one field are one row, named by the one
-     in the locale the screen reads, else by the one the others translate.
-     @return list<Pointer> each named in the words of the locale the screen reads */
+  /** A work's translations pointing with one field are one row, named by the one
+      in the locale the screen reads, else by the one the others translate.
+      @return list<Pointer> each named in the words of the locale the screen reads */
   public function pointers(Account $account, Entity $entity, Locale $in): array
   {
     $members = [];
@@ -166,9 +166,9 @@ final readonly class RecordPage
       $predicates[$group], $in), array_keys($members)));
   }
 
-  /* The records before and after this one in the query it was opened from, on
-     its page or across the page's edge; null at either end.
-     @return array{?string, ?string} */
+  /** The records before and after this one in the query it was opened from, on
+      its page or across the page's edge; null at either end.
+      @return array{?string, ?string} */
   public function neighbours(Account $account, Request $request, Collection $collection, Entity $entity): array
   {
     $query = $this->bar->query($account, $request->without('in'), $collection);
@@ -249,9 +249,9 @@ final readonly class RecordPage
       $holder === null ? null : Rows::address($holder, $subject), $records ?: $words, $words !== []);
   }
 
-  /* A labelled thing's languages, the authored one and each holding words of its own, every one opening
-     the record on its words, since what points here reads it in each of them.
-     @return array<string, string> */
+  /** A labelled thing's languages, the authored one and each holding words of its own, every one opening
+      the record on its words, since what points here reads it in each of them.
+      @return array<string, string> */
   private function worded(Entity $subject, ?Collection $holder, TypeDefinition $type): array
   {
     $held = (new LocalisedText($type))->locales($subject);
@@ -269,9 +269,9 @@ final readonly class RecordPage
     return $locales;
   }
 
-  /* Each translation's address in the house's order of its locales.
-     @param list<Entity> $members
-     @return array<string, string> */
+  /** Each translation's address in the house's order of its locales.
+      @param list<Entity> $members
+      @return array<string, string> */
   private function locales(array $members, ?Collection $holder): array
   {
     if (count($members) < 2 || $holder === null) {

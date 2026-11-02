@@ -9,6 +9,7 @@ use Profile\FieldKind;
 use Profile\Kinds;
 use Profile\Profile;
 use Profile\SchemaOrg;
+use Profile\ValueObject;
 
 /* One spelling of a value at the address and one in `props`, so the spelling a
    document shows finds its row and a write is held as the editor holds it. A
@@ -36,14 +37,34 @@ final readonly class Spelling
     string $origin): string|int|float|bool|array|null
   {
     $path = fn (string|int|float|bool|array|null $link): string|int|float|bool|array|null
-      => !is_string($link) ? $link : (str_starts_with($link = Kinds::spelled($link), $origin . '/')
-        ? substr($link, strlen($origin)) : $link);
+      => !is_string($link) ? $link : self::path($link, $origin);
 
     return match ($field?->kind) {
       FieldKind::Link => is_array($value) ? array_map($path, $value) : $path($value),
       FieldKind::Select => is_string($value) ? self::token($value) : $value,
       default => $value,
     };
+  }
+
+  /** A value object's row as it is held, its link keys spelled and pathed as a field's link is.
+      @param array<array-key, mixed> $row
+      @return array<array-key, mixed> */
+  public static function heldRow(?ValueObject $object, array $row, string $origin): array
+  {
+    foreach ($object === null ? [] : $object->kinds as $key => $kind) {
+      if ($kind === FieldKind::Link && is_string($row[$key] ?? null)) {
+        $row[$key] = self::path($row[$key], $origin);
+      }
+    }
+
+    return $row;
+  }
+
+  private static function path(string $link, string $origin): string
+  {
+    $link = Kinds::spelled($link);
+
+    return str_starts_with($link, $origin . '/') ? substr($link, strlen($origin)) : $link;
   }
 
   /* The token a write may send as the member's address, a row's key among them. */
@@ -68,14 +89,20 @@ final readonly class Spelling
     };
   }
 
-  /* A row's key on a fixed list is spelt as a select's value is.
-     @param array<string, mixed> $row @return array<string, mixed> */
+  /** A row's key on a fixed list is spelt as a select's value is, and its link
+      keys as a field's link, a path of the house shown whole.
+      @param array<string, mixed> $row @return array<string, mixed> */
   public function row(FieldDefinition $field, array $row): array
   {
-    $options = $this->addressed ? $this->profile->valueObject((string) $field->ref)?->options ?? [] : [];
-    foreach (array_keys($options) as $key) {
+    $object = $this->profile->valueObject((string) $field->ref);
+    foreach (array_keys($this->addressed ? $object?->options ?? [] : []) as $key) {
       if (is_string($row[$key] ?? null)) {
         $row[$key] = $this->schema->member($row[$key]) ?? $row[$key];
+      }
+    }
+    foreach ($object?->kinds ?? [] as $key => $kind) {
+      if ($kind === FieldKind::Link && is_string($row[$key] ?? null) && str_starts_with($row[$key], '/')) {
+        $row[$key] = $this->origin . $row[$key];
       }
     }
 

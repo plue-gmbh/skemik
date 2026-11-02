@@ -68,12 +68,12 @@ final readonly class Grant
     return $this->subject === null || $this->subject->value === $record?->value;
   }
 
-  /* The collection these rules would read two ways, or null. A key reads one
-     whole or by some of its records, each with the same fields, since its
-     reading is the collection's: `Feed\PublicFilter` reads every rule's fields
-     on every record a rule reaches, its filter, sort and `?q=` among them, so a
-     second way would widen the first.
-     @param list<Grant> $rules */
+  /** The collection these rules would read two ways, or null. A key reads one
+      whole or by some of its records, each with the same fields, since its
+      reading is the collection's: `Feed\PublicFilter` reads every rule's fields
+      on every record a rule reaches, its filter, sort and `?q=` among them, so a
+      second way would widen the first.
+      @param list<Grant> $rules */
   public static function readTwoWays(array $rules): ?Slug
   {
     $fields = [];

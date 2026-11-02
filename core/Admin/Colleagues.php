@@ -110,8 +110,8 @@ final readonly class Colleagues
       ['role' => $this->words->get('account.role.' . $account->role->value), 'does' => implode(', ', $does)]);
   }
 
-  /* Two whole scopes are one clause, since "writes every type, reads every type" reads as a list of two.
-     @return list<string> */
+  /** Two whole scopes are one clause, since "writes every type, reads every type" reads as a list of two.
+      @return list<string> */
   private function editor(string $person, Account $account): array
   {
     if ($account->write->types === null && $account->read->types === null) {

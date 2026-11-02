@@ -44,6 +44,10 @@ final readonly class Intake
      file lacks is not the old one's; the name only where it is the old file's (`named`). */
   private const DESCRIBED = ['content_url', 'encoding_format', 'content_size', 'sha256', 'upload_date',
     'width', 'height'];
+  /* What a phone records, refused with the format to export it as, since a type alone sends nobody
+     anywhere; `finfo` names many an `.m4a` `video/mp4`, which is taken as the video it says. */
+  private const INSTEAD = ['video/quicktime' => 'MP4', 'image/heic' => 'JPEG', 'image/heif' => 'JPEG',
+    'audio/x-m4a' => 'MP3', 'audio/mp4' => 'MP3'];
 
   public function __construct(
     private EntityRepository $entities,
@@ -59,8 +63,8 @@ final readonly class Intake
     private SvgGuard $guard = new SvgGuard(),
   ) {}
 
-  /* As a draft, like every other record; a field's picker takes what it offers (`SchemaOrg::fileKinds`).
-     @param list<string> $kinds */
+  /** As a draft, like every other record; a field's picker takes what it offers (`SchemaOrg::fileKinds`).
+      @param list<string> $kinds */
   public function taken(Collection $library, ?Upload $upload, array $kinds = []): Entity
   {
     $file = $this->file($upload, $kinds);
@@ -75,9 +79,9 @@ final readonly class Intake
       $now), []);
   }
 
-  /* The record's file exchanged for this one, taken by `file`, its other fields and its edges kept,
-     and its slug renamed where its name follows the file (`slugged`).
-     @param list<Relation> $edges the asset's, as they stand */
+  /** The record's file exchanged for this one, taken by `file`, its other fields and its edges kept,
+      and its slug renamed where its name follows the file (`slugged`).
+      @param list<Relation> $edges the asset's, as they stand */
   public function replaced(Entity $asset, Props $file, array $edges): Entity
   {
     $kept = array_diff_key($asset->props->document(), array_flip(self::DESCRIBED));
@@ -128,7 +132,8 @@ final readonly class Intake
      trashed ones counted, still holds them. */
   public function release(Entity $asset): void
   {
-    $name = basename((string) $asset->props->string('content_url'));
+    /** @psalm-taint-escape file */
+    $name = basename((string) $asset->props->string('content_url')); /* refused below unless a UUID */
     $held = new Query($asset->type, ['content_url' => [self::ADDRESS . $name]], perPage: 1);
     if (!$asset->keeps('content_url') || preg_match(Uuid::SHAPE, $name) !== 1
       || $this->entities->count($held) + $this->entities->count($held->inTrash()) > 0) {
@@ -139,14 +144,13 @@ final readonly class Intake
     $this->thumbnail->discard($name);
   }
 
-  /* The file placed under a generated name and described as its asset holds it,
-     or refused in a sentence naming it, and where a kind of file is shown,
-     refused unless it is one, before anything is placed.
-     @param list<string> $kinds the kinds taken, `image`, none for any */
+  /** The file placed under a generated name and described as its asset holds it,
+      or refused in a sentence naming it, and where a kind of file is shown,
+      refused unless it is one, before anything is placed.
+      @param list<string> $kinds the kinds taken, `image`, none for any */
   public function file(?Upload $upload, array $kinds = []): Props
   {
-    $mime = $upload?->error === UPLOAD_ERR_OK && class_exists(\finfo::class)
-      ? (string) (new \finfo(FILEINFO_MIME_TYPE))->file($upload->path) : '';
+    $mime = $upload?->error === UPLOAD_ERR_OK && class_exists(\finfo::class) ? $this->sniffed($upload) : '';
     $refusal = $this->refusal($upload, $mime, $kinds);
     if ($refusal !== null || $upload === null) {
       throw UploadRefused::because((string) $refusal);
@@ -155,10 +159,23 @@ final readonly class Intake
     return new Props($this->described($upload, $mime, $this->placed($upload, $mime)));
   }
 
+  /* The sniff tells no plain text format from another, Markdown and CSV being
+     plain text to it, so among those the name's extension says which: every one
+     is served as a download and run by nothing, and a page sent under `.md` is
+     still sniffed as the page it is. */
+  private function sniffed(Upload $upload): string
+  {
+    $mime = (string) (new \finfo(FILEINFO_MIME_TYPE))->file($upload->path);
+    $named = array_search(mb_strtolower(pathinfo($upload->name, PATHINFO_EXTENSION)), Media::FORMATS, true);
+
+    return $mime === 'text/plain' && is_string($named) && str_starts_with($named, 'text/') ? $named : $mime;
+  }
+
   /* A placed file whose asset was not written, so no file is left that no record holds. */
   public function drop(Props $file): void
   {
     $format = Media::FORMATS[(string) $file->string('encoding_format')] ?? '';
+    /** @psalm-taint-escape file */
     $path = $this->directory . '/' . basename((string) $file->string('content_url')) . '.' . $format;
     if ($format !== '' && is_file($path)) {
       unlink($path);
@@ -177,8 +194,8 @@ final readonly class Intake
     };
   }
 
-  /* Why this file is not taken, in a sentence naming it; null where it is.
-     @param list<string> $kinds */
+  /** Why this file is not taken, in a sentence naming it; null where it is.
+      @param list<string> $kinds */
   private function refusal(?Upload $upload, string $mime, array $kinds): ?string
   {
     $said = ['name' => $upload?->name ?? '', 'limit' => self::size(Upload::limit()), 'type' => $mime];
@@ -189,6 +206,7 @@ final readonly class Intake
       $upload->size > Upload::limit() => $this->words->get('media.too_large', $said),
       $upload->error !== UPLOAD_ERR_OK, !is_uploaded_file($upload->path) => $this->words->get('media.failed', $said),
       !class_exists(\finfo::class) => $this->words->get('boot.extension', ['extension' => 'fileinfo']),
+      isset(self::INSTEAD[$mime]) => $this->words->get('media.instead', [...$said, 'instead' => self::INSTEAD[$mime]]),
       !isset(Media::FORMATS[$mime]) => $this->words->get('media.format', $said),
       $kinds !== [] && !in_array(strtok($mime, '/'), $kinds, true)
         => $this->words->get('media.no_' . $kinds[0], $said),

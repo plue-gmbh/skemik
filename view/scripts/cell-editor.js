@@ -12,10 +12,11 @@ const INPUTS = { text: "text", link: "url", number: "number", date: "text",
 const MOVES = { Enter: null, ArrowDown: [1, 0], ArrowUp: [-1, 0], Tab: [0, 1] };
 
 /* Which editor a field opens: in the cell, or one of the popovers. A select on
-   the world's list has no options and edits as text that suggests the list. */
+   the world's list has no options and edits as text that suggests the list; a
+   link that takes a file of the library opens a popover offering it. */
 const modeOf = (field) => (field.prose ? "prose" : field.edge ? "edge" : field.kind === "objects" ? "objects"
   : field.refers ? "refer" : field.kind === "select" && field.options.length > 0 ? "select"
-  : field.many ? "list" : "input");
+  : field.many ? "list" : field.key in field.files ? "link" : "input");
 
 /* The house's wall clock to the minute, as a `datetime-local` input holds it. */
 function nowIn(zone) {
@@ -27,7 +28,7 @@ function nowIn(zone) {
 
 const cellEditor = {
   template: "#cell-editor-template",
-  components: { edgePicker, listPicker, objectsPicker, referPicker },
+  components: { edgePicker, listPicker, objectsPicker, referPicker, linkPicker },
   props: ["editing", "words", "language"],
   emits: ["commit", "cancel"],
   data() {

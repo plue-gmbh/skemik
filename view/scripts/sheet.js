@@ -67,12 +67,16 @@ function mountSheet(root) {
         if (chip && spineData?.rows[chip.dataset.spine]) this.openSpine(chip);
       };
       document.addEventListener("click", this.opening);
-      window.addEventListener("beforeunload", (event) => this.count > 0 && event.preventDefault());
-      document.addEventListener("keydown", (event) => this.shortcut(event));
+      this.leaving = (event) => this.count > 0 && event.preventDefault();
+      window.addEventListener("beforeunload", this.leaving);
+      this.keyed = (event) => this.shortcut(event);
+      document.addEventListener("keydown", this.keyed);
     },
     unmounted() {
       document.removeEventListener("click", this.opening);
       document.removeEventListener("click", this.adding);
+      window.removeEventListener("beforeunload", this.leaving);
+      document.removeEventListener("keydown", this.keyed);
     },
     methods: {
       clicked(event) {
@@ -157,7 +161,8 @@ function mountSheet(root) {
         const [chip, values] = [chipOf(id), this.pending[id] ?? {}];
         if (!chip) return;
         Object.keys(values).some(isSpine) ? (chip.dataset.pending = "") : delete chip.dataset.pending;
-        chip.querySelector("[data-spine-slug]").textContent = values["spine.slug"] ?? spineData.rows[id].slug;
+        const slug = values["spine.slug"] ?? spineData.rows[id].slug;
+        chip.querySelector("[data-spine-slug]").textContent = slugShown(slug);
         const dot = chip.querySelector("[data-spine-locale]");
         if (!dot) return;
         const locale = values["spine.locale"] ?? spineData.rows[id].locale;

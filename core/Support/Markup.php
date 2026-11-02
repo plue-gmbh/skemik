@@ -37,9 +37,9 @@ final readonly class Markup
     return clone($this, ['link' => $link]);
   }
 
-  /* Markdown with each link's address answered by `$to`, the words alone where
-     it answers null; the pattern is the renderer's, so both see the same links.
-     @param \Closure(string): ?string $to */
+  /** Markdown with each link's address answered by `$to`, the words alone where
+      it answers null; the pattern is the renderer's, so both see the same links.
+      @param \Closure(string): ?string $to */
   public static function relinked(string $markdown, \Closure $to): string
   {
     return (string) preg_replace_callback(self::LINK, function (array $found) use ($to): string {

@@ -37,11 +37,11 @@ final readonly class VocabularyDistiller
       'ranges' => $this->properties($nodes, 'schema:rangeIncludes'), 'members' => $this->members($nodes)];
   }
 
-  /* The released file carries the vocabularies schema.org aligns with —
-     `dcat:Dataset`, `skos:broader` — under the same graph. Keying on the local
-     name alone lets dcat:Dataset overwrite schema:Dataset.
-     @param array<string, mixed> $graph
-     @return array<string, array<string, mixed>> schema.org's own nodes, by local name */
+  /** The released file carries the vocabularies schema.org aligns with —
+      `dcat:Dataset`, `skos:broader` — under the same graph. Keying on the local
+      name alone lets dcat:Dataset overwrite schema:Dataset.
+      @param array<string, mixed> $graph
+      @return array<string, array<string, mixed>> schema.org's own nodes, by local name */
   private function schemaNodes(array $graph): array
   {
     $nodes = [];
@@ -56,9 +56,9 @@ final readonly class VocabularyDistiller
     return $nodes;
   }
 
-  /* Kept because domains cannot show it: `branchOf` is still declared on
-     LocalBusiness, and only this says `parentOrganization` took its place.
-     @return array<string, string> each superseded name with its first successor */
+  /** Kept because domains cannot show it: `branchOf` is still declared on
+      LocalBusiness, and only this says `parentOrganization` took its place.
+      @return array<string, string> each superseded name with its first successor */
   private function superseded(array $nodes): array
   {
     $by = array_map(fn (array $node): array => $this->names($node['schema:supersededBy'] ?? null), $nodes);
@@ -86,9 +86,9 @@ final readonly class VocabularyDistiller
     );
   }
 
-  /* Kept because a select stores a member by its name, `EventScheduled`, and
-     only its type says it is an `EventStatusType`.
-     @return array<string, list<string>> each member with the enumerations it is typed by */
+  /** Kept because a select stores a member by its name, `EventScheduled`, and
+      only its type says it is an `EventStatusType`.
+      @return array<string, list<string>> each member with the enumerations it is typed by */
   private function members(array $nodes): array
   {
     $isMember = fn (array $node): bool => !str_contains($this->typeOf($node), 'rdfs:Class')
@@ -99,8 +99,8 @@ final readonly class VocabularyDistiller
     return array_filter(array_map($types, array_filter($nodes, $isMember)));
   }
 
-  /* `domainIncludes`, `rangeIncludes` and `subClassOf` are one node, a list, or absent.
-     @return list<string> */
+  /** `domainIncludes`, `rangeIncludes` and `subClassOf` are one node, a list, or absent.
+      @return list<string> */
   private function names(mixed $value): array
   {
     if ($value === null) {

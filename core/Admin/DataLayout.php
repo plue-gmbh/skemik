@@ -26,8 +26,8 @@ final readonly class DataLayout
 
   public function __construct(private string $root, private Proofs $proofs, private Words $words) {}
 
-  /* The host's lines, free ones but for the `PATCH` of the address this run came under.
-     @return list<Requirement> */
+  /** The host's lines, free ones but for the `PATCH` of the address this run came under.
+      @return list<Requirement> */
   public function requirements(?Premises $configured, string $origin): array
   {
     [$free, $writable] = [self::free($configured?->data ?? $this->root), is_writable($this->root)];
@@ -59,12 +59,12 @@ final readonly class DataLayout
     return $free === false ? null : (int) $free;
   }
 
-  /* What costs and refuses nothing, said before somebody measures it: without
-     the opcode cache PHP compiles the tree anew per request, with
-     `zend.assertions` left at 1 the self-tests run on every page, and run as
-     CGI or FastCGI PHP cannot end an answer before the work after it, so a
-     login waits for its mail and its time tells whether the address has an account.
-     @return list<Requirement> */
+  /** What costs and refuses nothing, said before somebody measures it: without
+      the opcode cache PHP compiles the tree anew per request, with
+      `zend.assertions` left at 1 the self-tests run on every page, and run as
+      CGI or FastCGI PHP cannot end an answer before the work after it, so a
+      login waits for its mail and its time tells whether the address has an account.
+      @return list<Requirement> */
   public function costs(): array
   {
     $enabled = PHP_SAPI === 'cli-server' ? 'opcache.enable_cli' : 'opcache.enable';
@@ -122,10 +122,10 @@ final readonly class DataLayout
     $this->proveHidden($premises->address . '/config.php', $sentinel, $premises->data);
   }
 
-  /* The library `pdo_sqlite` was built with, asked of it: `strict` tables need
-     3.37, `format()` and the JSON functions 3.38. Without the extension the line
-     is unmet beside its own, naming what a hoster is asked for.
-     @return list<Requirement> */
+  /** The library `pdo_sqlite` was built with, asked of it: `strict` tables need
+      3.37, `format()` and the JSON functions 3.38. Without the extension the line
+      is unmet beside its own, naming what a hoster is asked for.
+      @return list<Requirement> */
   private function sqlite(): array
   {
     $version = extension_loaded('pdo_sqlite')
@@ -135,9 +135,9 @@ final readonly class DataLayout
       version_compare($version, self::SQLITE, '>='))];
   }
 
-  /* PHP's own server answers one request at a time unless told otherwise, and
-     the proofs are a second request made while the first waits for it.
-     @return list<Requirement> */
+  /** PHP's own server answers one request at a time unless told otherwise, and
+      the proofs are a second request made while the first waits for it.
+      @return list<Requirement> */
   private function workers(): array
   {
     if (PHP_SAPI !== 'cli-server') {
@@ -152,11 +152,19 @@ final readonly class DataLayout
      typed, since resolved it would tell anyone before the first run where the
      domain root lies. `open_basedir` is asked first, since a path outside it
      prints a warning where it should refuse. */
-  /** @psalm-taint-escape file the operator's own folder, proven empty and writable before anything is made in it */
+  /** @psalm-taint-escape file the operator's own folder, proven empty and writable before anything is made in it,
+      @psalm-taint-escape ssrf and a path on this disk, never an address
+      @psalm-taint-escape url_component
+      @psalm-taint-escape url_path */
   private function folder(string $typed): string
   {
     $typed = trim($typed);
+    /** @psalm-taint-escape file
+        @psalm-taint-escape url_component
+        @psalm-taint-escape url_path */
     $path = $this->normalised(str_starts_with($typed, '/') ? $typed : $this->root . '/' . $typed);
+    /* `scandir` below is the proof itself: it answers empty or not, inside `open_basedir`, to whoever reaches a
+       house before its first run. */
     $refused = fn (string $key): InstallRefused => InstallRefused::because(
       $this->words->get($key, ['folder' => $typed]));
 
@@ -171,12 +179,12 @@ final readonly class DataLayout
     };
   }
 
-  /* A line about a write PHP was refused, naming the user it runs as where the
-     host lets that be asked, since the write is mended for that account, and only
-     then, since the page shows it to anyone before the first run. Never the owner
-     of the files, which PHP answers without `posix`: on the host that meets this
-     line it is the wrong one.
-     @param array<string, string> $values */
+  /** A line about a write PHP was refused, naming the user it runs as where the
+      host lets that be asked, since the write is mended for that account, and only
+      then, since the page shows it to anyone before the first run. Never the owner
+      of the files, which PHP answers without `posix`: on the host that meets this
+      line it is the wrong one.
+      @param array<string, string> $values */
   private function writing(string $key, array $values): string
   {
     $account = function_exists('posix_geteuid') ? posix_getpwuid(posix_geteuid()) : false;

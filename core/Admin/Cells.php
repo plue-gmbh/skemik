@@ -54,10 +54,10 @@ final readonly class Cells
       }]);
   }
 
-  /* What an editable field holds, in the spelling its editor takes: a date and
-     time in the house's timezone, since that is what a person types, and a list
-     as its entries.
-     @return string|int|float|bool|list<mixed>|null */
+  /** What an editable field holds, in the spelling its editor takes: a date and
+      time in the house's timezone, since that is what a person types, and a list
+      as its entries.
+      @return string|int|float|bool|list<mixed>|null */
   public function editable(Entity $entity, FieldDefinition $field): string|int|float|bool|array|null
   {
     $value = $entity->props->document()[$field->key] ?? null;
@@ -158,10 +158,10 @@ final readonly class Cells
     return implode(' ', $shown);
   }
 
-  /* Every row by its bearing key, so rows told apart by their names are told apart in the cell too;
-     only rows with no name are counted, since the names already say how many there are.
-     @param array<array-key, mixed> $items
-     @param array<int, Chip> $chips the records its rows refer to, by row */
+  /** Every row by its bearing key, so rows told apart by their names are told apart in the cell too;
+      only rows with no name are counted, since the names already say how many there are.
+      @param array<array-key, mixed> $items
+      @param array<int, Chip> $chips the records its rows refer to, by row */
   private function objects(FieldDefinition $field, array $items, array $chips): string
   {
     $bearing = (string) ($this->profile->valueObject((string) $field->ref)?->bearing[0] ?? '');

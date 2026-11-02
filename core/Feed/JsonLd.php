@@ -96,8 +96,8 @@ final readonly class JsonLd
       'spelling' => new Spelling($this->schema, $this->profile, $this->origin, true)]);
   }
 
-  /* The flat formats are this document in another syntax, so the gates run once
-     and no serialiser can be the one that forgets them. @return array<string, mixed> */
+  /** The flat formats are this document in another syntax, so the gates run once
+      and no serialiser can be the one that forgets them. @return array<string, mixed> */
   public function recordDocument(Entity $entity, Collection $collection): array
   {
     return ['@context' => self::CONTEXT, ...$this->document($entity, $collection, Depth::Addressed)];
@@ -147,17 +147,17 @@ final readonly class JsonLd
       ...$this->properties->of($type, $values), ...$this->spine($entity, $type)];
   }
 
-  /* What each property is called in the content's language, for a page that
-     shows a person the values; a document itself carries no label.
-     @return array<string, string> */
+  /** What each property is called in the content's language, for a page that
+      shows a person the values; a document itself carries no label.
+      @return array<string, string> */
   public function labels(Collection $collection): array
   {
     return $this->properties->labels($collection->type);
   }
 
-  /* Every property a document of this reading may carry, in its order, so a
-     table has the same columns on every page whatever its rows hold.
-     @return list<string> */
+  /** Every property a document of this reading may carry, in its order, so a
+      table has the same columns on every page whatever its rows hold.
+      @return list<string> */
   public function columns(Collection $collection): array
   {
     $keys = array_map(fn (CollectionField $held): string => $held->key, $this->filter->fields($collection));
@@ -166,9 +166,9 @@ final readonly class JsonLd
     return ['@id', ...$this->properties->names($collection->type, $keys), ...$spine];
   }
 
-  /* A plain value as the document shows it (`Spelling`), a referring key as its
-     target, and rows each with theirs.
-     @return string|int|float|bool|array<array-key, mixed>|null */
+  /** A plain value as the document shows it (`Spelling`), a referring key as its
+      target, and rows each with theirs.
+      @return string|int|float|bool|array<array-key, mixed>|null */
   private function scalar(Entity $entity, FieldDefinition $field, ?Depth $below): string|int|float|bool|array|null
   {
     $value = $entity->props->document()[$field->key] ?? null;
@@ -186,12 +186,12 @@ final readonly class JsonLd
     return array_map($typed, array_filter($entity->props->list($field->key), is_array(...)));
   }
 
-  /* A row's reference, or a flattened key's, leaves as any target does, through
-     the same gates and at the same depth, or not at all; a word leaves as a
-     thing of that name, so a consumer reads `name` either way, unless the key
-     is a link, where the word is an address and leaves as one.
-     @param array<string, mixed> $row
-     @return array<string, mixed> */
+  /** A row's reference, or a flattened key's, leaves as any target does, through
+      the same gates and at the same depth, or not at all; a word leaves as a
+      thing of that name, so a consumer reads `name` either way, unless the key
+      is a link, where the word is an address and leaves as one.
+      @param array<string, mixed> $row
+      @return array<string, mixed> */
   private function referring(FieldDefinition $field, array $row, ?Depth $below): array
   {
     $object = $this->profile->referring($field);
@@ -210,10 +210,10 @@ final readonly class JsonLd
     return array_filter($row, fn (mixed $value): bool => $value !== null);
   }
 
-  /* A record among its own targets, a live list that lists itself, is its
-     address alone: rendered, it would carry the document once more inside it.
-     @param array<string, list<Relation>> $edges the record's, by predicate, in their stored order
-     @return array<array-key, mixed>|string|Rendered|null */
+  /** A record among its own targets, a live list that lists itself, is its
+      address alone: rendered, it would carry the document once more inside it.
+      @param array<string, list<Relation>> $edges the record's, by predicate, in their stored order
+      @return array<array-key, mixed>|string|Rendered|null */
   private function edge(FieldDefinition $field, array $edges, ?Depth $below): array|string|Rendered|null
   {
     $values = [];
@@ -228,10 +228,10 @@ final readonly class JsonLd
     return $field->holdsMany() ? $values : ($values[0] ?? null);
   }
 
-  /* A term by its code and any other record as its own document one level down
-     — or nothing at all where it fails the gates, since an `@id` carries the
-     slug and a slug is a name.
-     @return array<string, mixed>|string|Rendered|null */
+  /** A term by its code and any other record as its own document one level down
+      — or nothing at all where it fails the gates, since an `@id` carries the
+      slug and a slug is a name.
+      @return array<string, mixed>|string|Rendered|null */
   private function targetOf(FieldDefinition $field, Relation $edge, ?Depth $below): array|string|Rendered|null
   {
     $target = $this->target($edge->object, $below);
@@ -257,19 +257,19 @@ final readonly class JsonLd
       : $this->document($target, $collection, $below);
   }
 
-  /* An edge's qualifiers are what this surface says about the target, in the reader's language.
-     @param array<string, mixed>|string|Rendered $target
-     @return array<string, mixed>|string|Rendered */
+  /** An edge's qualifiers are what this surface says about the target, in the reader's language.
+      @param array<string, mixed>|string|Rendered $target
+      @return array<string, mixed>|string|Rendered */
   private function wrapped(Relation $edge, array|string|Rendered $target): array|string|Rendered
   {
     return (new Wrappers())->wrapped($edge, $this->properties->qualified($edge->qualifiersIn($this->locale)),
       $target);
   }
 
-  /* The spine's content columns, which survive a copy of the holdings, in
-     schema.org's vocabulary and never under spine names. A labelled thing emits
-     no `inLanguage`: a price written in German would announce who typed it
-     first. @return array<string, mixed> */
+  /** The spine's content columns, which survive a copy of the holdings, in
+      schema.org's vocabulary and never under spine names. A labelled thing emits
+      no `inLanguage`: a price written in German would announce who typed it
+      first. @return array<string, mixed> */
   private function spine(Entity $entity, TypeDefinition $type): array
   {
     if (!$type->locale->forks()) {

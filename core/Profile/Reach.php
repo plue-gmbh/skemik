@@ -11,6 +11,6 @@ namespace Profile;
    list of names in `Domain\Status` that a thirty-first type would not be on. */
 enum Reach: string
 {
-  case Public = 'public';  // may be published, and the address serves it once it is
-  case House = 'house';    // draft, review and archived only: nothing of it leaves the house
+  case Public = 'public';  /* may be published, and the address serves it once it is */
+  case House = 'house';    /* draft, review and archived only: nothing of it leaves the house */
 }

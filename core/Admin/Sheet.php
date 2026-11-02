@@ -48,7 +48,7 @@ final readonly class Sheet
     'picker.says', 'picker.done', 'sheet.ticked', 'sheet.ticked_count', 'sheet.ticked_actions', 'sheet.set_status',
     'sheet.set_field', 'sheet.set_to', 'sheet.set_none', 'sheet.set_locale', 'sheet.set_locale_kept', 'sheet.untick',
     'delete.confirm', 'delete.question_many', 'delete.many', 'dialog.cancel', 'media.upload', 'media.upload_up_to',
-    'media.sending', 'media.lost', 'picker.draft'];
+    'media.sending', 'media.lost', 'picker.draft', 'picker.link_file'];
 
   public const OWN_STATUS = ['payment_status', 'order_status', 'reservation_status'];
   private const READ = 'date_read';
@@ -146,12 +146,13 @@ final readonly class Sheet
       'words' => (object) array_combine(self::ISLAND_WORDS, array_map($this->word(...), self::ISLAND_WORDS))]);
   }
 
-  /* What the island needs to pick an editor for a field: a select's options, or
-     what its input suggests where they are the world's list or a record's kinds,
-     a reference's targets — which collections hold them, named in the picker's
-     heading — and whether it uploads and which kinds of file, and an object's
-     keys, their kinds where they are not text, and those that take a closed list.
-     @return array<string, mixed> */
+  /** What the island needs to pick an editor for a field: a select's options, or
+      what its input suggests where they are the world's list or a record's kinds,
+      a reference's targets — which collections hold them, named in the picker's
+      heading — and whether it uploads and which kinds of file, which of its keys
+      take a file of the library as a link, and an object's keys, their kinds
+      where they are not text, and those that take a closed list.
+      @return array<string, mixed> */
   private function field(Column $column, TypeDefinition $type): array
   {
     $field = $column->field;
@@ -166,7 +167,7 @@ final readonly class Sheet
       'prose' => $column->prose(), 'many' => $field->holdsMany(), 'whole' => $field->whole,
       'edge' => $edge, 'any' => $field->targets === ['*'], 'upload' => $column->uploads,
       'accept' => $this->schema->fileKinds($object?->targets ?? $field->targets),
-      'term' => $field->cardinality === Cardinality::T,
+      'term' => $field->cardinality === Cardinality::T, 'files' => (object) $this->schema->fileKeys($field, $object),
       'target' => $edge ? $this->targets($field) : '', 'lines' => $this->lines($field),
       'keys' => $keys, 'bearing' => $object?->bearing ?? [], 'reference' => $object?->reference,
       'refers' => $object === null && $this->profile->referring($field) !== null,
@@ -174,10 +175,10 @@ final readonly class Sheet
       'choices' => (object) $this->terms->rowOptions($field)];
   }
 
-  /* The lines a picker offers under a target it adds, by the target's type
-     where that changes them and under '' for any other; a term's word is its
-     record's.
-     @return array<string, array<string, FieldKind>> */
+  /** The lines a picker offers under a target it adds, by the target's type
+      where that changes them and under '' for any other; a term's word is its
+      record's.
+      @return array<string, array<string, FieldKind>> */
   private function lines(FieldDefinition $field): array
   {
     if ($field->cardinality !== Cardinality::E) {
@@ -244,9 +245,9 @@ final readonly class Sheet
       ...($row->authored === null ? [] : ['hints' => $this->hints($row->authored, $editable)])];
   }
 
-  /* The authored words a row editing another locale's holds, by key, as its
-     editors' placeholders.
-     @param list<Column> $editable */
+  /** The authored words a row editing another locale's holds, by key, as its
+      editors' placeholders.
+      @param list<Column> $editable */
   private function hints(Entity $authored, array $editable): object
   {
     $hints = [];
@@ -258,9 +259,9 @@ final readonly class Sheet
       fn (string|int|float|bool|array|null $words): bool => !in_array($words, [null, '', []], true));
   }
 
-  /* A value object's rows as their editor takes them, a row's record by the
-     row's place, as a held edge is by its own and for the same reason.
-     @return list<mixed> */
+  /** A value object's rows as their editor takes them, a row's record by the
+      row's place, as a held edge is by its own and for the same reason.
+      @return list<mixed> */
   private function entries(SheetRow $row, FieldDefinition $field): array
   {
     $entries = (array) $this->cells->editable($row->entity, $field);

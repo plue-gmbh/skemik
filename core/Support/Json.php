@@ -49,6 +49,8 @@ final readonly class Json
     return is_array($value) ? $value : throw JsonFailed::malformed('not an object');
   }
 
+  /** @psalm-taint-escape has_quotes a JSON document: its quotes are escaped here, and it is sent under a JSON
+      @psalm-taint-escape html content type with `nosniff`, so no browser reads it as a page */
   public function encode(mixed $value): string
   {
     return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

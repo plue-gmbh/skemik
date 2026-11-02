@@ -40,11 +40,11 @@ final readonly class Payload
     private ?string $language = null,
   ) {}
 
-  /* The language a document states of a type that forks is the record's own: the route's for a new
-     work, and a photograph's or a dataset's wherever it is read, a new one's too
-     (`IngestController::spoken`), since there it is the language of the bytes
-     (`Profile\LocaleMode`).
-     @return list<Violation> what the document says that could not be read, each by its name */
+  /** The language a document states of a type that forks is the record's own: the route's for a new
+      work, and a photograph's or a dataset's wherever it is read, a new one's too
+      (`IngestController::spoken`), since there it is the language of the bytes
+      (`Profile\LocaleMode`).
+      @return list<Violation> what the document says that could not be read, each by its name */
   public function refusedOn(Entity $record): array
   {
     $stated = $this->language === null || $this->language === $record->locale->tag ? []
@@ -85,10 +85,10 @@ final readonly class Payload
     return [...array_values($kept), ...$sent];
   }
 
-  /* An edge's words in every other locale stay while its target does. Sent on
-     another locale's route, its words are that locale's, and the ones it was
-     written with stay; an edge not held before takes them as its own.
-     @param list<Relation> $stored */
+  /** An edge's words in every other locale stay while its target does. Sent on
+      another locale's route, its words are that locale's, and the ones it was
+      written with stay; an edge not held before takes them as its own.
+      @param list<Relation> $stored */
   private function worded(Entity $record, Relation $sent, array $stored): Relation
   {
     $held = array_find($stored, fn (Relation $edge): bool

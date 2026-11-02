@@ -29,15 +29,15 @@ final readonly class Terms
     assert($this->unworded($profile) === [], 'a select token has no word in every shipped language');
   }
 
-  /* The keys of an objects field's rows that take a closed list, each with its tokens.
-     @return array<string, list<string>> */
+  /** The keys of an objects field's rows that take a closed list, each with its tokens.
+      @return array<string, list<string>> */
   public function rowOptions(FieldDefinition $field): array
   {
     return $field->kind === FieldKind::Objects ? $this->rows[(string) $field->ref] ?? [] : [];
   }
 
-  /* Every token a field draws on, its own and its rows' keys'.
-     @return list<string> */
+  /** Every token a field draws on, its own and its rows' keys'.
+      @return list<string> */
   public function tokens(FieldDefinition $field): array
   {
     return [...$field->choices(), ...array_merge(...array_values($this->rowOptions($field)))];

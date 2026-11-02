@@ -208,9 +208,9 @@ final readonly class Schema
     return [...self::TABLES, ...self::INDEXES, $this->slugAcrossLocales(), ...$this->search()];
   }
 
-  /* The word table follows `words` by triggers, one row per word per field, so
-     a save writes the JSON once and never the rows; a purge takes them by key.
-     @return list<string> */
+  /** The word table follows `words` by triggers, one row per word per field, so
+      a save writes the JSON once and never the rows; a purge takes them by key.
+      @return list<string> */
   private function search(): array
   {
     $insert = 'insert into entity_word (entity_id, field, word) select new.id, f.key, w.value'

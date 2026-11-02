@@ -19,12 +19,26 @@ final readonly class Media
   /* What an upload may be, by its sniffed type, and the extension its
      stored name gets; `mpeg` and `ogg` are sniffed as audio or video. Part of the
      profile and not a setting, so another entry is the conversation another
-     `FieldKind` would be. */
+     `FieldKind` would be. An archive is never unpacked, so nothing inside it
+     becomes a file here, and it is served as a download like every format that
+     is not shown, the office six among them: `finfo` names each by its own type
+     and never as the zip it is, and a macro-enabled file by its plain sibling's,
+     which is the extension its download gets and under which Office runs no
+     macro. Not here on purpose: HTML and XML, which a browser would run from
+     the house's domain, and what a phone records, `.mov`, HEIC and `.m4a`,
+     which browsers do not show and the preview cannot read, refused naming what
+     to export instead (`Admin\Intake`). */
   public const FORMATS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
     'image/avif' => 'avif', 'image/gif' => 'gif', 'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
     'video/mp4' => 'mp4', 'video/webm' => 'webm', 'audio/mpeg' => 'mp3', 'video/mpeg' => 'mpeg',
     'audio/ogg' => 'ogg', 'video/ogg' => 'ogv', 'text/plain' => 'txt', 'text/csv' => 'csv',
-    'text/markdown' => 'md', 'font/woff2' => 'woff2'];
+    'text/markdown' => 'md', 'text/vtt' => 'vtt', 'font/woff2' => 'woff2', 'application/zip' => 'zip',
+    'application/json' => 'json',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+    'application/vnd.oasis.opendocument.text' => 'odt', 'application/vnd.oasis.opendocument.spreadsheet' => 'ods',
+    'application/vnd.oasis.opendocument.presentation' => 'odp'];
 
   /* The @type an asset leaves under, by the first half of its MIME type, and
      what `Claims` checks a property against. Any other record leaves as itself. */

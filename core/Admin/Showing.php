@@ -45,9 +45,9 @@ final readonly class Showing
     return array_values(array_filter($edges, fn (Relation $edge): bool => $this->shows($edge, $record)));
   }
 
-  /* The kinds of file every field showing the record takes (`SchemaOrg::fileKinds`),
-     empty where any file may stand.
-     @return list<string> */
+  /** The kinds of file every field showing the record takes (`SchemaOrg::fileKinds`),
+      empty where any file may stand.
+      @return list<string> */
   public function fileKinds(Entity $record): array
   {
     $kinds = null;
@@ -65,9 +65,9 @@ final readonly class Showing
     return $kinds ?? [];
   }
 
-  /* An asset saved with a format no field showing it takes is refused, as the file
-     itself would be, or a picture an event shows turns into a PDF by one typed line.
-     @return list<Violation> */
+  /** An asset saved with a format no field showing it takes is refused, as the file
+      itself would be, or a picture an event shows turns into a PDF by one typed line.
+      @return list<Violation> */
   public function kept(Entity $asset): array
   {
     $kinds = $asset->typeName() === 'MediaObject' ? $this->fileKinds($asset) : [];

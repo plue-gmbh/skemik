@@ -80,9 +80,9 @@ final readonly class TokenController
     return $refused ?? $this->issued($request, $token, $rules);
   }
 
-  /* Said before adding is: a name whose new key would read a collection two
-     ways is refused whatever else it holds, and the form is answered so.
-     @param list<Grant> $rules */
+  /** Said before adding is: a name whose new key would read a collection two
+      ways is refused whatever else it holds, and the form is answered so.
+      @param list<Grant> $rules */
   private function refused(Token $token, array $rules): ?Response
   {
     $twoWays = Grant::readTwoWays($rules);
@@ -111,10 +111,10 @@ final readonly class TokenController
     return $this->refused($token, $rules) ?? $this->issued($request, $token, $rules);
   }
 
-  /* The older secrets of the name are read before the new one is written, so
-     the stop ticked never stops the key just issued. Each is logged as replaced,
-     not revoked: read under the new key's line, a revocation reads as its own.
-     @param list<Grant> $rules */
+  /** The older secrets of the name are read before the new one is written, so
+      the stop ticked never stops the key just issued. Each is logged as replaced,
+      not revoked: read under the new key's line, a revocation reads as its own.
+      @param list<Grant> $rules */
   private function issued(Request $request, Token $token, array $rules): Response
   {
     $older = $request->form('replace') === '1' ? $this->keys->liveNamed($token->label) : [];
@@ -134,9 +134,9 @@ final readonly class TokenController
       $account->person->value, $this->expiry((string) $request->form('until'))))->issuable();
   }
 
-  /* The live key's rules and the new ones, on the new key.
-     @param list<Grant> $rules
-     @return list<Grant> */
+  /** The live key's rules and the new ones, on the new key.
+      @param list<Grant> $rules
+      @return list<Grant> */
   private function carried(?Token $previous, Token $token, array $rules): array
   {
     $kept = $previous === null ? [] : array_filter($this->grants->forToken($previous),
@@ -193,10 +193,10 @@ final readonly class TokenController
       $done === null ? null : new Props([$done => true]));
   }
 
-  /* The ticked capabilities and the collections, each sent as one comma list:
-     create and read on one anchor are two rules of one key, and the set-up key
-     of the register is one rule per collection. A field names one collection.
-     @return list<Grant> */
+  /** The ticked capabilities and the collections, each sent as one comma list:
+      create and read on one anchor are two rules of one key, and the set-up key
+      of the register is one rule per collection. A field names one collection.
+      @return list<Grant> */
   private function rules(Request $request): array
   {
     $slugs = array_values(array_unique(array_filter(explode(',', (string) $request->form('collection')))));
@@ -245,22 +245,13 @@ final readonly class TokenController
      or the rule would be stale the moment it is issued. */
   private function subject(Collection $collection, string $id): EntityId
   {
-    try {
-      $record = $this->entities->find(new EntityId($id));
-    } catch (MalformedValue | EntityNotFound) {
-      $record = null;
-    }
-    if ($record === null || $record->type !== $collection->type || $record->deletedAt !== null) {
-      throw EntityNotFound::withId($id);
-    }
-
-    return $record->id;
+    return $this->entities->live($collection->type, $id)->id;
   }
 
-  /* A key reads a collection one way: a read rule issued for it moves the key's
-     other read rules there with it, or two sentences on one badge would disagree
-     about one reading, and the filter would take the narrower.
-     @param list<Grant> $issued */
+  /** A key reads a collection one way: a read rule issued for it moves the key's
+      other read rules there with it, or two sentences on one badge would disagree
+      about one reading, and the filter would take the narrower.
+      @param list<Grant> $issued */
   private function unpublished(Grant $each, array $issued): bool
   {
     $read = array_find($issued, fn (Grant $rule): bool => $rule->capability === GrantCapability::Read

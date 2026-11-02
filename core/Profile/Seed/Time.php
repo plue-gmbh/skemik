@@ -42,7 +42,7 @@ final readonly class Time
     $vo = $this->vo;
 
     return [
-      /* ‡ and not †, the one override in the profile: a concert names itself,
+      /* ‡ and not †, the one override of a † in the profile: a concert names itself,
          the eleventh run of a course does not, and requiring a name there
          produces a formatted restatement no page renders. */
       $f->text('name', 'Name')->starter()->words(),
@@ -55,7 +55,7 @@ final readonly class Time
       $f->select('event_status', 'Status', ['EventScheduled', 'EventCancelled',
         'EventPostponed', 'EventRescheduled', 'EventMovedOnline'])->starter(),
       $f->select('event_attendance_mode', 'Attendance', ['OfflineEventAttendanceMode',
-        'OnlineEventAttendanceMode', 'MixedEventAttendanceMode'])->starter(),
+        'OnlineEventAttendanceMode', 'MixedEventAttendanceMode']),
       $f->objects('event_schedule', 'Recurrence', 'Schedule'),
       $f->number('maximum_attendee_capacity', 'Capacity')->whole(),
       /* ∂ — capacity minus every reservation not cancelled, computed at emit. The
@@ -75,7 +75,7 @@ final readonly class Time
          only by choosing. Both optional: the profile holds no rule spanning
          two fields, so *at least one* is not ours to enforce. */
       $f->ref('location', 'Venue', 'Place')->starter(),
-      $f->link('location_url', 'Online address')->starter()
+      $f->link('location_url', 'Online address')
         ->keyOf('VirtualLocation', 'url', 'location'),
       $f->ref('organizer', 'Organizer', 'Organization', 'Person')->starter(),
       $f->refs('performer', 'Performer', 'Person', 'Organization'),

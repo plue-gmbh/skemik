@@ -161,9 +161,9 @@ final readonly class Session
     }));
   }
 
-  /* `logIn` writes the account first, so another login of it is a file that
-     begins with it, and an anonymous one never does.
-     @return list<string> */
+  /** `logIn` writes the account first, so another login of it is a file that
+      begins with it, and an anonymous one never does.
+      @return list<string> */
   private function held(string $accountId): array
   {
     $own = $this->active() ? session_id() : '';

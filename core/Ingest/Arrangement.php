@@ -14,8 +14,8 @@ use Storage\CollectionField;
 
 /* The arrangement a document sends, read into the fields a collection carries
    (`ArrangeController`): each entry of `variableMeasured` the type's own field
-   of that name, or the value object arriving on that property, carried whole
-   with its keys named under `valueReference`, and each let out where
+   of that name, or the value object arriving on that property, its keys named
+   under `valueReference`, each a field of its own and let out where
    `isAccessibleForFree` says so. What no house arranges by hand is a violation
    naming the entry as the document spelt it: a required field left out, a name
    the type does not have, one named twice, a field let out of a type with no
@@ -44,10 +44,10 @@ final readonly class Arrangement
     return [$fields, [...$violations, ...$this->once($type, $fields), ...$this->required($type, $fields)]];
   }
 
-  /* One entry sent: the value object arriving on that property where it names
-     keys under `valueReference`, else the type's own field of that name, since
-     both may share it: an event's venue and its online address are `location`.
-     @return list<CollectionField|Violation> */
+  /** One entry sent: the value object arriving on that property where it names
+      keys under `valueReference`, else the type's own field of that name, since
+      both may share it: an event's venue and its online address are `location`.
+      @return list<CollectionField|Violation> */
   private function entry(TypeDefinition $type, mixed $variable): array
   {
     $name = is_array($variable) && is_string($variable['propertyID'] ?? null) ? $variable['propertyID'] : null;
@@ -85,26 +85,26 @@ final readonly class Arrangement
     return [new CollectionField($field->key, $out)];
   }
 
-  /* A value object whole: every key the type gives it, each let out where the
-     entry names it so under `valueReference`.
-     @param array<array-key, mixed> $variable
-     @return list<CollectionField|Violation> */
+  /** The keys of a value object the entry names under `valueReference`, each a field, as the Fields dialog
+      adds them one by one.
+      @param array<array-key, mixed> $variable
+      @return list<CollectionField|Violation> */
   private function object(TypeDefinition $type, string $name, array $variable): array
   {
-    $keys = array_values(array_filter($type->fields(),
-      fn (FieldDefinition $field): bool => $field->valueObjectOf === $name));
-    if ($keys === []) {
+    if (!array_any($type->fields(), fn (FieldDefinition $field): bool => $field->valueObjectOf === $name)) {
       return [Violation::stated($name, 'is no field of ' . $type->name)];
     }
-    if (isset($variable['isAccessibleForFree']) || !isset($variable['valueReference'])) {
+    $named = isset($variable['valueReference']) ? $this->named($variable['valueReference']) : [];
+    if (isset($variable['isAccessibleForFree']) || $named === []) {
       return [Violation::stated($name, 'lets its keys out one by one, each named under valueReference')];
     }
-    $named = $this->named($variable['valueReference']);
     $entry = [];
-    foreach ($keys as $key) {
+    foreach ($type->fields() as $key) {
       $spelt = (string) $this->schema->propertyName($key->key);
-      $entry = [...$entry, ...$this->field($type, $key, (array) ($named[$spelt] ?? []),
-        $name . '.' . $spelt)];
+      if ($key->valueObjectOf !== $name || !isset($named[$spelt])) {
+        continue;
+      }
+      $entry = [...$entry, ...$this->field($type, $key, (array) $named[$spelt], $name . '.' . $spelt)];
       unset($named[$spelt]);
     }
 

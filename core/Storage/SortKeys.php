@@ -73,12 +73,12 @@ final readonly class SortKeys
       && (($field->kind === FieldKind::Text && $field->repeatable) || $field->kind === FieldKind::Objects);
   }
 
-  /* The strings a value is keyed and searched by: a text, each of a repeatable
-     one, and of rows the `value` each holds, the key schema.org gives the
-     objects that are one value, PropertyValue among them. So an identifier is
-     found as a text is, while a row's name stands as a field's word does and
-     is no more searched than that.
-     @return list<string> */
+  /** The strings a value is keyed and searched by: a text, each of a repeatable
+      one, and of rows the `value` each holds, the key schema.org gives the
+      objects that are one value, PropertyValue among them. So an identifier is
+      found as a text is, while a row's name stands as a field's word does and
+      is no more searched than that.
+      @return list<string> */
   public static function entries(FieldDefinition $field, mixed $value): array
   {
     $held = is_array($value) && array_is_list($value) ? $value : [$value];

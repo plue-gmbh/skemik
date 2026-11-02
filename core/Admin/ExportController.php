@@ -148,11 +148,11 @@ final readonly class ExportController
     return Response::redirect('/export');
   }
 
-  /* The collections with something to dump, as the sidebar counts them for this
-     reader: those within the read scope, or those outside it as the public
-     reads them; one with nothing in it is no line to read.
-     @param list<SidebarEntry> $entries
-     @return list<string> */
+  /** The collections with something to dump, as the sidebar counts them for this
+      reader: those within the read scope, or those outside it as the public
+      reads them; one with nothing in it is no line to read.
+      @param list<SidebarEntry> $entries
+      @return list<string> */
   private function names(Account $account, array $entries, bool $outside): array
   {
     $names = [];

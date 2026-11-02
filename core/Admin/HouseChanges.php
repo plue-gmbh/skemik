@@ -151,8 +151,8 @@ final readonly class HouseChanges
       : array_map(fn (string $key): string => $this->words->get($key, $role), $said);
   }
 
-  /* The fields by the names the reader's admin gives them.
-     @return list<string> */
+  /** The fields by the names the reader's admin gives them.
+      @return list<string> */
   private function arranged(HouseObject $object, Props $kept): array
   {
     $collection = $this->collection(null, $object);

@@ -102,9 +102,9 @@ final readonly class Collisions
     }
   }
 
-  /* The live record already holding one of this record's `!` values: what a
-     repeated order is answered with, where anything else is refused.
-     @param list<Relation> $edges */
+  /** The live record already holding one of this record's `!` values: what a
+      repeated order is answered with, where anything else is refused.
+      @param list<Relation> $edges */
   public function holder(Entity $entity, array $edges): ?EntityId
   {
     foreach ($this->profile->byType($entity->type)->fields() as $field) {
@@ -148,10 +148,10 @@ final readonly class Collisions
     return $holder === false ? null : new EntityId((string) $holder);
   }
 
-  /* A type that does not fork answers on every locale route, so it meets
-     every row of such a type whatever that row's locale. Bound as a list rather
-     than a flag, since a bound flag is text and never equals `1`.
-     @return array{locale: string, across: string} */
+  /** A type that does not fork answers on every locale route, so it meets
+      every row of such a type whatever that row's locale. Bound as a list rather
+      than a flag, since a bound flag is text and never equals `1`.
+      @return array{locale: string, across: string} */
   public function localeScope(string $type, Locale $locale): array
   {
     $across = [];

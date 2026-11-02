@@ -22,7 +22,6 @@ use Auth\Authorizer;
 use Auth\Capability;
 use Domain\Entity;
 use Domain\EntityId;
-use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\LocalisedText;
@@ -139,7 +138,7 @@ final readonly class TranslationController
   public function link(Account $account, Request $request, string $slug, string $id): Response
   {
     [$collection, $entity] = $this->aimed($account, $request, $slug, $id);
-    $joining = $this->record($collection, $this->named($request));
+    $joining = $this->entities->live($collection->type, $this->named($request));
     $this->spine->locale($entity, $joining->locale->tag);
     $this->transaction->saved($this->db, fn (): Entity
       => $this->disjoined($this->regrouped($joining->withTranslationOf(TranslationGroup::rootOf($entity)))));
@@ -150,7 +149,7 @@ final readonly class TranslationController
   public function unlink(Account $account, Request $request, string $slug, string $id): Response
   {
     [$collection, $entity] = $this->aimed($account, $request, $slug, $id);
-    $leaving = $this->record($collection, $this->named($request));
+    $leaving = $this->entities->live($collection->type, $this->named($request));
     if ($leaving->translationOf?->value !== TranslationGroup::rootOf($entity)->value) {
       throw MalformedValue::named('translation in this group', $leaving->id->value);
     }
@@ -178,21 +177,6 @@ final readonly class TranslationController
     $collection = $this->collections->readable($account, $slug);
     $this->authorizer->requireHuman(Capability::WriteContent, $collection);
 
-    return [$collection, $this->record($collection, $id)];
-  }
-
-  /* Another collection's record, a trashed one and a malformed id all read as none. */
-  private function record(Collection $collection, string $id): Entity
-  {
-    try {
-      $entity = $this->entities->find(new EntityId($id));
-    } catch (MalformedValue) {
-      throw EntityNotFound::withId($id);
-    }
-    if ($entity->type !== $collection->type || $entity->deletedAt !== null) {
-      throw EntityNotFound::withId($id);
-    }
-
-    return $entity;
+    return [$collection, $this->entities->live($collection->type, $id)];
   }
 }

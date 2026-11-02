@@ -63,11 +63,11 @@ final readonly class EdgeEdits
     return $kept;
   }
 
-  /* Words sent under another locale: each edge the field holds, by its place,
-     saying there what is sent, and no target changed, added or moved. With no
-     locale they are the ones it was written with.
-     @param list<Relation> $edges every outbound edge, as the save leaves them
-     @return list<Relation> */
+  /** Words sent under another locale: each edge the field holds, by its place,
+      saying there what is sent, and no target changed, added or moved. With no
+      locale they are the ones it was written with.
+      @param list<Relation> $edges every outbound edge, as the save leaves them
+      @return list<Relation> */
   public function worded(FieldDefinition $field, ?Locale $locale, array $edges, mixed $sent): array
   {
     $predicate = (string) $this->schema->propertyName($field->key);
@@ -87,8 +87,8 @@ final readonly class EdgeEdits
     return $edges;
   }
 
-  /* A record the picker would not have offered is refused as one that does not exist.
-     @return array{EntityId, string, ?string, Props} */
+  /** A record the picker would not have offered is refused as one that does not exist.
+      @return array{EntityId, string, ?string, Props} */
   public function record(Account $account, FieldDefinition $field, string $id): array
   {
     try {
@@ -128,9 +128,9 @@ final readonly class EdgeEdits
     return [$object, $type, $term, $this->said($qualifiers, $lines, null, $sent['qualifiers'] ?? null)];
   }
 
-  /* A word typed into a term field: the term of that word in the field's set,
-     made where it is missing (`TermMaker`).
-     @return array{EntityId, string, string, Props} */
+  /** A word typed into a term field: the term of that word in the field's set,
+      made where it is missing (`TermMaker`).
+      @return array{EntityId, string, string, Props} */
   private function termed(FieldDefinition $field, string $word): array
   {
     if ($field->cardinality !== Cardinality::T || trim($word) === '') {
@@ -141,9 +141,9 @@ final readonly class EdgeEdits
     return [$term->id, 'DefinedTerm', (string) $term->props->string('term_code'), new Props([])];
   }
 
-  /* The lines sent over what the edge held, a blank one saying nothing, in a
-     locale's words where one is named.
-     @param array<string, FieldKind> $lines */
+  /** The lines sent over what the edge held, a blank one saying nothing, in a
+      locale's words where one is named.
+      @param array<string, FieldKind> $lines */
   private function said(Props $held, array $lines, ?Locale $locale, mixed $sent): Props
   {
     if ($sent === null) {

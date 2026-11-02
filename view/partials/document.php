@@ -29,6 +29,7 @@ if (!isset($template)) {
 <link rel="stylesheet" href="<?= $template->asset('style.css') ?>">
 <?php if ($islands): ?>
 <script src="<?= $template->asset('vendor/vue.global.prod.js') ?>" defer></script>
+<script src="<?= $template->asset('scripts/file-picker.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/pickers.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/edge-picker.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/cell-editor.js') ?>" defer></script>

@@ -8,8 +8,18 @@
 
 const fill = (text, values) => text.replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
 
+/* An answer as its JSON, which every admin endpoint answers in, success too, or as the page's sentence where it
+   has none: an update's or a restore's 503 page, a host's own 413 or 502, a connection lost (`status` 0). */
+async function answered(sent) {
+  const response = await sent.catch(() => null);
+  const body = await response?.json().catch(() => null);
+  return body ? { ok: response.ok, status: response.status, body }
+    : { ok: false, status: response?.status ?? 0, body: { error: document.body.dataset.unanswered } };
+}
+
+/* Through the open modal dialog's region, since an open one makes the frame's inert (`partials/live-region`). */
 function announce(text) {
-  const region = document.querySelector("[data-live-region]");
+  const region = (document.querySelector("dialog:modal") ?? document.body).querySelector(":scope > [data-live-region]");
   if (region) {
     region.textContent = "";
     window.setTimeout(() => { region.textContent = text; }, 60);
@@ -18,13 +28,15 @@ function announce(text) {
 
 /* On what it answers, since a word at the foot of a wide screen is missed by the eye that is on
    the key it copied, and one beside it covers what is still to read or do, the key's sentence or
-   its Done. Placed when called, so a button a re-render takes along, the save bar's, still holds it. */
+   its Done. Placed when called, so a button a re-render takes along, the save bar's, still holds it.
+   Inside an open dialog it hangs in the dialog, since a modal one stands over everything in the body. */
 function toast(text, near) {
   document.querySelector(".toast")?.remove();
   const element = Object.assign(document.createElement("div"), { className: "toast" });
   element.textContent = text;
-  document.body.append(element);
-  Object.assign(element.style, centred(near, element));
+  const holder = near.closest("dialog[open]") ?? document.body;
+  holder.append(element);
+  Object.assign(element.style, centred(near, element, holder));
   announce(text);
   window.setTimeout(() => element.remove(), 2000);
 }
@@ -150,12 +162,16 @@ function placement(anchor, box = { width: 0, height: 0 }, below = null) {
     maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
 }
 
-/* Over the middle of the anchor, in the page's coordinates as a popover is, and inside the window's width. */
-function centred(anchor, element) {
+/* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it: the
+   page's, as a popover is, or a dialog's, which is fixed and scrolls its own content. */
+function centred(anchor, element, holder) {
   const [at, box] = [anchor.getBoundingClientRect(), element.getBoundingClientRect()];
   const left = Math.max(8, Math.min(at.left + (at.width - box.width) / 2,
     document.documentElement.clientWidth - box.width - 8));
-  return { left: window.scrollX + left + "px", top: window.scrollY + at.top + (at.height - box.height) / 2 + "px" };
+  const frame = holder === document.body ? null : holder.getBoundingClientRect();
+  const [x, y] = frame === null ? [window.scrollX, window.scrollY]
+    : [holder.scrollLeft - frame.left - holder.clientLeft, holder.scrollTop - frame.top - holder.clientTop];
+  return { left: x + left + "px", top: y + at.top + (at.height - box.height) / 2 + "px" };
 }
 
 /* The paper scrolls under the page, not the page, so a popover goes along with its

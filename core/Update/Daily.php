@@ -21,10 +21,9 @@ final readonly class Daily
 {
   public function __construct(private Backup $backup, private Clock $clock) {}
 
-  /* An answer that has work of its own, or streams a file, leaves the day to the next one. */
   public function after(Response $response): Response
   {
-    return $this->backup->daily && $response->after === null && $response->file === null && $this->due()
+    return $this->backup->daily && $response->takesWork() && $this->due()
       ? $response->after($this->run(...)) : $response;
   }
 

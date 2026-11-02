@@ -19,6 +19,8 @@ final readonly class Mail
     public string $html,
   ) {}
 
+  /** @psalm-taint-escape header the name goes as encoded words, which hold no line break, and the address passed
+      `filter_var` in `Auth\Account` */
   public function recipient(string $address): string
   {
     $name = (string) preg_replace('/[\x00-\x1F\x7F]/u', '', $this->name);

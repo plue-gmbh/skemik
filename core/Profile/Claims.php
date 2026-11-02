@@ -70,13 +70,13 @@ final readonly class Claims
     ];
   }
 
-  /* A type re-declares a pooled property to mark it required, to demote it to
-     the first screen, or to narrow what the value is — all three are the owning
-     type's to say. Who writes it is not: the pool has already answered, and a
-     row reversing it leaves one property with two answers and `fields()` quietly
-     taking the nearer one. `WebSite.inLanguage` was the one, authored beside a
-     field the spine derives.
-     @return list<Violation> */
+  /** A type re-declares a pooled property to mark it required, to demote it to
+      the first screen, or to narrow what the value is — all three are the owning
+      type's to say. Who writes it is not: the pool has already answered, and a
+      row reversing it leaves one property with two answers and `fields()` quietly
+      taking the nearer one. `WebSite.inLanguage` was the one, authored beside a
+      field the spine derives.
+      @return list<Violation> */
   private function checkOverrides(): array
   {
     $violations = [];
@@ -106,9 +106,9 @@ final readonly class Claims
       : [Violation::stated('profile', sprintf('%d types, and the ceiling is %d', $count, Profile::CEILING))];
   }
 
-  /* Every type is a class the vocabulary publishes, so no name is one a
-     validator cannot resolve.
-     @return list<Violation> */
+  /** Every type is a class the vocabulary publishes, so no name is one a
+      validator cannot resolve.
+      @return list<Violation> */
   private function checkTypes(): array
   {
     $violations = [];
@@ -121,11 +121,11 @@ final readonly class Claims
     return $violations;
   }
 
-  /* Every kind a type declares fields for is a class the vocabulary publishes
-     and a descendant of that type — a specialisation is how the ceiling holds at
-     thirty, so a token nobody can resolve turns *specialise instead of adding a
-     table* into a string somebody typed.
-     @return list<Violation> */
+  /** Every kind a type declares fields for is a class the vocabulary publishes
+      and a descendant of that type — a specialisation is how the ceiling holds at
+      thirty, so a token nobody can resolve turns *specialise instead of adding a
+      table* into a string somebody typed.
+      @return list<Violation> */
   private function checkSpecialisations(): array
   {
     $violations = [];
@@ -164,11 +164,11 @@ final readonly class Claims
     return $violations;
   }
 
-  /* A flattened field is checked against the value object it declares,
-     never against the type it sits on — `addressLocality` is PostalAddress's
-     and the type never claimed it. Asking the type instead is what made the
-     currency keys look like an off-domain step.
-     @return list<Violation> */
+  /** A flattened field is checked against the value object it declares,
+      never against the type it sits on — `addressLocality` is PostalAddress's
+      and the type never claimed it. Asking the type instead is what made the
+      currency keys look like an off-domain step.
+      @return list<Violation> */
   private function checkProperty(FieldDefinition $field, TypeDefinition $type, string $name): array
   {
     $domain = $this->schema->domainOf($field, $type->name);
@@ -209,12 +209,12 @@ final readonly class Claims
     return false;
   }
 
-  /* Every flattened field names a value object `Seed\ValueObjects` declares and a key that
-     value object has, and no value object quietly stays a text field. The second
-     half is why the first is worth running — a mark and a reason are the only
-     way a VO may remain unflattened, so a silent exception is a defect. Every key
-     is asked of the value object's class, since no flattened field asks for a row's.
-     @return list<Violation> */
+  /** Every flattened field names a value object `Seed\ValueObjects` declares and a key that
+      value object has, and no value object quietly stays a text field. The second
+      half is why the first is worth running — a mark and a reason are the only
+      way a VO may remain unflattened, so a silent exception is a defect. Every key
+      is asked of the value object's class, since no flattened field asks for a row's.
+      @return list<Violation> */
   private function checkValueObjects(): array
   {
     $violations = [];
@@ -257,10 +257,10 @@ final readonly class Claims
     return $violations;
   }
 
-  /* Every predicate is a schema.org property name verbatim, save `broader`,
-     which is SKOS and named as the exception — which is what makes
-     "the edges add no vocabulary" a checkable sentence rather than a claim.
-     @return list<Violation> */
+  /** Every predicate is a schema.org property name verbatim, save `broader`,
+      which is SKOS and named as the exception — which is what makes
+      "the edges add no vocabulary" a checkable sentence rather than a claim.
+      @return list<Violation> */
   private function checkPredicates(): array
   {
     $violations = [];
@@ -273,9 +273,9 @@ final readonly class Claims
     return $violations;
   }
 
-  /* A document word is still one the vocabulary publishes and still off its
-     domain there: one the vocabulary has since placed is a stale excuse.
-     @return list<Violation> */
+  /** A document word is still one the vocabulary publishes and still off its
+      domain there: one the vocabulary has since placed is a stale excuse.
+      @return list<Violation> */
   private function checkWords(): array
   {
     $violations = [];

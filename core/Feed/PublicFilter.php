@@ -62,10 +62,9 @@ final readonly class PublicFilter
   }
 
   /* Gates 1 and 2 on a list: the query narrowed to what this caller may read, or
-     null when nothing it asks for could pass. */
-  /* A rule bound to a record narrows to it whatever the status gate says: the
-     fields it names are that record's, and on every other row they would be read
-     past their flags. */
+     null when nothing it asks for could pass. A rule bound to a record narrows to
+     it whatever the status gate says: the fields it names are that record's, and
+     on every other row they would be read past their flags. */
   public function query(Query $query, Collection $collection): ?Query
   {
     if ($this->inScope($collection->type)) {
@@ -108,12 +107,12 @@ final readonly class PublicFilter
     return $this->passesType($collection->type) && !$past;
   }
 
-  /* Gate 3: the collection's fields whose flag lets them leave, and beside them
-     the fields a grant names: a key for a person's email still reads the name a
-     stranger reads, or it would know less of a record than nobody does. Every
-     rule's fields stand on every record a rule reaches, which holds because a
-     key reads a collection one way (`Auth\Grant::readTwoWays`).
-     @return list<CollectionField> */
+  /** Gate 3: the collection's fields whose flag lets them leave, and beside them
+      the fields a grant names: a key for a person's email still reads the name a
+      stranger reads, or it would know less of a record than nobody does. Every
+      rule's fields stand on every record a rule reaches, which holds because a
+      key reads a collection one way (`Auth\Grant::readTwoWays`).
+      @return list<CollectionField> */
   public function fields(Collection $collection): array
   {
     if ($this->inScope($collection->type)) {
@@ -144,10 +143,10 @@ final readonly class PublicFilter
       $query->descending, $query->search, $query->page, $query->perPage, $query->searchIn, $query->searchThrough);
   }
 
-  /* What this caller reads of each collection, as the query narrowing to it and
-     the fields it reads of it; a collection it has no reading of is left out.
-     @param list<Collection> $collections
-     @return array<string, Query> by type */
+  /** What this caller reads of each collection, as the query narrowing to it and
+      the fields it reads of it; a collection it has no reading of is left out.
+      @param list<Collection> $collections
+      @return array<string, Query> by type */
   public function readings(array $collections): array
   {
     $readings = [];

@@ -39,8 +39,8 @@ final readonly class FeedRequest
 
   public function __construct(private SchemaOrg $schema, private Profile $profile, private Clock $clock) {}
 
-  /* No locale is the admin's reading of every locale; a feed route always names one.
-     @param Collection $read the collection carrying only the fields this reader reads */
+  /** No locale is the admin's reading of every locale; a feed route always names one.
+      @param Collection $read the collection carrying only the fields this reader reads */
   public function query(Request $request, Collection $read, ?Locale $locale): Query
   {
     if ($request->repeated !== []) {
@@ -82,9 +82,9 @@ final readonly class FeedRequest
     return $held?->key ?? throw MalformedValue::named('field of ' . basename($read->type), $name);
   }
 
-  /* The type's own field before a value object's key of the same name: `url` at
-     the top of an event's document is the event's, not its virtual location's.
-     @return list<FieldDefinition> */
+  /** The type's own field before a value object's key of the same name: `url` at
+      the top of an event's document is the event's, not its virtual location's.
+      @return list<FieldDefinition> */
   private function meant(string $type, string $name): array
   {
     $named = array_values(array_filter($this->profile->byType($type)->fields(),
@@ -95,10 +95,10 @@ final readonly class FeedRequest
     return $own === [] ? $named : $own;
   }
 
-  /* An empty value would match every row holding the field, a text's start
-     being nothing, so `?name=` and `?name=a,` are refused. A link is read as it
-     is stored (`Spelling::held`), so the spelling a document shows finds its row.
-     @return list<string> */
+  /** An empty value would match every row holding the field, a text's start
+      being nothing, so `?name=` and `?name=a,` are refused. A link is read as it
+      is stored (`Spelling::held`), so the spelling a document shows finds its row.
+      @return list<string> */
   private function values(?FieldDefinition $field, string $name, Request $request): array
   {
     $values = explode(',', (string) $request->query($name));

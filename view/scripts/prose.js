@@ -2,28 +2,32 @@
    marks put in or taken out at the cursor, code fencing the lines where the
    selection spans more than one, a web link and Insert link, in a bar at
    the top of the field's own frame, since they belong to the text and to nothing
-   beside it. No preview
-   stands beside the field, so the text has the width while it is typed; what it
-   renders as is the read mode's, drawn by the server after a save, since the
-   renderer the `.html` uses is PHP's and a second one here would disagree with it
-   some day. Each tool puts its text in through an `input` event, so the save bar
-   sees it as typing. `view/scripts/app.js` owns what every screen shares —
-   `popover`, `focusField`, `toast`, `fill`. */
+   beside it; and the marks in colour where they are typed, through a mirror
+   behind the textarea. No preview stands beside the field, so the text has the
+   width while it is typed; what it renders as is the read mode's, drawn by the
+   server after a save, since the renderer the `.html` uses is PHP's and a second
+   one here would disagree with it some day. Each tool puts its text in through
+   an `input` event, so the save bar sees it as typing. `view/scripts/app.js`
+   owns what every screen shares — `popover`, `focusField`, `toast`, `fill`. */
 
 const MARKS = { heading: ["## ", /^#{1,6} /], quote: ["> ", /^> ?/], bold: ["**"], italic: ["*"], code: ["`"] };
 
 /* A line's mark on every line the selection touches, off again where each
-   carries it; the heading is `##`, since the record's name is the page's `<h1>`.
-   A cursor keeps its place in its line, a selection takes the lines. At the
-   text's start no newline is looked for, since `lastIndexOf` reads -1 as 0. */
+   carries it; the heading is `##`, since the record's name is the page's `<h1>`,
+   and a second press makes it `###` before a third takes it off, so a writer
+   who never typed Markdown meets the levels. A cursor keeps its place in its
+   line, a selection takes the lines. At the text's start no newline is looked
+   for, since `lastIndexOf` reads -1 as 0. */
 function prefix(area, mark, pattern) {
   const [value, from, to] = [area.value, area.selectionStart, area.selectionEnd];
   const start = from === 0 ? 0 : value.lastIndexOf("\n", from - 1) + 1;
   const stop = value.indexOf("\n", Math.max(start, to > from ? to - 1 : to));
   const end = stop === -1 ? value.length : stop;
   const lines = value.slice(start, end).split("\n");
-  const off = lines.every((line) => pattern.test(line));
-  const marked = lines.map((line) => (off ? line.replace(pattern, "") : pattern.test(line) ? line : mark + line));
+  const deeper = mark === "## " && lines.every((line) => line.startsWith("## "));
+  const off = !deeper && lines.every((line) => pattern.test(line));
+  const marked = lines.map((line) =>
+    deeper ? "#" + line : off ? line.replace(pattern, "") : pattern.test(line) ? line : mark + line);
   area.setRangeText(marked.join("\n"), start, end, "select");
   if (from === to) {
     const at = Math.max(start, from + marked[0].length - lines[0].length);
@@ -127,8 +131,9 @@ function insertLink(button, words) {
   const paint = async () => {
     const typed = search.value;
     const address = "/search?" + new URLSearchParams({ q: typed, in: locale });
-    const hits = typed.trim() === "" ? []
-      : (await (await fetch(address, { headers: { Accept: "application/json" } })).json()).hits ?? [];
+    const { body } = typed.trim() === "" ? { body: {} }
+      : await answered(fetch(address, { headers: { Accept: "application/json" } }));
+    const hits = body.hits ?? [];
     if (typed !== search.value) return;
     list.replaceChildren(...hits.map((hit) => {
       const option = Object.assign(document.createElement("button"), { type: "button", className: "option" });
@@ -139,7 +144,7 @@ function insertLink(button, words) {
     }));
     if (hits.length === 0 && typed.trim() !== "") {
       list.append(Object.assign(document.createElement("p"), { className: "popover-hint",
-        textContent: words["record.link_none"] }));
+        textContent: body.error ?? words["record.link_none"] }));
     }
   };
   let typing = 0;
@@ -149,6 +154,79 @@ function insertLink(button, words) {
   });
   focusField(search, element);
 }
+
+/* The marks as `Support\Markup` reads them, within one line: code first, since
+   its marks are literal, then `***`, which the renderer reads as bold inside
+   italic, then bold before italic, so `**` is never two `*`. */
+const INLINE = new RegExp(["`[^`]+`", "\\*\\*\\*(?=\\S)[^*]+(?<=\\S)\\*\\*\\*",
+  "\\*\\*(?=\\S)[^*]+(?<=\\S)\\*\\*", "(?<!\\*)\\*(?=\\S)[^*]+(?<=\\S)\\*(?!\\*)",
+  "(?<!!)\\[[^\\]]+\\]\\([^)\\s]+\\)"].join("|"), "g");
+const FENCE = /^```[^`]*$/;
+
+function span(kind, ...content) {
+  const element = Object.assign(document.createElement("span"), { className: "prose-" + kind });
+  element.append(...content);
+  return element;
+}
+
+function inline(line) {
+  const parts = [];
+  let at = 0;
+  for (const found of line.matchAll(INLINE)) {
+    const mark = found[0];
+    const kind = mark[0] === "`" ? "code" : mark[0] === "[" ? "link" : mark.startsWith("**") ? "bold" : "italic";
+    const both = mark.startsWith("***");
+    parts.push(line.slice(at, found.index), both ? span("italic", span("bold", mark)) : span(kind, mark));
+    at = found.index + mark.length;
+  }
+  parts.push(line.slice(at));
+  return parts;
+}
+
+/* A fence and its lines are code and nothing inside them; a heading and a quote
+   hold their inline marks, as the renderer reads them. A text ending in a
+   newline has an empty last line in the textarea, which the `pre` lays out only
+   around a character, so a zero-width space ends it. */
+function painted(text) {
+  const nodes = [];
+  let fenced = false;
+  text.split("\n").forEach((line, index) => {
+    if (index > 0) nodes.push("\n");
+    const fence = FENCE.test(line);
+    if (fence) fenced = !fenced;
+    if (fence || fenced) return nodes.push(span("code", line));
+    if (/^#{1,6} /.test(line)) return nodes.push(span("heading", ...inline(line)));
+    nodes.push(...(/^> /.test(line) ? [span("quote", ...inline(line))] : inline(line)));
+  });
+  nodes.push("​");
+  return nodes;
+}
+
+/* The mirror: a `pre` behind the textarea carrying the same text with each mark
+   in a span, the textarea's own text transparent over it with its caret kept.
+   Same size and weight throughout, since a bolder or bigger run would wrap the
+   mirror differently from the textarea and the marks would sit a line off; an
+   italic is slanted only because no italic Inter is vendored, and a synthesised
+   slant leaves every glyph its width. The mirror's width is the textarea's
+   inside its border and scrollbar for the same reason, and it scrolls with it.
+   Built here, so without script the textarea is a textarea. */
+function mirror(area) {
+  const pre = Object.assign(document.createElement("pre"), { className: "record-prose-mirror", lang: area.lang });
+  pre.setAttribute("aria-hidden", "true");
+  const paint = () => pre.replaceChildren(...painted(area.value));
+  const follow = () => { pre.scrollTop = area.scrollTop; };
+  area.addEventListener("input", paint);
+  area.addEventListener("scroll", follow);
+  /* Sized after the scroll, since a textarea dragged shorter scrolls before the observer sees it. */
+  new ResizeObserver(() => {
+    Object.assign(pre.style, { width: area.clientWidth + "px", height: area.clientHeight + "px" });
+    follow();
+  }).observe(area);
+  area.before(pre);
+  paint();
+}
+
+document.querySelectorAll(".record-prose-edit.is-markdown [data-prose]").forEach(mirror);
 
 document.addEventListener("click", (event) => {
   const trigger = event.target.closest("[data-mark], [data-link], [data-link-insert]");

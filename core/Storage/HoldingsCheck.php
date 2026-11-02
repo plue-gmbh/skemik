@@ -66,11 +66,11 @@ final readonly class HoldingsCheck
     return array_merge(...array_map($this->row(...), $ids));
   }
 
-  /* A row is changed by a save, which the `Validator` checks, and by a restore
-     or a purge taking its edge, which it does not, so a changed row is read
-     again rather than taken as mended.
-     @param list<EntityId> $ids
-     @return list<EntityId> those changed at or after `$since` */
+  /** A row is changed by a save, which the `Validator` checks, and by a restore
+      or a purge taking its edge, which it does not, so a changed row is read
+      again rather than taken as mended.
+      @param list<EntityId> $ids
+      @return list<EntityId> those changed at or after `$since` */
   public function changed(array $ids, string $since): array
   {
     $statement = $this->db->prepare('select id from entity where updated_at >= :since'
@@ -101,8 +101,8 @@ final readonly class HoldingsCheck
     return $violations;
   }
 
-  /* The word table against the `words` it follows, both ways.
-     @return list<Violation> */
+  /** The word table against the `words` it follows, both ways.
+      @return list<Violation> */
   private function index(): array
   {
     $rows = 'select e.id, f.key, w.value from entity e, json_each(e.words) f, json_each(f.value) w';
@@ -115,8 +115,8 @@ final readonly class HoldingsCheck
       : [new Violation('entity_word', Reason::Stale)];
   }
 
-  /* A sampled pass wraps to the start once it reads fewer rows than it asked for.
-     @return list<string> */
+  /** A sampled pass wraps to the start once it reads fewer rows than it asked for.
+      @return list<string> */
   private function ids(?int $rows): array
   {
     $statement = $this->db->prepare('select id from entity where id > :cursor'

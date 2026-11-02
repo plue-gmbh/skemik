@@ -80,9 +80,9 @@ enum Qualifier: string
     return $this === self::PotentialAction ? 'Action' : $this->kind()->datatype();
   }
 
-  /* What a screen writes on such an edge, each a line of its own read as its
-     kind: all but `potentialAction`, which stays as the feed sent it.
-     @return array<string, FieldKind> */
+  /** What a screen writes on such an edge, each a line of its own read as its
+      kind: all but `potentialAction`, which stays as the feed sent it.
+      @return array<string, FieldKind> */
   public static function lines(string $predicate, ?string $objectType): array
   {
     $lines = [];

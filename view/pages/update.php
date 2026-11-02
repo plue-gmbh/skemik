@@ -9,8 +9,9 @@ declare(strict_types=1);
    installed with the reason and the copy by hand named, and last the key
    downloads are verified against, which a reader looks up and never acts on.
    The check is red once a day passed without one (`UpdateCheck::stale`), and
-   may be asked for now rather than within the hour, unless a snapshot or an update
-   holds the lock, which the button waits out. */
+   may be asked for now rather than within the hour, unless a snapshot or a restore
+   holds the lock, which the button waits out; while its own release installs the
+   screen is the waiting page instead (`Update\UpdateController`). */
 
 if (!isset($template)) {
   return;
@@ -44,8 +45,8 @@ if (!isset($template)) {
   $report->checked === null => [$words->get('update.unchecked'), ''],
   $report->unreachable !== null => [$words->get('update.unreachable', ['reason' => $report->unreachable]),
     ' is-failing'],
-  $report->offered !== null && $report->offered !== $report->installed && $report->offered !== $report->refused
-    => [$words->get($enabled ? 'update.offered' : 'update.available', ['version' => $report->offered]), ''],
+  $report->pending() => [$words->get($enabled ? 'update.offered' : 'update.available',
+    ['version' => $report->offered]), ''],
   default => [$words->get('update.checked'), $stale ? ' is-failing' : ' is-ok'],
 } ?>
       <span class="record-row-note<?= $mark ?>"><?= $template->escape($check) ?></span>

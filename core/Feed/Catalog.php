@@ -35,10 +35,10 @@ final readonly class Catalog
     private array $arranged = [],
   ) {}
 
-  /* The house's one date, said on the smallest document and on no entry, which
-     would claim a date per collection it is not (`Storage\Modified`).
-     @param list<Locale> $locales the house's, the first of them its default
-     @return array<string, mixed> */
+  /** The house's one date, said on the smallest document and on no entry, which
+      would claim a date per collection it is not (`Storage\Modified`).
+      @param list<Locale> $locales the house's, the first of them its default
+      @return array<string, mixed> */
   public function locales(array $locales, string $modified): array
   {
     $datasets = [];
@@ -69,8 +69,7 @@ final readonly class Catalog
       'dataset' => $datasets];
   }
 
-  /* One collection's entry as a document of its own: what an arrangement answers.
-     @return array<string, mixed> */
+  /** @return array<string, mixed> */
   public function entry(Collection $collection, Locale $locale): array
   {
     return ['@context' => self::CONTEXT, ...$this->feed($collection, $locale)];

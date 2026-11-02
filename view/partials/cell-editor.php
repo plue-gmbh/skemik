@@ -8,7 +8,8 @@ declare(strict_types=1);
    passing through does not, or the browser's picker would open on a day the
    field does not hold. A currency or a country edits as text suggesting names,
    stored as codes, since three hundred buttons are no popover, and prose in a
-   textarea, so a row that requires it is made from the table. The keys are a
+   textarea, so a row that requires it is made from the table. A link that takes
+   a file opens a popover with the library beneath the address. The keys are a
    spreadsheet's: Enter commits, the arrows and Tab commit and move, Escape
    restores. */
 
@@ -74,8 +75,11 @@ if (!isset($template)) {
         :csrf="editing.csrf" :limit="editing.limit" :all="editing.all" @draft="draft = $event"
         @done="finish($event, null)"></edge-picker>
       <list-picker v-else-if="mode === 'list'" :field="editing.field" :value="editing.value" :hints="editing.hint"
-        :words="words"
-        :terms="editing.terms" @draft="draft = $event" @done="finish(draft, null)"></list-picker>
+        :words="words" :terms="editing.terms" :collection="editing.collection" :locale="editing.locale"
+        :csrf="editing.csrf" :limit="editing.limit" @draft="draft = $event" @done="finish(draft, null)"></list-picker>
+      <link-picker v-else-if="mode === 'link'" :field="editing.field" :value="editing.value" :words="words"
+        :collection="editing.collection" :locale="editing.locale" :csrf="editing.csrf" :limit="editing.limit"
+        @draft="draft = $event" @done="finish($event, null)"></link-picker>
       <refer-picker v-else-if="mode === 'refer'" :field="editing.field" :value="editing.value" :words="words"
         :collection="editing.collection" :locale="editing.locale" @draft="draft = $event"
           @done="finish($event, null)"></refer-picker>

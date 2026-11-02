@@ -56,17 +56,17 @@ final readonly class Properties
     return [...$properties, ...$this->nested($objects)];
   }
 
-  /* Every name a document of these fields may carry, in the order it carries
-     them, whatever one record holds.
-     @param list<string> $keys @return list<string> */
+  /** Every name a document of these fields may carry, in the order it carries
+      them, whatever one record holds.
+      @param list<string> $keys @return list<string> */
   public function names(string $type, array $keys): array
   {
     return array_keys($this->of($this->profile->byType($type), array_fill_keys($keys, true)));
   }
 
-  /* A property's name in the words of the profile this was built with, and an
-     object's the heading its flattened keys stand under, `Address`.
-     @return array<string, string> by property */
+  /** A property's name in the words of the profile this was built with, and an
+      object's the heading its flattened keys stand under, `Address`.
+      @return array<string, string> by property */
   public function labels(string $type): array
   {
     $labels = [];
@@ -95,10 +95,10 @@ final readonly class Properties
     return $nested;
   }
 
-  /* A word, a number and a date leave as they are; a repeatable text is rendered
-     one by one and a row's keys by the kinds its value object declares.
-     @param string|int|float|bool|array<array-key, mixed>|null $value
-     @return string|int|float|bool|array<array-key, mixed>|Rendered|null */
+  /** A word, a number and a date leave as they are; a repeatable text is rendered
+      one by one and a row's keys by the kinds its value object declares.
+      @param string|int|float|bool|array<array-key, mixed>|null $value
+      @return string|int|float|bool|array<array-key, mixed>|Rendered|null */
   private function rendered(FieldDefinition $field, string|int|float|bool|array|null $value):
     string|int|float|bool|array|Rendered|null
   {
@@ -117,8 +117,8 @@ final readonly class Properties
       : $this->one($field->kind, $value);
   }
 
-  /* An edge's own words, each read as the kind `Qualifier` gives it, its buttons as rows.
-     @param array<string, mixed> $qualifiers @return array<string, mixed> */
+  /** An edge's own words, each read as the kind `Qualifier` gives it, its buttons as rows.
+      @param array<string, mixed> $qualifiers @return array<string, mixed> */
   public function qualified(array $qualifiers): array
   {
     $kinds = $this->profile->valueObject('Action')?->kinds ?? [];
@@ -140,10 +140,10 @@ final readonly class Properties
     return $this->markup?->line($code) ?? $code;
   }
 
-  /* A key no kind is declared for is a short text, and a word standing where a
-     record could is its name, so no string of a rendered document is left for
-     its reader to escape.
-     @param array<string, mixed> $row @param array<string, FieldKind> $kinds @return array<string, mixed> */
+  /** A key no kind is declared for is a short text, and a word standing where a
+      record could is its name, so no string of a rendered document is left for
+      its reader to escape.
+      @param array<string, mixed> $row @param array<string, FieldKind> $kinds @return array<string, mixed> */
   private function row(array $row, array $kinds): array
   {
     foreach ($row as $key => $held) {

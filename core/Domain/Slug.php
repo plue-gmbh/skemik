@@ -19,11 +19,15 @@ final readonly class Slug
   private const GERMAN = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
     'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ẞ' => 'SS'];
 
-  public function __construct(public string $value)
+  public string $value;
+
+  public function __construct(string $value)
   {
     if (preg_match(self::SHAPE, $value) !== 1) {
       throw MalformedValue::named('slug', $value);
     }
+    /** @psalm-taint-escape input */
+    $this->value = $value; /* letters, digits and single dashes carry no header break, path, address or markup */
   }
 
   public static function from(string $text, string $fallback): self

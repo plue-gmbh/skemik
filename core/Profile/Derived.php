@@ -15,13 +15,13 @@ namespace Profile;
    typed the value. */
 enum Derived: string
 {
-  case Locale = 'locale';             // the spine — `inLanguage`, and nothing else
+  case Locale = 'locale';             /* the spine — `inLanguage`, and nothing else */
   case Count = 'count';
   case Min = 'min';
   case Max = 'max';
   case Sum = 'sum';
   case Avg = 'avg';
-  case Range = 'range';               // an `AggregateOffer` per currency, over the offers' prices
+  case Range = 'range';               /* an `AggregateOffer` per currency, over the offers' prices */
 
   public function readsEdge(): bool
   {

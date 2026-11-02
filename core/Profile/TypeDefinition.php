@@ -42,10 +42,10 @@ final readonly class TypeDefinition
       'a name is filled from fields of this type');
   }
 
-  /* The type in another language's words: `Type.key` where this type calls a
-     field something of its own, `key` otherwise, the seed's English where the
-     language has no word yet, and a block's heading the same way by its key.
-     @param array<string, string> $names */
+  /** The type in another language's words: `Type.key` where this type calls a
+      field something of its own, `key` otherwise, the seed's English where the
+      language has no word yet, and a block's heading the same way by its key.
+      @param array<string, string> $names */
   public function worded(array $names): self
   {
     $word = fn (?string $key, ?string $seed): ?string => $key === null ? $seed
@@ -57,13 +57,13 @@ final readonly class TypeDefinition
       array_map($name, $this->inherited), $this->nameParts);
   }
 
-  /* A name follows its parts where nobody typed one: blank, or still what the
-     parts gave before this save, so a marriage reaches it. A name typed
-     otherwise stands, since a stage name has no parts, and nothing fills the
-     parts from a name: splitting one is a guess.
-     @param array<string, mixed> $before the stored document
-     @param array<string, mixed> $after the document as this save leaves it
-     @return array<string, mixed> */
+  /** A name follows its parts where nobody typed one: blank, or still what the
+      parts gave before this save, so a marriage reaches it. A name typed
+      otherwise stands, since a stage name has no parts, and nothing fills the
+      parts from a name: splitting one is a guess.
+      @param array<string, mixed> $before the stored document
+      @param array<string, mixed> $after the document as this save leaves it
+      @return array<string, mixed> */
   public function named(array $before, array $after): array
   {
     $joined = fn (array $document): string => implode(' ', array_filter(array_map(
@@ -140,20 +140,21 @@ final readonly class TypeDefinition
     return $required ?? 'name';
   }
 
-  /* A row is found by what it is called, so the naming field leads and the
-     sentence saying what it is follows: the own properties come before the Thing
-     block, which would put an offer's name behind its price and every
-     description last. A type told apart by its body, a review or a comment,
-     starts without its name and keeps its order.
-     @return list<FieldDefinition> what a new collection starts with: † and ‡ */
+  /** A row is found by what it is called, so the naming field leads and the
+      sentence saying what it is follows: the own properties come before the Thing
+      block, which would put an offer's name behind its price and every
+      description last. A type told apart by its body, a review or a comment,
+      starts without its name and keeps its order.
+      @return list<FieldDefinition> what a new collection starts with: † and ‡ */
   public function firstScreen(): array
   {
     $shown = array_values(array_filter($this->fields(), fn (FieldDefinition $f): bool => $f->onFirstScreen()));
     $named = array_any($shown, fn (FieldDefinition $f): bool => $f->key === $this->namedBy());
     $rank = fn (FieldDefinition $f): int => match (true) {
       $f->key === $this->namedBy() => 0,
-      $named && $f->key === 'description' => 1,
-      default => 2,
+      $named && $f->key === 'alternate_name' => 1,
+      $named && $f->key === 'description' => 2,
+      default => 3,
     };
     usort($shown, fn (FieldDefinition $a, FieldDefinition $b): int => $rank($a) <=> $rank($b));
 
@@ -181,10 +182,10 @@ final readonly class TypeDefinition
     return array_values(array_filter($this->fields(), fn (FieldDefinition $f): bool => $f->cardinality->isEdge()));
   }
 
-  /* The document without a value under an edge's key, left by a release that
-     made the field one: no screen shows it, and kept it refuses every save,
-     since the `Validator` reads it as a second home for the fact.
-     @param array<string, mixed> $document @return array<string, mixed> */
+  /** The document without a value under an edge's key, left by a release that
+      made the field one: no screen shows it, and kept it refuses every save,
+      since the `Validator` reads it as a second home for the fact.
+      @param array<string, mixed> $document @return array<string, mixed> */
   public function valued(array $document): array
   {
     $edges = array_map(fn (FieldDefinition $f): string => $f->key, $this->edges());

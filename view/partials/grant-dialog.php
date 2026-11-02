@@ -21,6 +21,7 @@ $named = fn (string $sentence): string => str_replace($template->escape(Admin\Gr
 ?>
 <dialog class="dialog grant-dialog" id="<?= $template->escape($id) ?>"
   aria-labelledby="<?= $template->escape($id) ?>-title">
+  <?= $template->render('partials/live-region') ?>
   <h2 id="<?= $template->escape($id) ?>-title"><?= $template->escape($words->get('grant.label',
     ['anchor' => $entry->token->label])) ?></h2>
   <p class="grant-facts"><?= $template->escape($entry->issued . ' · ' . $entry->facts) ?></p>

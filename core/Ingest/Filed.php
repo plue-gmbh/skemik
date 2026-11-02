@@ -27,9 +27,9 @@ final readonly class Filed
 
   public function __construct(private Intake $intake, private SchemaOrg $schema, private Json $json = new Json()) {}
 
-  /* The document without what the file says of itself.
-     @param array<string, mixed> $document
-     @return array<string, mixed> */
+  /** The document without what the file says of itself.
+      @param array<string, mixed> $document
+      @return array<string, mixed> */
   public function document(Collection $collection, array $document): array
   {
     if (basename($collection->type) !== 'MediaObject') {

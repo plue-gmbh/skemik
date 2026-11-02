@@ -30,6 +30,12 @@ final readonly class UpdateReport
     public bool $again = false,
   ) {}
 
+  /* Offered and neither installed nor refused: what an install held under the lock is under way for. */
+  public function pending(): bool
+  {
+    return $this->offered !== null && $this->offered !== $this->installed && $this->offered !== $this->refused;
+  }
+
   public function checkedAt(string $at, ?string $unreachable, ?string $offered): self
   {
     return new self($at, $unreachable, $offered, $this->installed, $this->installedAt, $this->security,

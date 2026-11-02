@@ -55,13 +55,13 @@ final readonly class PayloadMapper
     private \Closure $reads,
   ) {}
 
-  /* What a grant is asked about, read before anything is resolved: the fields the
-     document writes, by the name it gave each, and the translation it names, which
-     joins the record to another's group and is no field's, so only a rule on the
-     collection whole covers it, as one does a document naming nothing else. What
-     cannot be read is left to the refusal that names it once the grant has been asked.
-     @param array<string, mixed> $document
-     @return array<string, string> field key to the name the document spelt it by */
+  /** What a grant is asked about, read before anything is resolved: the fields the
+      document writes, by the name it gave each, and the translation it names, which
+      joins the record to another's group and is no field's, so only a rule on the
+      collection whole covers it, as one does a document naming nothing else. What
+      cannot be read is left to the refusal that names it once the grant has been asked.
+      @param array<string, mixed> $document
+      @return array<string, string> field key to the name the document spelt it by */
   public function fields(Collection $collection, array $document): array
   {
     $type = $this->profile->byType($collection->type);
@@ -105,7 +105,7 @@ final readonly class PayloadMapper
       [...$refused, ...$spine], $original, is_string($language) || $language === null ? $language : 'a list');
   }
 
-  /* @return array{?EntityId, list<Violation>} the record translated, or why it names none */
+  /** @return array{?EntityId, list<Violation>} the record translated, or why it names none */
   private function original(mixed $sent): array
   {
     if ($sent === null) {
@@ -120,8 +120,8 @@ final readonly class PayloadMapper
       : [null, [Violation::stated('translationOfWork', 'not the address of one record')]];
   }
 
-  /* @return array<string, mixed> field key to the value as sent: none for the spine
-     or for what is computed at emit */
+  /** @return array<string, mixed> field key to the value as sent: none for the spine
+      or for what is computed at emit */
   private function fieldsOf(Collection $collection, string $property, mixed $value): array
   {
     $type = $this->profile->byType($collection->type);
@@ -143,11 +143,11 @@ final readonly class PayloadMapper
       fn (FieldDefinition $field): bool => $field->valueObjectOf === $property));
 
     return $carried === [] ? throw MalformedValue::named('property of ' . $collection->name, $property)
-      : $this->flattened($type, $carried, $value);
+      : $this->flattened($collection, $carried, $value);
   }
 
-  /* @param array<string, mixed> $found
-     @return array<string, string|int|float|bool|array<array-key, mixed>|null> */
+  /** @param array<string, mixed> $found
+      @return array<string, string|int|float|bool|array<array-key, mixed>|null> */
   private function values(Collection $collection, array $found): array
   {
     $type = $this->profile->byType($collection->type);
@@ -162,8 +162,8 @@ final readonly class PayloadMapper
     return $values;
   }
 
-  /* @param array<string, mixed> $found
-     @return array<string, list<Relation>> by predicate */
+  /** @param array<string, mixed> $found
+      @return array<string, list<Relation>> by predicate */
   private function relations(Collection $collection, EntityId $subject, array $found): array
   {
     $type = $this->profile->byType($collection->type);
@@ -178,16 +178,20 @@ final readonly class PayloadMapper
     return $relations;
   }
 
-  /* `Feed\JsonLd`'s assembly in reverse: one nested object back into the fields it was assembled
-     from, a key no field of this property carries being the one its object
-     shares with the type's other amounts (an invoice's currency).
-     @param non-empty-list<FieldDefinition> $carried
-     @return array<string, mixed> */
-  private function flattened(TypeDefinition $type, array $carried, mixed $value): array
+  /** `Feed\JsonLd`'s assembly in reverse: one nested object back into the fields it was assembled
+      from, a key no field of this property carries being the one its object
+      shares with the type's other amounts (an invoice's currency). A `null`
+      clears the keys the collection carries, since a key it does not is no
+      field of it, as sending one would be told.
+      @param non-empty-list<FieldDefinition> $carried the type's fields of this property
+      @return array<string, mixed> */
+  private function flattened(Collection $collection, array $carried, mixed $value): array
   {
     if ($value === null) {
-      return array_fill_keys(array_map(fn (FieldDefinition $field): string => $field->key, $carried), null);
+      return array_fill_keys(array_values(array_intersect(array_column($carried, 'key'),
+        array_column($collection->fields, 'key'))), null);
     }
+    $type = $this->profile->byType($collection->type);
     $object = (string) $carried[0]->valueObject;
     if (!is_array($value) || array_is_list($value)) {
       throw MalformedValue::notA('a ' . $object, (string) $carried[0]->valueObjectOf);

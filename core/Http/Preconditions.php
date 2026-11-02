@@ -28,15 +28,11 @@ final readonly class Preconditions
     return sprintf('"%d"', $version);
   }
 
-  /* @param string $validator `CacheHeaders::validator` of the document served */
   public function recordTag(Entity $entity, string $validator): string
   {
     return sprintf('"%d-%s-%s"', $entity->version, $entity->id->value, trim($validator, '"'));
   }
 
-  /* No write without a version, on either path: a write that forgot to say what
-     it read is the lost update this mechanism exists to refuse. A write aimed at
-     a record by its slug must echo the tag that record was read under. */
   public function expectedVersion(Request $request, ?EntityId $record = null): int
   {
     $sent = $request->header('If-Match') ?? $request->form(self::FIELD);

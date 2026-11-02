@@ -45,6 +45,7 @@ if ($entries === []) { ?>
       <p class="home-more"><button type="button" class="tool-button is-wide" data-dialog="grant-setup"
         aria-haspopup="dialog"><?= $template->escape($words->get('grant.setup_new')) ?></button></p>
       <dialog class="dialog grant-dialog" id="grant-setup" aria-labelledby="grant-setup-title" data-grant-setup>
+        <?= $template->render('partials/live-region') ?>
         <h2 id="grant-setup-title"><?= $template->escape($words->get('grant.setup')) ?></h2>
         <p class="popover-hint"><?= $template->escape($words->get('grant.setup_hint')) ?></p>
         <form class="grant-issue" data-grant-issue data-grant-add="<?= $template->escape($words->get('grant.add')) ?>">

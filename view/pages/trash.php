@@ -86,6 +86,7 @@ $held = $rows !== [] && $rows[0]->held;
 <?php if ($purges): ?>
       <dialog class="dialog" id="purge-<?= $template->escape($id) ?>"
         aria-labelledby="purge-<?= $template->escape($id) ?>-title">
+        <?= $template->render('partials/live-region') ?>
         <form method="post" action="<?= $template->escape($address . '/' . $id) ?>/purge">
           <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
           <h2 id="purge-<?= $template->escape($id) ?>-title"><?= $template->escape($words->get('purge.question',
@@ -113,6 +114,7 @@ $held = $rows !== [] && $rows[0]->held;
   </ul>
 <?php if ($purges && $rows !== []): ?>
   <dialog class="dialog" id="purge-ticked" aria-labelledby="purge-ticked-title">
+    <?= $template->render('partials/live-region') ?>
     <form method="post" action="<?= $template->escape($address) ?>/purge">
       <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
       <input type="hidden" name="ids" data-ticked-ids>

@@ -88,13 +88,13 @@ final readonly class SettingStore
     $this->write(self::LOCALES, $this->json->encode($tags));
   }
 
-  /* Every tag something is written in: a record's own, the words a record or an
-     edge keeps under `l10n`, in the trash too. Each with the records outside the
-     trash written in it, one record counted once, for the Languages card: one
-     pass, and a record's words read of the types that localise alone, through
-     the type index, since only those carry `l10n` (`Profile\Validator`) and a
-     grown house is mostly orders.
-     @return array<string, int> by tag */
+  /** Every tag something is written in: a record's own, the words a record or an
+      edge keeps under `l10n`, in the trash too. Each with the records outside the
+      trash written in it, one record counted once, for the Languages card: one
+      pass, and a record's words read of the types that localise alone, through
+      the type index, since only those carry `l10n` (`Profile\Validator`) and a
+      grown house is mostly orders.
+      @return array<string, int> by tag */
   public function held(): array
   {
     $statement = $this->db->prepare('select tag, count(distinct case when live then id end) from ('
@@ -168,9 +168,9 @@ final readonly class SettingStore
       'at' => $report->at->format(Clock::STORED), 'version' => $report->version]));
   }
 
-  /* A report an older version wrote holds each reason spelt out, read back as stated until the
-     next pass writes it again.
-     @param array<string, mixed> $found */
+  /** A report an older version wrote holds each reason spelt out, read back as stated until the
+      next pass writes it again.
+      @param array<string, mixed> $found */
   private function found(array $found): Violation
   {
     $record = $found['record'] === null ? null : new EntityId((string) $found['record']);

@@ -13,9 +13,9 @@ use Profile\Seed\Terms;
 /* A field as a catalogue measures it, the one entry `Catalog` and `ProfileCatalog`
    both write, so a machine that learnt a field from the profile finds it under
    the same name and words in the catalogue. A value object is one entry of the
-   property it arrives on, its keys under `valueReference`, since it is carried
-   whole and its keys share their names across a type. What either document says
-   of a field beyond that is its own. */
+   property it arrives on, the keys it carries under `valueReference`, since
+   its keys share their names across a type. What either document says of a
+   field beyond that is its own. */
 final readonly class Variables
 {
   public function __construct(private SchemaOrg $schema, private Terms $terms) {}
@@ -45,9 +45,9 @@ final readonly class Variables
     return array_values($entries);
   }
 
-  /* A select on the world's list names its standard, `ISO 4217`, and no code:
-     the reader holds that table already.
-     @return array<string, mixed> */
+  /** A select on the world's list names its standard, `ISO 4217`, and no code:
+      the reader holds that table already.
+      @return array<string, mixed> */
   public function variable(FieldDefinition $field, Locale $locale): array
   {
     $variable = ['@type' => 'PropertyValue',
@@ -61,10 +61,10 @@ final readonly class Variables
       $locale)];
   }
 
-  /* Each token of a closed list as a term by its code, with its word in the
-     locale; a row key's stand in the profile alone, its rows' keys being entries
-     there, where `valueReference` in the catalogue names a value object's keys.
-     @param list<string> $tokens @return list<array<string, string>> */
+  /** Each token of a closed list as a term by its code, with its word in the
+      locale; a row key's stand in the profile alone, its rows' keys being entries
+      there, where `valueReference` in the catalogue names a value object's keys.
+      @param list<string> $tokens @return list<array<string, string>> */
   public function worded(FieldDefinition $field, array $tokens, Locale $locale): array
   {
     $address = fn (string $token): array => ($at = $this->schema->member($token)) === null ? [] : ['@id' => $at];

@@ -36,8 +36,8 @@ final readonly class Range
     return "($bound is null or $compared $operator $bound)";
   }
 
-  /* No end at all asks nothing, so it is refused rather than matching every row.
-     @return list<string|int|float|null> */
+  /** No end at all asks nothing, so it is refused rather than matching every row.
+      @return list<string|int|float|null> */
   public static function bounds(FieldDefinition $field, string $value, string $named): array
   {
     $ends = str_contains($value, '..') ? explode('..', $value, 2) : [$value, $value];

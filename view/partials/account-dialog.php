@@ -27,6 +27,7 @@ $last = $colleague !== null && $colleague->lastOwner;
 ?>
 <dialog class="dialog account-dialog" id="<?= $template->escape($id) ?>"
   aria-labelledby="<?= $template->escape($id) ?>-title">
+  <?= $template->render('partials/live-region') ?>
   <form class="account-form" data-account-form="/settings/accounts<?= $account === null ? '' : '/'
     . $template->escape($account->id) ?>" data-method="<?= $account === null ? 'POST' : 'PATCH' ?>"
     data-csrf="<?= $template->escape($csrf) ?>"

@@ -108,9 +108,9 @@ final readonly class Ranges
     return $this->judged($held);
   }
 
-  /* A flattened field holds its key's value, and its value object is what the
-     property it arrives on holds; a key both amounts carry is asked alone.
-     @return array<string, list<string>> by `Class.property` */
+  /** A flattened field holds its key's value, and its value object is what the
+      property it arrives on holds; a key both amounts carry is asked alone.
+      @return array<string, list<string>> by `Class.property` */
   private function held(FieldDefinition $field, TypeDefinition $type): array
   {
     $name = (string) $this->schema->propertyName($field->key);
@@ -146,7 +146,7 @@ final readonly class Ranges
     return $text ? 'Text' : 'DefinedTerm';
   }
 
-    /* The value objects held as rows, whose keys no field declares.
+    /** The value objects held as rows, whose keys no field declares.
      @return list<ValueObject> */
   private function rowed(): array
   {
@@ -169,8 +169,8 @@ final readonly class Ranges
     return $held;
   }
 
-  /* A programme a membership names leaves inside its `ProgramMembership`.
-     @param list<string> $targets @return list<string> */
+  /** A programme a membership names leaves inside its `ProgramMembership`.
+      @param list<string> $targets @return list<string> */
   private function emitted(array $targets, string $property = ''): array
   {
     $classes = array_map(fn (string $target): array => match (true) {
@@ -182,9 +182,9 @@ final readonly class Ranges
     return array_merge(...$classes);
   }
 
-  /* Each word an edge may carry, by the wrapper it is emitted in (`Feed\Wrappers`),
-     is declared on that wrapper and holds what the property holds.
-     @return list<Violation> */
+  /** Each word an edge may carry, by the wrapper it is emitted in (`Feed\Wrappers`),
+      is declared on that wrapper and holds what the property holds.
+      @return list<Violation> */
   private function checkWrappers(): array
   {
     $held = [];
@@ -220,8 +220,8 @@ final readonly class Ranges
     return $held;
   }
 
-  /* A property the vocabulary does not publish is `Claims`' to name, not this.
-     @param array<string, list<string>> $held @return list<Violation> */
+  /** A property the vocabulary does not publish is `Claims`' to name, not this.
+      @param array<string, list<string>> $held @return list<Violation> */
   private function judged(array $held): array
   {
     $violations = [];

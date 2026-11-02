@@ -107,11 +107,11 @@ final readonly class Trash
     $this->log->record(ActionType::Update, $entity->id, $moved);
   }
 
-  /* Every record an edge points from, each with the edges it loses, or the
-     refusal naming the ones a required edge binds to the record; one going in
-     the same lot binds nothing.
-     @param list<string> $lot
-     @return array<string, array<string, array{from: string, to: null}>> by subject, then predicate */
+  /** Every record an edge points from, each with the edges it loses, or the
+      refusal naming the ones a required edge binds to the record; one going in
+      the same lot binds nothing.
+      @param list<string> $lot
+      @return array<string, array<string, array{from: string, to: null}>> by subject, then predicate */
   private function leaving(Entity $purged, array $lot): array
   {
     $address = self::address($purged);
@@ -130,9 +130,9 @@ final readonly class Trash
     return $required === [] ? $leaving : throw TargetRequired::by($address, $required);
   }
 
-  /* Whether one of the predicates is a required field the record would hold
-     no other target of.
-     @param list<string> $predicates */
+  /** Whether one of the predicates is a required field the record would hold
+      no other target of.
+      @param list<string> $predicates */
   private function requires(Entity $record, EntityId $target, array $predicates): bool
   {
     $held = $this->relations->outboundByPredicate($record->id);

@@ -20,6 +20,7 @@ use Http\Request;
 use Http\Response;
 use Profile\Cardinality;
 use Profile\FieldDefinition;
+use Profile\FieldKind;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
@@ -36,7 +37,9 @@ use Support\Json;
    best first. With `collection` and `field` it is that field's picker: only the
    types the field points at, images alone on an image field, and with nothing typed the newest of them, so a
    short list is picked from without a word — but a field pointing at any type
-   waits for one. With `type` it offers that type alone, as the accounts card's
+   waits for one. A link field's picker, and with `key` a row's link key's, is
+   offered the library's files the link takes, each with the file a pick
+   writes. With `type` it offers that type alone, as the accounts card's
    people are offered. `record` and `held` name the places of the field's edges a
    picker still lists, whose targets it is not offered again. A match is asked of
    the fields the reader reads, a hit passes the reader's scope before it is named, and
@@ -66,14 +69,9 @@ final readonly class SearchController
   {
     $house = $this->collections->all();
     $field = $this->field($request);
-    $targets = $this->accepted($field, $request->query('type'));
     $in = trim((string) $request->query('in')) === '' ? null : new Locale((string) $request->query('in'));
     [$hits, $seen] = [[], array_fill_keys($this->held($account, $request, $field), true)];
-    foreach ($this->found($account, $request, $targets) as $id) {
-      $entity = $this->entities->find($id);
-      if (!$this->fits($field, $targets, $entity) || !$this->rows->readable($account, $entity)) {
-        continue;
-      }
+    foreach ($this->fitting($account, $request, $field) as $entity) {
       $offered = $this->offered($account, $entity, $in);
       $root = TranslationGroup::rootOf($offered)->value;
       if (!isset($seen[$root]) && ($hit = $this->hit($offered, $house, $in)) !== null) {
@@ -87,6 +85,42 @@ final readonly class SearchController
     return Response::json($this->json->encode(['hits' => $hits]));
   }
 
+  /** What may be offered, best first: of the types asked, what the field takes
+      and this account reads; a link's search is the library's files of the
+      kinds the link takes.
+      @return \Generator<int, Entity> */
+  private function fitting(Account $account, Request $request, ?FieldDefinition $field): \Generator
+  {
+    $kinds = $this->linked($request, $field);
+    $targets = $kinds === null ? $this->accepted($field, $request->query('type')) : ['MediaObject'];
+    foreach ($this->found($account, $request, $targets) as $id) {
+      $entity = $this->entities->find($id);
+      $kind = (string) strtok((string) $entity->props->string('encoding_format'), '/');
+      $fits = $kinds === null ? $this->fits($field, $targets, $entity) : $kinds === [] || in_array($kind, $kinds, true);
+      if ($fits && $this->rows->readable($account, $entity)) {
+        yield $entity;
+      }
+    }
+  }
+
+  /** The kinds of file the link searched takes (`SchemaOrg::linkTakes`): a link
+      field's, or with `key` a row's link key's; null where the search is no link's.
+      @return ?list<string> */
+  private function linked(Request $request, ?FieldDefinition $field): ?array
+  {
+    $key = $request->query('key');
+    if ($field === null || ($key === null && $field->kind !== FieldKind::Link)) {
+      return null;
+    }
+    $kinds = $key === null ? [] : $this->profile->valueObject((string) $field->ref)?->kinds ?? [];
+    if ($key !== null && ($kinds[$key] ?? null) !== FieldKind::Link) {
+      throw MalformedValue::named('link key of ' . $field->key, $key);
+    }
+    $property = $key ?? (string) $this->schema->propertyName($field->key);
+
+    return $this->schema->linkTakes($property) ?? throw MalformedValue::named('link taking a file', $property);
+  }
+
   /** @param ?list<string> $targets null for any type
       @return list<EntityId> best first */
   private function found(Account $account, Request $request, ?array $targets): array
@@ -94,17 +128,17 @@ final readonly class SearchController
     $house = $this->collections->all();
     $typed = (string) $request->query('q');
 
-    return trim($typed) === '' && $targets !== null ? $this->newest($house, $targets, $this->field($request))
+    return trim($typed) === '' && $targets !== null ? $this->newest($house, $targets, $this->narrowed($request))
       : $this->search->search($typed, $this->readings($account, $house, $targets));
   }
 
-  /* The targets the field holds at the places the picker still lists, each as its
-     group's root, since a hit stands for its group: a picker names a held target by
-     its place and never by its id (`Chip::held`), so what it holds is read here. Only
-     for a staff reader of the record's type, who reads every field of it and is the
-     only one with a picker, writing being within reading: for anybody else the hits
-     missing would tell of an edge the feed withholds.
-     @return list<string> */
+  /** The targets the field holds at the places the picker still lists, each as its
+      group's root, since a hit stands for its group: a picker names a held target by
+      its place and never by its id (`Chip::held`), so what it holds is read here. Only
+      for a staff reader of the record's type, who reads every field of it and is the
+      only one with a picker, writing being within reading: for anybody else the hits
+      missing would tell of an edge the feed withholds.
+      @return list<string> */
   private function held(Account $account, Request $request, ?FieldDefinition $field): array
   {
     [$record, $places] = [$request->query('record'), (string) $request->query('held')];
@@ -152,11 +186,11 @@ final readonly class SearchController
     return $found;
   }
 
-  /* Each type the search may offer, as this account reads it, since a match on
-     any other field would name a record by a word the reader is not shown.
-     @param list<Collection> $house
-     @param ?list<string> $targets null for any type
-     @return array<string, Query> */
+  /** Each type the search may offer, as this account reads it, since a match on
+      any other field would name a record by a word the reader is not shown.
+      @param list<Collection> $house
+      @param ?list<string> $targets null for any type
+      @return array<string, Query> */
   private function readings(Account $account, array $house, ?array $targets): array
   {
     $offered = array_filter($house, fn (Collection $collection): bool
@@ -179,8 +213,8 @@ final readonly class SearchController
       ?? throw MalformedValue::named('field of ' . $collection->name, $key);
   }
 
-  /* @return ?list<string> the type asked for, or the types an edge points at or a
-     value object's row refers to, a branch among the organisations; null for any type */
+  /** @return ?list<string> the type asked for, or the types an edge points at or a
+      value object's row refers to, a branch among the organisations; null for any type */
   private function accepted(?FieldDefinition $field, ?string $type): ?array
   {
     if ($type !== null) {
@@ -197,26 +231,23 @@ final readonly class SearchController
       fn (string $name): bool => $this->schema->takes($targets, $name)));
   }
 
-  /* A field is offered what a save of it takes (`Feed\Targets::misfit`).
-     @param ?list<string> $targets null for any type */
+  /** A field is offered what a save of it takes (`Feed\Targets::misfit`).
+      @param ?list<string> $targets null for any type */
   private function fits(?FieldDefinition $field, ?array $targets, Entity $entity): bool
   {
     return ($field === null || $this->targets->misfit($field, $entity) === null)
       && ($targets === null || in_array($entity->typeName(), $targets, true));
   }
 
-  /**
-   * @param list<Collection> $house
-   * @param list<string> $targets
-   * @return list<EntityId> newest first
-   */
-  private function newest(array $house, array $targets, ?FieldDefinition $field): array
+  /** @param list<Collection> $house @param list<string> $targets @param array<string, list<string>> $narrowed
+      @return list<EntityId> newest first */
+  private function newest(array $house, array $targets, array $narrowed): array
   {
     $types = array_unique(array_map(fn (Collection $collection): string => $collection->type, $house));
     $found = [];
     foreach ($types as $type) {
       if (in_array($this->profile->byType($type)->name, $targets, true)) {
-        $found = [...$found, ...$this->entities->list(new Query($type, $this->narrowed($field)))];
+        $found = [...$found, ...$this->entities->list(new Query($type, $narrowed))];
       }
     }
     usort($found, fn (Entity $a, Entity $b): int => strcmp($b->createdAt, $a->createdAt));
@@ -224,14 +255,15 @@ final readonly class SearchController
     return array_map(fn (Entity $entity): EntityId => $entity->id, $found);
   }
 
-  /* What a field's picker opens on is asked of the holdings and not sifted from
-     the newest of the type, or a set of three terms opens empty behind fifty
-     newer ones of another set, and a picture behind fifty documents.
-     @return array<string, list<string>> */
-  private function narrowed(?FieldDefinition $field): array
+  /** What a field's picker opens on is asked of the holdings and not sifted from
+      the newest of the type, or a set of three terms opens empty behind fifty
+      newer ones of another set, and a picture behind fifty documents.
+      @return array<string, list<string>> */
+  private function narrowed(Request $request): array
   {
+    $field = $this->field($request);
     $root = $field?->cardinality === Cardinality::T ? $this->targets->root($this->schema->termSet($field)) : null;
-    $kinds = $field === null ? [] : $this->schema->fileKinds($field->targets);
+    $kinds = $this->linked($request, $field) ?? ($field === null ? [] : $this->schema->fileKinds($field->targets));
 
     return match (true) {
       $root !== null => ['in_defined_term_set' => [$root->id->value]],
@@ -240,14 +272,15 @@ final readonly class SearchController
     };
   }
 
-  /* The slug beside the label, since two offers may both be called Ticket, an
-     image's preview, since two photos are told apart by looking, and a work's
-     locale only where it is not the one edited, so a German page offered on an
-     English site says so, and its type, since an edge to a `MemberProgram` says
-     more than one to anything else.
-     @param list<Collection> $house
-     @return ?array{id: string, label: string, slug: string, glyph: string, collection: string,
-       preview: ?string, locale: ?string, type: string} null for a record no collection holds */
+  /** The slug beside the label, since two offers may both be called Ticket, an
+      image's preview, since two photos are told apart by looking, and a work's
+      locale only where it is not the one edited, so a German page offered on an
+      English site says so, and its type, since an edge to a `MemberProgram` says
+      more than one to anything else.
+      @param list<Collection> $house
+      @return ?array{id: string, label: string, slug: string, glyph: string, collection: string,
+        preview: ?string, locale: ?string, type: string, file: ?array{address: string, format: string,
+        size: string}} null for a record no collection holds */
   private function hit(Entity $entity, array $house, ?Locale $in): ?array
   {
     $holder = array_find($house, fn (Collection $collection): bool => $collection->type === $entity->type);
@@ -261,6 +294,7 @@ final readonly class SearchController
     return ['id' => $entity->id->value, 'label' => $this->label->of($shown, $type),
       'slug' => $entity->slug->value, 'glyph' => SidebarEntry::glyphOf($entity->type),
       'collection' => $holder->name, 'preview' => Rows::preview($entity),
-      'locale' => $elsewhere ? $entity->locale->tag : null, 'type' => $entity->typeName()];
+      'locale' => $elsewhere ? $entity->locale->tag : null, 'type' => $entity->typeName(),
+      'file' => Rows::file($entity)];
   }
 }

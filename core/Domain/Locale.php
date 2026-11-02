@@ -26,6 +26,8 @@ final readonly class Locale
     assert($this->canonical('SR-latn-rs') === 'sr-Latn-RS', 'a tag is not cased canonically');
   }
 
+  /** @psalm-taint-escape input a tag by the pattern and the closed lists carries no line break, path, address
+      or markup, and goes into a redirect, a file name of the export and a file opened to be read */
   private function canonical(string $tag): string
   {
     if (preg_match(self::TAG, $tag, $parts) !== 1) {

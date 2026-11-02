@@ -62,10 +62,10 @@ final readonly class ProfileCatalog
         'result' => $this->created($type)]];
   }
 
-  /* A row's keys under an objects field, and the route's language where the
-     field's words differ by route: never on a type whose second language is a
-     second one of it, a review.
-     @return array<string, mixed> */
+  /** A row's keys under an objects field, and the route's language where the
+      field's words differ by route: never on a type whose second language is a
+      second one of it, a review.
+      @return array<string, mixed> */
   private function entry(TypeDefinition $type, FieldDefinition $field, Locale $locale): array
   {
     $rows = $field->kind === FieldKind::Objects ? $this->profile->valueObject((string) $field->ref) : null;
@@ -94,8 +94,8 @@ final readonly class ProfileCatalog
     };
   }
 
-  /* A key that takes a closed list carries its words, as a select's entry does.
-     @return list<array<string, mixed>> */
+  /** A key that takes a closed list carries its words, as a select's entry does.
+      @return list<array<string, mixed>> */
   private function rows(ValueObject $object, FieldDefinition $field, Locale $locale): array
   {
     $range = fn (string $key): array => $key === $object->reference ? $object->targets
@@ -108,10 +108,10 @@ final readonly class ProfileCatalog
       ...$words($key)], $field->carried($object));
   }
 
-  /* An edge is annotated apart from the values, since a value object may arrive
-     on its property too: an event's place beside its online address. An edge
-     that is a value object's key is nested with the object's other keys.
-     @return array<string, mixed> */
+  /** An edge is annotated apart from the values, since a value object may arrive
+      on its property too: an event's place beside its online address. An edge
+      that is a value object's key is nested with the object's other keys.
+      @return array<string, mixed> */
   private function created(TypeDefinition $type): array
   {
     $values = [];
@@ -128,8 +128,8 @@ final readonly class ProfileCatalog
     return ['@type' => $type->name, ...$this->inputs($properties), ...$edges];
   }
 
-  /* schema.org's default for each is false, so only what holds is said.
-     @return array<string, mixed> */
+  /** schema.org's default for each is false, so only what holds is said.
+      @return array<string, mixed> */
   private function specification(FieldDefinition $field): array
   {
     return ['@type' => self::SPECIFICATION, ...array_filter(['valueRequired' => $field->required,

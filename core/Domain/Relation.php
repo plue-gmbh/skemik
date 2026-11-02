@@ -53,17 +53,17 @@ final readonly class Relation
     return clone($this, ['qualifiers' => $qualifiers]);
   }
 
-  /* The words as that locale reads them: its own where it has some, the ones the
-     edge was written with where not, as a labelled thing's are read.
-     @return array<string, mixed> */
+  /** The words as that locale reads them: its own where it has some, the ones the
+      edge was written with where not, as a labelled thing's are read.
+      @return array<string, mixed> */
   public function qualifiersIn(Locale $locale): array
   {
     return [...array_diff_key($this->qualifiers->document(), [LocalisedText::KEY => true]),
       ...$this->wordsIn($locale)];
   }
 
-  /* The words that locale holds of its own, and none where it holds none.
-     @return array<string, mixed> */
+  /** The words that locale holds of its own, and none where it holds none.
+      @return array<string, mixed> */
   public function wordsIn(Locale $locale): array
   {
     $own = $this->qualifiers->document()[LocalisedText::KEY][$locale->tag] ?? [];

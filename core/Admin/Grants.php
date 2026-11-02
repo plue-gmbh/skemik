@@ -183,11 +183,11 @@ final readonly class Grants
       $newer === null ? null : $this->facts->replaced($token, $newer), $this->stale($rule));
   }
 
-  /* A key's rules, one line per set of collections allowed the same, since a
-     setup key holds four rules on every collection and a sentence each hides
-     which collections it reaches, as a line each hides that they are all.
-     @param list<Grant> $others
-     @return list<string> */
+  /** A key's rules, one line per set of collections allowed the same, since a
+      setup key holds four rules on every collection and a sentence each hides
+      which collections it reaches, as a line each hides that they are all.
+      @param list<Grant> $others
+      @return list<string> */
   public function lines(array $others, Account $account): array
   {
     $lines = [];

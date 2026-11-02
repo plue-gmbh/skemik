@@ -16,7 +16,6 @@ use Feed\Spelling;
 use Http\Request;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
-use Profile\Kinds;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\TypeDefinition;
@@ -97,9 +96,9 @@ final readonly class FieldEdits
     return is_string($id) ? ['@id' => $this->accepted($account, $field, $id)] : $held;
   }
 
-  /* A row's reference as the picker sends it: `{row}` keeps the record the row
-     at that place held, whoever may read it, and `{id}` is a hit of the search.
-     @param list<mixed> $held the field's rows as stored */
+  /** A row's reference as the picker sends it: `{row}` keeps the record the row
+      at that place held, whoever may read it, and `{id}` is a hit of the search.
+      @param list<mixed> $held the field's rows as stored */
   private function referring(Account $account, FieldDefinition $field, array $held, mixed $sent): mixed
   {
     $object = $this->profile->referring($field);
@@ -128,10 +127,10 @@ final readonly class FieldEdits
     return $target->value;
   }
 
-  /* One pending change per field per locale: an empty one returns the field to
-     the authored words, as `LocalisedText` reads it.
-     @param list<Relation> $edges every outbound edge, as the save leaves them
-     @return array{Entity, list<Relation>} */
+  /** One pending change per field per locale: an empty one returns the field to
+      the authored words, as `LocalisedText` reads it.
+      @param list<Relation> $edges every outbound edge, as the save leaves them
+      @return array{Entity, list<Relation>} */
   public function worded(Collection $collection, Entity $entity, array $edges, mixed $sent): array
   {
     if ($sent === null) {
@@ -151,10 +150,10 @@ final readonly class FieldEdits
     return [$entity, $edges];
   }
 
-  /* A reference's words in that locale, on a type that has words per locale.
-     @param list<Relation> $edges
-     @param array<array-key, mixed> $sent
-     @return list<Relation> */
+  /** A reference's words in that locale, on a type that has words per locale.
+      @param list<Relation> $edges
+      @param array<array-key, mixed> $sent
+      @return list<Relation> */
   private function spoken(Collection $collection, Entity $entity, Locale $locale, array $edges, array $sent): array
   {
     $type = $this->profile->byType($entity->type);
@@ -202,8 +201,8 @@ final readonly class FieldEdits
     return $field;
   }
 
-  /* Decoded JSON, before the Validator has read it: the one place `mixed` is honest.
-     @return string|int|float|bool|array<array-key, mixed>|null */
+  /** Decoded JSON, before the Validator has read it: the one place `mixed` is honest.
+      @return string|int|float|bool|array<array-key, mixed>|null */
   private function stored(FieldDefinition $field, mixed $value): string|int|float|bool|array|null
   {
     $blank = fn (mixed $each): bool => in_array($each, [null, '', []], true);
@@ -213,7 +212,7 @@ final readonly class FieldEdits
     if ($field->repeatable && is_array($value)) {
       $object = $this->profile->valueObject((string) $field->ref);
       $entries = array_map(fn (mixed $entry): mixed => is_array($entry)
-        ? Kinds::spelledRow($object, array_filter($entry, fn (mixed $each): bool => !$blank($each)))
+        ? Spelling::heldRow($object, array_filter($entry, fn (mixed $each): bool => !$blank($each)), $this->origin)
         : $entry, $value);
       $entries = array_values(array_filter($entries, fn (mixed $entry): bool => !$blank($entry)));
 

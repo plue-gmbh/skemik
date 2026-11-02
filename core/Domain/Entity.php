@@ -64,10 +64,10 @@ final readonly class Entity
       && $this->translationOf?->value === $stored->translationOf?->value;
   }
 
-  /* The spine's settings a save would change, by the spine dialog's keys; the
-     slug is a former address the log keeps whole, and a translation is joined
-     on a screen of its own.
-     @return list<string> */
+  /** The spine's settings a save would change, by the spine dialog's keys; the
+      slug is a former address the log keeps whole, and a translation is joined
+      on a screen of its own.
+      @return list<string> */
   public function spineChanged(Entity $stored): array
   {
     return array_keys(array_filter([

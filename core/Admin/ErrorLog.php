@@ -73,9 +73,9 @@ final readonly class ErrorLog
     }
   }
 
-  /* The first piece of each chunk may be the end of a line the next chunk
-     holds the start of, so it waits for that chunk.
-     @return \Generator<int, string> */
+  /** The first piece of each chunk may be the end of a line the next chunk
+      holds the start of, so it waits for that chunk.
+      @return \Generator<int, string> */
   private function backwards(string $path): \Generator
   {
     $handle = fopen($path, 'rb');

@@ -182,6 +182,7 @@ a {
 
 @media (hover: hover) {
   a:not([class]):hover,
+  a.spine-mono:hover,
   .login-again:hover,
   .record-back:hover,
   a.record-row-name:not(:has(+ .record-row-locales)):hover {
@@ -384,6 +385,11 @@ button:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+    --duration-slide: 0s;
+  }
+
   .waiting {
     animation-duration: 4s;
   }
@@ -2337,6 +2343,14 @@ a.option {
   color: var(--text-secondary);
 }
 
+.record-prose :not(pre) > code {
+  padding: 1px 3px;
+  border-radius: var(--radius-small);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
 .record-prose .chip {
   vertical-align: 1px;
 }
@@ -2530,6 +2544,68 @@ a.chip {
 
 .record-prose-edit.is-markdown > .record-prose-tools {
   grid-area: tools;
+}
+
+.record-prose-edit.is-markdown > .record-textarea,
+.record-prose-mirror {
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: normal;
+  word-spacing: normal;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
+}
+
+.record-prose-mirror {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  grid-area: area;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 0 0 calc(var(--radius-large) - 1px) calc(var(--radius-large) - 1px);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.record-prose-mirror + .record-textarea {
+  position: relative;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text);
+}
+
+@media (forced-colors: active) {
+  .record-prose-mirror {
+    display: none;
+  }
+}
+
+.prose-quote {
+  color: var(--text-secondary);
+}
+
+.prose-italic {
+  font-style: italic;
+}
+
+.prose-heading,
+.prose-bold {
+  -webkit-text-stroke: .35px currentColor;
+}
+
+.prose-code {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+.prose-link {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .side-card-title {
@@ -3028,7 +3104,7 @@ a.cell {
 }
 
 .popover.is-wide {
-  width: 360px;
+  width: 380px;
   max-height: calc(100vh - 16px);
   overflow-y: auto;
 }
@@ -4462,10 +4538,10 @@ button.spine-chip {
 .page-note,
 .trashed,
 .ticked-bar {
-  animation: appear var(--transition-fast);
+  animation: drop-in var(--transition-fast);
 }
 
-@keyframes appear {
+@keyframes drop-in {
   from {
     opacity: 0;
     transform: translateY(-4px);
@@ -5145,18 +5221,12 @@ button.spine-chip {
   display: none;
 }
 
-.option:not(.is-offer) + .is-offer {
-  position: relative;
-  margin-top: 9px;
+.option.is-offer {
+  color: var(--text-secondary);
 }
 
-.option:not(.is-offer) + .is-offer::before {
-  position: absolute;
-  top: -7px;
-  right: 11px;
-  left: 11px;
-  border-top: 1px solid var(--border);
-  content: "";
+.option.is-offer .kind {
+  opacity: .6;
 }
 
 .popover-head {

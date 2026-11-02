@@ -53,12 +53,12 @@ final readonly class Changes
     private Words $words,
   ) {}
 
-  /* A row folds into the line above it before the reader's scope is asked,
-     since one thing is in it or out of it whole, and a row the reader cannot
-     see breaks no run, so no line split in two says something stood between.
-     A run ends with the house's day, so a line's time never hides a change
-     made days before it. A line is drawn again only where a row folded in.
-     @return list<Change> */
+  /** A row folds into the line above it before the reader's scope is asked,
+      since one thing is in it or out of it whole, and a row the reader cannot
+      see breaks no run, so no line split in two says something stood between.
+      A run ends with the house's day, so a line's time never hides a change
+      made days before it. A line is drawn again only where a row folded in.
+      @return list<Change> */
   public function latest(Account $account): array
   {
     $collections = $this->collections->all();
@@ -148,9 +148,9 @@ final readonly class Changes
       'activity' => $kept === [] ? null : $activity->id, 'byKey' => $activity->token !== null];
   }
 
-  /* What a redaction would take: a former address, a number held once, an edge
-     a purge took, each as it went and what it became.
-     @return list<string> */
+  /** What a redaction would take: a former address, a number held once, an edge
+      a purge took, each as it went and what it became.
+      @return list<string> */
   private function kept(Activity $activity): array
   {
     $kept = [];
@@ -225,10 +225,10 @@ final readonly class Changes
     };
   }
 
-  /* Unknown only for a name redacted, which a person's current name must not
-     undo; the install is nobody's and says so. The state stands apart from the
-     name, so a screen can link the name alone.
-     @return array{who: string, state: ?string} */
+  /** Unknown only for a name redacted, which a person's current name must not
+      undo; the install is nobody's and says so. The state stands apart from the
+      name, so a screen can link the name alone.
+      @return array{who: string, state: ?string} */
   private function actor(Activity $activity): array
   {
     if ($activity->person === null && $activity->token === null) {
@@ -242,9 +242,9 @@ final readonly class Changes
       : $this->person((string) $activity->person, $activity->name);
   }
 
-  /* By the name the person holds now, so a colleague who changed theirs is not
-     two people, and by the kept one once the record is gone.
-     @return array{who: string, state: ?string} */
+  /** By the name the person holds now, so a colleague who changed theirs is not
+      two people, and by the kept one once the record is gone.
+      @return array{who: string, state: ?string} */
   private function person(string $id, string $kept): array
   {
     try {

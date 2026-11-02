@@ -25,27 +25,27 @@ final readonly class FieldDefinition
     public FieldKind $kind,
     public Cardinality $cardinality,
     public WrittenBy $writtenBy = WrittenBy::Authored,
-    public bool $required = false,      // † — the Validator refuses to save without it
-    public bool $starter = false,       // ‡ — in a new collection by default, never a rule
-    public bool $repeatable = false,    // []
+    public bool $required = false,      /* † — the Validator refuses to save without it */
+    public bool $starter = false,       /* ‡ — in a new collection by default, never a rule */
+    public bool $repeatable = false,    /* [] */
     public array $options = [],
     public ?string $ref = null,
-    public ?Uniqueness $unique = null,  // ! — a duplicate is refused; nothing is generated
+    public ?Uniqueness $unique = null,  /* ! — a duplicate is refused; nothing is generated */
     public array $targets = [],
-    public ?string $valueObject = null, // the VO this field was flattened out of
-    public ?string $valueObjectKey = null,  // and which of its keys this is
-    public ?string $valueObjectOf = null,   // and the property the object arrived on
-    public ?string $notFlattened = null,    // or why it is still one text field
-    public bool $writerFromHoldings = false,  // the one row the type cannot answer
-    public bool $words = false,         // a Text or Objects field a reader reads — see holdsWords()
-    public ?Derivation $derivation = null,  // ∂ — what computes it and what it reads
-    public ?string $ofKind = null,      // the specialisation whose property this is, not the type's
-    public bool $dialled = false,       // a number to dial — see dialled()
-    public ?ClosedList $list = null,    // Select only: the world's list in place of options
-    public ?string $set = null,         // T only: the set's code where it is not the property's name
-    public ?string $block = null,       // the heading a flattened field stands under with its kin
-    public bool $whole = false,         // a count — see whole()
-    public array $keys = [],            // Objects only: the keys of a row this field carries — see keys()
+    public ?string $valueObject = null, /* the VO this field was flattened out of */
+    public ?string $valueObjectKey = null,  /* and which of its keys this is */
+    public ?string $valueObjectOf = null,   /* and the property the object arrived on */
+    public ?string $notFlattened = null,    /* or why it is still one text field */
+    public bool $writerFromHoldings = false,  /* the one row the type cannot answer */
+    public bool $words = false,         /* a Text or Objects field a reader reads — see holdsWords() */
+    public ?Derivation $derivation = null,  /* ∂ — what computes it and what it reads */
+    public ?string $ofKind = null,      /* the specialisation whose property this is, not the type's */
+    public bool $dialled = false,       /* a number to dial — see dialled() */
+    public ?ClosedList $list = null,    /* Select only: the world's list in place of options */
+    public ?string $set = null,         /* T only: the set's code where it is not the property's name */
+    public ?string $block = null,       /* the heading a flattened field stands under with its kin */
+    public bool $whole = false,         /* a count — see whole() */
+    public array $keys = [],            /* Objects only: the keys of a row this field carries — see keys() */
   ) {
     /* Self-tests on the profile's own declarations. Each group is called inside
        `assert()`, so production neither checks nor calls it. */
@@ -71,8 +71,8 @@ final readonly class FieldDefinition
       : strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $this->valueObjectOf)) . ':';
   }
 
-  /* What a select takes: its own options, or the codes of the list it names.
-     @return list<string> */
+  /** What a select takes: its own options, or the codes of the list it names.
+      @return list<string> */
   public function choices(): array
   {
     return $this->list?->codes() ?? $this->options;

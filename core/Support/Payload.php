@@ -33,11 +33,11 @@ final readonly class Payload
       fn (string $path): bool => !$this->inert($this->root . '/' . $path))));
   }
 
-  /* What `$scan` found, or nothing where it found nothing on the files as they stand. Their
-     times are read before the scan, so a file saved during it shows as moved, and a pass is
-     not kept while a file is from this second, where a second save would leave its time.
-     @param \Closure(): list<string> $scan
-     @return list<string> */
+  /** What `$scan` found, or nothing where it found nothing on the files as they stand. Their
+      times are read before the scan, so a file saved during it shows as moved, and a pass is
+      not kept while a file is from this second, where a second save would leave its time.
+      @param \Closure(): list<string> $scan
+      @return list<string> */
   public function found(string $check, \Closure $scan): array
   {
     [$now, $times] = [time(), $this->times()];

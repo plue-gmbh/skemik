@@ -41,13 +41,12 @@ function sending(sheet) {
         try {
           const headers = { "Content-Type": "application/json", Accept: "application/json",
             "X-CSRF-Token": data.csrf, ...(isNew(id) ? {} : { "If-Match": `"${row.version}"` }) };
-          const response = await fetch(address,
-            { method: isNew(id) ? "POST" : "PATCH", headers, body: JSON.stringify(body) });
-          const answer = await response.json();
-          if (response.ok && (dated in sent || (dated === "" && isNew(id)))) this.moved = location.href;
-          if (response.ok && isNew(id)) return this.made(id, answer);
-          if (response.ok) return this.stored(id, answer, sent);
-          if (response.status === 412) return this.conflicts.push({ id, body: answer });
+          const { ok, status, body: answer } = await answered(fetch(address,
+            { method: isNew(id) ? "POST" : "PATCH", headers, body: JSON.stringify(body) }));
+          if (ok && (dated in sent || (dated === "" && isNew(id)))) this.moved = location.href;
+          if (ok && isNew(id)) return this.made(id, answer);
+          if (ok) return this.stored(id, answer, sent);
+          if (status === 412) return this.conflicts.push({ id, body: answer });
           (answer.violations ?? [{ field: "", reason: answer.error }]).forEach((each) => this.refuse(id, each));
         } catch (failure) {
           this.refuse(id, { field: "", reason: String(failure.message ?? failure) });

@@ -42,7 +42,7 @@ const edgePicker = {
     const items = (this.value ?? []).map((item) => (item.qualifiers
       ? { ...item, qualifiers: { ...item.qualifiers } } : { ...item }));
     const opened = new Set(items.filter((item) => Object.keys(item.qualifiers ?? {}).length > 0));
-    return { items, opened, typed: "", hits: [], asked: false, sending: false, refused: "" };
+    return { items, opened, typed: "", hits: [], asked: false, unanswered: "", sending: false, refused: "" };
   },
   computed: {
     offered() {
@@ -85,9 +85,9 @@ const edgePicker = {
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
         ...(this.held !== "" ? { record: this.record, held: this.held } : {}),
       });
-      const answer = await (await fetch("/search?" + query, { headers: { Accept: "application/json" } })).json();
+      const { ok, body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
       if (typed !== this.typed) return;
-      [this.hits, this.asked] = [answer.hits ?? [], true];
+      [this.hits, this.asked, this.unanswered] = [body.hits ?? [], ok, ok ? "" : body.error];
     },
     typing() {
       window.clearTimeout(this.timer);

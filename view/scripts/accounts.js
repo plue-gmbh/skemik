@@ -78,9 +78,9 @@ function saveAccount(form) {
 const accountHeaders = (form) => ({ "X-CSRF-Token": form.dataset.csrf, Accept: "application/json" });
 
 async function answerAccount(form, sent) {
-  const response = await sent;
-  if (response.ok) return location.reload();
-  form.querySelector("[data-account-error]").textContent = (await response.json()).error ?? "";
+  const { ok, body } = await answered(sent);
+  if (ok) return location.reload();
+  form.querySelector("[data-account-error]").textContent = body.error ?? "";
 }
 
 /* Deleting asks once more, beside the sentence saying the person stays. */
@@ -134,8 +134,8 @@ async function paintPeople(person, choose) {
   const search = person.querySelector("[data-person-search]");
   const options = person.querySelector("[data-person-options]");
   const typed = search.value;
-  const answer = await (await fetch("/search?" + new URLSearchParams({ q: typed, type: "Person" }),
-    { headers: { Accept: "application/json" } })).json();
+  const { body: answer } = await answered(fetch("/search?" + new URLSearchParams({ q: typed, type: "Person" }),
+    { headers: { Accept: "application/json" } }));
   if (typed !== search.value) return;
   const held = new Set(JSON.parse(person.dataset.held));
   const named = fill(person.dataset.newWord, { name: typed.trim() });

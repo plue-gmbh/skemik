@@ -12,10 +12,10 @@ namespace Profile;
    into two Domain classes, a second copy of what the seed says. */
 enum LocaleMode: string
 {
-  case Fork = 'fork';          // works: one row per language, its own slug and status
-  case Localise = 'localise';  // labelled things: one row, free-text fields per locale
-  case Both = 'both';          // MediaObject and Dataset — fork when the bytes differ, localise when not
-  case None = 'none';          // instruments and other people's words: a second language is a second one
+  case Fork = 'fork';          /* works: one row per language, its own slug and status */
+  case Localise = 'localise';  /* labelled things: one row, free-text fields per locale */
+  case Both = 'both';          /* MediaObject and Dataset — fork when the bytes differ, localise when not */
+  case None = 'none';          /* instruments and other people's words: a second language is a second one */
 
   public function forks(): bool
   {

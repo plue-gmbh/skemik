@@ -17,6 +17,7 @@ if (!isset($template)) {
 ?>
 <dialog class="dialog" id="delete-<?= $template->escape($row->entity->id->value) ?>"
   aria-labelledby="delete-<?= $template->escape($row->entity->id->value) ?>-title">
+  <?= $template->render('partials/live-region') ?>
   <form method="post"
     action="/c/<?= $template->escape($collection->slug->value) ?>/<?= $template->escape($row->entity->id->value)
       ?>/delete">

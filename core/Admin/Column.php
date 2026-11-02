@@ -15,8 +15,9 @@ use Profile\TypeDefinition;
    its kind opens: prose's textarea, a select's options, a reference's picker, a
    list's entries (`partials/cell-editor`), and an image the same picker over the
    media library; the record screen gives prose its full width. `uploads` is
-   whether that picker takes a new file too: on a field pointing at the library,
-   for an account that writes it. A field nobody authors — computed at emit, kept
+   whether that picker takes a new file too: on a field pointing at the library
+   or holding a link that takes a file of it, for an account that writes it.
+   A field nobody authors — computed at emit, kept
    by a channel — has no editor anywhere, and `FieldEdits` refuses it as well,
    since a hidden input is not a rule. */
 final readonly class Column
@@ -31,7 +32,6 @@ final readonly class Column
     public string $parameter,
     public bool $uploads,
     public ?string $url = null,
-    public ?string $objectUrl = null,
   ) {}
 
   /* The same field on a screen that only reads it, where a reference stays a link to its record. */
@@ -40,12 +40,20 @@ final readonly class Column
     return clone($this, ['editable' => false, 'uploads' => false]);
   }
 
-  /* The schema.org name a label is hovered for: the property, after the value object it is a key of. */
+  /* The schema.org name a label is hovered for. */
   public function term(): string
   {
-    $property = $this->url === null ? $this->parameter : basename($this->url);
+    return $this->url === null ? $this->parameter : basename($this->url);
+  }
 
-    return $this->objectUrl === null ? $property : basename($this->objectUrl) . ' › ' . $property;
+  /* The label without the heading of the block it stands in, `Street` for
+     `Address: Street`, where the screen already says *Address*; the colon French spaces. */
+  public function shortLabel(): string
+  {
+    $heading = $this->field->block;
+
+    return $heading === null ? $this->label
+      : preg_replace('/^' . preg_quote($heading, '/') . '\h?: /u', '', $this->label, 1) ?? $this->label;
   }
 
   /* Every field sorts but a list of objects, which has no one value to order by. */

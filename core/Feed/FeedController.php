@@ -199,7 +199,6 @@ final readonly class FeedController
     };
   }
 
-  /* A collection's catalogue entry alone: what arranging it answers with. */
   public function entry(Request $request, Route $route, Collection $collection): Response
   {
     $locale = $this->locale($route->parameter('locale'));

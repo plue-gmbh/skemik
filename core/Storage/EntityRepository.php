@@ -56,6 +56,19 @@ final readonly class EntityRepository
     return $row === false ? throw EntityNotFound::withId($id->value) : $this->entity($row);
   }
 
+  /* A record of the type outside the trash, by the id a request sends: a malformed
+     id, another type's record and a trashed one all read as none. */
+  public function live(string $type, string $id): Entity
+  {
+    try {
+      $entity = $this->find(new EntityId($id));
+    } catch (MalformedValue) {
+      throw EntityNotFound::withId($id);
+    }
+
+    return $entity->type !== $type || $entity->deletedAt !== null ? throw EntityNotFound::withId($id) : $entity;
+  }
+
   /* The type is part of the address: a labelled thing answers on every
      locale route, so without it a `Person` and an `Article` may share one. */
   public function bySlug(string $type, Locale $locale, Slug $slug): ?Entity
@@ -84,9 +97,9 @@ final readonly class EntityRepository
       $rows === [] ? [$member] : array_map($this->entity(...), $rows));
   }
 
-  /* The works of a type in one locale that are in no group, a member in the
-     trash counting as one, as `Collisions` counts it: what may join another's.
-     @return list<Entity> */
+  /** The works of a type in one locale that are in no group, a member in the
+      trash counting as one, as `Collisions` counts it: what may join another's.
+      @return list<Entity> */
   public function ungrouped(string $type, Locale $locale): array
   {
     $statement = $this->db->prepare('select * from entity e where type = :type and locale = :locale'
@@ -97,21 +110,27 @@ final readonly class EntityRepository
     return array_map($this->entity(...), $statement->fetchAll(\PDO::FETCH_ASSOC));
   }
 
-  /* The page is chosen by id and its rows read after: sorting whole rows to keep
-     fifty cost five times as much at 50 000. @return list<Entity> trashed left out */
+  /** The page is chosen by id and its rows read after: sorting whole rows to keep
+      fifty cost five times as much at 50 000. @return list<Entity> trashed left out */
   public function list(Query $query): array
   {
     $type = $this->profile->byType($query->type);
     $page = $this->db->prepare('select e.id from ' . $query->from() . ' where ' . $query->where($type)
       . $query->page($type));
     $page->execute([...$this->bindings($query, $type), ...$query->sortBindings($type, $this->schema)]);
-    $ids = $page->fetchAll(\PDO::FETCH_COLUMN);
-    $statement = $this->db->prepare('select * from entity'
-      . ' where id in (select value from json_each(:ids))');
-    $statement->execute(['ids' => $this->json->encode($ids)]);
+
+    return $this->byIds(array_map(fn (string $id): EntityId => new EntityId($id), $page->fetchAll(\PDO::FETCH_COLUMN)));
+  }
+
+  /** @param list<EntityId> $ids each of a row that stands, trashed or not
+      @return list<Entity> in the order asked */
+  public function byIds(array $ids): array
+  {
+    $statement = $this->db->prepare('select * from entity where id in (select value from json_each(:ids))');
+    $statement->execute(['ids' => $this->json->encode(array_map(fn (EntityId $id): string => $id->value, $ids))]);
     $rows = array_column($statement->fetchAll(\PDO::FETCH_ASSOC), null, 'id');
 
-    return array_map(fn (string $id): Entity => $this->entity($rows[$id]), $ids);
+    return array_map(fn (EntityId $id): Entity => $this->entity($rows[$id->value]), $ids);
   }
 
   public function count(Query $query): int
@@ -123,10 +142,10 @@ final readonly class EntityRepository
     return (int) $statement->fetchColumn();
   }
 
-  /* Which of a type's fields some record outside the trash holds, so a view
-     leaves out what nobody fills; each `exists` stops at the first it finds.
-     @param list<FieldDefinition> $fields
-     @return list<string> their keys */
+  /** Which of a type's fields some record outside the trash holds, so a view
+      leaves out what nobody fills; each `exists` stops at the first it finds.
+      @param list<FieldDefinition> $fields
+      @return list<string> their keys */
   public function held(string $type, array $fields): array
   {
     $fields = array_values($fields);
@@ -169,7 +188,7 @@ final readonly class EntityRepository
     return $this->find($entity->id);
   }
 
-  /* @return ?Entity the record as stored, null when it is new */
+  /** @return ?Entity the record as stored, null when it is new */
   private function requireSaveable(Entity $entity, ?int $expectedVersion): ?Entity
   {
     try {
@@ -185,10 +204,10 @@ final readonly class EntityRepository
       : throw StaleWrite::expected($expectedVersion);
   }
 
-  /* The fields and edges a save changes, by field: a field's words in another
-     locale count as the field.
-     @param list<Relation> $edges
-     @return list<FieldDefinition> */
+  /** The fields and edges a save changes, by field: a field's words in another
+      locale count as the field.
+      @param list<Relation> $edges
+      @return list<FieldDefinition> */
   private function changed(Entity $entity, Entity $stored, array $edges): array
   {
     $predicates = $this->relations->changed($entity->id, $edges);

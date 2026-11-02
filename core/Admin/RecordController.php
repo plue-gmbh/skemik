@@ -23,7 +23,6 @@ use Auth\Capability;
 use Domain\Entity;
 use Domain\EntityId;
 use Domain\Locale;
-use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\StaleWrite;
 use Domain\Exceptions\ValueTaken;
@@ -104,7 +103,7 @@ final readonly class RecordController
   {
     $collection = $this->writing($account, $request, $slug);
 
-    return [$collection, $this->record($collection, $id)];
+    return [$collection, $this->entities->live($collection->type, $id)];
   }
 
   private function writing(Account $account, Request $request, string $slug): Collection
@@ -212,9 +211,9 @@ final readonly class RecordController
     return $this->entities->save($edited, $edges, $entity->version);
   }
 
-  /* The record as the `PATCH` leaves it: its fields and edges, a labelled
-     thing's words in other locales under `l10n`, then its spine.
-     @return array{Entity, list<Relation>} */
+  /** The record as the `PATCH` leaves it: its fields and edges, a labelled
+      thing's words in other locales under `l10n`, then its spine.
+      @return array{Entity, list<Relation>} */
   private function edited(Account $account, Request $request, Collection $collection, Entity $entity): array
   {
     [$sent, $type] = [$this->fields->sent($request), $this->profile->byType($entity->type)];
@@ -225,21 +224,6 @@ final readonly class RecordController
       $sent[LocalisedText::KEY] ?? null);
 
     return [$this->spine->applied($worded, $sent['spine'] ?? null), $edges];
-  }
-
-  /* Another collection's record, a trashed one and a malformed id all read as none. */
-  private function record(Collection $collection, string $id): Entity
-  {
-    try {
-      $entity = $this->entities->find(new EntityId($id));
-    } catch (MalformedValue) {
-      throw EntityNotFound::withId($id);
-    }
-    if ($entity->type !== $collection->type || $entity->deletedAt !== null) {
-      throw EntityNotFound::withId($id);
-    }
-
-    return $entity;
   }
 
   /** @param list<Violation> $violations */

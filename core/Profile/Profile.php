@@ -50,10 +50,10 @@ final readonly class Profile
     return array_values($this->byName);
   }
 
-  /* The same thirty under another language's field names (`Support\Words::fields`).
-     A field's name is ours in every language and no house's to change: a renamed
-     field said one word on the screen and another at the address.
-     @param array<string, string> $names */
+  /** The same thirty under another language's field names (`Support\Words::fields`).
+      A field's name is ours in every language and no house's to change: a renamed
+      field said one word on the screen and another at the address.
+      @param array<string, string> $names */
   public function worded(array $names): self
   {
     return $names === [] ? $this : new self(array_map(
@@ -67,9 +67,9 @@ final readonly class Profile
     return array_values($this->valueObjects);
   }
 
-  /* Every key a type holds searched text under: the search index's columns, one
-     each, so a search can be asked of the fields its reader reads and no others.
-     @return list<string> */
+  /** Every key a type holds searched text under: the search index's columns, one
+      each, so a search can be asked of the fields its reader reads and no others.
+      @return list<string> */
   public function searchedKeys(): array
   {
     $fields = array_merge(...array_map(fn (TypeDefinition $type): array => $type->fields(), $this->types()));
@@ -187,9 +187,9 @@ final readonly class Profile
     return true;
   }
 
-  /* The types a derivation's edge reaches: an inbound edge is carried by the rows
-     it reads, so those are the types naming this one through it.
-     @return list<string> */
+  /** The types a derivation's edge reaches: an inbound edge is carried by the rows
+      it reads, so those are the types naming this one through it.
+      @return list<string> */
   private function readFrom(TypeDefinition $type, Derivation $how): array
   {
     $edge = $how->path[0] ?? '';

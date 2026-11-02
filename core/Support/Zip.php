@@ -63,7 +63,6 @@ final class Zip
     $this->handle = null;
   }
 
-  /* What a failed run leaves: nothing. */
   public function discard(): void
   {
     $this->handle === null || fclose($this->handle);

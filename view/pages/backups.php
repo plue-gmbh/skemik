@@ -61,6 +61,7 @@ if (!isset($template)) {
       </form>
       <dialog class="dialog" id="restore-<?= $template->escape($name) ?>"
         aria-labelledby="restore-<?= $template->escape($name) ?>-title">
+        <?= $template->render('partials/live-region') ?>
         <form method="post" action="/settings/backups/<?= $template->escape($name) ?>/restore">
           <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
           <h2 id="restore-<?= $template->escape($name) ?>-title"><?= $template->escape(

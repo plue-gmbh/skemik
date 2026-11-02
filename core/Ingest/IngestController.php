@@ -95,11 +95,11 @@ final readonly class IngestController
     return $saved instanceof Response ? $saved : $this->created($request, $route, $saved);
   }
 
-  /* The language of a photograph's or a dataset's bytes is read alike on every
-     route (`Profile\LocaleMode`), so a new one is written as on the route of the
-     language its document states, where the house holds it: posted back from
-     another tree it is the record it was read as.
-     @param array<string, mixed> $document */
+  /** The language of a photograph's or a dataset's bytes is read alike on every
+      route (`Profile\LocaleMode`), so a new one is written as on the route of the
+      language its document states, where the house holds it: posted back from
+      another tree it is the record it was read as.
+      @param array<string, mixed> $document */
   private function spoken(Collection $collection, Route $route, array $document): Route
   {
     $stated = $document['inLanguage'] ?? null;
@@ -156,8 +156,8 @@ final readonly class IngestController
     return $this->collections->bySlug($this->slugOf($slug)) ?? throw EntityNotFound::withId($slug);
   }
 
-  /* The body, or beside a file the multipart's `document` part.
-     @return array<string, mixed> */
+  /** The body, or beside a file the multipart's `document` part.
+      @return array<string, mixed> */
   private function document(Request $request): array
   {
     try {
@@ -171,11 +171,11 @@ final readonly class IngestController
       : throw MalformedValue::notA('a JSON object', 'the body');
   }
 
-  /* The whole record is validated after the merge, since a † is a wall on the
-     fields nobody sent as much as on the ones they did; a new one takes the first
-     free slug its naming field gives, and a `!` value already held is refused by
-     its field like any other that does not fit.
-     @return Entity|Response the record as saved, or the refusal naming each field */
+  /** The whole record is validated after the merge, since a † is a wall on the
+      fields nobody sent as much as on the ones they did; a new one takes the first
+      free slug its naming field gives, and a `!` value already held is refused by
+      its field like any other that does not fit.
+      @return Entity|Response the record as saved, or the refusal naming each field */
   private function write(Token $token, Entity $record, Payload $payload): Entity|Response
   {
     $stored = $this->isStored($record);
@@ -198,9 +198,9 @@ final readonly class IngestController
     }
   }
 
-  /* A translation joins a group of its own type, in a locale the group has free,
-     asked here as well as in the save so the refusal names the field.
-     @return list<Violation> */
+  /** A translation joins a group of its own type, in a locale the group has free,
+      asked here as well as in the save so the refusal names the field.
+      @return list<Violation> */
   private function grouped(Entity $entity): array
   {
     if ($entity->translationOf === null) {
@@ -254,9 +254,9 @@ final readonly class IngestController
       Slug::from($type->name, 'record'), new Props([]), $now, $now);
   }
 
-  /* Each field once, as the caller wrote it and never as it is stored: what the
-     document could not say is named before what it said that does not fit.
-     @param list<Violation> $violations */
+  /** Each field once, as the caller wrote it and never as it is stored: what the
+      document could not say is named before what it said that does not fit.
+      @param list<Violation> $violations */
   private function refused(TypeDefinition $type, array $violations): Response
   {
     $said = [];

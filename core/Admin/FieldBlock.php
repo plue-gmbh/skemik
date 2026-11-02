@@ -13,12 +13,10 @@ final readonly class FieldBlock
   /** @param list<Column> $columns */
   public function __construct(public ?string $heading, public array $columns) {}
 
-  /* The field's own label inside its block, without the block's name before it,
-     whose colon French spaces. */
+  /* The field's own label inside its block, and the whole where it stands alone. */
   public function labelOf(Column $column): string
   {
-    return $this->heading === null ? $column->label
-      : preg_replace('/^' . preg_quote($this->heading, '/') . '\h?: /u', '', $column->label, 1) ?? $column->label;
+    return $this->heading === null ? $column->label : $column->shortLabel();
   }
 
   /**

@@ -29,8 +29,8 @@ final readonly class Transaction
     }
   }
 
-  /* The same, answering the record the work saved.
-     @param \Closure(): Entity $work */
+  /** The same, answering the record the work saved.
+      @param \Closure(): Entity $work */
   public function saved(\PDO $db, \Closure $work): Entity
   {
     $saved = null;

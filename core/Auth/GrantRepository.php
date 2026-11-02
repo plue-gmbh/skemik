@@ -54,9 +54,9 @@ final readonly class GrantRepository
     return array_map($this->grant(...), $statement->fetchAll(\PDO::FETCH_ASSOC));
   }
 
-  /* The rules written for one collection, whatever token holds them: what its
-     badges draw.
-     @return list<Grant> */
+  /** The rules written for one collection, whatever token holds them: what its
+      badges draw.
+      @return list<Grant> */
   public function forCollection(Slug $collection): array
   {
     $statement = $this->db->prepare('select * from grant_rule'
@@ -66,9 +66,9 @@ final readonly class GrantRepository
     return array_map($this->grant(...), $statement->fetchAll(\PDO::FETCH_ASSOC));
   }
 
-  /* Who writes into each collection at `$now`, by the names of the live keys
-     holding a `create` or `set` rule there, in one query: what the sidebar marks.
-     @return array<string, list<string>> by collection slug */
+  /** Who writes into each collection at `$now`, by the names of the live keys
+      holding a `create` or `set` rule there, in one query: what the sidebar marks.
+      @return array<string, list<string>> by collection slug */
   public function writers(string $now): array
   {
     $statement = $this->db->prepare('select distinct g.collection, t.label from grant_rule g'
@@ -84,12 +84,12 @@ final readonly class GrantRepository
     return $writers;
   }
 
-  /* The live keys whose date falls between the two instants, each with the first
-     collection it holds a rule in, where its badge is found. Only a name's newest
-     live key counts: an older one is left to run out by a re-issue, which is the
-     renewal, and a key issued under a live name takes its spelling, so one name
-     is one label here.
-     @return array<string, string> collection slug by token id */
+  /** The live keys whose date falls between the two instants, each with the first
+      collection it holds a rule in, where its badge is found. Only a name's newest
+      live key counts: an older one is left to run out by a re-issue, which is the
+      renewal, and a key issued under a live name takes its spelling, so one name
+      is one label here.
+      @return array<string, string> collection slug by token id */
   public function expiring(string $now, string $until): array
   {
     $statement = $this->db->prepare('select t.id, min(g.collection) from token t join grant_rule g'

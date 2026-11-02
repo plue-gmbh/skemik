@@ -239,10 +239,10 @@ final readonly class Query
     };
   }
 
-  /* Where `PUBLIC` and `Status::isPublicAt` read one status in one window
-     apart, each case as `status from..to`: the feed's lists and its records ask
-     the two, and a draft must be neither's.
-     @return list<string> */
+  /** Where `PUBLIC` and `Status::isPublicAt` read one status in one window
+      apart, each case as `status from..to`: the feed's lists and its records ask
+      the two, and a draft must be neither's.
+      @return list<string> */
   public static function publicDisagreements(): array
   {
     $disagreeing = [];

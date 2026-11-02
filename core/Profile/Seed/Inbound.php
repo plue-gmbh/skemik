@@ -46,7 +46,7 @@ final readonly class Inbound
     $vo = $this->vo;
 
     return [
-      $f->text('name', 'Name')->words(),               // a review is not titled
+      $f->text('name', 'Name')->words(),               /* a review is not titled */
       $f->longText('review_body', 'Review text')->starter(),
       ...$vo->flatten('Rating', 'reviewRating', 'Rating', $f, starter: true),
       $f->term('review_aspect', 'Aspect reviewed'),

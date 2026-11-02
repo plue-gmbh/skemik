@@ -65,10 +65,10 @@ final readonly class ChecksController
       new Screen($this->words->get('checks.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
-  /* The house's own first, then what Needs a look counts as the check's, then
-     the required fields that have their own line.
-     @param list<Violation> $violations
-     @return list<Violation> */
+  /** The house's own first, then what Needs a look counts as the check's, then
+      the required fields that have their own line.
+      @param list<Violation> $violations
+      @return list<Violation> */
   private function ordered(array $violations): array
   {
     $rank = fn (Violation $violation): int => match (true) {
@@ -81,8 +81,8 @@ final readonly class ChecksController
     return $violations;
   }
 
-  /* A row the check could not read as a record, or one purged since, is named and opens nothing.
-     @param list<Collection> $collections */
+  /** A row the check could not read as a record, or one purged since, is named and opens nothing.
+      @param list<Collection> $collections */
   private function entry(Violation $violation, array $collections): CheckEntry
   {
     if ($violation->record === null) {

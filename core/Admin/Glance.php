@@ -71,8 +71,8 @@ final readonly class Glance
     return $this->drawn($this->chosen(), $count, $new);
   }
 
-  /* A timeline row's, its date among them wherever it stands, since that is where it is edited.
-     @return list<Column> in the collection's order */
+  /** A timeline row's, its date among them wherever it stands, since that is where it is edited.
+      @return list<Column> in the collection's order */
   public function dated(int $count, bool $new): array
   {
     $date = $this->date();

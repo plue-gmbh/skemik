@@ -22,8 +22,8 @@ final readonly class LiveKeys
     private Words $words,
   ) {}
 
-  /* A UUIDv7 orders by time where `created_at`, to the second, cannot.
-     @return array<string, Token> newest first, by id */
+  /** A UUIDv7 orders by time where `created_at`, to the second, cannot.
+      @return array<string, Token> newest first, by id */
   public function live(): array
   {
     $now = $this->clock->now()->format(Clock::STORED);

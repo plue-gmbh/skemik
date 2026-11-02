@@ -66,10 +66,10 @@ final readonly class ActivityLog
       ]);
   }
 
-  /* A save records what it left behind and nothing can reconstruct afterwards,
-     the slug a site was built from and a number no second record may hold, and
-     the keys of the fields and spine settings it changed, never their values.
-     @param list<FieldDefinition> $changed */
+  /** A save records what it left behind and nothing can reconstruct afterwards,
+      the slug a site was built from and a number no second record may hold, and
+      the keys of the fields and spine settings it changed, never their values.
+      @param list<FieldDefinition> $changed */
   public function recordSave(Entity $entity, ?Entity $stored, array $changed): void
   {
     if ($stored === null) {
@@ -99,9 +99,9 @@ final readonly class ActivityLog
     return $this->lastActorNames([$target])[$target->value] ?? null;
   }
 
-  /* The same for a page of records, so a page reads the log once and not once a row.
-     @param list<EntityId> $targets
-     @return array<string, string> by record id; a record nobody named is absent */
+  /** The same for a page of records, so a page reads the log once and not once a row.
+      @param list<EntityId> $targets
+      @return array<string, string> by record id; a record nobody named is absent */
   public function lastActorNames(array $targets): array
   {
     $statement = $this->db->prepare('select target_id, actor_name from (select target_id, actor_name,'
@@ -114,10 +114,10 @@ final readonly class ActivityLog
     return array_map(strval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
   }
 
-  /* Every row, newest first, read down the time index as it is fetched, so the
-     home screen stops once it holds what it shows. A redaction is left out, as
-     for `lastActorName`.
-     @return \Generator<int, Activity> */
+  /** Every row, newest first, read down the time index as it is fetched, so the
+      home screen stops once it holds what it shows. A redaction is left out, as
+      for `lastActorName`.
+      @return \Generator<int, Activity> */
   public function latest(): \Generator
   {
     $statement = $this->db->prepare(self::READ . " and json_extract(result, '$.redacted') is null"
@@ -128,8 +128,8 @@ final readonly class ActivityLog
     }
   }
 
-  /* Every row, newest first, or one actor's: the log screen, a page at a time.
-     @return list<Activity> */
+  /** Every row, newest first, or one actor's: the log screen, a page at a time.
+      @return list<Activity> */
   public function page(?string $actor, int $offset, int $limit): array
   {
     $statement = $this->db->prepare(self::READ . ($actor === null ? '' : ' and actor_id = :actor')

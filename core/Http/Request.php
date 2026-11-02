@@ -108,10 +108,9 @@ final readonly class Request
      connection's own, since `X-Forwarded-*` are headers any client can send.
      Behind a proxy that speaks TLS for the host every visitor is one address and
      every `@id` reads `http://`; a `config.php` key naming the proxy comes when a
-     house behind one asks. An
-     IPv6 connection is usually handed a whole `/64`, so an address of its own
-     per request would be a fresh allowance per request; an IPv4 address written
-     as IPv6 stays whole. */
+     house behind one asks. An IPv6 connection is usually handed a whole `/64`,
+     so an address of its own per request would be a fresh allowance per request;
+     an IPv4 address written as IPv6 stays whole. */
   private static function client(string $address): string
   {
     $packed = filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false ? false : inet_pton($address);
@@ -134,7 +133,6 @@ final readonly class Request
     return $this->query[$name] ?? null;
   }
 
-  /* The admin's own parameters taken off before the feed's parser reads the rest. */
   public function without(string ...$names): self
   {
     return new self($this->method, $this->path, array_diff_key($this->query, array_flip($names)),
@@ -142,7 +140,6 @@ final readonly class Request
       array_values(array_diff($this->repeated, $names)));
   }
 
-  /* The address with one parameter set, as a view that fixes its order reads it. */
   public function with(string $name, string $value): self
   {
     return new self($this->method, $this->path, [...$this->query, $name => $value], $this->form,
@@ -184,6 +181,8 @@ final readonly class Request
      than trusted, since anything but a host and a port would be a header the
      caller chose, and it lands in every `@id` of the document. What the install
      says outside a request uses the address `config.php` holds (`Admin\Premises`). */
+  /** @psalm-taint-escape input a host and a port by the pattern, or `localhost`, carry no markup, line break or
+      path; the install asks it on purpose, to prove the host the request came under refuses `PATCH` */
   public function origin(): string
   {
     $host = (string) $this->header('Host');
@@ -208,11 +207,11 @@ final readonly class Request
     return str_contains((string) $this->header('accept'), 'application/json');
   }
 
-  /* PHP keeps the last of `?a=1&a=2` and says nothing, and reads `?a[]=1` as a
-     list that `strings()` drops, so both are named here for a reader to refuse
-     rather than to read one value or none.
-     @param array<string, mixed> $get
-     @return list<string> */
+  /** PHP keeps the last of `?a=1&a=2` and says nothing, and reads `?a[]=1` as a
+      list that `strings()` drops, so both are named here for a reader to refuse
+      rather than to read one value or none.
+      @param array<string, mixed> $get
+      @return list<string> */
   private static function repeated(string $query, array $get): array
   {
     $names = array_map(fn (string $pair): string => urldecode(explode('=', $pair, 2)[0]),

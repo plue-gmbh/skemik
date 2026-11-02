@@ -21,18 +21,18 @@ enum FieldKind: string
   case Text = 'text';
   case LongText = 'longtext';
   case Markdown = 'markdown';
-  case Date = 'date';              // YYYY-MM-DD, YYYY-MM or YYYY, no zone
-  case DateTime = 'date_time';     // 2026-08-19T14:03:00Z, UTC only
-  case Duration = 'duration';      // ISO 8601, PT4H / P1M
-  case Time = 'time';              // 08:00 or 08:00:00, of the place and never of a zone
+  case Date = 'date';              /* YYYY-MM-DD, YYYY-MM or YYYY, no zone */
+  case DateTime = 'date_time';     /* 2026-08-19T14:03:00Z, UTC only */
+  case Duration = 'duration';      /* ISO 8601, PT4H / P1M */
+  case Time = 'time';              /* 08:00 or 08:00:00, of the place and never of a zone */
   case Number = 'number';
   case Boolean = 'boolean';
-  case Select = 'select';          // closed option list, shipped with the profile
+  case Select = 'select';          /* closed option list, shipped with the profile */
   case Link = 'link';
   case Image = 'image';
   case Ref = 'ref';
   case Refs = 'refs';
-  case Objects = 'objects';        // a repeatable value object; `ref` names which
+  case Objects = 'objects';        /* a repeatable value object; `ref` names which */
 
   /* An image field is a reference too: the target is the asset, and what lands
      in the JSON-LD is the asset's own @type, not the field's. */

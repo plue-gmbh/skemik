@@ -29,6 +29,12 @@ final readonly class Downloader
     return [$archive, $signature];
   }
 
+  /* Whether an archive stands here, which it does from its fetch until it is staged or refused. */
+  public function fetching(): bool
+  {
+    return glob($this->staging . '/' . self::ARCHIVE . '*') !== [];
+  }
+
   public function clear(): void
   {
     foreach (glob($this->staging . '/' . self::ARCHIVE . '*') ?: [] as $file) {

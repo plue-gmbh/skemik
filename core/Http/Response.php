@@ -26,9 +26,15 @@ final readonly class Response
     return new self($this->status, $this->body, $this->headers, $this->file, $work);
   }
 
-  /* A file whole, or the one range a player seeking in a video asks for.
-     @param array<string, string> $headers */
-  /** @psalm-taint-sink file $path read as it stands */
+  /* An answer that has work of its own, or streams a file, leaves any other work to the next one. */
+  public function takesWork(): bool
+  {
+    return $this->after === null && $this->file === null;
+  }
+
+  /** A file whole, or the one range a player seeking in a video asks for.
+      @param array<string, string> $headers
+      @psalm-taint-sink file $path read as it stands */
   public static function ranged(string $path, ?string $range, array $headers): self
   {
     $size = (int) filesize($path);
@@ -45,9 +51,9 @@ final readonly class Response
         [...$headers, 'Content-Range' => sprintf('bytes %d-%d/%d', $start, $end, $size)], 206);
   }
 
-  /* Nothing sent, the caller holding what the tag names; the headers go with it,
-     so a cache's lifetime starts again.
-     @param array<string, string> $headers */
+  /** Nothing sent, the caller holding what the tag names; the headers go with it,
+      so a cache's lifetime starts again.
+      @param array<string, string> $headers */
   public static function unchanged(array $headers): self
   {
     return new self(304, '', $headers);
@@ -69,16 +75,16 @@ final readonly class Response
     return new self($status, $body, ['Content-Type' => 'application/json; charset=utf-8']);
   }
 
-  /* `303`, so a POST answered by a redirect is followed by a GET. */
-  /** @psalm-taint-sink header $location sent as it stands */
+  /** `303`, so a POST answered by a redirect is followed by a GET.
+      @psalm-taint-sink header $location sent as it stands */
   public static function redirect(string $location): self
   {
     return new self(303, '', ['Location' => $location]);
   }
 
-  /* An answer's own headers override the admin's defaults, and work following it
-     sends a length, so the client need not wait for that work; a file's is set already.
-     @return array<string, string> */
+  /** An answer's own headers override the admin's defaults, and work following it
+      sends a length, so the client need not wait for that work; a file's is set already.
+      @return array<string, string> */
   public function headersFor(Request $request): array
   {
     return [...(new SecurityHeaders())->for($request), ...(new CacheHeaders())->admin(), ...$this->headers,

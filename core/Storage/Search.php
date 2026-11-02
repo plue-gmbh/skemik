@@ -145,8 +145,8 @@ final readonly class Search
       'tags' => $this->tags($read), 'edges' => $this->edges($read, $query->searchThrough)]);
   }
 
-  /* @param list<FieldDefinition> $read
-     @return list<string> the predicates of the term fields among them, as the edges hold them */
+  /** @param list<FieldDefinition> $read
+      @return list<string> the predicates of the term fields among them, as the edges hold them */
   private function tags(array $read): array
   {
     $tags = array_filter($read, fn (FieldDefinition $field): bool => $field->cardinality === Cardinality::T);
@@ -155,11 +155,11 @@ final readonly class Search
       => (string) $this->schema->propertyName($field->key), $tags)));
   }
 
-  /* Each reference field among the read, once per type it points at whose name the reader reads: a
-     name the reading withholds is not found through what points at it either.
-     @param list<FieldDefinition> $read
-     @param array<string, Query> $through
-     @return list<array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>}> */
+  /** Each reference field among the read, once per type it points at whose name the reader reads: a
+      name the reading withholds is not found through what points at it either.
+      @param list<FieldDefinition> $read
+      @param array<string, Query> $through
+      @return list<array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>}> */
   private function edges(array $read, array $through): array
   {
     $edges = [];
@@ -177,9 +177,9 @@ final readonly class Search
     return $edges;
   }
 
-  /* The target's type, the field it is named by and the reading: every status
-     where the list is empty, and every record where the ids are.
-     @return array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>} */
+  /** The target's type, the field it is named by and the reading: every status
+      where the list is empty, and every record where the ids are.
+      @return array{predicate: string, type: string, named: string, statuses: list<string>, ids: list<string>} */
   private function edge(FieldDefinition $field, TypeDefinition $target, Query $reading): array
   {
     return ['predicate' => (string) $this->schema->propertyName($field->key), 'type' => $target->url(),
@@ -188,9 +188,9 @@ final readonly class Search
       'ids' => $reading->filters['id'] ?? []];
   }
 
-  /* Lower-case words with their diacritics folded, as a search is typed, so
-     `Ärztin` is `arztin` whether typed with the umlaut or without.
-     @return list<string> */
+  /** Lower-case words with their diacritics folded, as a search is typed, so
+      `Ärztin` is `arztin` whether typed with the umlaut or without.
+      @return list<string> */
   private function tokens(string $text): array
   {
     $decomposed = (string) \Normalizer::normalize(mb_strtolower($text), \Normalizer::FORM_D);
@@ -199,9 +199,9 @@ final readonly class Search
     return preg_split('/[^\p{L}\p{N}]+/u', $folded, -1, PREG_SPLIT_NO_EMPTY) ?: [];
   }
 
-  /* The folded words, and beside each that differs in German spelling that
-     spelling too, since `Müller` is typed `mueller` as often as `muller`.
-     @return list<string> */
+  /** The folded words, and beside each that differs in German spelling that
+      spelling too, since `Müller` is typed `mueller` as often as `muller`.
+      @return list<string> */
   private function indexed(string $text): array
   {
     $composed = (string) \Normalizer::normalize(mb_strtolower($text), \Normalizer::FORM_C);
@@ -210,12 +210,12 @@ final readonly class Search
     return [...$folded, ...array_values(array_diff($this->tokens(strtr($composed, self::GERMAN)), $folded))];
   }
 
-  /* A short text of words names something, and a name is often one compound word, *Grundkurs* or
-     *itemlist.jpg*, so its words keep every ending as a word too and the prefix range finds `kurs` inside. A
-     code or a hash is typed from its start, and a long text keeps its words whole: it holds most of the table,
-     which this would make several times its size, and a fragment would match nearly every text.
-     @param list<string> $words
-     @return list<string> each word, then every ending of it */
+  /** A short text of words names something, and a name is often one compound word, *Grundkurs* or
+      *itemlist.jpg*, so its words keep every ending as a word too and the prefix range finds `kurs` inside. A
+      code or a hash is typed from its start, and a long text keeps its words whole: it holds most of the table,
+      which this would make several times its size, and a fragment would match nearly every text.
+      @param list<string> $words
+      @return list<string> each word, then every ending of it */
   private function endings(array $words): array
   {
     $kept = [];

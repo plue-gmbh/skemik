@@ -9,6 +9,6 @@ namespace Profile;
    one nobody checks. */
 enum Erasure
 {
-  case Purge;  // nothing holds the row back once the owner purges it
-  case Hold;   // a retention duty usually does: the purge warns first, and the owner decides
+  case Purge;  /* nothing holds the row back once the owner purges it */
+  case Hold;   /* a retention duty usually does: the purge warns first, and the owner decides */
 }

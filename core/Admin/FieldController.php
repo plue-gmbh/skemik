@@ -18,7 +18,6 @@ use Http\Csrf;
 use Http\Request;
 use Http\Response;
 use Profile\FieldDefinition;
-use Profile\FieldKind;
 use Profile\Profile;
 use Profile\Reach;
 use Profile\SchemaOrg;
@@ -34,14 +33,15 @@ use Support\Words;
 /* A collection's fields, for `manageFields`. The dialog opens on the full list,
    since a truncated first screen would be the profile having an opinion about
    which of its fields matter. It asks the write scope, as writing a record does:
-   letting a field out discloses every row's value. A value object is one entry,
-   added, moved and removed whole, but let out key by key, since a house may let
-   the town out and keep the street. A removal keeps the values, so adding it back
-   loses nothing, and a grant's field is a key and not a foreign key, so a rule on
-   a removed field fails closed and says nothing, which is why the confirmation
-   names the grants first. A field let out, withheld, added or removed is logged
-   as a key's arrangement is (`Ingest\ArrangeController`); a move is not, which
-   would bury those. */
+   letting a field out discloses every row's value. A key of a value object is a
+   field like any other, added, let out, moved and removed alone, so a house may
+   keep the town and drop the street; added, it stands after its kin, under their
+   heading. A removal keeps the values, so adding it back loses nothing, and a
+   grant's field is a key and not a foreign key, so a rule on a removed field
+   fails closed and says nothing, which is why the confirmation names the grants
+   first. A field let out, withheld, added or removed is logged as a key's
+   arrangement is (`Ingest\ArrangeController`); a move is not, which would bury
+   those. */
 final readonly class FieldController
 {
   public function __construct(
@@ -79,11 +79,10 @@ final readonly class FieldController
     if (!$offered) {
       throw MalformedValue::named('field ' . $type->name . ' still offers', $key);
     }
-    $entry = $this->entry($type, $key);
-    $added = array_map(fn (FieldDefinition $field): CollectionField => new CollectionField($field->key), $entry);
-    $this->collections->save($collection->carrying([...$collection->fields, ...$added]));
-    $this->logged($collection, 'added', array_map(fn (FieldDefinition $field): string => $field->key, $entry));
-    $this->session->keep('fielded', $this->words->get('field.added', ['label' => $this->name($entry)]));
+    $field = $type->field($key) ?? throw EntityNotFound::withId($key);
+    $this->collections->save($collection->carrying($this->placed($type, $collection->fields, $field)));
+    $this->logged($collection, 'added', [$key]);
+    $this->session->keep('fielded', $this->words->get('field.added', ['label' => $field->label]));
 
     return $this->backTo($collection, $request);
   }
@@ -100,7 +99,7 @@ final readonly class FieldController
       ? new CollectionField($key, $feed) : $each, $collection->fields);
     $move = is_string($sent['move'] ?? null) ? $sent['move'] : '';
     $this->collections->save($collection->carrying(
-      $move === '' ? $fields : $this->moved($type, $fields, $key, $move === 'left' ? -1 : 1)));
+      $move === '' ? $fields : $this->moved($fields, $key, $move === 'left' ? -1 : 1)));
     if ($feed !== $held->feed) {
       $this->logged($collection, $feed ? 'let_out' : 'withheld', [$key]);
     }
@@ -112,12 +111,11 @@ final readonly class FieldController
   {
     $collection = $this->managed($request, $slug);
     $this->held($collection, $key);
-    $entry = $this->entry($this->profile->byType($collection->type), $key);
-    $leaving = array_map(fn (FieldDefinition $field): string => $field->key, $entry);
+    $field = $this->profile->byType($collection->type)->field($key) ?? throw EntityNotFound::withId($key);
     $this->collections->save($collection->carrying(array_values(array_filter($collection->fields,
-      fn (CollectionField $each): bool => !in_array($each->key, $leaving, true)))));
-    $this->logged($collection, 'removed', $leaving);
-    $this->session->keep('fielded', $this->words->get('field.removed', ['label' => $this->name($entry)]));
+      fn (CollectionField $each): bool => $each->key !== $key))));
+    $this->logged($collection, 'removed', [$key]);
+    $this->session->keep('fielded', $this->words->get('field.removed', ['label' => $field->label]));
 
     return $this->backTo($collection, $request);
   }
@@ -163,49 +161,36 @@ final readonly class FieldController
       ?? throw EntityNotFound::withId($key);
   }
 
-  /** @return list<FieldDefinition> the field, or every key of the value object it belongs to */
-  private function entry(TypeDefinition $type, string $key): array
+  /** A key of a value object after its kin, so it stands under their heading; any other field at the end.
+      @param list<CollectionField> $fields @return list<CollectionField> */
+  private function placed(TypeDefinition $type, array $fields, FieldDefinition $added): array
   {
-    $field = $type->field($key) ?? throw EntityNotFound::withId($key);
+    $object = $added->valueObjectOf;
+    $last = $object === null ? null : array_find_key(array_reverse($fields, true),
+      fn (CollectionField $each): bool => $type->field($each->key)?->valueObjectOf === $object);
+    $field = new CollectionField($added->key);
 
-    return $field->valueObjectOf === null ? [$field] : array_values(array_filter($type->fields(),
-      fn (FieldDefinition $each): bool => $each->valueObjectOf === $field->valueObjectOf));
-  }
-
-  /** @param list<FieldDefinition> $entry */
-  private function name(array $entry): string
-  {
-    return count($entry) === 1 ? $entry[0]->label : $entry[0]->block ?? $entry[0]->label;
+    return $last === null ? [...$fields, $field]
+      : [...array_slice($fields, 0, $last + 1), $field, ...array_slice($fields, $last + 1)];
   }
 
   /** @return list<FieldOffer> */
   private function offers(TypeDefinition $type, Collection $collection): array
   {
     $taken = array_map(fn (CollectionField $each): string => $each->key, $collection->fields);
-    $offers = [];
-    foreach ($type->suggestions($taken) as $field) {
-      $entry = $this->entry($type, $field->key);
-      $offers[$entry[0]->key] ??= new FieldOffer($entry[0]->key, $this->name($entry),
-        count($entry) === 1 ? $field->kind : FieldKind::Objects,
-        $field->valueObjectOf ?? (string) $this->schema->propertyName($field->key), count($entry),
-        !$field->writtenBy->hasEditor());
-    }
 
-    return array_values($offers);
+    return array_map(fn (FieldDefinition $field): FieldOffer => new FieldOffer($field->key, $field->label,
+      $field->kind, (string) $this->schema->parameterName($field->key), !$field->writtenBy->hasEditor()),
+      $type->suggestions($taken));
   }
 
   /** @return array<string, FieldEntry> by the key of every field the collection carries */
   private function entries(TypeDefinition $type, Collection $collection): array
   {
-    $order = $this->grouped($type, $collection->fields);
     $entries = [];
-    foreach ($collection->fields as $held) {
-      $entry = $this->entry($type, $held->key);
-      $at = array_search($this->group($type, $held->key), array_keys($order), true);
-      $entries[$held->key] = new FieldEntry(array_map(fn (FieldDefinition $field): string => $field->key, $entry),
-        $this->name($entry),
-        !array_any($entry, fn (FieldDefinition $field): bool => $field->required),
-        $at === 0, $at === count($order) - 1);
+    foreach ($collection->fields as $at => $held) {
+      $entries[$held->key] = new FieldEntry(!($type->field($held->key)?->required ?? false), $at === 0,
+        $at === count($collection->fields) - 1);
     }
 
     return $entries;
@@ -213,40 +198,16 @@ final readonly class FieldController
 
   /**
    * @param list<CollectionField> $fields
-   * @return list<CollectionField> the entry holding the key one place further, as a whole
+   * @return list<CollectionField> the field one place further, where there is one
    */
-  private function moved(TypeDefinition $type, array $fields, string $key, int $by): array
+  private function moved(array $fields, string $key, int $by): array
   {
-    $order = $this->grouped($type, $fields);
-    $names = array_keys($order);
-    $from = (int) array_search($this->group($type, $key), $names, true);
+    $from = (int) array_find_key($fields, fn (CollectionField $each): bool => $each->key === $key);
     $to = $from + $by;
-    if (isset($names[$to])) {
-      [$names[$from], $names[$to]] = [$names[$to], $names[$from]];
+    if (isset($fields[$to])) {
+      [$fields[$from], $fields[$to]] = [$fields[$to], $fields[$from]];
     }
 
-    return array_merge(...array_map(fn (string $name): array => $order[$name], $names));
-  }
-
-  /**
-   * @param list<CollectionField> $fields
-   * @return array<string, list<CollectionField>> the entries in order, a value object's keys together
-   */
-  private function grouped(TypeDefinition $type, array $fields): array
-  {
-    $order = [];
-    foreach ($fields as $held) {
-      $order[$this->group($type, $held->key)][] = $held;
-    }
-
-    return $order;
-  }
-
-  /* Marked, so a value object's property never meets a field's key of the same spelling. */
-  private function group(TypeDefinition $type, string $key): string
-  {
-    $object = $type->field($key)?->valueObjectOf;
-
-    return $object === null ? $key : '@' . $object;
+    return $fields;
   }
 }

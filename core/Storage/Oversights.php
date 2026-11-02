@@ -32,11 +32,11 @@ final readonly class Oversights
       ['status' => $status->value, 'types' => $this->json->encode($types), 'before' => $before]);
   }
 
-  /* An image whose own words describe nothing, which is its alt text, while it is
-     public or on its way there: an upload is a draft, and asking of each its alt
-     text at once would count every picture still being sorted, as it would every
-     one put away.
-     @return array<string, int> by type URL */
+  /** An image whose own words describe nothing, which is its alt text, while it is
+      public or on its way there: an upload is a draft, and asking of each its alt
+      text at once would count every picture still being sorted, as it would every
+      one put away.
+      @return array<string, int> by type URL */
   public function withoutAlt(string $type): array
   {
     return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
@@ -45,12 +45,12 @@ final readonly class Oversights
       ['type' => $type, 'review' => Status::Review->value, 'published' => Status::Published->value]);
   }
 
-  /* The records a report named, among the types asked and out of the trash, each
-     marked where it changed at or after `$since`, since only those can have been
-     mended since the report was written.
-     @param list<EntityId> $ids
-     @param list<string> $types the type URLs asked
-     @return array<string, array<string, bool>> by type URL, then by record id */
+  /** The records a report named, among the types asked and out of the trash, each
+      marked where it changed at or after `$since`, since only those can have been
+      mended since the report was written.
+      @param list<EntityId> $ids
+      @param list<string> $types the type URLs asked
+      @return array<string, array<string, bool>> by type URL, then by record id */
   public function listed(array $ids, array $types, string $since): array
   {
     $statement = $this->db->prepare('select e.type, e.id, e.updated_at >= :since from entity e where '
@@ -67,9 +67,9 @@ final readonly class Oversights
     return $listed;
   }
 
-  /* A message nobody marked read, in any state, the oldest first, since an id
-     is a UUIDv7 and the one waiting longest is the one to open.
-     @return array<string, list<EntityId>> by type URL */
+  /** A message nobody marked read, in any state, the oldest first, since an id
+      is a UUIDv7 and the one waiting longest is the one to open.
+      @return array<string, list<EntityId>> by type URL */
   public function unread(string $type): array
   {
     $statement = $this->db->prepare('select e.id from entity e where ' . self::LIVE . ' and e.type = :type'
@@ -80,10 +80,10 @@ final readonly class Oversights
     return $ids === [] ? [] : [$type => $ids];
   }
 
-  /* What stands open by the field that says how it stands, in any state, since
-     what a till writes is a draft and stays one.
-     @param list<string> $values the states that count as open
-     @return array<string, int> by type URL */
+  /** What stands open by the field that says how it stands, in any state, since
+      what a till writes is a draft and stays one.
+      @param list<string> $values the states that count as open
+      @return array<string, int> by type URL */
   public function standing(string $type, string $field, array $values): array
   {
     return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
@@ -91,11 +91,11 @@ final readonly class Oversights
       ['type' => $type, 'path' => '$.' . $field, 'values' => $this->json->encode($values)]);
   }
 
-  /* A purge takes its edges with it, so what points into nothing points into the trash. Asked from the
-     trash's side, a few rows, through `relation_object`: `cross join` keeps that order, which SQLite would
-     otherwise turn round to ask every live record whether it points into the trash.
-     @param list<string> $types the type URLs asked, of the record and of its target alike
-     @return array<string, list<EntityId>> by type URL */
+  /** A purge takes its edges with it, so what points into nothing points into the trash. Asked from the
+      trash's side, a few rows, through `relation_object`: `cross join` keeps that order, which SQLite would
+      otherwise turn round to ask every live record whether it points into the trash.
+      @param list<string> $types the type URLs asked, of the record and of its target alike
+      @return array<string, list<EntityId>> by type URL */
   public function pointingIntoTrash(array $types): array
   {
     $statement = $this->db->prepare('select distinct e.type, e.id from entity t'

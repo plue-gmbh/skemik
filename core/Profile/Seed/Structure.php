@@ -70,6 +70,9 @@ final readonly class Structure
       $f->number('number_of_items', 'Items')->whole()
         ->derived(Derivation::over(Derived::Count, 'item_list_element')),
       $f->refs('item_list_element', 'Entries', '*')->required(),
+      /* ‡ over Thing's own: a list is named twice as often as a thing, *Spring
+         programme* on the page and *Programm Frühjahr* on the poster. */
+      $f->text('alternate_name', 'Alternative name')->repeatable()->words()->starter(),
       $this->base->description()->starter(),
     ];
   }
@@ -88,7 +91,7 @@ final readonly class Structure
       $f->ref('in_defined_term_set', 'Term set', 'DefinedTerm')->starter(),
       /* SKOS, not schema.org, and `Claims` names it as its exception,
          because a taxonomy without a hierarchy is a flat list. */
-      $f->ref('broader', 'Broader term', 'DefinedTerm'),
+      $f->ref('broader', 'Broader term', 'DefinedTerm')->starter(),
       $f->objects('additional_property', 'Additional property', 'PropertyValue')->words(),
       $this->base->description(),
     ];
@@ -100,7 +103,7 @@ final readonly class Structure
     $f = $this->f;
 
     return [
-      $f->text('name', 'Name')->words(),               // title is the posting's name
+      $f->text('name', 'Name')->words(),               /* title is the posting's name */
       $f->text('title', 'Title')->required()->words(),
       $f->longText('description', 'Description')->starter(),
       $f->dateTime('date_posted', 'Posted')->starter(),
@@ -113,7 +116,7 @@ final readonly class Structure
       $f->listed('salary_currency', 'Currency', ClosedList::Currency)->starter(),
       /* A field of its own, since without it the perks end up as prose in
          workHours and description, which is not a rung. */
-      $f->longText('job_benefits', 'Benefits')->starter(),
+      $f->longText('job_benefits', 'Benefits'),
       $f->longText('responsibilities', 'Responsibilities'),
       /* Terms, so a skill filters across postings; the prose is `qualifications`. */
       $f->term('skills', 'Skills')->repeatable(),
@@ -183,7 +186,7 @@ final readonly class Structure
     $vo = $this->vo;
 
     return [
-      $f->longText('text', 'Details'),
+      $f->longText('text', 'Details')->starter(),
       $f->number('answer_count', 'Answers')->whole(),
       $f->number('upvote_count', 'Upvotes')->whole(),
       $f->term('edu_question_type', 'Question type'),

@@ -58,8 +58,8 @@ final readonly class Validator
     ];
   }
 
-  /* Checked here and not only in `Domain\LocalisedText`, which an ingested
-     payload never passes through. @return list<Violation> */
+  /** Checked here and not only in `Domain\LocalisedText`, which an ingested
+      payload never passes through. @return list<Violation> */
   private function checkLocalised(TypeDefinition $type, mixed $translations): array
   {
     if ($translations === []) {
@@ -87,7 +87,7 @@ final readonly class Validator
         $violations[] = new Violation($where, Reason::NotTranslatable, ['key' => (string) $key]);
         continue;
       }
-      $fallsBack = in_array($value, [null, '', []], true);   // empty reads the authored value
+      $fallsBack = in_array($value, [null, '', []], true);   /* empty reads the authored value */
       $found = $fallsBack ? [] : $this->checkField($field, $words);
       foreach ($found as $violation) {
         $violations[] = new Violation($where . '.' . $violation->field, $violation->reason, $violation->values);
@@ -109,7 +109,7 @@ final readonly class Validator
     if ($field->repeatable && (!is_array($value) || $this->isMap($value))) {
       $what = $field->kind === FieldKind::Objects ? Reason::NotAListOfObjects : Reason::NotAList;
 
-      return [new Violation($field->key, $what)];   // every reader reads a list
+      return [new Violation($field->key, $what)];   /* every reader reads a list */
     }
     if ($field->repeatable) {
       return $this->checkEach($field, $value);
@@ -157,14 +157,14 @@ final readonly class Validator
     return [];
   }
 
-  /* One entry of a repeatable value object: its keys are the object's own and its
-     bearing keys are what make it a value at all — an opening-hours row with no
-     day is not a row somebody left half-filled, it is not an entry. Which keys
-     bear is a statement about the value object, so it is read from the object and never
-     from the type that happens to use one. A row naming a record by `@id` is
-     somebody who read a value object's name as a type's, and is told the shape
-     once rather than that `@id` is no key.
-     @return list<Violation> */
+  /** One entry of a repeatable value object: its keys are the object's own and its
+      bearing keys are what make it a value at all — an opening-hours row with no
+      day is not a row somebody left half-filled, it is not an entry. Which keys
+      bear is a statement about the value object, so it is read from the object and never
+      from the type that happens to use one. A row naming a record by `@id` is
+      somebody who read a value object's name as a type's, and is told the shape
+      once rather than that `@id` is no key.
+      @return list<Violation> */
   private function checkValueObject(FieldDefinition $field, mixed $value): array
   {
     if (!is_array($value) || !$this->isMap($value)) {

@@ -14,7 +14,7 @@ if (!isset($template)) {
 }
 ob_start();
 ?>
-<body class="admin">
+<body class="admin" data-unanswered="<?= $template->escape($words->get('frame.unanswered')) ?>">
 <a class="skip-link" href="#main"><?= $template->escape($words->get('frame.skip')) ?></a>
 <?= $template->render('partials/header', ['words' => $words, 'menu' => $menu, 'own' => $own, 'csrf' => $csrf,
   'feed' => $feed, 'sites' => $sites]) ?>
@@ -27,7 +27,7 @@ ob_start();
   ['words' => $words, 'ground' => false]) ?></main>
 <?= $template->render('partials/feed-panel', ['words' => $words, 'feed' => $feed]) ?>
 </div>
-<div class="live-region visually-hidden" role="status" aria-live="polite" data-live-region></div>
+<?= $template->render('partials/live-region') ?>
 <?= $template->render('partials/glyphs') ?>
 </body>
 <?php

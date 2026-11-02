@@ -65,11 +65,11 @@ final readonly class Sidebar
     return [...$filled, ...$empty];
   }
 
-  /* The house's own sites, which the header draws where it has room and the drawer
-     where it has not, and only while the feed lets their `url` out: everybody is
-     shown them, and a colleague reading `WebSite` as a stranger must not be shown
-     what a stranger is not.
-     @return array<string, string> a host by URL */
+  /** The house's own sites, which the header draws where it has room and the drawer
+      where it has not, and only while the feed lets their `url` out: everybody is
+      shown them, and a colleague reading `WebSite` as a stranger must not be shown
+      what a stranger is not.
+      @return array<string, string> a host by URL */
   public function sites(): array
   {
     $site = array_find($this->collections->all(), fn (Collection $held): bool => $held->type === Sites::WEB_SITE);

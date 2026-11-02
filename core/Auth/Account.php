@@ -31,7 +31,8 @@ final readonly class Account
     public ?string $lastLoginAt = null,
     public ?string $disabledAt = null,
   ) {
-    $this->email = self::address($email);
+    /** @psalm-taint-escape header */
+    $this->email = self::address($email); /* refused two lines down unless `filter_var` reads it as an address */
     if (filter_var($this->email, FILTER_VALIDATE_EMAIL) === false) {
       throw MalformedValue::named('login address', $email);
     }

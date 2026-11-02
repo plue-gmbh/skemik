@@ -94,7 +94,7 @@ final readonly class TrashController
   public function deleteMany(Account $account, Request $request, string $slug): Response
   {
     $collection = $this->writable($account, $request, $slug);
-    $held = array_map(fn (string $id): Entity => $this->held($collection, $id), $this->ids($request));
+    $held = array_map(fn (string $id): Entity => $this->entities->live($collection->type, $id), $this->ids($request));
     $this->trash->delete(...array_map(fn (Entity $entity): EntityId => $entity->id, $held));
     $this->session->keep('trashed', implode(',', array_map(fn (Entity $entity): string
       => $entity->id->value, $held)));
@@ -120,8 +120,8 @@ final readonly class TrashController
     return $this->backTo($collection, $request);
   }
 
-  /* Comma-joined, since a form value that is a list is dropped at the door (`Http\Request`).
-     @return list<string> */
+  /** Comma-joined, since a form value that is a list is dropped at the door (`Http\Request`).
+      @return list<string> */
   private function ids(Request $request): array
   {
     $ids = array_values(array_filter(explode(',', (string) $request->form('ids'))));
@@ -188,16 +188,7 @@ final readonly class TrashController
   {
     $collection = $this->writable($account, $request, $slug);
 
-    return [$collection, $this->held($collection, $id)];
-  }
-
-  /* A record of the collection outside its trash; any other id reads as none. */
-  private function held(Collection $collection, string $id): Entity
-  {
-    $entity = $this->find($id);
-
-    return $entity->type !== $collection->type || $entity->deletedAt !== null
-      ? throw EntityNotFound::withId($id) : $entity;
+    return [$collection, $this->entities->live($collection->type, $id)];
   }
 
   private function trashed(Collection $collection, string $id): Entity

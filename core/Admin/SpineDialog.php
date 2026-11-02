@@ -28,7 +28,7 @@ use Support\Words;
    passing the reader's scope first. */
 final readonly class SpineDialog
 {
-  private const WORDS = ['spine.open', 'spine.slug', 'spine.address', 'spine.moved', 'spine.status',
+  private const WORDS = ['spine.open', 'spine.slug', 'spine.moved', 'spine.status',
     'spine.publish_from', 'spine.publish_to', 'spine.window_order', 'spine.locale', 'spine.worded'];
 
   public function __construct(
@@ -93,9 +93,9 @@ final readonly class SpineDialog
     return $this->profile->byType($collection->type)->locale->forks() && count($this->settings->locales()) > 1;
   }
 
-  /* A work's house locales, each with its member or, where none, the records
-     that could be linked; null on a type whose second language is not a second record.
-     @return ?list<Translation> */
+  /** A work's house locales, each with its member or, where none, the records
+      that could be linked; null on a type whose second language is not a second record.
+      @return ?list<Translation> */
   public function translations(Account $account, Collection $collection, Entity $entity): ?array
   {
     if (!$this->profile->byType($entity->type)->locale->forks()) {

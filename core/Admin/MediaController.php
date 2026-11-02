@@ -11,7 +11,6 @@ use Auth\Session;
 use Domain\Entity;
 use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
-use Domain\Exceptions\MalformedValue;
 use Domain\Relation;
 use Feed\PublicFilter;
 use Http\CacheHeaders;
@@ -103,8 +102,8 @@ final readonly class MediaController
     }
   }
 
-  /* What landed, as the search names a hit to a picker (`SearchController`).
-     @param list<string> $kinds */
+  /** What landed, as the search names a hit to a picker (`SearchController`).
+      @param list<string> $kinds */
   private function picked(Collection $library, ?Upload $upload, array $kinds): Response
   {
     try {
@@ -116,7 +115,7 @@ final readonly class MediaController
 
     return Response::json($this->json->encode(['picked' => ['id' => $asset->id->value, 'label' => $label,
       'glyph' => SidebarEntry::glyphOf($asset->type), 'preview' => Rows::preview($asset),
-      'type' => $asset->typeName()]]));
+      'type' => $asset->typeName(), 'file' => Rows::file($asset)]]));
   }
 
   /* A record's file exchanged on its own screen: a translation's own bytes, or
@@ -168,10 +167,10 @@ final readonly class MediaController
       : $this->served($request, $name, $preview, $headers);
   }
 
-  /* The name is the tag, and it is matched only past the reading and the file:
-     a 304 would tell a stranger a draft is there, or a browser that a purged
-     file still is.
-     @param array<string, string> $headers */
+  /** The name is the tag, and it is matched only past the reading and the file:
+      a 304 would tell a stranger a draft is there, or a browser that a purged
+      file still is.
+      @param array<string, string> $headers */
   private function served(Request $request, string $name, string $path, array $headers): Response
   {
     $headers = [...$headers, 'ETag' => $this->cache->named($name)];
@@ -180,11 +179,11 @@ final readonly class MediaController
       ? Response::unchanged($headers) : Response::ranged($path, $request->header('Range'), $headers);
   }
 
-  /* What the grid draws beside its tiles: how often each is used, under this
-     reader's scope as the record screen counts it, the largest file this server
-     takes, stated before the picker opens, and what the last upload left.
-     @param list<SheetRow> $rows
-     @return array<string, array<string, int>|string|bool> */
+  /** What the grid draws beside its tiles: how often each is used, under this
+      reader's scope as the record screen counts it, the largest file this server
+      takes, stated before the picker opens, and what the last upload left.
+      @param list<SheetRow> $rows
+      @return array<string, array<string, int>|string|bool> */
   public function library(Account $account, Collection $collection, array $rows): array
   {
     $uses = [];
@@ -243,22 +242,15 @@ final readonly class MediaController
       ?? throw EntityNotFound::withId('MediaObject');
   }
 
-  /* Another collection's record, a trashed one and a malformed id all read as none. */
   private function asset(Collection $library, string $slug, string $id): Entity
   {
-    try {
-      $asset = $slug === $library->slug->value ? $this->entities->find(new EntityId($id)) : null;
-    } catch (MalformedValue) {
-      $asset = null;
-    }
-
-    return $asset !== null && $asset->type === $library->type && $asset->deletedAt === null ? $asset
+    return $slug === $library->slug->value ? $this->entities->live($library->type, $id)
       : throw EntityNotFound::withId($id);
   }
 
-  /* Any record holding the file opens it: a translation starts on the original's,
-     and its draft must not close what the published original shows.
-     @return array{Entity, string} the record and its stored type */
+  /** Any record holding the file opens it: a translation starts on the original's,
+      and its draft must not close what the published original shows.
+      @return array{Entity, string} the record and its stored type */
   private function readable(?Account $account, string $name): array
   {
     $library = $this->holder();

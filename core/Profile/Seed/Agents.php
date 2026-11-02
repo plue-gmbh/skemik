@@ -86,7 +86,7 @@ final readonly class Agents
     return [
       $f->text('legal_name', 'Legal name')->starter()->words(),
       $f->image('logo', 'Logo')->starter(),
-      $this->base->image()->starter(),
+      $this->base->image(),
       $f->text('slogan', 'Slogan')->words(),
       $f->link('email', 'Email')->starter(),
       /* Its own website, which lives on another domain than anything held here. */
@@ -120,7 +120,7 @@ final readonly class Agents
       $f->objects('has_certification', 'Certification', 'Certification')->words(),
       $f->ref('parent_organization', 'Parent organization', 'Organization'),
       $f->refs('location', 'Location', 'Place', 'LocalBusiness'),
-      $f->refs('brand', 'Brands', 'Brand')->starter(),
+      $f->refs('brand', 'Brands', 'Brand'),
       $f->ref('has_offer_catalog', 'Offer catalogue', 'ItemList'),
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
       /* Off-domain on purpose: the escape rung the profile's

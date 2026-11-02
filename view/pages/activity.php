@@ -65,6 +65,7 @@ $back = ['by' => $by, 'page' => $page > 1 ? (string) $page : null];
 <?php endif ?>
 <?php if ($redacts && $line->activity !== null): ?>
       <dialog class="dialog" id="<?= $dialog ?>" aria-labelledby="<?= $dialog ?>-title">
+        <?= $template->render('partials/live-region') ?>
         <form method="post" action="/changes/<?= $template->escape($line->activity) ?>/redact">
           <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
 <?php foreach (array_filter($back) as $name => $value): ?>

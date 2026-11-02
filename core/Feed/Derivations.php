@@ -64,13 +64,13 @@ final readonly class Derivations
     };
   }
 
-  /* A record's `AggregateOffer`s, one per currency, since one spanning two would
-     state a number whose unit is a guess. Read inbound they range over the prices
-     of the offers that name the record and the gates admit — sold out ones too,
-     since leaving them out is a `where` and selection is the address's, and
-     none past its `validThrough`; over an edge of the record they merge what each admitted target
-     states for its own, one hop and never a chain the request bounds.
-     @return list<array<string, mixed>> */
+  /** A record's `AggregateOffer`s, one per currency, since one spanning two would
+      state a number whose unit is a guess. Read inbound they range over the prices
+      of the offers that name the record and the gates admit — sold out ones too,
+      since leaving them out is a `where` and selection is the address's, and
+      none past its `validThrough`; over an edge of the record they merge what each admitted target
+      states for its own, one hop and never a chain the request bounds.
+      @return list<array<string, mixed>> */
   public function offerRanges(Entity $entity, FieldDefinition $field): array
   {
     return array_values($this->ranges($entity, $field));
@@ -96,10 +96,10 @@ final readonly class Derivations
     return $ranges;
   }
 
-  /* An offer with no price or no currency states no range, not a zero, and
-     one whose last valid day has passed in the house states none either: *ab
-     99 €* for last spring's run is a price nobody can pay.
-     @return array<string, array<string, mixed>> */
+  /** An offer with no price or no currency states no range, not a zero, and
+      one whose last valid day has passed in the house states none either: *ab
+      99 €* for last spring's run is a price nobody can pay.
+      @return array<string, array<string, mixed>> */
   private function priced(Entity $offer): array
   {
     $price = $offer->props->document()['price'] ?? null;
@@ -151,11 +151,11 @@ final readonly class Derivations
     return is_int($capacity) ? $capacity - (int) $taken : null;
   }
 
-  /* What the function is taken over: the target key the declaration reads, or
-     the targets themselves where it counts them. A target whose key holds no
-     number is not a zero — it is a row that says nothing, and averaging a zero
-     into a rating would be this class inventing an opinion.
-     @return list<int|float> */
+  /** What the function is taken over: the target key the declaration reads, or
+      the targets themselves where it counts them. A target whose key holds no
+      number is not a zero — it is a row that says nothing, and averaging a zero
+      into a rating would be this class inventing an opinion.
+      @return list<int|float> */
   private function readings(Entity $entity, Derivation $how): array
   {
     $key = $how->reads();

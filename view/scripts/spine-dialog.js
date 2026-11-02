@@ -1,14 +1,17 @@
 /* The spine dialog component (`view/partials/spine-dialog.php` holds its template
    and contract), mounted by the save bar's island. It keeps no value of its own:
    it shows the pending edit or the loaded value, and each change goes back to
-   the island as a pending value under `spine.{column}`. The slug is folded here
-   only to show the address it will have; `Domain\Slug` folds it again on save. */
+   the island as a pending value under `spine.{column}`. The slug goes as typed
+   and only `Domain\Slug` folds it, since its transliteration is one a browser
+   lacks: a fold here would lose `Ł` and the whole of a Cyrillic name. */
 
 const GERMAN_FOLDS = { ä: "ae", ö: "oe", ü: "ue", ß: "ss", Ä: "Ae", Ö: "Oe", Ü: "Ue", ẞ: "SS" };
 
-const slugify = (text) => text.replace(/[äöüßÄÖÜẞ]/g, (letter) => GERMAN_FOLDS[letter])
-  .normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
-  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+/* The slug as the dialog and the chip show it until the save reads it back: German letters and accents as
+   `Domain\Slug` folds them, and a letter only its transliteration takes apart, `ł` or Cyrillic, as typed. */
+const slugShown = (text) => text.replace(/[äöüßÄÖÜẞ]/g, (letter) => GERMAN_FOLDS[letter])
+  .normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase()
+  .replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
 
 /* A wall time with or without seconds, spelled one way for comparing. */
 const wall = (value) => (value && value.length === 16 ? value + ":00" : value);
@@ -46,11 +49,11 @@ const spineDialog = {
     common() { return this.opened.common; },
     words() { return this.common.words; },
     address() {
-      const [slug, collection] = [this.current("slug"), this.common.collection];
+      const [slug, collection] = [slugShown(this.current("slug")), this.common.collection];
       return this.common.public ? `/feed/${this.current("locale")}/${collection}/${slug}` : `/c/${collection}/${slug}`;
     },
     moved() {
-      return this.current("slug") !== this.record.slug || this.current("locale") !== this.record.locale;
+      return slugShown(this.current("slug")) !== this.record.slug || this.current("locale") !== this.record.locale;
     },
   },
   mounted() {
@@ -70,9 +73,10 @@ const spineDialog = {
     set(key, value) {
       this.$emit("change", this.opened.id, "spine." + key, value);
     },
+    /* Words that fold to nothing, or to the slug held, are no edit, so they are kept off the save bar. */
     typeSlug(event) {
       this.typed = event.target.value;
-      this.set("slug", slugify(this.typed) || this.record.slug);
+      this.set("slug", ["", this.record.slug].includes(slugShown(this.typed)) ? this.record.slug : this.typed);
     },
     /* An end before the start is refused here and never made pending. */
     setWindow(key, event) {

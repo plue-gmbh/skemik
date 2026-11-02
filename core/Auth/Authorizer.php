@@ -66,12 +66,12 @@ final readonly class Authorizer
     return $account->can(Capability::ManageFields) && $this->writes($account, $collection);
   }
 
-  /* The write half for a machine. A write makes a record or names one, so the
-     record decides the verb: none is `create`, one is `set`. Every field written
-     is asked, so the refusal names the first one no rule covers, as the document
-     spelt it. A record none of the key's rules here binds to is not the key's,
-     and is answered as its reads answer one: absence, never a refusal.
-     @param array<string, string> $fields each field key the write carries, to its name in the document */
+  /** The write half for a machine. A write makes a record or names one, so the
+      record decides the verb: none is `create`, one is `set`. Every field written
+      is asked, so the refusal names the first one no rule covers, as the document
+      spelt it. A record none of the key's rules here binds to is not the key's,
+      and is answered as its reads answer one: absence, never a refusal.
+      @param array<string, string> $fields each field key the write carries, to its name in the document */
   public function requireMachine(Collection $collection, array $fields, ?Entity $record = null): Token
   {
     $token = $this->requireToken();
@@ -105,12 +105,12 @@ final readonly class Authorizer
     return $held ? $token : throw NotPermitted::grant($collection->slug->value, null, $capability);
   }
 
-  /* The read half for a machine: the `read` rules the bearer holds, which only
-     `Feed\PublicFilter`'s gates can apply, since a list names no one record to
-     ask a subject about. No key is the anonymous reading; a key
-     that is refused is a 401 and not that reading, or a caller whose token
-     expired would be served less without being told why.
-     @return ?list<Grant> null where no key was sent */
+  /** The read half for a machine: the `read` rules the bearer holds, which only
+      `Feed\PublicFilter`'s gates can apply, since a list names no one record to
+      ask a subject about. No key is the anonymous reading; a key
+      that is refused is a 401 and not that reading, or a caller whose token
+      expired would be served less without being told why.
+      @return ?list<Grant> null where no key was sent */
   public function machineReads(): ?array
   {
     if ($this->bearer === null) {
@@ -121,9 +121,9 @@ final readonly class Authorizer
       fn (Grant $rule): bool => $rule->capability === GrantCapability::Read));
   }
 
-  /* The collections the bearer may arrange, whose catalogue entries then show
-     the arrangement rather than a reading (`Feed\Catalog`); none without a key.
-     @return list<string> collection slugs */
+  /** The collections the bearer may arrange, whose catalogue entries then show
+      the arrangement rather than a reading (`Feed\Catalog`); none without a key.
+      @return list<string> collection slugs */
   public function machineArranges(): array
   {
     if ($this->bearer === null) {

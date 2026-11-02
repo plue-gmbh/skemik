@@ -37,8 +37,8 @@ final readonly class Promises
     ];
   }
 
-  /* A list replaces a custom collection only while its members may be anything
-     and their order is the edge's. @return list<Violation> */
+  /** A list replaces a custom collection only while its members may be anything
+      and their order is the edge's. @return list<Violation> */
   private function checkLists(): array
   {
     $members = $this->field('ItemList', 'item_list_element');
@@ -47,8 +47,8 @@ final readonly class Promises
     return $holds ? [] : [Violation::stated('ItemList.item_list_element', 'not an ordered edge to any type')];
   }
 
-  /* A vocabulary is data only while every controlled value is a term and a term
-     is found by its code within its set. @return list<Violation> */
+  /** A vocabulary is data only while every controlled value is a term and a term
+      is found by its code within its set. @return list<Violation> */
   private function checkTerms(): array
   {
     $code = $this->field('DefinedTerm', 'term_code');
@@ -66,8 +66,8 @@ final readonly class Promises
     return $violations;
   }
 
-  /* No second system for what a house transacts: each says how it stands in a
-     closed list of its own. @return list<Violation> */
+  /** No second system for what a house transacts: each says how it stands in a
+      closed list of its own. @return list<Violation> */
   private function checkTransactions(): array
   {
     $violations = [];
@@ -81,8 +81,8 @@ final readonly class Promises
     return $violations;
   }
 
-  /* Address, state and language sit in one place on all thirty only while no
-     type declares a field under a spine column's name. @return list<Violation> */
+  /** Address, state and language sit in one place on all thirty only while no
+      type declares a field under a spine column's name. @return list<Violation> */
   private function checkSpine(): array
   {
     $violations = [];

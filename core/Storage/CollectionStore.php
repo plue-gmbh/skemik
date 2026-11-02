@@ -20,10 +20,9 @@ use Support\Words;
    every sidebar and a release that adds a type gives every standing house its
    collection: the seed, `/install` and an update all call the same method.
    What would leave a collection unable to hold its type is refused here, not
-   only hidden on a screen: a † field removed, one key of a value object without
-   the others, since a value object is on a screen whole or not at all. A field
-   taken off hides its values and deletes none, so carrying it again brings them
-   back.
+   only hidden on a screen: a † field removed. A key of a value object is a
+   field of its own, carried with or without the others. A field taken off hides
+   its values and deletes none, so carrying it again brings them back.
    The name is the chrome's word for the type, read here so nothing above asks. */
 final readonly class CollectionStore
 {
@@ -97,27 +96,11 @@ final readonly class CollectionStore
     $carried = [];
     foreach ($collection->fields as $field) {
       $type->field($field->key) ?? throw MalformedValue::named('field of ' . $type->name, $field->key);
-      $carried[$field->key] = $field;
+      $carried[$field->key] = true;
     }
-    $this->requireWholeFields($type, $carried);
-  }
-
-  /** @param array<string, CollectionField> $carried by key */
-  private function requireWholeFields(TypeDefinition $type, array $carried): void
-  {
-    $groups = [];
     foreach ($type->fields() as $field) {
-      $held = $carried[$field->key] ?? null;
-      if ($held === null && $field->required) {
+      if (!isset($carried[$field->key]) && $field->required) {
         throw MalformedValue::named('collection without the required field', $field->key);
-      }
-      if ($field->valueObjectOf !== null) {
-        $groups[$field->valueObjectOf][] = $held !== null;
-      }
-    }
-    foreach ($groups as $property => $states) {
-      if (count(array_unique($states)) > 1) {
-        throw MalformedValue::named('value object carried whole', $property);
       }
     }
   }
@@ -128,10 +111,10 @@ final readonly class CollectionStore
       'feed' => $field->feed], $collection->fields));
   }
 
-  /* A key the type no longer names, left by a release that dropped the field, is
-     left out as the row is read, since carried it would refuse every save of the
-     collection; the next save writes the fields without it.
-     @param array<string, string|int|null> $row */
+  /** A key the type no longer names, left by a release that dropped the field, is
+      left out as the row is read, since carried it would refuse every save of the
+      collection; the next save writes the fields without it.
+      @param array<string, string|int|null> $row */
   private function collection(array $row): Collection
   {
     $type = $this->profile->byType((string) $row['type']);

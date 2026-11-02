@@ -8,7 +8,6 @@ use Domain\Exceptions\MalformedValue;
 use Feed\Spelling;
 use Feed\Targets;
 use Profile\FieldDefinition;
-use Profile\Kinds;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\ValueObject;
@@ -31,6 +30,7 @@ final readonly class ObjectRows
     private SchemaOrg $schema,
     private Targets $targets,
     private \Closure $reads,
+    private string $origin,
   ) {}
 
   /**
@@ -43,7 +43,8 @@ final readonly class ObjectRows
     $rows = $rows !== [] && !array_is_list($rows) ? [$rows] : $rows;
 
     return array_map(fn (mixed $row): mixed
-      => is_array($row) ? Kinds::spelledRow($kinds, $this->tokened($kinds, $this->row($object, $row))) : $row,
+      => is_array($row) ? Spelling::heldRow($kinds, $this->tokened($kinds, $this->row($object, $row)), $this->origin)
+        : $row,
       $rows);
   }
 

@@ -34,11 +34,9 @@ final readonly class FileCheck
     private Json $json = new Json(),
   ) {}
 
-  /* An answer that has work of its own, or streams a file, leaves the comparison to the next one. */
   public function after(Response $response): Response
   {
-    return $response->after === null && $response->file === null && $this->due()
-      ? $response->after($this->run(...)) : $response;
+    return $response->takesWork() && $this->due() ? $response->after($this->run(...)) : $response;
   }
 
   /* Under the lock an update takes, so no comparison reads a tree half swapped, and asked again inside it. */

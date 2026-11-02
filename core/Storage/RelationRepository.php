@@ -65,8 +65,8 @@ final readonly class RelationRepository
     return $this->select(' and r.object_id = :id order by r.subject_id, r.predicate', $object);
   }
 
-  /* To any member of a translation group, a trashed one too, whose link still serves the others.
-     @return list<Relation> */
+  /** To any member of a translation group, a trashed one too, whose link still serves the others.
+      @return list<Relation> */
   public function inboundToGroup(EntityId $root): array
   {
     return $this->select(' and r.object_id in (select id from entity'
@@ -103,10 +103,10 @@ final readonly class RelationRepository
     });
   }
 
-  /* The predicates whose edges `replace` would change, order and words included:
-     none where it would leave them as they stand.
-     @param list<Relation> $edges
-     @return list<string> */
+  /** The predicates whose edges `replace` would change, order and words included:
+      none where it would leave them as they stand.
+      @param list<Relation> $edges
+      @return list<string> */
   public function changed(EntityId $subject, array $edges): array
   {
     $held = $this->spelt($this->outbound($subject));
@@ -135,9 +135,9 @@ final readonly class RelationRepository
     }, $spelt);
   }
 
-  /* The same target twice under one predicate is one edge sent twice, refused by
-     name before the unique constraint answers it as a database error.
-     @param array<string, true> $written */
+  /** The same target twice under one predicate is one edge sent twice, refused by
+      name before the unique constraint answers it as a database error.
+      @param array<string, true> $written */
   private function requireOnce(Relation $edge, array &$written): void
   {
     $key = $edge->predicate . ' → ' . $edge->object->value;

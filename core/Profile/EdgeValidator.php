@@ -46,11 +46,11 @@ final readonly class EdgeValidator
       ...$this->checkOfKind($type, $props, $edges)];
   }
 
-  /* A specialisation's property is held by a record marked as that kind and by
-     no other: `variesBy` on a plain product speaks of a group that is none.
-     @param array<string, mixed> $props
-     @param list<Relation> $edges
-     @return list<Violation> */
+  /** A specialisation's property is held by a record marked as that kind and by
+      no other: `variesBy` on a plain product speaks of a group that is none.
+      @param array<string, mixed> $props
+      @param list<Relation> $edges
+      @return list<Violation> */
   private function checkOfKind(TypeDefinition $type, array $props, array $edges): array
   {
     $kinds = (array) ($props[TypeDefinition::KIND] ?? []);
@@ -99,9 +99,9 @@ final readonly class EdgeValidator
       => [...$this->checkTarget($field, $edge), ...$this->checkQualifiers($field, $edge)], $held));
   }
 
-  /* An edge's words are read as a field of their kind would be, and what a
-     locale holds of its own is words and nothing else.
-     @return list<Violation> */
+  /** An edge's words are read as a field of their kind would be, and what a
+      locale holds of its own is words and nothing else.
+      @return list<Violation> */
   private function checkQualifiers(FieldDefinition $field, Relation $edge): array
   {
     $violations = [];

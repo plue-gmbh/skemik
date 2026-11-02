@@ -43,11 +43,9 @@ final readonly class Updater
     private Clock $clock,
   ) {}
 
-  /* An answer that has work of its own, or streams a file, leaves the check to the next one. */
   public function after(Response $response): Response
   {
-    return $response->after === null && $response->file === null && $this->check->due()
-      ? $response->after($this->run(...)) : $response;
+    return $response->takesWork() && $this->check->due() ? $response->after($this->run(...)) : $response;
   }
 
   public function run(): void
@@ -78,6 +76,14 @@ final readonly class Updater
   public function busy(): bool
   {
     return !$this->backup->locked(static fn () => null);
+  }
+
+  /* Whether the lock's holder is an install: the archive stands in staging from its fetch until it is staged,
+     a moment before the swap takes over every address (`Move`), and a snapshot or a restore holding the lock
+     leaves none there. */
+  public function installing(): bool
+  {
+    return $this->downloader->fetching() && $this->busy();
   }
 
   /* The release to install, where one is offered and not refused for good. */

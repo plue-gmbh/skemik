@@ -81,7 +81,7 @@ final readonly class Commerce
       $f->text('product_group_id', 'Group: ID')->ofKind('ProductGroup'),
       $f->text('varies_by', 'Group: varies by')->repeatable()->ofKind('ProductGroup'),
       $f->refs('has_variant', 'Group: variants', 'Product')->ofKind('ProductGroup'),
-      $f->objects('additional_property', 'Specification', 'PropertyValue')->words(),   // spec sheets go here
+      $f->objects('additional_property', 'Specification', 'PropertyValue')->words(),   /* spec sheets go here */
       $f->text('award', 'Award')->repeatable()->words(),
       $f->text('slogan', 'Slogan')->words(),
       $f->term('category', 'Category'),
@@ -141,7 +141,7 @@ final readonly class Commerce
 
     return [
       $f->ref('hosting_organization', 'Run by', 'Organization')->starter(),
-      $f->refs('has_tiers', 'Tiers', 'Offer'),
+      $f->refs('has_tiers', 'Tiers', 'Offer')->starter(),
       $this->base->description()->starter(),
     ];
   }

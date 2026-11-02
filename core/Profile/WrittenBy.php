@@ -8,10 +8,9 @@ namespace Profile;
    conversation as a further FieldKind. */
 enum WrittenBy: string
 {
-  case Authored = 'authored';   // a person typed it — the default, and nearly every field
-  case Derived = 'derived';     // computed by Feed\JsonLd at emit, never stored
+  case Authored = 'authored';   /* a person typed it — the default, and nearly every field */
+  case Derived = 'derived';     /* computed by Feed\JsonLd at emit, never stored */
 
-  /* Only authored fields get an editor input. */
   public function hasEditor(): bool
   {
     return $this === self::Authored;

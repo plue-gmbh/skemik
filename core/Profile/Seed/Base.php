@@ -52,7 +52,7 @@ final readonly class Base
      over the block's. */
   public function description(): FieldDefinition
   {
-    return $this->f->longText('description', 'Description');   // plain text
+    return $this->f->longText('description', 'Description');   /* plain text */
   }
 
   /* An image of the thing, never a place to park what a page needs: an icon
@@ -64,9 +64,9 @@ final readonly class Base
     return $this->f->image('image', 'Image')->repeatable();
   }
 
-  /* `inLanguage` is the spine's, and only a forking type emits it, so on
-     any other the field would be a column that is always empty.
-     @return list<FieldDefinition> */
+  /** `inLanguage` is the spine's, and only a forking type emits it, so on
+      any other the field would be a column that is always empty.
+      @return list<FieldDefinition> */
   public function creativeWork(LocaleMode $locale): array
   {
     $f = $this->f;

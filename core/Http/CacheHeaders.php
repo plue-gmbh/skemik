@@ -30,9 +30,9 @@ final readonly class CacheHeaders
       'Vary' => 'Accept, Authorization'];
   }
 
-  /* A file's address names bytes that never change, so only who may read it
-     can: an hour in this reader's own cache, the feed's minute in a shared one.
-     @return array<string, string> */
+  /** A file's address names bytes that never change, so only who may read it
+      can: an hour in this reader's own cache, the feed's minute in a shared one.
+      @return array<string, string> */
   public function asset(bool $anonymous): array
   {
     return ['Cache-Control' => $anonymous ? 'public, max-age=60' : 'private, max-age=3600',
@@ -51,8 +51,7 @@ final readonly class CacheHeaders
 
   /* A caller may send several, and `*` means any — both are the same answer. A
      tag a compressing server rewrote, `W/` in front or `-gzip` behind, is the
-     tag it was.
-     @param string $validator the tag this answer carries */
+     tag it was. */
   public function matches(?string $sent, string $validator): bool
   {
     $held = array_map(fn (string $tag): string => (string) preg_replace(['/^W\//', '/-(?:gzip|br|zstd|deflate)"$/'],

@@ -60,8 +60,8 @@ final readonly class FindController
       new Screen($this->words->get('find.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
-  /* The hits the reader may open, a work's group once, by its best member.
-     @return list<Entity> */
+  /** The hits the reader may open, a work's group once, by its best member.
+      @return list<Entity> */
   private function found(Account $account, string $asked): array
   {
     [$found, $seen] = [[], []];
@@ -105,9 +105,9 @@ final readonly class FindController
       $entity->slug->value, $this->sheet->state($entity));
   }
 
-  /* What the logs hold of the question: the changes of each colleague found, and the incident typed.
-     @param list<Entity> $found
-     @return list<Found> */
+  /** What the logs hold of the question: the changes of each colleague found, and the incident typed.
+      @param list<Entity> $found
+      @return list<Found> */
   private function logged(array $found, string $asked): array
   {
     $lines = [];

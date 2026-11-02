@@ -25,18 +25,25 @@ function mountGrant(element) {
     submit.textContent = issue;
   });
   form.addEventListener("change", () => issuable(form, submit));
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const sent = new URLSearchParams(new FormData(form));
-    sent.set("capability", sent.getAll("capability").join(","));
-    const response = await fetch("/settings/tokens", { method: "POST", body: sent,
-      headers: { Accept: "application/json" } });
-    const body = await response.json();
-    if (response.status === 409) confirmAdding(form, submit);
-    if (!response.ok) return (form.querySelector("[data-grant-error]").textContent = body.error);
-    showSecret(element, body);
+    issueKey(element, form, submit);
   });
   return name;
+}
+
+/* Held until answered, since two issues answered side by side would each find the name free: two keys, one of
+   them never shown. */
+async function issueKey(element, form, submit) {
+  const sent = new URLSearchParams(new FormData(form));
+  sent.set("capability", sent.getAll("capability").join(","));
+  submit.disabled = true;
+  const { ok, status, body } = await answered(fetch("/settings/tokens", { method: "POST", body: sent,
+    headers: { Accept: "application/json" } }));
+  submit.disabled = false;
+  if (status === 409) confirmAdding(form, submit);
+  if (!ok) return (form.querySelector("[data-grant-error]").textContent = body.error);
+  showSecret(element, body);
 }
 
 /* Nothing ticked is nothing to issue, and the draft box stands under a ticked
@@ -87,24 +94,30 @@ function mountReissue(form) {
   const dialog = form.closest("dialog");
   const [submit, error] = [dialog.querySelector(`[form="${form.id}"]`), form.querySelector("[data-grant-error]")];
   form.addEventListener("change", () => { submit.disabled = !form.querySelector("[name=rule]:checked"); });
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const sent = new URLSearchParams(new FormData(form));
-    sent.set("rules", sent.getAll("rule").join(","));
-    sent.delete("rule");
-    sent.set("from", form.dataset.grantReissue);
-    const response = await fetch("/settings/tokens", { method: "POST", body: sent,
-      headers: { Accept: "application/json" } });
-    const body = await response.json();
-    if (!response.ok) return (error.textContent = body.error);
-    dialog.addEventListener("cancel", (closing) => closing.preventDefault());
-    dialog.addEventListener("close", () => location.reload());
-    showSecret(dialog, body);
+    reissueKey(form, dialog, submit);
   });
   dialog.addEventListener("close", () => {
     form.reset();
     [error.textContent, submit.disabled] = ["", false];
   });
+}
+
+/* Held until answered, as an issue is. */
+async function reissueKey(form, dialog, submit) {
+  const sent = new URLSearchParams(new FormData(form));
+  sent.set("rules", sent.getAll("rule").join(","));
+  sent.delete("rule");
+  sent.set("from", form.dataset.grantReissue);
+  submit.disabled = true;
+  const { ok, body } = await answered(fetch("/settings/tokens", { method: "POST", body: sent,
+    headers: { Accept: "application/json" } }));
+  submit.disabled = false;
+  if (!ok) return (form.querySelector("[data-grant-error]").textContent = body.error);
+  dialog.addEventListener("cancel", (closing) => closing.preventDefault());
+  dialog.addEventListener("close", () => location.reload());
+  showSecret(dialog, body);
 }
 
 /* Taking a key back asks once more, beside when the key was last used: once on

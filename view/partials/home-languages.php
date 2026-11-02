@@ -49,6 +49,7 @@ $trash = $template->render('partials/icon', ['name' => 'trash']);
           <span class="locale-count"><?= $template->escape($row->count) ?></span>
 <?php if ($index > 0) { ?>
           <dialog class="dialog" id="<?= $id ?>-default" aria-labelledby="<?= $id ?>-default-title">
+            <?= $template->render('partials/live-region') ?>
             <form method="post" action="/settings/locales/order">
               <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
               <input type="hidden" name="tag" value="<?= $template->escape($row->tag) ?>">
@@ -65,6 +66,7 @@ $trash = $template->render('partials/icon', ['name' => 'trash']);
 <?php } ?>
 <?php if ($index > 0 && $row->refusal === null) { ?>
           <dialog class="dialog" id="<?= $id ?>-remove" aria-labelledby="<?= $id ?>-remove-title">
+            <?= $template->render('partials/live-region') ?>
             <form method="post" action="/settings/locales/<?= $template->escape(rawurlencode($row->tag)) ?>/remove">
               <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
               <h2 id="<?= $id ?>-remove-title"><?= $said('locale.remove_question', $row->tag) ?></h2>

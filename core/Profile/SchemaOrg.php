@@ -55,15 +55,6 @@ final readonly class SchemaOrg
     return $name !== null && $this->vocabulary->hasProperty($name) ? self::BASE . $name : null;
   }
 
-  /* The property a flattened field's object arrives on, `acceptedAnswer` for the
-     answer's `upvoteCount`: without it the key's own page reads as the type's. */
-  public function objectUrl(FieldDefinition $field): ?string
-  {
-    $name = $field->valueObjectOf;
-
-    return $name !== null && $this->vocabulary->hasProperty($name) ? self::BASE . $name : null;
-  }
-
   /* Which class the vocabulary is asked about for this field: the value object
      it was flattened out of, the specialisation whose property it is, and the
      type otherwise. */
@@ -159,10 +150,10 @@ final readonly class SchemaOrg
     return true;
   }
 
-  /* What a plain value is as schema.org names it, stated by the profile and asked
-     by `Ranges`: a count is an `Integer`, a token of a closed list the
-     enumeration it is a member of, `EventStatusType`, or text where it is none.
-     @param list<string> $options @return list<string> */
+  /** What a plain value is as schema.org names it, stated by the profile and asked
+      by `Ranges`: a count is an `Integer`, a token of a closed list the
+      enumeration it is a member of, `EventStatusType`, or text where it is none.
+      @param list<string> $options @return list<string> */
   public function holds(FieldKind $kind, array $options = [], bool $whole = false): array
   {
     if ($options === []) {
@@ -188,9 +179,9 @@ final readonly class SchemaOrg
     return $this->takes($field->targets, $type);
   }
 
-  /* A record of the type may stand behind the targets: the library's, whose
-     file decides what it leaves as, behind any class one of its files is.
-     @param list<string> $targets an edge's, or a value object's reference's */
+  /** A record of the type may stand behind the targets: the library's, whose
+      file decides what it leaves as, behind any class one of its files is.
+      @param list<string> $targets an edge's, or a value object's reference's */
   public function takes(array $targets, string $type): bool
   {
     return array_any($this->emittedAs($type), fn (string $class): bool => $this->within($targets, $class));
@@ -202,29 +193,58 @@ final readonly class SchemaOrg
     return array_intersect(['*', $class, ...$this->vocabulary->ancestorsOf($class)], $classes) !== [];
   }
 
-  /* The classes a record of the type leaves the document as: itself, and for the
-     library each class its format derives (`Seed\Media::emittedType`).
-     @return list<string> */
+  /** The classes a record of the type leaves the document as: itself, and for the
+      library each class its format derives (`Seed\Media::emittedType`).
+      @return list<string> */
   public function emittedAs(string $type): array
   {
     return [$type, ...($type === 'MediaObject' ? array_values(Media::EMITTED) : [])];
   }
 
-  /* The kinds of file a field takes of the library, `image`, by the classes its
-     targets are: empty where any file stands, which is what the picker's search,
-     its upload, a save and a replaced file all ask.
-     @param list<string> $targets @return list<string> */
+  /** The kinds of file a field takes of the library, `image`, by the classes its
+      targets are: empty where any file stands, which is what the picker's search,
+      its upload, a save and a replaced file all ask.
+      @param list<string> $targets @return list<string> */
   public function fileKinds(array $targets): array
   {
     return $this->within($targets, 'MediaObject') ? [] : array_keys(array_filter(Media::EMITTED,
       fn (string $class): bool => $this->within($targets, $class)));
   }
 
-  /* What an editor suggests for a record's kind: every class a write would take,
-     by name, since a list closed on the screen and open at the address lets a
-     bakery say so through a key and not by hand. No kind leads: which one a
-     house needs is not the profile's to guess.
-     @return list<string> */
+  /** The kinds of file a link takes of the library, by its property's range: as
+      an edge's targets take them where the range names a class a file leaves as,
+      any file where it names URL, and none, null, where it names neither, an email.
+      @return ?list<string> */
+  public function linkTakes(string $property): ?array
+  {
+    $range = $this->vocabulary->rangeOf($property) ?? [];
+    $kinds = $this->fileKinds($range);
+
+    return $kinds !== [] || $this->within($range, 'MediaObject') || in_array('URL', $range, true) ? $kinds : null;
+  }
+
+  /** The keys of a field that take a file of the library as a link, a link
+      field's own key or the link keys of its rows, each with the kinds it takes;
+      a row's referring key holds the record itself and is not among them.
+      @param ?ValueObject $object the field's rows', null where it holds none
+      @return array<string, list<string>> */
+  public function fileKeys(FieldDefinition $field, ?ValueObject $object): array
+  {
+    $linked = $object === null || $field->kind !== FieldKind::Objects ? [] : array_keys(array_filter($object->kinds,
+      fn (FieldKind $kind, string $key): bool => $kind === FieldKind::Link && $key !== $object->reference,
+      ARRAY_FILTER_USE_BOTH));
+    $properties = $field->kind === FieldKind::Link ? [$field->key => (string) $this->propertyName($field->key)]
+      : array_combine($linked, $linked);
+    $files = array_map($this->linkTakes(...), $properties);
+
+    return array_filter($files, fn (?array $kinds): bool => $kinds !== null);
+  }
+
+  /** What an editor suggests for a record's kind: every class a write would take,
+      by name, since a list closed on the screen and open at the address lets a
+      bakery say so through a key and not by hand. No kind leads: which one a
+      house needs is not the profile's to guess.
+      @return list<string> */
   public function kindsOf(TypeDefinition $type): array
   {
     return $this->vocabulary->descendantsOf($type->name);

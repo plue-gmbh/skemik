@@ -22,7 +22,8 @@ final readonly class ValueObjects
      holds: a kind, the options of a select, the world's list, or `T` for a term
      of the house's own, with its set's code after it where that is not the
      key's own name — text where it says nothing — and after a kind `words` for
-     what a reader reads or `whole` for a count. An empty label is the object's
+     what a reader reads, `whole` for a count or `offered` for a key a new
+     collection starts without. An empty label is the object's
      own value, named by its heading alone, as a width is. A repeatable value object
      needs none of it: it stays one field of kind `objects` and the editor draws
      its columns from the key set above. Kinds are every one but `objects`,
@@ -31,10 +32,10 @@ final readonly class ValueObjects
     'PostalAddress' => [
       'streetAddress' => ['street', 'Street'],
       'addressLocality' => ['locality', 'Town'],
-      'addressRegion' => ['region', 'Region'],
+      'addressRegion' => ['region', 'Region', FieldKind::Text, 'offered'],
       'postalCode' => ['postal_code', 'Postcode'],
       'addressCountry' => ['country', 'Country', ClosedList::Country],
-      'postOfficeBoxNumber' => ['post_office_box', 'PO box'],
+      'postOfficeBoxNumber' => ['post_office_box', 'PO box', FieldKind::Text, 'offered'],
     ],
     'GeoCoordinates' => [
       'latitude' => ['latitude', 'Latitude', FieldKind::Number],
@@ -57,9 +58,9 @@ final readonly class ValueObjects
     ],
     'Rating' => [
       'ratingValue' => ['value', '', FieldKind::Number],
-      'bestRating' => ['best', 'Best possible', FieldKind::Number],
-      'worstRating' => ['worst', 'Worst possible', FieldKind::Number],
-      'ratingExplanation' => ['explanation', 'Explanation', FieldKind::LongText],
+      'bestRating' => ['best', 'Best possible', FieldKind::Number, 'offered'],
+      'worstRating' => ['worst', 'Worst possible', FieldKind::Number, 'offered'],
+      'ratingExplanation' => ['explanation', 'Explanation', FieldKind::LongText, 'offered'],
     ],
     'MerchantReturnPolicy' => [
       'returnPolicyCategory' => ['category', '', ['MerchantReturnFiniteReturnWindow',
@@ -231,13 +232,13 @@ final readonly class ValueObjects
     ];
   }
 
-  /* One value object, flattened onto a type: one field per key, each declaring
-     the value object it came from, which key it is, and the property it arrived
-     on. The storage key is prefixed with that property and nothing reads
-     meaning back out of the prefix — `shipping_details_rate` is the
-     `shippingDetails` object because the field says so, not because it is spelt
-     that way.
-     @return list<FieldDefinition> */
+  /** One value object, flattened onto a type: one field per key, each declaring
+      the value object it came from, which key it is, and the property it arrived
+      on. The storage key is prefixed with that property and nothing reads
+      meaning back out of the prefix — `shipping_details_rate` is the
+      `shippingDetails` object because the field says so, not because it is spelt
+      that way.
+      @return list<FieldDefinition> */
   public function flatten(
     string $valueObject,
     string $property,
@@ -255,28 +256,31 @@ final readonly class ValueObjects
       $field = $holds === Cardinality::T
         ? $f->term($stored, $named, $spec[3] ?? null)->keyOf($valueObject, $key, $property)
         : $f->valueOf($valueObject, $key, $stored, $named, $holds, $property);
-      /* ‡ binds the object, not its keys: an address puts its five fields on
-         the first screen together or not at all. */
-      $field = match ($holds === Cardinality::T ? null : $spec[3] ?? null) {
+      /* ‡ on the object is ‡ on each of its keys, each a field of its own, but by
+         the mark's own test, what every house of the type adds on its first day,
+         a key marked `offered` stays behind Fields: a PO box, or a rating's
+         scale beside its stars. */
+      $mark = $holds === Cardinality::T ? null : $spec[3] ?? null;
+      $field = match ($mark) {
         'words' => $field->words(),
         'whole' => $field->whole(),
         default => $field,
       };
-      $field = $starter ? $field->starter() : $field;
+      $field = $starter && $mark !== 'offered' ? $field->starter() : $field;
       $fields[] = $computed ? $field->derivable($this->computed($valueObject)[$key]) : $field;
     }
 
     return $fields;
   }
 
-  /* The one row the type cannot answer, and what the answer needs to be worth
-     choosing: a house whose reviews are rows here computes its rating over
-     them, and one whose reviews live at a platform stores the number instead.
-     `reviewCount` counts the reviews and `ratingCount` those carrying stars,
-     since a review may be words alone and the average is over the stars.
-     `bestRating` and `worstRating` are the scale rather than the data —
-     one hop onto the reviews' own, so a computed 4.3 still says out of what.
-     @return array<string, Derivation> by the value object's key */
+  /** The one row the type cannot answer, and what the answer needs to be worth
+      choosing: a house whose reviews are rows here computes its rating over
+      them, and one whose reviews live at a platform stores the number instead.
+      `reviewCount` counts the reviews and `ratingCount` those carrying stars,
+      since a review may be words alone and the average is over the stars.
+      `bestRating` and `worstRating` are the scale rather than the data —
+      one hop onto the reviews' own, so a computed 4.3 still says out of what.
+      @return array<string, Derivation> by the value object's key */
   private function computed(string $valueObject): array
   {
     assert($valueObject === 'AggregateRating', 'the only value object a collection computes');

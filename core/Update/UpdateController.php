@@ -42,15 +42,22 @@ final readonly class UpdateController
     private Words $words,
   ) {}
 
+  /* While an install holds the lock, the press's own as a rule, since it answers before installing, the
+     screen is the waiting page: it opens the screen again until that ends, the move between. */
   public function show(Account $account, Entity $person, Request $request): Response
   {
     $this->authorizer->requireHuman(Capability::RunUpdate);
     $report = $this->check->report();
+    $busy = $this->updater->busy();
+    if ($this->enabled && $this->updater->installing()) {
+      return Response::html($this->template->render('pages/waiting', ['words' => $this->words,
+        'sentence' => $this->words->get('boot.updating')]));
+    }
     $main = $this->template->render('pages/update', ['words' => $this->words, 'report' => $report,
       'enabled' => $this->enabled, 'early' => $this->early, 'version' => Version::APP, 'key' => $this->keyId(),
       'stale' => $this->check->stale(), 'checked' => $this->when($report->checked),
       'installedAt' => $this->when($report->installedAt), 'csrf' => $this->csrf->token(),
-      'busy' => $this->updater->busy()]);
+      'busy' => $busy]);
 
     return $this->frame->around($account, $person,
       new Screen($this->words->get('update.title'), $main, FeedPanel::at($request, '/feed'), 'update'));
