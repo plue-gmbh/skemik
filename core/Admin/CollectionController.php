@@ -51,6 +51,7 @@ final readonly class CollectionController
     private Sheet $sheet,
     private SpineDialog $dialog,
     private QueryBar $bar,
+    private QueryChoices $choices,
     private MediaController $media,
     private FieldController $fields,
     private SettingStore $settings,
@@ -137,7 +138,7 @@ final readonly class CollectionController
       'parameters' => $request->query, 'narrowing' => $this->bar->narrowing($request),
       ...$this->counted($account, $collection, $query),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
-      'filters' => $this->bar->filters($account, $collection, $columns),
+      'filters' => $this->choices->filters($account, $collection, $columns),
       'named' => $this->bar->narrowed($request, $columns),
       'data' => $this->sheet->data($collection, $columns, $rows, $this->csrf->token()),
       'spine' => $this->dialog->data($collection, $rows)];

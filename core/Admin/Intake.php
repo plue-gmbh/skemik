@@ -44,10 +44,17 @@ final readonly class Intake
      file lacks is not the old one's; the name only where it is the old file's (`named`). */
   private const DESCRIBED = ['content_url', 'encoding_format', 'content_size', 'sha256', 'upload_date',
     'width', 'height'];
-  /* What a phone records, refused with the format to export it as, since a type alone sends nobody
-     anywhere; `finfo` names many an `.m4a` `video/mp4`, which is taken as the video it says. */
-  private const INSTEAD = ['video/quicktime' => 'MP4', 'image/heic' => 'JPEG', 'image/heif' => 'JPEG',
-    'audio/x-m4a' => 'MP3', 'audio/mp4' => 'MP3'];
+  /* What a phone records, refused with the format to export it as, and Office's files before 2007
+     with the one to save as, since a type alone sends nobody anywhere. */
+  private const INSTEAD = ['video/quicktime' => 'MP4', 'image/heic' => 'JPEG', 'image/heif' => 'JPEG'];
+  private const SAVE_AS = ['application/msword' => 'DOCX', 'application/vnd.ms-excel' => 'XLSX',
+    'application/vnd.ms-powerpoint' => 'PPTX'];
+  /* What `finfo` names a format by besides the type it is stored as, the name's extension choosing
+     where the sniff names two: `font/sfnt` is TrueType's and OpenType's both, and many an `.m4a` is
+     `video/mp4`. Older libmagic names some otherwise, and refuses that file until it is listed here. */
+  private const SNIFFED = ['font/sfnt' => ['font/ttf', 'font/otf'], 'application/vnd.ms-opentype' => ['font/otf'],
+    'application/x-font-ttf' => ['font/ttf'], 'application/font-woff' => ['font/woff'],
+    'audio/x-wav' => ['audio/wav'], 'audio/x-m4a' => ['audio/mp4'], 'video/mp4' => ['audio/mp4']];
 
   public function __construct(
     private EntityRepository $entities,
@@ -162,13 +169,20 @@ final readonly class Intake
   /* The sniff tells no plain text format from another, Markdown and CSV being
      plain text to it, so among those the name's extension says which: every one
      is served as a download and run by nothing, and a page sent under `.md` is
-     still sniffed as the page it is. */
+     still sniffed as the page it is. A format the sniff names otherwise is chosen
+     the same way, or taken where it names one alone. */
   private function sniffed(Upload $upload): string
   {
     $mime = (string) (new \finfo(FILEINFO_MIME_TYPE))->file($upload->path);
     $named = array_search(mb_strtolower(pathinfo($upload->name, PATHINFO_EXTENSION)), Media::FORMATS, true);
+    $texts = array_filter(array_keys(Media::FORMATS), fn (string $format): bool => str_starts_with($format, 'text/'));
+    $may = $mime === 'text/plain' ? array_values($texts) : self::SNIFFED[$mime] ?? [];
 
-    return $mime === 'text/plain' && is_string($named) && str_starts_with($named, 'text/') ? $named : $mime;
+    return match (true) {
+      in_array($named, $may, true) => (string) $named,
+      count($may) === 1 && !isset(Media::FORMATS[$mime]) => $may[0],
+      default => $mime,
+    };
   }
 
   /* A placed file whose asset was not written, so no file is left that no record holds. */
@@ -207,6 +221,7 @@ final readonly class Intake
       $upload->error !== UPLOAD_ERR_OK, !is_uploaded_file($upload->path) => $this->words->get('media.failed', $said),
       !class_exists(\finfo::class) => $this->words->get('boot.extension', ['extension' => 'fileinfo']),
       isset(self::INSTEAD[$mime]) => $this->words->get('media.instead', [...$said, 'instead' => self::INSTEAD[$mime]]),
+      isset(self::SAVE_AS[$mime]) => $this->words->get('media.save_as', [...$said, 'instead' => self::SAVE_AS[$mime]]),
       !isset(Media::FORMATS[$mime]) => $this->words->get('media.format', $said),
       $kinds !== [] && !in_array(strtok($mime, '/'), $kinds, true)
         => $this->words->get('media.no_' . $kinds[0], $said),

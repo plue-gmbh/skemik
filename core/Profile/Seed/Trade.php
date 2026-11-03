@@ -29,9 +29,9 @@ final readonly class Trade
       new TypeDefinition('Offer', Erasure::Purge, LocaleMode::Localise, Reach::Public,
         $this->offer(), $this->base->thing()),
       new TypeDefinition('Order', Erasure::Hold, LocaleMode::None, Reach::House,
-        $this->order(), $this->base->thing()),
+        $this->order(), $this->base->thing(), nameParts: ['order_number']),
       new TypeDefinition('Invoice', Erasure::Hold, LocaleMode::None, Reach::House,
-        $this->invoice(), $this->base->thing()),
+        $this->invoice(), $this->base->thing(), nameParts: ['identifier']),
     ];
   }
 
@@ -167,7 +167,8 @@ final readonly class Trade
       $f->term('payment_method', 'Payment method', 'paymentMethod'),
       $f->text('payment_method_id', 'Payment method ID'),
       $f->term('category', 'Category'),
-      $f->ref('customer', 'Customer', 'Person', 'Organization')->required(),
+      /* ‡ and not †: a small cash invoice names nobody. */
+      $f->ref('customer', 'Customer', 'Person', 'Organization')->starter(),
       /* On the first screen for the reason an order's `seller` is: the number is
          unique under it. */
       $f->ref('provider', 'Issued by', 'Organization')->starter(),

@@ -16,7 +16,7 @@ use Profile\TypeDefinition;
    sound an `AudioObject`, anything else a `MediaObject`. */
 final readonly class Media
 {
-  /* What an upload may be, by its sniffed type, and the extension its
+  /* What an upload may be, by the type it is stored as, and the extension its
      stored name gets; `mpeg` and `ogg` are sniffed as audio or video. Part of the
      profile and not a setting, so another entry is the conversation another
      `FieldKind` would be. An archive is never unpacked, so nothing inside it
@@ -25,20 +25,25 @@ final readonly class Media
      and never as the zip it is, and a macro-enabled file by its plain sibling's,
      which is the extension its download gets and under which Office runs no
      macro. Not here on purpose: HTML and XML, which a browser would run from
-     the house's domain, and what a phone records, `.mov`, HEIC and `.m4a`,
-     which browsers do not show and the preview cannot read, refused naming what
-     to export instead (`Admin\Intake`). */
+     the house's domain; what a phone records, `.mov` and HEIC, which browsers do
+     not show; and Office's files before 2007, which run macros under their plain
+     extension, each refused naming what to export or save as (`Admin\Intake`). */
   public const FORMATS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
-    'image/avif' => 'avif', 'image/gif' => 'gif', 'image/svg+xml' => 'svg', 'application/pdf' => 'pdf',
-    'video/mp4' => 'mp4', 'video/webm' => 'webm', 'audio/mpeg' => 'mp3', 'video/mpeg' => 'mpeg',
-    'audio/ogg' => 'ogg', 'video/ogg' => 'ogv', 'text/plain' => 'txt', 'text/csv' => 'csv',
-    'text/markdown' => 'md', 'text/vtt' => 'vtt', 'font/woff2' => 'woff2', 'application/zip' => 'zip',
+    'image/avif' => 'avif', 'image/gif' => 'gif', 'image/svg+xml' => 'svg', 'image/vnd.microsoft.icon' => 'ico',
+    'application/pdf' => 'pdf', 'video/mp4' => 'mp4', 'video/webm' => 'webm', 'audio/mpeg' => 'mp3',
+    'video/mpeg' => 'mpeg', 'audio/ogg' => 'ogg', 'video/ogg' => 'ogv', 'audio/mp4' => 'm4a', 'audio/wav' => 'wav',
+    'text/plain' => 'txt', 'text/csv' => 'csv', 'text/markdown' => 'md', 'text/vtt' => 'vtt',
+    'text/calendar' => 'ics', 'text/vcard' => 'vcf', 'font/woff2' => 'woff2', 'font/woff' => 'woff',
+    'font/ttf' => 'ttf', 'font/otf' => 'otf', 'application/zip' => 'zip', 'application/gzip' => 'gz',
     'application/json' => 'json',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
     'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
     'application/vnd.oasis.opendocument.text' => 'odt', 'application/vnd.oasis.opendocument.spreadsheet' => 'ods',
     'application/vnd.oasis.opendocument.presentation' => 'odp'];
+
+  /* The formats of `Profile\MediaKind::Archive`, the one kind no type's first half names. */
+  public const ARCHIVES = ['application/zip', 'application/gzip'];
 
   /* The @type an asset leaves under, by the first half of its MIME type, and
      what `Claims` checks a property against. Any other record leaves as itself. */

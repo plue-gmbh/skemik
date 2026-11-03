@@ -158,7 +158,8 @@ final readonly class Rows
   }
 
   /* The picture a screen shows for an asset, and the only one it loads: a raster
-     image's preview, an SVG itself, which runs nothing in an `<img>`, and nothing
+     image's preview, an SVG itself, which runs nothing in an `<img>`, an icon
+     itself, small, since `Support\Thumbnail` decodes none, and nothing
      for a file elsewhere, which `img-src 'self'` would refuse anyway. */
   public static function preview(Entity $asset): ?string
   {
@@ -167,7 +168,7 @@ final readonly class Rows
 
     return match (true) {
       !str_starts_with($mime, 'image/') || !str_starts_with($address, Intake::ADDRESS) => null,
-      $mime === 'image/svg+xml' => $address,
+      in_array($mime, ['image/svg+xml', 'image/vnd.microsoft.icon'], true) => $address,
       default => $address . '/thumb',
     };
   }

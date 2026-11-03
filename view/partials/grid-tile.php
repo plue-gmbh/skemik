@@ -62,8 +62,7 @@ $used = $uses[$entity?->id->value ?? ''] ?? 0;
     <span class="spine-chip is-new"><?= $template->escape($words->get('sheet.new')) ?></span>
 <?php elseif ($glance->media()): ?>
     <span class="grid-facts"><?= $template->escape($width !== null && $height !== null ? $width . '×'
-      . $height : $words->get('media.kind.' . (in_array(strtok($mime, '/'), ['image', 'video', 'audio'],
-      true) ? strtok($mime, '/') : 'document'))) ?> · <span
+      . $height : $words->get('media.kind.' . Profile\MediaKind::of($mime)->value)) ?> · <span
       class="grid-used<?= $used === 0 ? ' is-unused' : '' ?>"><?= $template->escape($used === 0
       ? $words->get('media.unused') : $words->get('media.used', ['n' => (string) $used])) ?></span></span>
 <?php endif ?>

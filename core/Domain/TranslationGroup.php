@@ -43,6 +43,25 @@ final readonly class TranslationGroup
     return $entity->translationOf ?? $entity->id;
   }
 
+  /** One record per group, for a list where naming a work names all its translations: the
+      member in the first of the locales given, else in none of them; a record that is no
+      work stands for itself.
+      @param list<Entity> $records
+      @param list<Locale> $locales the house's, in its order
+      @return list<Entity> */
+  public static function once(array $records, array $locales): array
+  {
+    $order = array_flip(array_map(fn (Locale $locale): string => $locale->tag, $locales));
+    $rank = fn (Entity $record): int => $order[$record->locale->tag] ?? count($order);
+    usort($records, fn (Entity $one, Entity $other): int => $rank($one) <=> $rank($other));
+    $kept = [];
+    foreach ($records as $record) {
+      $kept[self::rootOf($record)->value] ??= $record;
+    }
+
+    return array_values($kept);
+  }
+
   public function with(Entity $member): self
   {
     return new self($this->type, [...$this->members, $member]);

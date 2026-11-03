@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /* Above the view (`Admin\QueryBar`), one form whose fields are the address. A
-   language no row is in is not offered, and a field's group names its type
-   beside it, since a field may be called Status too. Search matches what the
+   choice no row holds is not offered, and a field called what the Status group
+   is called names its collection beside it, so the two differ. Search matches what the
    feed's `?q=` matches, so its placeholder names the collection and not a field.
    A select at its default reads as quietly as the placeholder, so what narrows or
    orders the view stands out. n of total is announced, since typing redraws the

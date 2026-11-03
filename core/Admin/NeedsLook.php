@@ -95,7 +95,7 @@ final readonly class NeedsLook
         'status=review'),
       $this->opened(Overlooked::Required, $this->unfilled($read), $collections),
       $this->counted(Overlooked::NoAlt, in_array($media, $read, true) ? $this->oversights->withoutAlt($media)
-        : [], $collections, 'encodingFormat=image'),
+        : [], $collections, 'encodingFormat=image/'),
       $this->opened(Overlooked::Dangling, $this->oversights->pointingIntoTrash($read), $collections),
       $account->can(Capability::ManageHouse) ? $this->reported() : null,
       $account->can(Capability::RunBackup) ? $this->snapshot() : null,

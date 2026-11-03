@@ -31,7 +31,7 @@ final readonly class Time
       new TypeDefinition('Event', Erasure::Purge, LocaleMode::Localise, Reach::Public,
         $this->event(), $this->base->thing()),
       new TypeDefinition('Reservation', Erasure::Hold, LocaleMode::None, Reach::House,
-        $this->reservation(), $this->base->thing()),
+        $this->reservation(), $this->base->thing(), nameParts: ['reservation_id']),
     ];
   }
 

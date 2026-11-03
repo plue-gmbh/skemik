@@ -11,6 +11,7 @@ use Admin\FieldEdits;
 use Admin\MediaController;
 use Admin\Prose;
 use Admin\QueryBar;
+use Admin\QueryChoices;
 use Admin\RecordController;
 use Admin\RecordPage;
 use Admin\RecordWords;
@@ -110,7 +111,7 @@ final readonly class Records
     $common = $this->common;
     return new CollectionController($common->collections, $common->entities, $common->authorizer,
       $common->filter, $common->named, $common->schema, $common->sheet(), $this->dialog(), $this->bar(),
-      $this->mediaController(), $this->fieldController(), $common->settings, $common->frame(),
+      $this->choices(), $this->mediaController(), $this->fieldController(), $common->settings, $common->frame(),
       $common->session, $common->reviews(), $common->keys(), $common->clock, $common->csrf,
       $common->template, $common->words, $common->rows);
   }
@@ -197,8 +198,15 @@ final readonly class Records
   {
     $common = $this->common;
     return new QueryBar($common->parameters, $common->filter, $common->authorizer, $common->entities,
-      $common->collections, $common->counts, $common->settings, $common->rows, $common->named, $common->terms,
-      $common->targets, $common->words);
+      $common->collections, $common->settings, $common->rows, $common->named, $common->terms, $common->targets,
+      $common->words);
+  }
+
+  private function choices(): QueryChoices
+  {
+    $common = $this->common;
+    return new QueryChoices($common->authorizer, $common->entities, $common->collections, $common->counts,
+      $common->settings, $common->rows, $common->named, $common->terms, $common->words);
   }
 
   private function recordWords(): RecordWords

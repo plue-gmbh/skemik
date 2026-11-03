@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.13](https://img.shields.io/badge/version-1.0.13-1f6feb)
+![Version 1.0.14](https://img.shields.io/badge/version-1.0.14-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -796,7 +796,9 @@ does not know, so a campaign's `?utm_source=` stays on the page's own address.
 
 A text matches from its start, `?name=mar` finding *Maria*, in the words the
 route shows: the English route finds a person by her English name and never by
-her German one. A link matches whole, as the record states it and without case,
+her German one. So the library's files are asked by their kind,
+`?encodingFormat=image/` finding every image, and `video/`, `audio/` and
+`font/` theirs. A link matches whole, as the record states it and without case,
 since a link names one thing and its start names many:
 `?url=https://www.example.com` finds the site stating that address and not the
 one stating `https://www.example.com/en`. An edge is named as a document names
@@ -959,7 +961,9 @@ beside its file, as `multipart/form-data` with the document in a `document` part
 and the bytes in a `file` part: the file says its own address, format, size and
 pixels, so the copy's `contentUrl` names the new file. A person's `name` is made
 from `givenName` and `familyName` where those are sent and no name is, and
-follows a new `familyName` until a name is typed, which then stands.
+follows a new `familyName` until a name is typed, which then stands. An
+order's, an invoice's and a reservation's `name` is made the same way from its
+`orderNumber`, `identifier` and `reservationId`.
 
 - **Nothing to learn but the feed's own shapes.** A nested record, a bare
   `{"@id": …}` and a term's code in the field's set all name a target, and
