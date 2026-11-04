@@ -49,7 +49,6 @@ final readonly class HomeController
     private FileCheck $files,
     private ErrorLog $errors,
     private ?Smtp $relay,
-    private Premises $premises,
     private Probes $probes,
   ) {}
 
@@ -92,19 +91,24 @@ final readonly class HomeController
   /** @return array<string, string|bool|Health|null> the Settings card's rows, each status row with its health */
   private function settingsCard(Account $account): array
   {
-    $errors = $account->can(Capability::ReadLog);
+    [$errors, $slowed] = [$account->can(Capability::ReadLog), $this->probes->costs() !== []];
 
-    return ['timezone' => $this->settings->timezone()->getName(), 'language' => $this->adminLanguage(),
-      'address' => $this->premises->address, 'mail' => $this->mail(),
-      'contact' => $this->premises->securityContact, 'note' => $this->premises->loginNote,
-      'link' => $this->premises->loginLink,
+    return ['general' => $this->general($slowed), 'generalHealth' => $slowed ? Health::Blocked : null,
       'backups' => $this->backups(), 'backupsHealth' => $this->backupsHealth(),
       'files' => $this->shipped(), 'filesHealth' => $this->shippedHealth(),
       'updates' => $account->can(Capability::RunUpdate),
       'errors' => $errors ? $this->failing() : null, 'errorsHealth' => $errors ? $this->errorsHealth() : null];
   }
 
-  /* The Settings card's admin language row, named in the reader's own: `/install` always sets one. */
+  /* The Settings card's general row: the timezone, the admin language and how mail leaves, then that the host
+     slows every answer where it does, which the screen behind the row names. */
+  private function general(bool $slowed): string
+  {
+    return implode(' · ', array_filter([$this->settings->timezone()->getName(), $this->adminLanguage(),
+      $this->mail(), $slowed ? $this->words->get('home.general_slowed') : null]));
+  }
+
+  /* The Settings card's admin language, named in the reader's own: `/install` always sets one. */
   private function adminLanguage(): string
   {
     $chosen = $this->settings->chromeLocale();
@@ -112,8 +116,7 @@ final readonly class HomeController
     return $chosen === null ? '—' : mb_ucfirst(\Locale::getDisplayLanguage($chosen->tag, $this->words->language));
   }
 
-  /* The Settings card's mail half: the sender of the relay `config.php` names, never its login, else the host's
-     `mail()`. */
+  /* How mail leaves: the sender of the relay `config.php` names, never its login, else the host's `mail()`. */
   private function mail(): string
   {
     return $this->relay === null ? $this->words->get('home.mail_host') : $this->relay->sender;
@@ -130,7 +133,7 @@ final readonly class HomeController
     return $this->backup->report()?->failed === null ? Health::Ok : Health::Failing;
   }
 
-  /* The Settings card's files row: the release that runs, how the daily run last found its files and the
+  /* The Settings card's updates row: the release that runs, how the daily run last found its files and the
      release that could not be installed, which the screen behind the row explains. */
   private function shipped(): string
   {

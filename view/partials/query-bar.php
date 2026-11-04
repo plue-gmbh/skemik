@@ -89,5 +89,5 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
     <input type="hidden" name="sort" value="<?= $template->escape($sort) ?>" data-query-sort-value>
   </span>
   <span class="query-count" role="status" data-query-count><?= $narrowed ? $template->escape($words->get('query.count',
-    ['n' => (string) $total, 'total' => (string) $all])) : '' ?></span>
+    ['n' => $words->number($total), 'total' => $words->number($all)])) : '' ?></span>
 </form>

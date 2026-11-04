@@ -22,7 +22,7 @@ if ($pointers === []) {
   <section class="record-card side-card" aria-labelledby="pointers-title">
     <h2 class="side-card-title" id="pointers-title"><?= $template->escape($words->get('record.pointers')) ?></h2>
     <p class="side-card-sub"><?= $template->escape($words->get('record.pointers_count',
-      ['n' => (string) $pointing])) ?></p>
+      ['n' => $words->number($pointing)])) ?></p>
     <ul class="record-rows">
 <?php foreach ($pointers as $pointer):
   $languages = '';

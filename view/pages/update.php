@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-/* The update screen (`Update\UpdateController`): the running version, whether
-   releases are installed automatically, early, or declined in config.php, when the
+/* The update screen (`Update\UpdateController`): the running version, when the
    install last checked or that it could not, the last release installed
    automatically and whether it was a security release, the release that cannot be
    installed with the reason and the copy by hand named, and last the key
@@ -11,7 +10,9 @@ declare(strict_types=1);
    The check is red once a day passed without one (`UpdateCheck::stale`), and
    may be asked for now rather than within the hour, unless a snapshot or a restore
    holds the lock, which the button waits out; while its own release installs the
-   screen is the waiting page instead (`Update\UpdateController`). */
+   screen is the waiting page instead (`Update\UpdateController`). Beside the
+   button the choice `config.php` keeps, a switch for installing by itself and,
+   while that is on, one for doing so early (`partials/setting-switch`). */
 
 if (!isset($template)) {
   return;
@@ -20,24 +21,34 @@ if (!isset($template)) {
 <div class="page update-page">
   <header class="page-head">
     <h1><?= $template->escape($words->get('update.title')) ?></h1>
-    <p class="page-shape"><?= $template->escape($words->get(match (true) {
-      !$enabled => 'update.declined',
-      $early => 'update.early',
-      default => 'update.explain',
-    }, ['version' => $version])) ?></p>
+    <p class="page-shape"><?= $template->escape($words->get('update.running', ['version' => $version])) ?></p>
   </header>
 <?php if ($report->refused !== null): ?>
   <p class="page-note is-refused"><?= $template->escape($words->get($report->again ? 'update.refused_again'
     : 'update.refused', ['version' => $report->refused, 'reason' => $report->reason ?? ''])) ?></p>
 <?php endif ?>
-  <form class="update-check" method="post" action="/settings/update/check">
-    <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-    <button type="submit" class="button-secondary"<?= $busy ? ' disabled' : '' ?>><?= $template->escape(
-      $words->get('update.check_now')) ?></button>
-<?php if ($busy): ?>
-    <p class="page-note"><?= $template->escape($words->get('update.check_busy')) ?></p>
+  <div class="settings-actions">
+    <form method="post" action="/settings/update/check">
+      <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+      <button type="submit" class="button-secondary"<?= $busy ? ' disabled' : '' ?>><?= $template->escape(
+        $words->get('update.check_now')) ?></button>
+    </form>
+<?php $unwritable = $switchable ? null : 'update-unwritable' ?>
+<?= $template->render('partials/setting-switch', ['action' => '/settings/update/mode', 'name' => 'updates',
+  'value' => $enabled ? 'off' : 'on', 'on' => $enabled, 'label' => $words->get('update.automatic'), 'csrf' => $csrf,
+  'unwritable' => $unwritable]) ?>
+<?php if ($enabled): ?>
+<?= $template->render('partials/setting-switch', ['action' => '/settings/update/mode', 'name' => 'updates',
+  'value' => $early ? 'on' : 'early', 'on' => $early, 'label' => $words->get('update.early_switch'),
+  'csrf' => $csrf, 'unwritable' => $unwritable]) ?>
 <?php endif ?>
-  </form>
+  </div>
+<?php if (!$switchable): ?>
+  <p class="popover-hint" id="update-unwritable"><?= $template->escape($words->get('general.unwritable')) ?></p>
+<?php endif ?>
+<?php if ($busy): ?>
+  <p class="page-note"><?= $template->escape($words->get('update.check_busy')) ?></p>
+<?php endif ?>
   <ul class="record-rows">
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('update.check')) ?></span>

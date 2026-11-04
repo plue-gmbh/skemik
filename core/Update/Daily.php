@@ -10,8 +10,8 @@ use Support\Clock;
 /* The snapshot nobody asks for: one a day, on the first request of the day as
    the house lives it, after the answer has left and under a lock, there being
    no daemon and no cron to set up. Where it will not fit the window shrinks
-   before the day is lost: the weekly rungs go first, then the dailies to three,
-   and the three newest are never deleted to make room. What it did is the
+   before the day is lost: the weekly rungs go first, then the days to three,
+   and what three days keep is never deleted to make room. What it did is the
    report beside the snapshots, written before the attempt as well, so a disk
    that takes no report is asked once a request and not for a copy; the backups
    screen and Needs a look read it, which makes a daily failing for three weeks a

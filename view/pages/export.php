@@ -25,9 +25,9 @@ if (!isset($template)) {
 <?php if ($unfit !== null): ?>
   <p class="page-note is-refused"><?= $template->escape($unfit) ?></p>
 <?php else: ?>
-  <form method="post" action="/export">
+  <form class="export-take" method="post" action="/export">
     <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-    <button type="submit" class="button-secondary trash-back"
+    <button type="submit" class="button-secondary"
       data-download><?= $template->escape($words->get('export.take')) ?></button>
   </form>
 <?php endif ?>
@@ -46,11 +46,12 @@ if (!isset($template)) {
 <?php endif ?>
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('export.records')) ?></span>
-      <span class="record-row-note" data-export="records"><?= $size->records ?></span>
+      <span class="record-row-note"
+        data-export="records"><?= $template->escape($words->number($size->records)) ?></span>
     </li>
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('export.files')) ?></span>
-      <span class="record-row-note" data-export="files"><?= $size->files ?></span>
+      <span class="record-row-note" data-export="files"><?= $template->escape($words->number($size->files)) ?></span>
     </li>
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('export.size')) ?></span>

@@ -37,8 +37,9 @@ final readonly class Dispatch
         => $records->media($route),
       Endpoint::AccountCreate, Endpoint::AccountEdit, Endpoint::AccountRemove, Endpoint::TokenIssue,
         Endpoint::TokenRuleRemove, Endpoint::TokenRevoke, Endpoint::LocaleAdd, Endpoint::LocaleOrder,
-        Endpoint::LocaleRemove, Endpoint::Backups, Endpoint::BackupTake, Endpoint::BackupRestore,
-        Endpoint::BackupDownload, Endpoint::Update, Endpoint::UpdateCheck, Endpoint::Errors, Endpoint::Checks
+        Endpoint::LocaleRemove, Endpoint::General, Endpoint::GeneralSave, Endpoint::Backups,
+        Endpoint::BackupTake, Endpoint::BackupRestore, Endpoint::BackupDownload, Endpoint::BackupDaily,
+        Endpoint::Update, Endpoint::UpdateCheck, Endpoint::UpdateMode, Endpoint::Errors, Endpoint::Checks
         => (new Settings($this->common))->answer($route),
       Endpoint::FeedCatalog, Endpoint::FeedLocale, Endpoint::FeedProfile, Endpoint::FeedCollection,
         Endpoint::FeedRecord, Endpoint::IngestCreate, Endpoint::IngestPatch, Endpoint::IngestArrange,

@@ -57,16 +57,18 @@ final readonly class Updater
   }
 
   /* Asked for on the update screen, whatever the hour: the check answers before the
-     page does, so the page names what it found, and the install runs after it as the
-     hourly one does. A day the manifest holds back is held to as it is every hour. */
-  public function asked(Response $response): Response
+     page does, so the page names what it found, or is the waiting page where it found a
+     release, since the install runs after it as the hourly one does and has not taken
+     the lock yet when the page is asked for again. A day the manifest holds back is
+     held to as it is every hour. */
+  public function asked(Response $checked, Response $installing): Response
   {
     $found = null;
     $this->backup->locked(function () use (&$found): void {
       $found = $this->checked();
     });
 
-    return $found === null ? $response : $response->after(function () use ($found): void {
+    return $found === null ? $checked : $installing->after(function () use ($found): void {
       $this->backup->locked(fn () => $this->attempted($found));
     });
   }

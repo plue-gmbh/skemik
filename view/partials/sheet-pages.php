@@ -17,8 +17,8 @@ if ($last === 1) {
 }
 ?>
 <nav class="sheet-pages" aria-label="<?= $template->escape($words->get('sheet.pages')) ?>">
-  <span><?= $template->escape($words->get('sheet.count', ['from' => (string) min($total, $offset + 1),
-    'to' => (string) min($total, $offset + $shown), 'total' => (string) $total])) ?></span>
+  <span><?= $template->escape($words->get('sheet.count', ['from' => $words->number(min($total, $offset + 1)),
+    'to' => $words->number(min($total, $offset + $shown)), 'total' => $words->number($total)])) ?></span>
 <?php if ($page > 1): ?>
   <a href="<?= $template->escape($address($page - 1)) ?>"><?= $template->escape($words->get('sheet.previous')) ?></a>
 <?php endif ?>

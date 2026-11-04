@@ -7,6 +7,7 @@ namespace Feed;
 use Domain\Exceptions\AskedTooMuch;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
+use Domain\Status;
 use Http\Request;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
@@ -22,13 +23,15 @@ use Support\Clock;
    silence, so `,` is the one spelling of *any of*. A year, month or day on an
    instant is read here as the house's, the one place the zone is known. A field
    withheld from this reader is refused in the words of one the type lacks, since
-   a filter answering to it reads the value out a guess at a time. There is no
-   status parameter: what may be read is `PublicFilter`'s. A list whose
+   a filter answering to it reads the value out a guess at a time. A status asks
+   among what `PublicFilter` lets this reader read, so a stranger's drafts are
+   nothing to read, and is the one way a key reading past the published tells
+   them apart, since a document never says it. A list whose
    membership follows from a predicate is this query, and one somebody chose and
    ordered is an `ItemList` record. */
 final readonly class FeedRequest
 {
-  private const PARAMETERS = ['sort', 'q', 'page', 'per_page', 'render'];
+  private const PARAMETERS = ['sort', 'q', 'page', 'per_page', 'render', 'status'];
 
   private const PERIOD = '/^\d{4}(-\d{2}){0,2}$/';
   private const STEPS = [4 => '+1 year', 7 => '+1 month', 10 => '+1 day'];
@@ -56,7 +59,7 @@ final readonly class FeedRequest
     }
     $sort = (string) $request->query('sort');
 
-    return new Query($read->type, $filters, [], $locale,
+    return new Query($read->type, $filters, $this->statuses($request), $locale,
       $sort === '' ? null : $this->key($read, ltrim($sort, '-')), str_starts_with($sort, '-'),
       (string) $request->query('q'), $this->number($request->query('page'), 1),
       $this->number($request->query('per_page'), Query::PER_PAGE),
@@ -140,6 +143,15 @@ final readonly class FeedRequest
     $next = $this->clock->dayStart($day->modify(self::STEPS[strlen($end)])->format('Y-m-d'));
 
     return (new \DateTimeImmutable($next))->modify('-1 second')->format(Clock::STORED);
+  }
+
+  /** @return list<Status> none for every status this reader reads */
+  private function statuses(Request $request): array
+  {
+    $asked = $request->query('status');
+
+    return $asked === null ? [] : array_map(fn (string $one): Status => Status::tryFrom($one)
+      ?? throw MalformedValue::named('status, draft, review, published or archived', $one), explode(',', $asked));
   }
 
   /* An unreadable number is a zero and `Storage\Query` refuses it by name, so

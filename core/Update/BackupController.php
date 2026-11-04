@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Update;
 
+use Admin\ConfigFile;
 use Admin\DataLayout;
 use Admin\FeedPanel;
 use Admin\Frame;
@@ -28,7 +29,8 @@ use Support\ZipFailed;
    it was taken, what for, its size and its path, since an operator whose next
    move is to fetch one over SFTP should not have to guess where it went;
    above them whether the daily ones run and what the last daily run left where
-   it went wrong. A snapshot taken here is thinned like a daily one, and the
+   it went wrong, and the switch for the daily ones, which is `config.php`'s,
+   disabled where PHP may not write that. A snapshot taken here is thinned like a daily one, and the
    restore stands behind a dialog saying what one is. The download is the one
    copy off the server a house without SFTP has: a zip that unpacked into
    `backups/` is the snapshot again. From a gigabyte the screen says to use SFTP,
@@ -44,6 +46,7 @@ final readonly class BackupController
     private Backup $backup,
     private Restore $restore,
     private Zip $box,
+    private ConfigFile $config,
     private Frame $frame,
     private Session $session,
     private Csrf $csrf,
@@ -59,7 +62,7 @@ final readonly class BackupController
     $main = $this->template->render('pages/backups', ['words' => $this->words, 'daily' => $this->backup->daily,
       'report' => $this->backup->report(), 'rows' => array_map($this->row(...), $this->backup->list()),
       'notice' => $this->session->take('backups'), 'refusal' => $this->session->take('backups-refused'),
-      'csrf' => $this->csrf->token()]);
+      'switchable' => $this->config->writable(), 'csrf' => $this->csrf->token()]);
 
     return $this->frame->around($account, $person,
       new Screen($this->words->get('backups.title'), $main, FeedPanel::at($request, '/feed')));
@@ -75,6 +78,16 @@ final readonly class BackupController
     } catch (SnapshotFailed $failure) {
       return $this->refused($this->words->get('backups.refused', ['reason' => $failure->getMessage()]));
     }
+
+    return Response::redirect('/settings/backups');
+  }
+
+  /* Read on the next request, which builds `Backup` from the file again. */
+  public function daily(Request $request): Response
+  {
+    $this->csrf->require($request);
+    $this->authorizer->requireHuman(Capability::RunBackup);
+    $this->config->change(['daily_backups' => $request->form('daily') === 'on']);
 
     return Response::redirect('/settings/backups');
   }

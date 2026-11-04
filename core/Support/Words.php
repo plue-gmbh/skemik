@@ -75,10 +75,17 @@ final readonly class Words
     $few = $n !== 1 && \MessageFormatter::formatMessage($this->language, self::FORMS, ['n' => $n]) === 'few';
     $worded = $few ? $this->words[$group . '.few.' . $noun] ?? null : null;
     if ($worded !== null) {
-      return strtr($worded, ['{n}' => (string) $n]);
+      return strtr($worded, ['{n}' => $this->number($n)]);
     }
 
-    return $this->get($group . '.' . ($n === 1 ? 'one' : 'many') . '.' . $noun, ['n' => (string) $n]);
+    return $this->get($group . '.' . ($n === 1 ? 'one' : 'many') . '.' . $noun, ['n' => $this->number($n)]);
+  }
+
+  /* A count, grouped from four digits on, so a column of them reads 1.000 beside 12.000;
+     a value's number, which may be a year, is `Admin\Cells`'s. */
+  public function number(int $count): string
+  {
+    return (string) (new \NumberFormatter($this->language, \NumberFormatter::DECIMAL))->format($count);
   }
 
   /* The same chrome in another language, a content locale's: what a feed

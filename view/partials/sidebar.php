@@ -39,7 +39,7 @@ if (!isset($template)) {
         class="visually-hidden"><?= $template->escape($words->get('sidebar.served',
         ['address' => '/feed/' . $locale . '/' . $entry->slug])) ?></span></span>
 <?php endif ?>
-      <span class="sidebar-count"><?= $entry->count ?></span>
+      <span class="sidebar-count"><?= $template->escape($words->number($entry->count)) ?></span>
     </a></li>
 <?php endforeach ?>
   </ul>

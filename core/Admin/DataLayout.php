@@ -97,28 +97,22 @@ final readonly class DataLayout
     return $data;
   }
 
-  /* Written under a `.php` name and renamed, so no half-written file is ever
-     read and the draft beside it is never served as text, and readable by PHP
-     alone before it has its name, since a relay's password is typed into it.
-     The address is the one this run is proven under, kept for what the install
-     says outside a request; every other key stands at what its absence means,
-     so an operator fills one in rather than looks up its name. */
+  /* Written as the general screen writes it (`ConfigFile`). The address is the
+     one this run is proven under, kept for what the install says outside a
+     request; every other key stands at what its absence means, so an operator
+     fills one in rather than looks up its name. */
   public function writeConfig(Premises $premises): void
   {
-    $path = $this->root . '/config.php';
-    if (file_exists($path)) {
+    $config = new ConfigFile($this->root);
+    if (file_exists($config->path())) {
       throw InstallRefused::because($this->words->get('install.refused.config_taken'));
     }
     $sentinel = bin2hex(random_bytes(16));
-    $draft = $this->root . '/config-' . bin2hex(random_bytes(8)) . '.php';
-    file_put_contents($draft, "<?php\n\nreturn " . var_export(['data' => $premises->data,
-      'address' => $premises->address, 'sentinel' => $sentinel,
+    $config->write(['data' => $premises->data, 'address' => $premises->address, 'sentinel' => $sentinel,
       'relay' => ['host' => '', 'port' => 587, 'user' => '', 'password' => '', 'sender' => ''],
       'daily_backups' => $premises->dailyBackups, 'updates' => $premises->updates,
       'security_contact' => $premises->securityContact,
-      'login_note' => $premises->loginNote, 'login_link' => $premises->loginLink], true) . ";\n");
-    chmod($draft, 0600);
-    rename($draft, $path);
+      'login_note' => $premises->loginNote, 'login_link' => $premises->loginLink]);
     $this->proveHidden($premises->address . '/config.php', $sentinel, $premises->data);
   }
 

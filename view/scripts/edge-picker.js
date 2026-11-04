@@ -41,8 +41,7 @@ const edgePicker = {
   data() {
     const items = (this.value ?? []).map((item) => (item.qualifiers
       ? { ...item, qualifiers: { ...item.qualifiers } } : { ...item }));
-    const opened = new Set(items.filter((item) => Object.keys(item.qualifiers ?? {}).length > 0));
-    return { items, opened, typed: "", hits: [], asked: false, unanswered: "", sending: false, refused: "" };
+    return { items, opened: new Set(), typed: "", hits: [], asked: false, unanswered: "", sending: false, refused: "" };
   },
   computed: {
     offered() {
@@ -78,6 +77,11 @@ const edgePicker = {
     speaks(item) { return Object.keys(this.linesOf(item)).length > 0; },
     shows(item) { return this.speaks(item) && (this.fixed || this.opened.has(item)); },
     toggle(item) { this.opened.has(item) ? this.opened.delete(item) : this.opened.add(item); },
+    saying(item) { return Object.values(said(item.qualifiers ?? {}, this.linesOf(item))).join(" · "); },
+    pencil(item) {
+      const saying = this.saying(item);
+      return saying === "" ? this.words["picker.says"] : this.words["picker.says"] + ": " + saying;
+    },
     async find() {
       const typed = this.typed;
       if (this.waits) return ([this.hits, this.asked] = [[], false]);

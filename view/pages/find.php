@@ -26,7 +26,7 @@ $row = fn (Admin\Found $found): string => sprintf('<li><a class="record-row" hre
       $asked === '' => 'find.explain',
       $total + count($lines) === 0 => 'find.none',
       default => 'find.count',
-    }, ['q' => $asked, 'n' => (string) $total])) ?></p>
+    }, ['q' => $asked, 'n' => $words->number($total)])) ?></p>
   </header>
 <?php if ($asked === ''): ?>
   <p class="sheet-empty"><?= $template->escape($words->get('find.empty')) ?></p>
@@ -40,8 +40,8 @@ $row = fn (Admin\Found $found): string => sprintf('<li><a class="record-row" hre
   </ul>
 <?php if ($group->more > 0): ?>
   <p class="find-more"><a href="<?= $template->escape($group->href) ?>"><?= $template->escape($words->get(
-    $group->capped ? 'find.more_capped' : 'find.more', ['n' => (string) $group->more, 'collection' => $group->name]))
-    ?></a></p>
+    $group->capped ? 'find.more_capped' : 'find.more', ['n' => $words->number($group->more),
+    'collection' => $group->name])) ?></a></p>
 <?php endif ?>
 <?php endforeach ?>
 <?php if ($lines !== []): ?>

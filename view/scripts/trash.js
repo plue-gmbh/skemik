@@ -34,8 +34,8 @@ function mountTrash(area) {
 
 function counted(count, n) {
   count.title = fill(count.dataset.long, { n });
-  count.querySelector(".ticked-short").textContent = fill(count.dataset.short, { n });
-  count.querySelector(".ticked-long").textContent = count.title;
+  count.querySelector(".word-short").textContent = fill(count.dataset.short, { n });
+  count.querySelector(".word-long").textContent = count.title;
   return count.title;
 }
 

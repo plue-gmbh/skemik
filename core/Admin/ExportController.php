@@ -176,7 +176,7 @@ final readonly class ExportController
     }
 
     return $this->words->get('export.unfit', ['size' => Intake::size($this->weight($size)),
-      'free' => (string) intdiv($free, 1_000_000)]);
+      'free' => $this->words->number(intdiv($free, 1_000_000))]);
   }
 
   private function weight(DumpSize $size): int

@@ -22,7 +22,7 @@ use Update\Version;
    came back, since a host that cannot reach itself says nothing about the folder.
    Free space halts nothing, reads still working: it is a line in the admin, as
    is a release that cannot be installed by itself (`Update\UpdateCheck`), the
-   header's mark on every page. A restore under way halts every request until
+   header's mark on every page, and what slows every answer (`costs`). A restore under way halts every request until
    it is done (`Update\Restore`). */
 final readonly class Probes
 {
@@ -65,16 +65,24 @@ final readonly class Probes
     return $failed === null ? null : new Halt($this->words->get($failed));
   }
 
+  /** What `/install` named as slowing every answer and refusing nothing, asked on every visit, since a hoster
+      changes it under a running install and `ini_get` is free.
+      @return list<Requirement> only those that cost */
+  public function costs(): array
+  {
+    return array_values(array_filter($this->layout->costs(), fn (Requirement $cost): bool => !$cost->met));
+  }
+
   /* Read on every admin screen, since a disk fills between two hours as easily as within one. */
   public function space(): string
   {
     $free = DataLayout::free($this->data);
 
     return $free === null || $free >= DataLayout::FREE_BYTES ? ''
-      : $this->words->get('frame.space', ['free' => (string) intdiv($free, 1_000_000)]);
+      : $this->words->get('frame.space', ['free' => $this->words->number(intdiv($free, 1_000_000))]);
   }
 
-  /* The sentence the Settings card's files row is marked by, or null while every release could be installed. */
+  /* The sentence the Settings card's updates row is marked by, or null while every release could be installed. */
   public function update(): ?string
   {
     $refused = $this->updates->report()->refused;

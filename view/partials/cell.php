@@ -10,8 +10,8 @@ declare(strict_types=1);
    which links each target. A list of them shows and numbers every one, since a
    member behind a count is one nobody checks; one that is gone and one the
    reader may not see are both ⇢ missing; an image's chip is its preview and its
-   file name, and what an edge says of its target stands beside it
-   (`Admin\Cells`). Empty is — for every kind. A Markdown field's links to
+   file name, and what an edge says of its target stands inside its chip, so in
+   a list it reads as that member's (`Admin\Cells`). Empty is — for every kind. A Markdown field's links to
    records are counted here and drawn as chips on the record screen (`Admin\Prose`). */
 
 use Profile\FieldKind;
@@ -36,9 +36,9 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 
   $said = $said === '' ? '' : '<span class="chip-says">' . $template->escape($said) . '</span>';
 
-  return sprintf('<%s class="chip" title="%s">%s%s%s</%s>%s%s',
+  return sprintf('<%s class="chip" title="%s">%s%s%s%s</%s>%s',
     $tag, $template->escape($chip->title), $mark, $picture,
-    $template->escape($chip->label), $link ? 'a' : 'span', $noAlt, $said);
+    $template->escape($chip->label), $said, $link ? 'a' : 'span', $noAlt);
 };
 ?>
 <?php if ($empty): ?>

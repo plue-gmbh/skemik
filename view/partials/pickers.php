@@ -6,18 +6,17 @@ declare(strict_types=1);
    components in `view/scripts/pickers.js`, a reference's in `edge-picker.js`
    and a link's in `file-picker.js`, whose library search the list and the rows
    share: a key taking a file offers the library's files beneath the address
-   typed, each pick writing the file's path.
-   A reference picks a record of the collections the field points at, each
-   target it holds a link to its record, since the cell it opened from is none.
-   A term field searches its own set alone, and a word it lacks becomes a term
-   on save. Beside a reference's target the pencil opens what the edge says of
-   it under schema.org's names, `position` being no line since it is the list's
-   order. A value object's keys stand under their schema.org names, since the
-   profile gives a repeated object's keys no words of their own, and a key on a
-   closed list is a select of its tokens' words, a held value outside the list
-   offered as it stands, so opening a row never rewrites it. Every hit passes
-   the reader's scope, as `/search`'s do. A file field's Upload sits in the foot,
-   as a picture is added after the search has not found it. */
+   typed, each pick writing the file's path. A reference picks a record of the
+   collections the field points at, each target it holds a link to its record,
+   since the cell it opened from is none. A term field searches its own set
+   alone, and a word it lacks becomes a term on save. A target's pencil, lit
+   where the edge says something, opens it under schema.org's names, closed so a
+   list stays a list. A value object's keys stand under their schema.org names,
+   since the profile gives a repeated object's keys no words of their own, and a
+   key on a closed list is a select of its tokens' words, a held value outside
+   the list offered as it stands, so opening a row never rewrites it. Every hit
+   passes the reader's scope, as `/search`'s do. A file field's Upload sits in
+   the foot, as a picture is added after the search has not found it. */
 
 if (!isset($template)) {
   return;
@@ -35,8 +34,8 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
               class="chip-preview" :src="item.preview" alt="">{{ item.gone ? words['cell.gone'] : item.label }}
           </component>
           <span class="picker-tools" v-if="!fixed">
-            <button v-if="speaks(item)" type="button" class="picker-tool" :title="words['picker.says']"
-              :aria-label="words['picker.says']" :aria-expanded="shows(item) ? 'true' : 'false'"
+            <button v-if="speaks(item)" type="button" class="picker-tool" :class="{ 'is-said': saying(item) }"
+              :title="pencil(item)" :aria-label="pencil(item)" :aria-expanded="shows(item) ? 'true' : 'false'"
               @click="toggle(item)"><?= $icon('edit') ?></button>
             <button type="button" class="picker-tool" :title="words['picker.up']" :aria-label="words['picker.up']"
               :disabled="index === 0" @click="move(index, -1)"><?= $icon('up') ?></button>
@@ -62,7 +61,8 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             alt="">{{ items[0].gone ? words['cell.gone'] : items[0].label }}
         </component>
         <span class="picker-tools" v-if="!fixed && speaks(items[0])">
-          <button type="button" class="picker-tool" :title="words['picker.says']" :aria-label="words['picker.says']"
+          <button type="button" class="picker-tool" :class="{ 'is-said': saying(items[0]) }"
+            :title="pencil(items[0])" :aria-label="pencil(items[0])"
             :aria-expanded="shows(items[0]) ? 'true' : 'false'" @click="toggle(items[0])"><?= $icon('edit') ?></button>
         </span>
       </div>

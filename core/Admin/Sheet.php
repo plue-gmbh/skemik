@@ -34,9 +34,9 @@ use Support\Words;
    the chrome's, handed over here, never a literal in `view/scripts/app.js`. */
 final readonly class Sheet
 {
-  private const ISLAND_WORDS = ['sheet.pending', 'sheet.discard', 'sheet.save', 'sheet.saved', 'sheet.discarded',
-    'sheet.conflict', 'sheet.reload', 'sheet.overwrite', 'sheet.refused', 'sheet.failed', 'sheet.saving',
-    'sheet.empty_option', 'sheet.term_hint', 'sheet.date_shape', 'sheet.unit', 'sheet.amount',
+  private const ISLAND_WORDS = ['sheet.pending', 'sheet.discard', 'sheet.save', 'sheet.save_short', 'sheet.saved',
+    'sheet.discarded', 'sheet.conflict', 'sheet.reload', 'sheet.overwrite', 'sheet.refused', 'sheet.failed',
+    'sheet.saving', 'sheet.empty_option', 'sheet.term_hint', 'sheet.date_shape', 'sheet.unit', 'sheet.amount',
     'cell.yes', 'cell.no', 'duration.unit.Y', 'duration.unit.M', 'duration.unit.W', 'duration.unit.D',
     'duration.unit.H', 'duration.unit.m', 'duration.unit.S', 'duration.years', 'duration.months', 'duration.weeks',
     'duration.days', 'duration.hours', 'duration.minutes', 'duration.seconds', 'record.link_insert',

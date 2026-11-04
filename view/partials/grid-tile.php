@@ -64,7 +64,7 @@ $used = $uses[$entity?->id->value ?? ''] ?? 0;
     <span class="grid-facts"><?= $template->escape($width !== null && $height !== null ? $width . '×'
       . $height : $words->get('media.kind.' . Profile\MediaKind::of($mime)->value)) ?> · <span
       class="grid-used<?= $used === 0 ? ' is-unused' : '' ?>"><?= $template->escape($used === 0
-      ? $words->get('media.unused') : $words->get('media.used', ['n' => (string) $used])) ?></span></span>
+      ? $words->get('media.unused') : $words->get('media.used', ['n' => $words->number($used)])) ?></span></span>
 <?php endif ?>
 <?php foreach ($glance->shown(2, $row === null) as $column): ?>
     <?= $cell($column, $alt && $column->field->key === 'description' ? $words->get('media.alt') : $column->label) ?>

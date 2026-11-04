@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.14](https://img.shields.io/badge/version-1.0.14-1f6feb)
+![Version 1.0.15](https://img.shields.io/badge/version-1.0.15-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -304,16 +304,20 @@ region writes them, *€ 1.234,50* in `de-AT`.
 
 - **The first login code** is mailed and always also written to `login/` in the
   data folder, so a host whose mail does not work still lets you in. Where the
-  host's `mail()` delivers nothing, name a relay in `config.php`: `'relay' =>
-  ['host' => …, 'port' => 587, 'user' => …, 'password' => …, 'sender' => …]`.
-  It must offer STARTTLS; implicit TLS on 465 is not spoken.
+  host's `mail()` delivers nothing, name a relay on the general screen, or in
+  `config.php` as `'relay' => ['host' => …, 'port' => 587, 'user' => …,
+  'password' => …, 'sender' => …]`. It must offer STARTTLS; implicit TLS on
+  465 is not spoken. The screen tests a relay before it keeps one, connecting,
+  encrypting and logging in with no mail sent, and refuses one that fails,
+  naming why; its password is never shown again, and stays as it was while
+  the host and the user do.
 
 - **A line of the organisation's own under the login form**, for whoever lands
-  there without an account: `'login_note' => 'No account? Ask here'` in
-  `config.php`, the whole line a link where `'login_link' => 'https://…'` stands
-  beside it. It is shown as written on the first step of the login, where the
-  address is asked, and the home screen's Settings card names it; without it the
-  page says nothing but Skemik's name.
+  there without an account, typed on the general screen or as `'login_note' =>
+  'No account? Ask here'` in `config.php`, the whole line a link where
+  `'login_link' => 'https://…'` stands beside it. It is shown as written on the
+  first step of the login, where the address is asked, and on the general
+  screen; without it the page says nothing but Skemik's name.
 
 - **Apache reads the shipped `.htaccess`** and needs `mod_rewrite` and an
   `AllowOverride` of at least `FileInfo` and `AuthConfig`. Where `/install`
@@ -342,18 +346,37 @@ uploads. Beside it stands what is derived or must not survive a restore:
 `holdings/` is a backup and a move to another host; the rest is rebuilt or, for
 a login code and a session, rightly gone.
 
+**The owner's general screen** opens from the first row of the home screen's
+Settings card and saves two kinds of setting, saying which is which: the
+timezone and the admin's language, kept in the database and so in every
+snapshot, and the relay, the security contact and the line under the login
+form, written into `config.php`, which belongs to the machine, so a restore on
+another host arrives without a relay. Every other key of `config.php` stays as
+it was, and a comment written there does not. The install's address is shown
+there and never changed, since a slip would send every login mail to another
+domain: whoever moves the domain changes it in `config.php`. Where PHP may not
+write the domain root, the screen shows what `config.php` holds and changes
+none of it, and the switches on the backups and update screens are disabled.
+Beside them it names what the host sets and nothing there changes: the largest
+upload it takes, and each of the three settings *Requirements* names as costing
+time or giving something away, asked again on every visit, since a host
+changes them under a running install; while one does, the Settings card's row
+for the screen is marked.
+
 **One snapshot a day is taken automatically**, on the first request of the day
 in the install's timezone, with no daemon and no cron to set up: the database
 settled into one file by `VACUUM INTO`, never a copy of the live WAL, and the
-media tree beside it, hardlinked where the disk allows. Seven daily and four
-weekly are kept, about thirty days, in `backups/` beside the holdings. Where a
+media tree beside it, hardlinked where the disk allows. Every snapshot of the
+newest day is kept, whether taken daily, by hand, by an update or by a restore,
+then the newest of each of the six days before it and of four weeks before
+them, about thirty days, in `backups/` beside the holdings. Where a
 day's copy will not fit, the window shrinks before the day is lost, the weekly
 copies first; the backups screen says so, and that or a daily that failed is a
 line of the Needs a look card on the home screen. A snapshot sits on the
 holdings' disk, so it undoes a mistake and a bad update, not the loss of the
 server, which is the host's backup or a snapshot downloaded. A host that backs
-up properly switches the daily ones off with `'daily_backups' => false` in
-`config.php`, which belongs to the machine.
+up properly switches the daily ones off on the backups screen, which writes
+`'daily_backups' => false` into `config.php`, since that belongs to the machine.
 
 **The owner's backups screen** opens from a row on the home screen's Settings
 card, which says when the last snapshot was taken. It takes a snapshot now,
@@ -451,22 +474,23 @@ current, and the address answers *being updated* for the seconds of the swap.
   security policy and `SHA256SUMS` beside the code are replaced by the release's
   own, so what an install says of itself is the release it runs.
 
-- **An install declines with `'updates' => false`** in `config.php`. A
-  development copy says so too, since `0.3.0-dev` sorts below `0.3.0` and the
-  release would replace it. It still checks once an hour and installs
-  nothing, so its update screen names the release that came out.
+- **An install declines** on its update screen, which writes `'updates' =>
+  false` into `config.php`, where it may be typed too. A development copy
+  says so too, since `0.3.0-dev` sorts below `0.3.0` and the release would
+  replace it. It still checks once an hour and installs nothing, so its
+  update screen names the release that came out.
 
 - **A release may be held back until a day** the manifest names, so it reaches
-  a few installs before all of them: an install whose `config.php` says
-  `'updates' => 'early'` takes it the hour it goes up.
+  a few installs before all of them: an install switched to early on its update
+  screen, `'updates' => 'early'` in `config.php`, takes it the hour it goes up.
 
-- **The owner need not wait the hour**: *Check now* on the update screen asks
-  the manifest at once and installs what it finds as the hourly check would,
-  leaving a release held back until a day alone just as that does.
+- **The owner need not wait the hour**: *Check for a new release* on the update
+  screen asks the manifest at once and installs what it finds as the hourly
+  check would, leaving a release held back until a day alone just as that does.
 
 - **Where it cannot run**, the tree not PHP's to write on a host where the
   files belong to the FTP account, an extension missing, the data folder short
-  of room, or a release refused, the Settings card's files row is marked on
+  of room, or a release refused, the Settings card's updates row is marked on
   the home screen for the owner and Needs a look says the copy by hand is
   theirs. The update screen behind that row says when the install last
   checked, what it installed and whether that was a security release, or what
@@ -499,13 +523,14 @@ answers there, whoever installed it and under whichever licence.
 
 Every install answers `/.well-known/security.txt` automatically, as RFC 9116
 words it, for the researcher or the scanner who finds an install and not us. Its
-first `Contact` is the one `config.php` names, `'security_contact' =>
-'it@example.com'`, an address or a link, the organisation or the agency that
-runs the install. Ours follows as the manufacturer's of the software, never as
-the site's owner, and stands alone where `config.php` names none. Its `Expires`
-is a year after the day of the release the install runs, so one that has not
-updated for a year says of itself that it is stale. A `.well-known/security.txt`
-the operator writes into the domain root is answered in its place, as written.
+first `Contact` is the one the general screen keeps in `config.php`,
+`'security_contact' => 'it@example.com'`, an address or an `https://` link, the
+organisation or the agency that runs the install. Ours follows as the
+manufacturer's of the software, never as the site's owner, and stands alone
+where `config.php` names none. Its `Expires` is a year after the day of the
+release the install runs, so one that has not updated for a year says of itself
+that it is stale. A `.well-known/security.txt` the operator writes into the
+domain root is answered in its place, as written.
 
 A fix arrives as the next release and nowhere else: there is one line, the
 newest, and nothing is carried back to an older one. An install that follows
@@ -554,6 +579,7 @@ refuses any other, as *Reading the feed* says in full:
 | `?sort=` | the order by a field, `-` before it for the other way |
 | `?page=` | a page of 50 records, from `1` |
 | `?per_page=` | up to 200 records a page |
+| `?status=` | any of `draft`, `review`, `published` and `archived`, with a comma, for a key reading past the published; to every other reader only `published` is anything to read |
 | `?render=html` | every text as HTML, on a record too |
 
 ## Collections
@@ -837,7 +863,11 @@ to a record reads that record and no other of its collection, at any depth,
 since the fields it names are that record's. It reads what is not published only
 where the owner said so on that *read* rule, which the key's sentence in the
 admin then states: a customer is a draft person, so an invoice comes with its
-customer to the bookkeeping's key and without to every other. An expired or
+customer to the bookkeeping's key and without to every other. Such a key asks a
+list by status, `?status=draft,review`, since a document never says it:
+`published` is what a stranger reads at that minute, so a record whose window
+is shut answers to no status, and to a reader of the published alone every
+other status is nothing to read. An expired or
 revoked key is a `401` on a read too, never the stranger's reading, so a website
 holding one stops on its date rather than quietly showing less. A colleague
 logged into the admin reads `/feed` as a stranger does: the address never reads

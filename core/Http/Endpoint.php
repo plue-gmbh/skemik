@@ -51,12 +51,16 @@ enum Endpoint
   case LocaleRemove;
   case Activity;
   case ActivityRedact;
+  case General;
+  case GeneralSave;
   case Backups;
   case BackupTake;
   case BackupRestore;
   case BackupDownload;
+  case BackupDaily;
   case Update;
   case UpdateCheck;
+  case UpdateMode;
   case Errors;
   case Checks;
   case Export;

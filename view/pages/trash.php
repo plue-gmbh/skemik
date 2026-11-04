@@ -38,7 +38,7 @@ $held = $rows !== [] && $rows[0]->held;
     data-ticked hidden>
     <span class="ticked-count" data-ticked-count data-short="<?= $template->escape($words->get('sheet.ticked_count',
       ['n' => '{n}'])) ?>" data-long="<?= $template->escape($words->get('sheet.ticked', ['n' => '{n}'])) ?>"><span
-      class="ticked-short" aria-hidden="true"></span><span class="ticked-long"></span></span>
+      class="word-short" aria-hidden="true"></span><span class="word-long"></span></span>
     <form method="post" action="<?= $template->escape($address) ?>/restore">
       <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
       <input type="hidden" name="ids" data-ticked-ids>
@@ -92,7 +92,7 @@ $held = $rows !== [] && $rows[0]->held;
           <h2 id="purge-<?= $template->escape($id) ?>-title"><?= $template->escape($words->get('purge.question',
             ['label' => $row->label])) ?></h2>
           <p><?= $template->escape($row->pointing === 0 ? $words->get('purge.nothing') : $words->get('purge.pointing',
-            ['n' => (string) $row->pointing])) ?></p>
+            ['n' => $words->number($row->pointing)])) ?></p>
 <?php if ($row->held): ?>
           <p><strong><?= $template->escape($words->get('purge.held')) ?></strong></p>
 <?php endif ?>

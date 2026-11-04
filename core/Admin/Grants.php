@@ -178,7 +178,7 @@ final readonly class Grants
 
     return new GrantReview($token, $rule, $this->sentence($rule, $token->label, $account),
       $this->facts->issued($token), $this->facts->expiry($token), $this->facts->used($token),
-      $this->words->get('grant.writes', ['n' => (string) $this->log->writesBy($token->id, $since)]),
+      $this->words->get('grant.writes', ['n' => $this->words->number($this->log->writesBy($token->id, $since))]),
       $this->lines($others, $account),
       $newer === null ? null : $this->facts->replaced($token, $newer), $this->stale($rule));
   }

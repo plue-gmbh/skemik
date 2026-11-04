@@ -21,8 +21,7 @@ if (!isset($template)) {
 <div data-island="sheet"></div>
 <script type="text/x-template" id="save-bar-template">
   <div class="save-bar" :class="{ 'is-open': open, 'is-done': saved }" :aria-hidden="open ? 'false' : 'true'">
-    <span class="save-bar-dot" aria-hidden="true"></span>
-    <span class="save-bar-text">{{ sentence }}</span>
+    <span class="save-bar-text"><span class="save-bar-dot" aria-hidden="true"></span>{{ sentence }}</span>
     <template v-if="conflict">
       <button type="button" class="button-quiet" @click="takeTheirs">{{ words['sheet.reload'] }}</button>
       <button type="button" class="button-primary" @click="overwrite">{{ words['sheet.overwrite'] }}</button>
@@ -31,7 +30,9 @@ if (!isset($template)) {
       <button type="button" class="button-quiet" :disabled="saving"
         @click="discard">{{ words['sheet.discard'] }}</button>
       <button type="button" class="button-primary" :disabled="saving"
-        aria-keyshortcuts="Control+S Meta+S" @click="save">{{ words['sheet.save'] }}</button>
+        aria-keyshortcuts="Control+S Meta+S" @click="save"><span class="word-short"
+        aria-hidden="true">{{ words['sheet.save_short'] }}</span><span
+        class="word-long">{{ words['sheet.save'] }}</span></button>
     </template>
   </div>
   <cell-editor v-if="editing" :key="editing.id + editing.field.key" :editing="editing" :words="words"
@@ -41,9 +42,9 @@ if (!isset($template)) {
   <teleport v-if="ticked.length > 0" to="[data-ticked]">
     <div class="ticked-bar" role="toolbar" :aria-label="words['sheet.ticked_actions']">
       <span class="ticked-count" :title="fill(words['sheet.ticked'], { n: ticked.length })"><span
-        class="ticked-short" aria-hidden="true">{{ fill(words['sheet.ticked_count'],
+        class="word-short" aria-hidden="true">{{ fill(words['sheet.ticked_count'],
         { n: ticked.length }) }}</span><span
-        class="ticked-long">{{ fill(words['sheet.ticked'], { n: ticked.length }) }}</span></span>
+        class="word-long">{{ fill(words['sheet.ticked'], { n: ticked.length }) }}</span></span>
       <select v-if="statuses.length > 0" class="ticked-field" :aria-label="words['sheet.set_status']"
         :value="status" @change="setStatus">
         <option value="">{{ words['sheet.set_status'] }}</option>

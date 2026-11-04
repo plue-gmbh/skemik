@@ -8,14 +8,15 @@ namespace Auth;
 /* A minimal SMTP client, because hosting that disables `mail()` and hands out relay
    credentials runs a better mail setup, not a broken one — and the lines are
    cheaper than a dependency and its lockfile. Configured as `relay` in
-   `config.php`, which belongs to the machine: host, port, user, password and
-   sender, so a copy of the holdings carries no credential. STARTTLS is
-   required and a relay that refuses it is refused back, since the password would
-   otherwise cross the wire in the clear; implicit TLS on 465 is not spoken. No
-   retry and a timeout on every read. A failure is `RelayFailed`, thrown after
-   the answer has left and the `login/` floor was written, so a relay down or set
-   wrong reaches no visitor and is a line of the error log. The password is sent
-   and forgotten: no log line or exception message carries it. */
+   `config.php`, which belongs to the machine, so a copy of the holdings carries
+   no credential. STARTTLS is required and a relay that refuses it is refused
+   back, since the password would otherwise cross the wire in the clear; implicit
+   TLS on 465 is not spoken. No retry and a timeout on every read. A failure is
+   `RelayFailed` naming its fault (`RelayFault`), thrown after the answer has left
+   and the `login/` floor was written, so a relay set wrong reaches no visitor and
+   is a line of the error log, or by the save that proves a relay before keeping it
+   (`probe`), which words the fault for the owner. The password is sent and
+   forgotten: no log line or exception message carries it. */
 final readonly class Smtp
 {
   private const TIMEOUT_SECONDS = 10;
@@ -40,22 +41,29 @@ final readonly class Smtp
     $this->command($socket, 'QUIT', 221);
   }
 
+  /* Connected, encrypted and logged in, then gone: what a saved relay is asked before it is kept, sending
+     nothing, so a sender the relay refuses is learnt at the first mail. */
+  public function probe(): void
+  {
+    $this->command($this->open(), 'QUIT', 221);
+  }
+
   /** @return resource */
   private function open()
   {
     $socket = stream_socket_client(sprintf('tcp://%s:%d', $this->host, $this->port), $number, $reason,
       self::TIMEOUT_SECONDS);
     if ($socket === false) {
-      throw RelayFailed::because(sprintf('%s:%d is unreachable: %s', $this->host, $this->port, $reason));
+      throw RelayFailed::because(RelayFault::Unreachable, sprintf('%s:%d (%s)', $this->host, $this->port, $reason));
     }
     stream_set_timeout($socket, self::TIMEOUT_SECONDS);
     $this->expect($socket, 220);
     if (!str_contains($this->command($socket, 'EHLO ' . $this->name, 250), 'STARTTLS')) {
-      throw RelayFailed::because('it offers no STARTTLS');
+      throw RelayFailed::because(RelayFault::NoStartTls);
     }
     $this->command($socket, 'STARTTLS', 220);
     if (stream_socket_enable_crypto($socket, true, self::TLS) !== true) {
-      throw RelayFailed::because('the TLS handshake failed');
+      throw RelayFailed::because(RelayFault::Handshake);
     }
     $this->authenticate($socket, $this->command($socket, 'EHLO ' . $this->name, 250));
 
@@ -77,7 +85,7 @@ final readonly class Smtp
       $this->command($socket, base64_encode($this->password), 235);
     } catch (RelayFailed) {
       /* Its answer is not quoted: a server may word a refusal with what it was sent. */
-      throw RelayFailed::because('it refused the login config.php names');
+      throw RelayFailed::because(RelayFault::Login);
     }
   }
 
@@ -93,9 +101,9 @@ final readonly class Smtp
 
   private function message(string $to, Mail $mail): string
   {
-    foreach (['recipient address' => $to, 'sender address' => $this->sender] as $name => $address) {
+    foreach ([$to, $this->sender] as $address) {
       if (filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
-        throw RelayFailed::because('the ' . $name . ' is none: ' . $address);
+        throw RelayFailed::because(RelayFault::Address, $address);
       }
     }
     $headers = ['Date: ' . date(DATE_RFC2822), 'From: Skemik <' . $this->sender . '>',
@@ -110,7 +118,7 @@ final readonly class Smtp
   private function command($socket, string $line, int $expected): string
   {
     if (fwrite($socket, $line . "\r\n") === false) {
-      throw RelayFailed::because('it closed the connection');
+      throw RelayFailed::because(RelayFault::Closed);
     }
 
     return $this->expect($socket, $expected);
@@ -123,12 +131,12 @@ final readonly class Smtp
     do {
       $line = fgets($socket, 1024);
       if ($line === false) {
-        throw RelayFailed::because('it did not answer in time');
+        throw RelayFailed::because(RelayFault::Timeout);
       }
       $reply .= $line;
     } while (($line[3] ?? ' ') === '-');
     if ((int) substr($line, 0, 3) !== $expected) {
-      throw RelayFailed::because(sprintf('expected %d, it said: %s', $expected, trim($line)));
+      throw RelayFailed::because(RelayFault::Unexpected, trim($line));
     }
 
     return $reply;

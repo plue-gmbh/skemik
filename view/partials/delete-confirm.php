@@ -26,7 +26,7 @@ if (!isset($template)) {
     <h2 id="delete-<?= $template->escape($row->entity->id->value) ?>-title"><?= $template->escape(
         $words->get('delete.question', ['label' => $row->label])) ?></h2>
     <p><?= $template->escape($pointing === 0 ? $words->get('delete.nothing') : $words->get('delete.pointing',
-      ['n' => (string) $pointing])) ?></p>
+      ['n' => $words->number($pointing)])) ?></p>
     <div class="dialog-actions">
       <button type="button" class="button-quiet"
         data-dialog-close><?= $template->escape($words->get('dialog.cancel')) ?></button>

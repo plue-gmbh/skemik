@@ -102,7 +102,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
     <input type="hidden" name="ids" value="<?= $template->escape(implode(',',
       array_map(fn (Admin\SheetRow $row): string => $row->entity->id->value, $trashed))) ?>">
     <input type="hidden" name="back" value="<?= $template->escape(http_build_query($parameters)) ?>">
-    <span><?= $template->escape($words->get('record.trashed_many', ['n' => (string) count($trashed)])) ?></span>
+    <span><?= $template->escape($words->get('record.trashed_many', ['n' => $words->number(count($trashed))])) ?></span>
     <button type="submit" class="button-quiet"><?= $template->escape($words->get('record.restore')) ?></button>
   </form>
 <?php endif ?>
@@ -122,7 +122,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
 <?php if ($trash !== null): ?>
   <p class="trash-link"><a
     href="/trash/<?= $template->escape($collection->slug->value) ?>"><?= $template->render('partials/icon',
-    ['name' => 'trash']) ?><?= $template->escape($words->get('trash.open', ['n' => (string) $trash])) ?></a></p>
+    ['name' => 'trash']) ?><?= $template->escape($words->get('trash.open', ['n' => $words->number($trash)])) ?></a></p>
 <?php endif ?>
 <?php if ($labels !== []): ?>
   <datalist id="grant-labels">

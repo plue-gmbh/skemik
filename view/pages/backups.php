@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 /* The backups screen (`Update\BackupController`): what a snapshot is and how
-   many are kept, or that the daily ones are off, what the last daily run left
-   where it went wrong, the button for one now, and the snapshots newest first,
+   many are kept, what the last daily run left where it went wrong, the button
+   for one now beside the switch for the daily ones, which `config.php` keeps and
+   which is disabled where PHP may not write it, and the snapshots newest first,
    each with when, what for, its size, its path, its download, and its restore
    behind a dialog saying what a restore is. A snapshot too large for the
    browser keeps its download and says to fetch the folder over SFTP. */
@@ -16,7 +17,7 @@ if (!isset($template)) {
 <div class="page">
   <header class="page-head">
     <h1><?= $template->escape($words->get('backups.title')) ?></h1>
-    <p class="page-shape"><?= $template->escape($words->get($daily ? 'backups.explain' : 'backups.daily_off')) ?></p>
+    <p class="page-shape"><?= $template->escape($words->get('backups.explain')) ?></p>
   </header>
 <?php if ($notice !== null): ?>
   <p class="page-note is-done" role="status"><?= $template->escape($notice) ?></p>
@@ -30,11 +31,19 @@ if (!isset($template)) {
 <?php elseif ($report?->shrunk): ?>
   <p class="page-note is-refused"><?= $template->escape($words->get('backups.shrunk', ['day' => $report->day])) ?></p>
 <?php endif ?>
-  <form method="post" action="/settings/backups">
-    <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-    <button type="submit"
-      class="button-secondary trash-back"><?= $template->escape($words->get('backups.take')) ?></button>
-  </form>
+  <div class="settings-actions">
+    <form method="post" action="/settings/backups">
+      <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+      <button type="submit"
+        class="button-secondary"><?= $template->escape($words->get('backups.take')) ?></button>
+    </form>
+<?= $template->render('partials/setting-switch', ['action' => '/settings/backups/daily', 'name' => 'daily',
+  'value' => $daily ? 'off' : 'on', 'on' => $daily, 'label' => $words->get('backups.daily'), 'csrf' => $csrf,
+  'unwritable' => $switchable ? null : 'backups-unwritable']) ?>
+  </div>
+<?php if (!$switchable): ?>
+  <p class="popover-hint" id="backups-unwritable"><?= $template->escape($words->get('general.unwritable')) ?></p>
+<?php endif ?>
 <?php if ($rows === []): ?>
   <p class="sheet-empty"><?= $template->escape($words->get('backups.empty')) ?></p>
 <?php endif ?>

@@ -159,7 +159,7 @@ final readonly class TrashController
     }
     $label = fn (Entity $entity): string => (new Label())->of($entity, $this->profile->byType($entity->type));
     $this->session->keep('purged', count($lot) === 1 ? $this->words->get('purge.done', ['label' => $label($lot[0])])
-      : $this->words->get('purge.done_many', ['n' => (string) count($lot)]));
+      : $this->words->get('purge.done_many', ['n' => $this->words->number(count($lot))]));
 
     return Response::redirect('/trash/' . $collection->slug->value);
   }

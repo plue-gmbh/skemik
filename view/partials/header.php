@@ -7,7 +7,7 @@ declare(strict_types=1);
    room for them, the search, which opens into its field and answers on `/find`,
    the Feed button and the account. Settings, updates and help are no header
    items, because each belongs to a screen: the version and the door to the
-   update screen are the Settings card's files row. The admin has no light/dark
+   update screen are the Settings card's updates row. The admin has no light/dark
    switch but three materials, chrome, paper and terminal, each a scope redefining
    the same tokens in `view/style.css`, so a region says its role by its material
    and every component sits right on any ground; the scope sets `color` too, or

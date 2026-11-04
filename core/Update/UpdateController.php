@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Update;
 
+use Admin\ConfigFile;
 use Admin\FeedPanel;
 use Admin\Frame;
 use Admin\Moments;
@@ -25,7 +26,8 @@ use Support\Words;
    installed and why, with the copy by hand named. One button, a check now, for
    an owner who knows a release is out and will not wait the hour, waiting while a
    snapshot or an update holds the lock; what it finds is installed as the hourly
-   check's is (`Updater`). */
+   check's is (`Updater`). Beside it the choice `config.php` keeps, off, on or
+   early, disabled where PHP may not write that file. */
 final readonly class UpdateController
 {
   public function __construct(
@@ -35,6 +37,7 @@ final readonly class UpdateController
     private Signature $signature,
     private bool $enabled,
     private bool $early,
+    private ConfigFile $config,
     private Frame $frame,
     private Csrf $csrf,
     private Moments $moments,
@@ -50,14 +53,13 @@ final readonly class UpdateController
     $report = $this->check->report();
     $busy = $this->updater->busy();
     if ($this->enabled && $this->updater->installing()) {
-      return Response::html($this->template->render('pages/waiting', ['words' => $this->words,
-        'sentence' => $this->words->get('boot.updating')]));
+      return $this->waiting();
     }
     $main = $this->template->render('pages/update', ['words' => $this->words, 'report' => $report,
       'enabled' => $this->enabled, 'early' => $this->early, 'version' => Version::APP, 'key' => $this->keyId(),
       'stale' => $this->check->stale(), 'checked' => $this->when($report->checked),
       'installedAt' => $this->when($report->installedAt), 'csrf' => $this->csrf->token(),
-      'busy' => $busy]);
+      'busy' => $busy, 'switchable' => $this->config->writable()]);
 
     return $this->frame->around($account, $person,
       new Screen($this->words->get('update.title'), $main, FeedPanel::at($request, '/feed'), 'update'));
@@ -68,7 +70,25 @@ final readonly class UpdateController
     $this->csrf->require($request);
     $this->authorizer->requireHuman(Capability::RunUpdate);
 
-    return $this->updater->asked(Response::redirect('/settings/update'));
+    return $this->updater->asked(Response::redirect('/settings/update'), $this->waiting());
+  }
+
+  /* A choice that is none of the three changes nothing, so a stray value never declines every release. */
+  public function mode(Request $request): Response
+  {
+    $this->csrf->require($request);
+    $this->authorizer->requireHuman(Capability::RunUpdate);
+    $chosen = ['off' => false, 'on' => true, 'early' => 'early'][(string) $request->form('updates')] ?? null;
+    $chosen === null || $this->config->change(['updates' => $chosen]);
+
+    return Response::redirect('/settings/update');
+  }
+
+  /* Opening the screen again once the wait is over, the press's answer standing at the address it was sent to. */
+  private function waiting(): Response
+  {
+    return Response::html($this->template->render('pages/waiting', ['words' => $this->words,
+      'sentence' => $this->words->get('boot.updating'), 'reopen' => '/settings/update']));
   }
 
   /* Empty while the source holds no key, which the screen says in place of an id. */

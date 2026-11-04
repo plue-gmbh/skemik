@@ -6,7 +6,9 @@ namespace Wiring;
 
 use Admin\AccountController;
 use Admin\ChecksController;
+use Admin\ConfigFile;
 use Admin\ErrorLogController;
+use Admin\GeneralController;
 use Admin\TokenController;
 use Http\Endpoint;
 use Http\Response;
@@ -21,9 +23,9 @@ use Update\Signature;
 use Update\UpdateController;
 
 /* The writes behind the home screen's cards: accounts, keys and languages, which
-   have no `GET` of their own, the backups screen and the error log its Settings
-   card opens, the holdings check's screen Needs a look opens, and the update
-   screen the header's version opens. */
+   have no `GET` of their own, the general screen, the backups screen and the error
+   log its Settings card opens, the holdings check's screen Needs a look opens, and
+   the update screen the header's version opens. */
 final readonly class Settings
 {
   public function __construct(private Common $common) {}
@@ -43,15 +45,21 @@ final readonly class Settings
       Endpoint::LocaleAdd => $common->locales()->add($common->request),
       Endpoint::LocaleOrder => $common->locales()->order($common->request),
       Endpoint::LocaleRemove => $common->locales()->remove($common->request, $segment('tag')),
+      Endpoint::General => $this->generalController()->show($common->authorizer->requireAccount(),
+        $common->requirePerson(), $common->request),
+      Endpoint::GeneralSave => $this->generalController()->save($common->authorizer->requireAccount(),
+        $common->requirePerson(), $common->request),
       Endpoint::Backups => $this->backupController()->show($common->authorizer->requireAccount(),
         $common->requirePerson(), $common->request),
       Endpoint::BackupTake => $this->backupController()->take($common->request),
       Endpoint::BackupRestore => $this->backupController()->restore($common->authorizer->requireAccount(),
         $common->request, $segment('name')),
       Endpoint::BackupDownload => $this->backupController()->download($common->request, $segment('name')),
+      Endpoint::BackupDaily => $this->backupController()->daily($common->request),
       Endpoint::Update => $this->updateController()->show($common->authorizer->requireAccount(),
         $common->requirePerson(), $common->request),
       Endpoint::UpdateCheck => $this->updateController()->check($common->request),
+      Endpoint::UpdateMode => $this->updateController()->mode($common->request),
       Endpoint::Errors => $this->errorLogController()->show($common->authorizer->requireAccount(),
         $common->requirePerson(), $common->request),
       Endpoint::Checks => $this->checksController()->show($common->authorizer->requireAccount(),
@@ -63,8 +71,17 @@ final readonly class Settings
   {
     $common = $this->common;
     return new UpdateController($common->authorizer, $common->updates(), $common->updater(),
-      new Signature(Release::KEY), $common->premises->updates, $common->premises->early, $common->frame(),
-      $common->csrf, $common->moments, $common->template, $common->words);
+      new Signature(Release::KEY), $common->premises->updates, $common->premises->early,
+      new ConfigFile($common->root), $common->frame(), $common->csrf, $common->moments, $common->template,
+      $common->words);
+  }
+
+  private function generalController(): GeneralController
+  {
+    $common = $this->common;
+    return new GeneralController($common->authorizer, $common->settings, new ConfigFile($common->root),
+      $common->premises, $common->probes(), $common->frame(), $common->session, $common->csrf, $common->template,
+      $common->words);
   }
 
   private function errorLogController(): ErrorLogController
@@ -87,8 +104,8 @@ final readonly class Settings
     $box = new Zip($common->premises->data . '/staging/backup-' . $common->uuid->generate() . '.zip',
       $common->clock->now());
     return new BackupController($common->authorizer, $common->backup(), $this->restore(), $box,
-      $common->frame(), $common->session, $common->csrf, $common->moments, $common->clock, $common->template,
-      $common->words);
+      new ConfigFile($common->root), $common->frame(), $common->session, $common->csrf, $common->moments,
+      $common->clock, $common->template, $common->words);
   }
 
   private function restore(): Restore

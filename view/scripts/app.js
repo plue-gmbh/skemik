@@ -253,18 +253,19 @@ function mountIslands() {
 }
 
 /* A page waiting out an update or a restore asks the lightest address again and
-   opens its own once that is answered: a halt that needs a hand carries no
+   opens its own, or the one it names, once that is answered: a halt that needs a hand carries no
    Retry-After and is then shown as it is, and a form sent meanwhile was never
    carried out, so its address is opened and not sent again. */
-function waitOut() {
+function waitOut(address) {
   window.setTimeout(async () => {
     const answer = await fetch("/robots.txt", { cache: "no-store" }).catch(() => null);
     const waiting = answer === null || (answer.status === 503 && answer.headers.has("Retry-After"));
-    waiting ? waitOut() : location.replace(location.href);
+    waiting ? waitOut(address) : location.replace(address);
   }, 3000);
 }
 
-document.querySelector("[data-waiting]") && waitOut();
+const waitingPage = document.querySelector("[data-waiting]");
+waitingPage && waitOut(waitingPage.dataset.waiting || location.href);
 const mounted = { current: mountIslands() };
 document.querySelectorAll("[data-query-bar]").forEach((form) => mountQueryBar(form, mounted));
 document.querySelectorAll("[data-record-screen]").forEach((screen) => mountRecord(screen, mounted));
