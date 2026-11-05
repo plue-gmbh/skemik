@@ -822,7 +822,7 @@ return [
   'grant.capability_arrange' => 'Configurar',
   'grant.until' => 'Válida hasta',
   'grant.issue' => 'Emitir la clave',
-  'grant.adding' => '{name} es una clave activa. Al emitir, lo marcado se añade a sus reglas en una clave nueva, que entonces contiene todas las reglas del nombre; la antigua sigue siendo válida hasta el {until}.',
+  'grant.adding' => '{name} es una clave activa. Al emitir, lo marcado se añade a sus reglas en una clave nueva, que entonces contiene todas las reglas del nombre; la antigua se detiene al instante, o sigue siendo válida hasta el {until} si eso se desmarca abajo.',
   'grant.two_ways' => '{name} leería entonces {collection} de dos maneras: una clave lee una colección entera o algunos de sus registros, siempre con los mismos campos; para una segunda manera hace falta otra clave con otro nombre.',
   'grant.add' => 'Añadir y emitir',
   'grant.replace' => 'Detener todas las claves anteriores de este nombre',

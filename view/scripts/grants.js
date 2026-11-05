@@ -79,11 +79,13 @@ function showSecret(element, body) {
 }
 
 /* A live name was typed: the next press adds to that key, until the name changes,
-   and the box to stop the name's older secrets stands until then. */
+   and the box to stop the name's older secrets stands until then, ticked, since
+   a tool holding an older secret was given what that secret does and no more. */
 function confirmAdding(form, submit) {
   const adds = Object.assign(document.createElement("input"), { type: "hidden", name: "adds", value: "1" });
   form.append(adds);
-  form.querySelector("[data-grant-replace]").hidden = false;
+  const replace = form.querySelector("[data-grant-replace]");
+  [replace.hidden, replace.querySelector("input").checked] = [false, true];
   submit.textContent = form.dataset.grantAdd;
 }
 

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.15](https://img.shields.io/badge/version-1.0.15-1f6feb)
+![Version 1.0.16](https://img.shields.io/badge/version-1.0.16-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ tool to design first, no column called `Date2`. What an organisation keeps
 stands there once. Everything that works with it reads it there and writes back
 there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.13)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.16)
 
 The demo install's events, read with no key:
 
@@ -1614,9 +1614,10 @@ what it spends.
   not even as 2099: the integration that breaks on a known date is the one
   somebody renews on purpose. A key's grant is narrowed and never widened: to
   renew a key or give it more, a new one is issued under the same name, holding
-  the old one's rules and what is added, said before it is issued, while the
-  old one runs to its date or, where the owner ticks so, every older key of the
-  name stops at once. Taking back a key's last rule revokes it. In one
+  the old one's rules and what is added, said before it is issued. Where it
+  gives more, every older key of the name stops at once unless the owner
+  unticks that; where it renews, the old one runs to its date unless the owner
+  ticks it. Taking back a key's last rule revokes it. In one
   collection a key reads one way, the whole collection or some of its records,
   each with the same fields, since its filter, sort and search there are the
   collection's: reading it a second way takes a second key under its own name.

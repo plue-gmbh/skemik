@@ -822,7 +822,7 @@ return [
   'grant.capability_arrange' => 'Configure',
   'grant.until' => 'Valid until',
   'grant.issue' => 'Issue the key',
-  'grant.adding' => '{name} is a live key. Issuing adds what is ticked to its rules under a new key, which then holds every rule of the name; the old one stays valid until {until}.',
+  'grant.adding' => '{name} is a live key. Issuing adds what is ticked to its rules under a new key, which then holds every rule of the name; the old one stops at once, or stays valid until {until} where that is unticked below.',
   'grant.two_ways' => '{name} would then read {collection} in two ways. A key reads a collection in one way only: whole or some of its records, always with the same fields. A second way needs a key of its own under another name.',
   'grant.add' => 'Add and issue',
   'grant.replace' => 'Stop every older key of this name',

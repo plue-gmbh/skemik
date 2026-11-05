@@ -75,7 +75,7 @@ final readonly class SearchController
       $offered = $this->offered($account, $entity, $in);
       $root = TranslationGroup::rootOf($offered)->value;
       if (!isset($seen[$root]) && ($hit = $this->hit($offered, $house, $in)) !== null) {
-        [$seen[$root], $hits[]] = [true, $hit];
+        [$seen[$root], $hits[]] = [true, [...$hit, 'preview' => $this->rows->pictured($account, $offered)]];
       }
       if (count($hits) === self::HITS) {
         break;
@@ -272,15 +272,15 @@ final readonly class SearchController
     };
   }
 
-  /** The slug beside the label, since two offers may both be called Ticket, an
-      image's preview, since two photos are told apart by looking, and a work's
-      locale only where it is not the one edited, so a German page offered on an
-      English site says so, and its type, since an edge to a `MemberProgram` says
-      more than one to anything else.
+  /** The slug beside the label, since two offers may both be called Ticket, a
+      work's locale only where it is not the one edited, so a German page offered
+      on an English site says so, and its type, since an edge to a `MemberProgram`
+      says more than one to anything else; its picture, since two photos are told
+      apart by looking, is `hits`' to add, being the reader's.
       @param list<Collection> $house
       @return ?array{id: string, label: string, slug: string, glyph: string, collection: string,
-        preview: ?string, locale: ?string, type: string, file: ?array{address: string, format: string,
-        size: string}} null for a record no collection holds */
+        locale: ?string, type: string, file: ?array{address: string, format: string, size: string}}
+        null for a record no collection holds */
   private function hit(Entity $entity, array $house, ?Locale $in): ?array
   {
     $holder = array_find($house, fn (Collection $collection): bool => $collection->type === $entity->type);
@@ -293,8 +293,7 @@ final readonly class SearchController
 
     return ['id' => $entity->id->value, 'label' => $this->label->of($shown, $type),
       'slug' => $entity->slug->value, 'glyph' => SidebarEntry::glyphOf($entity->type),
-      'collection' => $holder->name, 'preview' => Rows::preview($entity),
-      'locale' => $elsewhere ? $entity->locale->tag : null, 'type' => $entity->typeName(),
-      'file' => Rows::file($entity)];
+      'collection' => $holder->name, 'locale' => $elsewhere ? $entity->locale->tag : null,
+      'type' => $entity->typeName(), 'file' => Rows::file($entity)];
   }
 }

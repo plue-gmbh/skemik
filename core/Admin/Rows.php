@@ -11,6 +11,7 @@ use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Locale;
 use Domain\LocalisedText;
+use Domain\Relation;
 use Feed\PublicFilter;
 use Profile\Cardinality;
 use Profile\FieldKind;
@@ -30,7 +31,8 @@ use Support\Clock;
    disclosure the record was not. A target in the trash is drawn gone as well, and a save sends its
    chip back and keeps the edge, so restoring the target brings every edge at it
    back, and taking the chip out is the one way to let one go. One lookup per
-   target; a page of fifty rows with a handful of edges each is what this is
+   target, and two more for a file without a preview of its own, its edges and
+   its Poster; a page of fifty rows with a handful of edges each is what this is
    sized for. */
 final readonly class Rows
 {
@@ -55,8 +57,11 @@ final readonly class Rows
     foreach ($this->profile->byType($entity->type)->edges() as $field) {
       $fields[(string) $this->schema->propertyName($field->key)] = $field;
     }
-    $draw = fn (EntityId $id): Chip
-      => $this->drawn($this->target($account, $id, $entity->locale), $entity->locale, $collections);
+    $draw = function (EntityId $id) use ($account, $entity, $collections): Chip {
+      $target = $this->target($account, $id, $entity->locale);
+
+      return $this->drawn($target, $entity->locale, $collections)->posted($this->pictured($account, $target));
+    };
     $chips = array_map(fn (array $ids): array => array_map($draw, $ids), $this->referred($entity));
     foreach ($this->relations->outbound($entity->id) as $edge) {
       $field = $fields[$edge->predicate] ?? null;
@@ -130,6 +135,22 @@ final readonly class Rows
       preview: self::preview($target));
   }
 
+  /* An asset's preview: its own, else its Poster's where the reader may see that, since GD makes
+     none of a video. */
+  public function pictured(Account $account, ?Entity $asset): ?string
+  {
+    $own = $asset === null ? null : self::preview($asset);
+    if ($asset === null || $own !== null || $asset->typeName() !== 'MediaObject') {
+      return $own;
+    }
+    $named = (string) $this->schema->propertyName('thumbnail');
+    $edge = array_find($this->relations->outbound($asset->id),
+      fn (Relation $edge): bool => $edge->predicate === $named);
+    $poster = $edge === null ? null : $this->target($account, $edge->object, $asset->locale);
+
+    return $poster === null ? null : self::preview($poster);
+  }
+
   /* What a target is called in that locale's words, as its chip says it. */
   public function named(Entity $target, Locale $in): string
   {
@@ -171,6 +192,17 @@ final readonly class Rows
       in_array($mime, ['image/svg+xml', 'image/vnd.microsoft.icon'], true) => $address,
       default => $address . '/thumb',
     };
+  }
+
+  /* An asset's pixels as its upload counted them, `640×480`, and nothing for any
+     other record: a product's width is no picture's, and a fraction typed into
+     an asset's counts none. */
+  public static function pixels(Entity $record): string
+  {
+    $size = $record->props->document();
+    [$width, $height] = [$size['width'] ?? null, $size['height'] ?? null];
+
+    return $record->typeName() === 'MediaObject' && is_int($width) && is_int($height) ? $width . '×' . $height : '';
   }
 
   /** The file an asset holds, as a link picked from the library writes it: its

@@ -822,7 +822,7 @@ return [
   'grant.capability_arrange' => 'Configurare',
   'grant.until' => 'Valida fino al',
   'grant.issue' => 'Emetti la chiave',
-  'grant.adding' => '{name} è una chiave attiva. Emettendo, ciò che è spuntato si aggiunge alle sue regole sotto una nuova chiave, che contiene poi ogni regola del nome; la vecchia resta valida fino alla sua scadenza, {until}.',
+  'grant.adding' => '{name} è una chiave attiva. Emettendo, ciò che è spuntato si aggiunge alle sue regole sotto una nuova chiave, che contiene poi ogni regola del nome; la vecchia si ferma subito, oppure resta valida fino alla sua scadenza, {until}, se qui sotto la spunta viene tolta.',
   'grant.two_ways' => '{name} leggerebbe allora {collection} in due modi. Una chiave legge una raccolta in un solo modo: intera o alcuni dei suoi record, sempre con gli stessi campi. Per un secondo modo serve una chiave a sé con un altro nome.',
   'grant.add' => 'Aggiungi ed emetti',
   'grant.replace' => 'Ferma ogni chiave precedente di questo nome',

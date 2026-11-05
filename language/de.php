@@ -820,7 +820,7 @@ return [
   'grant.capability_arrange' => 'Einrichten',
   'grant.until' => 'Gültig bis',
   'grant.issue' => 'Schlüssel ausstellen',
-  'grant.adding' => '{name} ist ein gültiger Schlüssel. Ausstellen fügt das Angekreuzte seinen Regeln unter einem neuen Schlüssel hinzu, der dann alle Regeln des Namens umfasst; der alte gilt noch bis {until}.',
+  'grant.adding' => '{name} ist ein gültiger Schlüssel. Ausstellen fügt das Angekreuzte seinen Regeln unter einem neuen Schlüssel hinzu, der dann alle Regeln des Namens umfasst; der alte wird sofort gesperrt oder gilt noch bis {until}, wenn das unten abgewählt ist.',
   'grant.two_ways' => '{name} würde {collection} dann auf zwei Arten lesen. Ein Schlüssel liest eine Sammlung nur auf eine Art: ganz oder einzelne Datensätze, immer mit denselben Feldern. Für eine zweite Art braucht es einen eigenen Schlüssel unter anderem Namen.',
   'grant.add' => 'Hinzufügen und ausstellen',
   'grant.replace' => 'Alle bisherigen Schlüssel dieses Namens sperren',

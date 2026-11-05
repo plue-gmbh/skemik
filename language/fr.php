@@ -822,7 +822,7 @@ return [
   'grant.capability_arrange' => 'Configurer',
   'grant.until' => 'Valable jusqu’au',
   'grant.issue' => 'Émettre la clé',
-  'grant.adding' => '{name} est une clé active. Émettre ajoute ce qui est coché à ses règles, sous une nouvelle clé qui porte alors toutes les règles de ce nom ; l’ancienne reste valable jusqu’au {until}.',
+  'grant.adding' => '{name} est une clé active. Émettre ajoute ce qui est coché à ses règles, sous une nouvelle clé qui porte alors toutes les règles de ce nom ; l’ancienne est arrêtée aussitôt, ou reste valable jusqu’au {until} si cela est décoché ci-dessous.',
   'grant.two_ways' => '{name} lirait alors {collection} de deux façons : une clé lit une collection entière ou certaines de ses fiches, toujours avec les mêmes champs ; une seconde façon demande une clé à part, sous un autre nom.',
   'grant.add' => 'Ajouter et émettre',
   'grant.replace' => 'Arrêter toutes les anciennes clés de ce nom',

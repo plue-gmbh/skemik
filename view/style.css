@@ -1756,33 +1756,33 @@ button.cell:focus-visible {
   display: inline-block;
   position: relative;
   flex: none;
-  width: 30px;
+  width: 26px;
   vertical-align: middle;
-  height: 17px;
-  border-radius: 20px;
-  background: var(--surface-sunken-strong);
-  box-shadow: inset 0 0 0 1px var(--border-field);
+  height: 15px;
+  border-radius: 7.5px;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  color: var(--text-secondary);
 }
 
 .switch i {
   position: absolute;
-  top: 2.5px;
-  left: 2.5px;
-  width: 12px;
-  height: 12px;
+  top: 3px;
+  left: 3px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--text-tertiary);
+  background: currentColor;
   transition: left var(--transition-fast);
 }
 
 .switch.is-on {
-  background: var(--status-ok);
-  box-shadow: none;
+  background: currentColor;
+  color: var(--accent);
 }
 
 .switch.is-on i {
-  left: 15.5px;
-  background: #FFFFFF;
+  left: 14px;
+  background: var(--surface);
 }
 
 .chips {
@@ -2267,6 +2267,7 @@ a.option {
 }
 
 .record-file {
+  position: relative;
   width: 240px;
   height: 160px;
 }
@@ -3318,14 +3319,31 @@ a.cell {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  height: 32px;
+  padding: 0 8px;
   border-radius: var(--radius-medium);
+  color: var(--text-secondary);
+  font-size: 12.5px;
   font-weight: 500;
+}
+
+.setting-switch[aria-checked="true"] {
+  color: var(--text);
+}
+
+.setting-switch .switch:not(.is-on) {
+  color: inherit;
+}
+
+.setting-switch:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
 }
 
 @media (hover: hover) {
   .setting-switch:hover:not(:disabled) {
     background: var(--surface-sunken);
+    color: var(--text);
   }
 }
 
@@ -3425,9 +3443,6 @@ a.cell {
 }
 
 .settings-fixed {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
   margin: 0 2px 8px;
   overflow-wrap: anywhere;
 }
@@ -3691,6 +3706,7 @@ a.cell {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: max-content;
   max-width: calc(100cqw - 24px);
   padding: 9px 10px 9px 16px;
   border: 1px solid var(--border-strong);
@@ -3727,6 +3743,16 @@ a.cell {
 
 .save-bar-text {
   color: var(--text-secondary);
+}
+
+@media (scripting: none) {
+  .save-bar[data-save-bar] {
+    position: static;
+    align-self: flex-start;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
 }
 
 .toast {
@@ -4767,6 +4793,26 @@ button.spine-chip {
   stroke-width: 1.25;
 }
 
+.play-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(20px, 30%, 44px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--material-chrome-deep) 62%, transparent);
+  color: #FFFFFF;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.play-mark .icon {
+  width: 55%;
+  height: 55%;
+}
+
 .list-main {
   display: flex;
   flex: 1;
@@ -5390,34 +5436,36 @@ button.spine-chip {
 .field-toggle input {
   position: relative;
   flex: none;
-  width: 30px;
-  height: 17px;
-  margin: 1px 0 0;
-  border-radius: 20px;
-  background: var(--border-field);
+  width: 26px;
+  height: 15px;
+  margin: 2px 0 0;
+  border-radius: 7.5px;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  color: var(--text-secondary);
   appearance: none;
   cursor: pointer;
-  transition: background var(--transition-fast);
 }
 
 .field-toggle input::before {
   content: "";
   position: absolute;
-  top: 2.5px;
-  left: 2.5px;
-  width: 12px;
-  height: 12px;
+  top: 3px;
+  left: 3px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: #FFFFFF;
+  background: currentColor;
   transition: left var(--transition-fast);
 }
 
 .field-toggle input:checked {
-  background: var(--status-ok);
+  background: currentColor;
+  color: var(--accent);
 }
 
 .field-toggle input:checked::before {
-  left: 15.5px;
+  left: 14px;
+  background: var(--surface);
 }
 
 .field-toggle .grant-note {

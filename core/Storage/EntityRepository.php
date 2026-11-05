@@ -148,6 +148,9 @@ final readonly class EntityRepository
       @return list<string> their keys */
   public function held(string $type, array $fields): array
   {
+    if ($fields === []) {
+      return [];
+    }
     $fields = array_values($fields);
     $asked = ['type' => $type];
     $clauses = ['0'];

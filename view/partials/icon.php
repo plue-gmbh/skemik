@@ -66,6 +66,7 @@ $paths = [
     . ' 1.35 1.35h1.65"/>',
   'unlocked' => '<rect x="3.25" y="7.25" width="9.5" height="6.5" rx="1.6"/>'
     . '<path d="M5.6 7.25V5.1a2.4 2.4 0 0 1 4.65-.85"/>',
+  'play' => '<path d="M5.75 4.1v7.8L12.25 8 5.75 4.1Z" fill="currentColor"/>',
 ];
 ?>
 <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"

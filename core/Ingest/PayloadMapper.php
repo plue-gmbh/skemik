@@ -136,14 +136,40 @@ final readonly class PayloadMapper
     $direct = array_find($type->fields(), fn (FieldDefinition $field): bool =>
       ($field->valueObject === null || ($field->valueObjectOf === null && $own))
       && $this->schema->propertyName($field->key) === $property);
+    $carried = array_values(array_filter($type->fields(),
+      fn (FieldDefinition $field): bool => $field->valueObjectOf === $property));
+    if ($direct !== null && $carried !== []) {
+      return $this->beside($collection, $direct, $carried, $value);
+    }
     if ($direct !== null) {
       return $direct->writtenBy === WrittenBy::Derived ? [] : [$direct->key => $value];
     }
-    $carried = array_values(array_filter($type->fields(),
-      fn (FieldDefinition $field): bool => $field->valueObjectOf === $property));
 
     return $carried === [] ? throw MalformedValue::named('property of ' . $collection->name, $property)
       : $this->flattened($collection, $carried, $value);
+  }
+
+  /** A property an edge and an object share, an event's `location`, read as
+      `Feed\Properties` joins it: the object by its `@type` and the rest the
+      edge's, each half written where it is sent, as an object's keys are, and
+      both cleared by `null` or `[]`.
+      @param non-empty-list<FieldDefinition> $carried
+      @return array<string, mixed> */
+  private function beside(Collection $collection, FieldDefinition $edge, array $carried, mixed $value): array
+  {
+    if (in_array($value, [null, []], true)) {
+      $held = in_array($edge->key, array_column($collection->fields, 'key'), true);
+
+      return [...($held ? [$edge->key => null] : []), ...$this->flattened($collection, $carried, null)];
+    }
+    $sent = is_array($value) && array_is_list($value) ? $value : [$value];
+    $objects = array_values(array_filter($sent, fn (mixed $each): bool
+      => is_array($each) && ($each['@type'] ?? null) === $carried[0]->valueObject));
+    $targets = array_values(array_filter($sent, fn (mixed $each): bool => !in_array($each, $objects, true)));
+    $one = fn (array $values): mixed => count($values) === 1 ? $values[0] : $values;
+
+    return [...($targets === [] ? [] : [$edge->key => $one($targets)]),
+      ...($objects === [] ? [] : $this->flattened($collection, $carried, $one($objects)))];
   }
 
   /** @param array<string, mixed> $found

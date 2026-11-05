@@ -13,7 +13,7 @@ use Profile\Qualifier;
    A target that is gone and one the reader may not see are the same chip, so the
    cell never says which, nor what the edge says of it. A target a collection
    holds links to its record screen; an image carries its description, which the
-   record screen captions it with, and its preview. */
+   record screen captions it with, and its preview, as a video carries its Poster's. */
 final readonly class Chip
 {
   public function __construct(
@@ -55,6 +55,12 @@ final readonly class Chip
   public function saying(Relation $edge): self
   {
     return $this->gone ? $this : clone($this, ['edge' => $edge]);
+  }
+
+  /* An asset's Poster's preview, where it has none of its own (`Rows::pictured`). */
+  public function posted(?string $preview): self
+  {
+    return $this->gone || $this->preview !== null ? $this : clone($this, ['preview' => $preview]);
   }
 
   public static function gone(): self

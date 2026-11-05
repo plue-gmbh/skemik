@@ -36,8 +36,7 @@ $address = $items->address($row);
 $pictured = $glance->media() || $glance->image() !== null;
 $picture = $template->render('partials/item-picture', ['row' => $row, 'glance' => $glance,
   'collection' => $collection, 'class' => 'grid-picture']);
-$width = $entity?->props->int('width');
-$height = $entity?->props->int('height');
+$pixels = $entity === null ? '' : Admin\Rows::pixels($entity);
 $used = $uses[$entity?->id->value ?? ''] ?? 0;
 ?>
 <li class="grid-tile" data-record="<?= $row === null ? '' : $template->escape($entity->id->value) ?>">
@@ -61,8 +60,8 @@ $used = $uses[$entity?->id->value ?? ''] ?? 0;
 <?php if ($row === null): ?>
     <span class="spine-chip is-new"><?= $template->escape($words->get('sheet.new')) ?></span>
 <?php elseif ($glance->media()): ?>
-    <span class="grid-facts"><?= $template->escape($width !== null && $height !== null ? $width . '×'
-      . $height : $words->get('media.kind.' . Profile\MediaKind::of($mime)->value)) ?> · <span
+    <span class="grid-facts"><?= $template->escape($pixels !== '' ? $pixels
+      : $words->get('media.kind.' . Profile\MediaKind::of($mime)->value)) ?> · <span
       class="grid-used<?= $used === 0 ? ' is-unused' : '' ?>"><?= $template->escape($used === 0
       ? $words->get('media.unused') : $words->get('media.used', ['n' => $words->number($used)])) ?></span></span>
 <?php endif ?>

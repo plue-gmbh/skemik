@@ -821,7 +821,7 @@ return [
   'grant.capability_arrange' => 'Inrichten',
   'grant.until' => 'Geldig tot',
   'grant.issue' => 'De sleutel uitgeven',
-  'grant.adding' => '{name} is een werkende sleutel. Uitgeven voegt wat is aangevinkt aan zijn regels toe onder een nieuwe sleutel, die dan elke regel van de naam bevat; de oude blijft geldig tot {until}.',
+  'grant.adding' => '{name} is een werkende sleutel. Uitgeven voegt wat is aangevinkt aan zijn regels toe onder een nieuwe sleutel, die dan elke regel van de naam bevat; de oude stopt meteen, of blijft geldig tot {until} als dat hieronder wordt uitgevinkt.',
   'grant.two_ways' => '{name} zou {collection} dan op twee manieren lezen. Een sleutel leest een collectie op maar één manier: in haar geheel of sommige van haar records, altijd met dezelfde velden. Een tweede manier vraagt een eigen sleutel onder een andere naam.',
   'grant.add' => 'Toevoegen en uitgeven',
   'grant.replace' => 'Elke oudere sleutel van deze naam stoppen',

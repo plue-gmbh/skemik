@@ -53,7 +53,22 @@ final readonly class Properties
       }
     }
 
-    return [...$properties, ...$this->nested($objects)];
+    return $this->joined($properties, $this->nested($objects));
+  }
+
+  /** An object assembled under a property an edge holds too stands beside its
+      target: an event's venue and its online address are both its `location`,
+      since a hybrid one has a room and a stream.
+      @param array<string, mixed> $properties
+      @param array<string, mixed> $nested
+      @return array<string, mixed> */
+  private function joined(array $properties, array $nested): array
+  {
+    foreach ($nested as $name => $object) {
+      $properties[$name] = isset($properties[$name]) ? [$properties[$name], $object] : $object;
+    }
+
+    return $properties;
   }
 
   /** Every name a document of these fields may carry, in the order it carries

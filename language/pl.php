@@ -826,7 +826,7 @@ return [
   'grant.capability_arrange' => 'Konfigurowanie',
   'grant.until' => 'Ważny do',
   'grant.issue' => 'Wystaw klucz',
-  'grant.adding' => '{name} to aktywny klucz. Wystawienie dodaje to, co zaznaczone, do jego reguł pod nowym kluczem, który zawiera wtedy każdą regułę tej nazwy; stary pozostaje ważny do {until}.',
+  'grant.adding' => '{name} to aktywny klucz. Wystawienie dodaje to, co zaznaczone, do jego reguł pod nowym kluczem, który zawiera wtedy każdą regułę tej nazwy; stary zostaje od razu zatrzymany albo pozostaje ważny do {until}, jeśli poniżej odznaczysz tę opcję.',
   'grant.two_ways' => '{name} czytałby wtedy kolekcję {collection} na dwa sposoby. Klucz czyta kolekcję tylko na jeden sposób: w całości albo niektóre jej rekordy, zawsze z tymi samymi polami. Drugi sposób wymaga osobnego klucza pod inną nazwą.',
   'grant.add' => 'Dodaj i wystaw',
   'grant.replace' => 'Zatrzymaj każdy starszy klucz tej nazwy',

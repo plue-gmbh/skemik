@@ -28,11 +28,10 @@ $type = basename($collection->type);
 $prefix = $public ? '/feed/' . $entity->locale->tag . '/' . $collection->slug->value . '/'
   : $collection->slug->value . '/';
 [$before, $after] = $neighbours;
-$preview = Admin\Rows::preview($entity);
+$preview = Admin\Rows::preview($entity) ?? ($chips['thumbnail'][0] ?? null)?->preview;
 $alt = trim((string) $entity->props->string('description'));
 $format = (string) $entity->props->string('encoding_format');
-$width = $entity->props->int('width');
-$shape = implode(' · ', array_filter([$width === null ? '' : $width . '×' . $entity->props->int('height'), $format]));
+$shape = implode(' · ', array_filter([Admin\Rows::pixels($entity), $format]));
 $kind = function (Admin\Column $column) use ($chips, $prose, $naming): string {
   $key = $column->field->key;
 
@@ -162,7 +161,8 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
       <a class="record-image record-file"<?= $writes ? ' data-drop' : '' ?>
         href="<?= $template->escape((string) $entity->props->string('content_url')) ?>" target="_blank"
         rel="noreferrer"><?php if ($preview !== null): ?><img src="<?= $template->escape($preview) ?>" alt=""
-        loading="lazy"><?php else: ?><?= $template->render('partials/glyph',
+        loading="lazy"><?= str_starts_with($format, 'video/') ? '<span class="play-mark">' . $template->render(
+        'partials/icon', ['name' => 'play']) . '</span>' : '' ?><?php else: ?><?= $template->render('partials/glyph',
         ['name' => Admin\SidebarEntry::glyphOf($entity->type)]) ?><?php endif ?><span
         class="visually-hidden"><?= $template->escape($words->get('record.file_open')) ?></span></a>
       <figcaption><?= $template->escape($alt !== '' ? $alt

@@ -149,7 +149,10 @@ final readonly class EdgeEdits
     if ($sent === null) {
       return $held;
     }
-    if (!is_array($sent) || ($sent !== [] && array_is_list($sent))) {
+    if (!is_array($sent)) {
+      throw MalformedValue::notA('an object of what an edge says', 'qualifiers');
+    }
+    if ($sent !== [] && array_is_list($sent)) {
       throw MalformedValue::notA('an object of what an edge says', 'qualifiers');
     }
     $said = array_filter($sent, fn (mixed $value): bool => !in_array($value, [null, '', []], true));

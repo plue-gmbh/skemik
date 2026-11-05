@@ -23,3 +23,38 @@ window.addEventListener("pageshow", (event) => {
     delete button.dataset.held;
   });
 });
+
+/* A settings form's save pill (`view/pages/general.php`) is the records' save bar
+   without its island: closed until a field differs from what the page loaded,
+   counted as the bar counts, and again once every field is back or Discard reset
+   them, while what the server said, saved or refused, keeps it open. Its
+   sentence is announced through the polite region once it changes, as the bar's
+   is. Ctrl or ⌘ S saves while something is pending or was refused. */
+document.querySelectorAll("[data-save-bar]").forEach((bar) => {
+  const [form, sentence, dot] = [bar.closest("form"), bar.querySelector("[data-sentence]"),
+    bar.querySelector(".save-bar-dot")];
+  const [said, done, kept] = [sentence.textContent, bar.classList.contains("is-done"), "kept" in bar.dataset];
+  const differs = (field) => (field.tagName === "SELECT"
+    ? [...field.options].some((option) => option.selected !== option.defaultSelected)
+    : field.type !== "hidden" && field.value !== field.defaultValue);
+  const count = () => [...form.elements].filter((field) => field.name && differs(field)).length;
+  const show = () => {
+    const n = count();
+    const text = n > 0 ? fill(bar.dataset.pending, { n }) : said;
+    bar.classList.toggle("is-open", n > 0 || kept);
+    bar.classList.toggle("is-done", n === 0 && done);
+    dot.hidden = n === 0 && !kept;
+    form.querySelector("button[type=reset]").hidden = n === 0;
+    if (text === sentence.textContent) return;
+    sentence.textContent = text;
+    sentence.parentElement.removeAttribute("role");
+    announce(text);
+  };
+  form.addEventListener("input", show);
+  form.addEventListener("reset", () => window.setTimeout(show));
+  document.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() !== "s" || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+    event.preventDefault();
+    if (count() > 0 || (kept && !done)) form.requestSubmit(form.querySelector("button[type=submit]"));
+  });
+});

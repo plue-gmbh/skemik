@@ -86,12 +86,13 @@ final readonly class Arrangement
   }
 
   /** The keys of a value object the entry names under `valueReference`, each a field, as the Fields dialog
-      adds them one by one.
+      adds them one by one, and in the order named, since the dialog places a key after its kin.
       @param array<array-key, mixed> $variable
       @return list<CollectionField|Violation> */
   private function object(TypeDefinition $type, string $name, array $variable): array
   {
-    if (!array_any($type->fields(), fn (FieldDefinition $field): bool => $field->valueObjectOf === $name)) {
+    $keys = array_filter($type->fields(), fn (FieldDefinition $field): bool => $field->valueObjectOf === $name);
+    if ($keys === []) {
       return [Violation::stated($name, 'is no field of ' . $type->name)];
     }
     $named = isset($variable['valueReference']) ? $this->named($variable['valueReference']) : [];
@@ -99,17 +100,14 @@ final readonly class Arrangement
       return [Violation::stated($name, 'lets its keys out one by one, each named under valueReference')];
     }
     $entry = [];
-    foreach ($type->fields() as $key) {
-      $spelt = (string) $this->schema->propertyName($key->key);
-      if ($key->valueObjectOf !== $name || !isset($named[$spelt])) {
-        continue;
-      }
-      $entry = [...$entry, ...$this->field($type, $key, (array) $named[$spelt], $name . '.' . $spelt)];
-      unset($named[$spelt]);
+    foreach ($named as $spelt => $sent) {
+      $key = array_find($keys, fn (FieldDefinition $field): bool
+        => $this->schema->propertyName($field->key) === (string) $spelt);
+      $entry = [...$entry, ...($key === null ? [Violation::stated($name . '.' . $spelt, 'is no key of ' . $name)]
+        : $this->field($type, $key, (array) $sent, $name . '.' . $spelt))];
     }
 
-    return [...$entry, ...array_map(fn (string $stray): Violation => Violation::stated($name . '.' . $stray,
-      'is no key of ' . $name), array_keys($named))];
+    return $entry;
   }
 
   /** @return array<string, mixed> the keys sent under a value object's entry, by name */

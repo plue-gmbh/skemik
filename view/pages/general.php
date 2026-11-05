@@ -10,8 +10,10 @@ declare(strict_types=1);
    each cost `/install` named, a warning while it costs, each value under its
    label as a field's is. Where PHP cannot write `config.php` its boxes are
    disabled under one note saying so. A kept password shows only as dots. Every
-   field keeps its label in sight and its hint tied to it, and a refusal is
-   announced, since it arrives after a post. */
+   field keeps its label in sight and its hint tied to it. It is saved from the
+   records' save pill, `view/scripts/forms.js` its behaviour, which says what
+   the post answered, saved or refused, and announces a refusal, since it
+   arrives after a post. */
 
 if (!isset($template)) {
   return;
@@ -28,18 +30,13 @@ $field = function (string $name, string $label, string $type = 'text', string $h
 $legend = fn (string $title, string $store): string => '<legend>' . $template->escape($title)
   . ' <span class="settings-store">' . $template->escape($store) . '</span></legend>';
 $machine = $writable ? '' : ' disabled aria-describedby="general-unwritable"';
+$said = $notice ?? $refusal;
 ?>
 <div class="page">
   <header class="page-head">
     <h1><?= $template->escape($words->get('general.title')) ?></h1>
     <p class="page-shape"><?= $template->escape($words->get('general.explain')) ?></p>
   </header>
-<?php if ($notice !== null): ?>
-  <p class="page-note is-done" role="status"><?= $template->escape($notice) ?></p>
-<?php endif ?>
-<?php if ($refusal !== null): ?>
-  <p class="page-note is-refused" role="alert"><?= $template->escape($refusal) ?></p>
-<?php endif ?>
 <?php if (!$writable): ?>
   <p class="page-note" id="general-unwritable"><?= $template->escape($words->get('general.unwritable')) ?></p>
 <?php endif ?>
@@ -123,8 +120,16 @@ $machine = $writable ? '' : ' disabled aria-describedby="general-unwritable"';
         </fieldset>
       </div>
     </div>
-    <div>
-      <button type="submit" class="button-primary"><?= $template->escape($words->get('general.save')) ?></button>
+    <div class="save-bar<?= $said === null ? '' : ' is-open' ?><?= $notice === null ? '' : ' is-done' ?>"
+      data-save-bar<?= $said === null ? '' : ' data-kept' ?> data-pending="<?= $template->escape(
+      $words->get('sheet.pending', ['n' => '{n}'])) ?>">
+      <span class="save-bar-text" role="<?= $refusal === null ? 'status' : 'alert' ?>"><span class="save-bar-dot"
+        aria-hidden="true"<?= $said === null ? ' hidden' : '' ?>></span><span data-sentence><?=
+        $template->escape($said ?? '') ?></span></span>
+      <button type="reset" class="button-quiet" hidden><?= $template->escape($words->get('sheet.discard'))
+        ?></button>
+      <button type="submit" class="button-primary" aria-keyshortcuts="Control+S Meta+S"><?= $template->escape(
+        $words->get('general.save')) ?></button>
     </div>
   </form>
 </div>
