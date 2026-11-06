@@ -15,13 +15,16 @@ function mountGrant(element) {
   mountRevoke(element);
   const form = element.querySelector("[data-grant-issue]");
   if (!form) return null;
-  const [name, submit] = [form.querySelector("[data-grant-label]"), form.querySelector("[type=submit]")];
-  const [fallback, issue] = [form.querySelector("[data-grant-name]")?.textContent ?? "", submit.textContent];
+  const name = form.querySelector("[data-grant-label]");
+  const submit = form.querySelector("[type=submit]");
+  const fallback = form.querySelector("[data-grant-name]")?.textContent ?? "";
+  const issue = submit.textContent;
   name.addEventListener("input", () => {
     form.querySelectorAll("[data-grant-name]").forEach((each) => { each.textContent = name.value.trim() || fallback; });
     form.querySelector("[name=adds]")?.remove();
     const replace = form.querySelector("[data-grant-replace]");
-    [replace.hidden, replace.querySelector("input").checked] = [true, false];
+    replace.hidden = true;
+    replace.querySelector("input").checked = false;
     submit.textContent = issue;
   });
   form.addEventListener("change", () => issuable(form, submit));
@@ -49,8 +52,8 @@ async function issueKey(element, form, submit) {
 /* Nothing ticked is nothing to issue, and the draft box stands under a ticked
    read; a form whose one capability is fixed has no box to tick. */
 function issuable(form, submit) {
-  const [unpublished, ticks] = [form.querySelector("[data-grant-unpublished]"),
-    [...form.querySelectorAll("input[type=checkbox][name=capability]")]];
+  const unpublished = form.querySelector("[data-grant-unpublished]");
+  const ticks = [...form.querySelectorAll("input[type=checkbox][name=capability]")];
   submit.disabled = ticks.length > 0 && !ticks.some((tick) => tick.checked);
   if (!unpublished) return;
   unpublished.hidden = !ticks.some((tick) => tick.checked && tick.value === "read");
@@ -85,7 +88,8 @@ function confirmAdding(form, submit) {
   const adds = Object.assign(document.createElement("input"), { type: "hidden", name: "adds", value: "1" });
   form.append(adds);
   const replace = form.querySelector("[data-grant-replace]");
-  [replace.hidden, replace.querySelector("input").checked] = [false, true];
+  replace.hidden = false;
+  replace.querySelector("input").checked = true;
   submit.textContent = form.dataset.grantAdd;
 }
 
@@ -94,7 +98,8 @@ function confirmAdding(form, submit) {
    the dialog then held until it is closed, which reads the page afresh. */
 function mountReissue(form) {
   const dialog = form.closest("dialog");
-  const [submit, error] = [dialog.querySelector(`[form="${form.id}"]`), form.querySelector("[data-grant-error]")];
+  const submit = dialog.querySelector(`[form="${form.id}"]`);
+  const error = form.querySelector("[data-grant-error]");
   form.addEventListener("change", () => { submit.disabled = !form.querySelector("[name=rule]:checked"); });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -102,7 +107,8 @@ function mountReissue(form) {
   });
   dialog.addEventListener("close", () => {
     form.reset();
-    [error.textContent, submit.disabled] = ["", false];
+    error.textContent = "";
+    submit.disabled = false;
   });
 }
 
@@ -128,10 +134,14 @@ function mountRevoke(scope) {
   scope.querySelectorAll("[data-grant-revoke-ask]").forEach((ask) => {
     const revoking = ask.closest(".grant, .grant-dialog").querySelector("[data-grant-revoking]");
     ask.addEventListener("click", () => {
-      [ask.hidden, revoking.hidden] = [true, false];
+      ask.hidden = true;
+      revoking.hidden = false;
       revoking.querySelector("[type=submit]").focus();
     });
-    scope.addEventListener("close", () => { [ask.hidden, revoking.hidden] = [false, true]; });
+    scope.addEventListener("close", () => {
+      ask.hidden = false;
+      revoking.hidden = true;
+    });
   });
 }
 

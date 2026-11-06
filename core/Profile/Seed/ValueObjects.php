@@ -20,7 +20,7 @@ final readonly class ValueObjects
 {
   /* The key, the English label and what each key of a flattened value object
      holds: a kind, the options of a select, the world's list, or `T` for a term
-     of the house's own, with its set's code after it where that is not the
+     of the organisation's own, with its set's code after it where that is not the
      key's own name — text where it says nothing — and after a kind `words` for
      what a reader reads, `whole` for a count or `offered` for a key a new
      collection starts without. An empty label is the object's
@@ -257,7 +257,7 @@ final readonly class ValueObjects
         ? $f->term($stored, $named, $spec[3] ?? null)->keyOf($valueObject, $key, $property)
         : $f->valueOf($valueObject, $key, $stored, $named, $holds, $property);
       /* ‡ on the object is ‡ on each of its keys, each a field of its own, but by
-         the mark's own test, what every house of the type adds on its first day,
+         the mark's own test, what every organisation of the type adds on its first day,
          a key marked `offered` stays behind Fields: a PO box, or a rating's
          scale beside its stars. */
       $mark = $holds === Cardinality::T ? null : $spec[3] ?? null;
@@ -274,7 +274,7 @@ final readonly class ValueObjects
   }
 
   /** The one row the type cannot answer, and what the answer needs to be worth
-      choosing: a house whose reviews are rows here computes its rating over
+      choosing: an organisation whose reviews are rows here computes its rating over
       them, and one whose reviews live at a platform stores the number instead.
       `reviewCount` counts the reviews and `ratingCount` those carrying stars,
       since a review may be words alone and the average is over the stars.

@@ -23,8 +23,8 @@ use Profile\Profile;
 use Storage\Collection;
 use Storage\CollectionField;
 use Storage\CollectionStore;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Storage\RateLimit;
 use Storage\SettingStore;
 use Support\Json;
@@ -32,11 +32,11 @@ use Support\JsonFailed;
 
 /* A `PATCH` on the collection's own address: the arrangement a key holding
    `arrange` there writes, as the entry its catalogue shows it
-   (`Feed\Catalog`), so what one house's catalogue shows is written to the next.
+   (`Feed\Catalog`), so what one install's catalogue shows is written to the next.
    The `variableMeasured` sent is the whole arrangement in its order: a field
    named is carried, one left out is taken off with its values kept, as the
-   admin takes one off, and each leaves the house where `isAccessibleForFree`
-   says so; what no house arranges by hand is refused (`Arrangement`). Letting
+   admin takes one off, and each leaves the install where `isAccessibleForFree`
+   says so; what no organisation arranges by hand is refused (`Arrangement`). Letting
    a withheld field out weighs what setting a public price does, so a changed
    arrangement is logged under the key's name, naming the fields let out,
    withheld, added and removed. No `If-Match`: an arrangement is written whole,
@@ -115,7 +115,8 @@ final readonly class ArrangeController
   {
     $flags = fn (Collection $collection): array => array_column(array_map(fn (CollectionField $field): array
       => [$field->key, $field->feed], $collection->fields), 1, 0);
-    [$was, $is] = [$flags($before), $flags($after)];
+    $was = $flags($before);
+    $is = $flags($after);
     if ($was === $is) {
       return;
     }
@@ -124,7 +125,7 @@ final readonly class ArrangeController
       'withheld' => array_values(array_intersect(array_diff($out($was), $out($is)), array_keys($is))),
       'added' => array_values(array_diff(array_keys($is), array_keys($was))),
       'removed' => array_values(array_diff(array_keys($was), array_keys($is)))];
-    ($this->logFor)($token)->record(ActionType::Update, new HouseObject(HouseItem::Collection,
+    ($this->logFor)($token)->record(ActionType::Update, new InstallObject(InstallItem::Collection,
       $before->slug->value), new Props(array_filter($changed)));
   }
 
@@ -142,7 +143,7 @@ final readonly class ArrangeController
       'violations' => $listed]), 422);
   }
 
-  /* A locale the house does not hold is no address of this install. */
+  /* A locale the install does not hold is no address of this install. */
   private function locale(Route $route): Locale
   {
     $tag = $route->parameter('locale');

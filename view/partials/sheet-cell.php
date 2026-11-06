@@ -9,21 +9,21 @@ declare(strict_types=1);
    field is not edited, so a button never holds a link. An uploaded
    file's address and type are shown and never edited (`Domain\Entity::keeps`).
    Outside the table no heading names it, so its name is spoken before the
-   value and titles it. Handed no cell, as the blank row + New record clones
-   is, it draws the empty one. */
+   value and titles it. Handed `$column`, `$row`, null for the blank row, `$element` and `$words`;
+   `$named` and `$cell` may be left out, and with no cell it draws the empty one + New record clones. */
 
 if (!isset($template)) {
   return;
 }
+$named ??= null;
 $cell ??= $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text,
   'value' => null, 'chips' => [], 'empty' => true, 'shown' => '']);
 $key = $column->field->key;
 $required = $row === null && $column->field->required;
 $edits = $column->editable && !($row?->entity->keeps($key) ?? false);
-$name = $named ?? null;
-$spoken = $name === null ? '' : '<span class="visually-hidden">' . $template->escape($name) . ': </span>';
+$spoken = $named === null ? '' : '<span class="visually-hidden">' . $template->escape($named) . ': </span>';
 $marks = ($required && $edits ? ' data-required' : '') . $column->kindMarks($row?->entity)
-  . ($name === null ? '' : ' title="' . $template->escape($name) . '"');
+  . ($named === null ? '' : ' title="' . $template->escape($named) . '"');
 $shown = $spoken . '<span class="cell-shown">' . $cell . '</span>';
 $note = $required ? ', ' . $words->get('sheet.required') : '';
 ?>

@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Http;
 
-/* Every answer's policy headers, chosen by the door a path opens before any route
-   is asked, so a refusal carries them as much as a document. `'unsafe-eval'` is
-   the price of no build step, Vue compiling its `x-template`s, and holdings reach
-   an island only as JSON, so no record's text is ever compiled. The feed may be
-   framed by anyone, said as `frame-ancestors *` because a host's front adds
-   `SAMEORIGIN` and a browser holding both obeys the policy. It answers any origin
-   and never with credentials: an anonymous reading is what `curl` fetches anyway,
-   and a token is sent only because the page put it there. The admin sends no
-   CORS header, which keeps its cookie same-origin. A per-install origin allowlist
-   is refused: a wrong value stays invisible until a frontend breaks in a browser.
-   Every answer says `noindex`, the feed's too, since `robots.txt` lets a robot
-   read the feed and a page a crawler may not fetch can still be listed by its
-   address: the organisation's website is what a search should find. */
+/* Every answer's policy headers, chosen by the door a path opens before any
+   route is asked, so a refusal carries them too. `'unsafe-eval'` is the price
+   of no build step, Vue compiling its `x-template`s, and holdings reach an
+   island only as JSON, so no record's text is ever compiled. The feed says
+   `frame-ancestors *`, since a host's front adds `SAMEORIGIN` and a browser
+   holding both obeys the policy. It answers any origin and never with
+   credentials, since an anonymous reading is what `curl` fetches anyway, and
+   the admin sends no CORS header, which keeps its cookie same-origin. No
+   per-install origin allowlist: a wrong value stays invisible until a frontend
+   breaks. */
 final readonly class SecurityHeaders
 {
   private const ADMIN = "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self';"

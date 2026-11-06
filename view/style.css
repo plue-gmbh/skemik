@@ -3315,6 +3315,13 @@ a.cell {
   margin-top: 12px;
 }
 
+.setting-switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+}
+
 .setting-switch {
   display: inline-flex;
   align-items: center;

@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 /* Accounts, drawn for every account (`Admin\Colleagues`): who works in the
-   house and on what, since a refused write says only that this account may not,
+   organisation and on what, since a refused write says only that this account may not,
    never whom to ask or who writes the type. With `manageAccounts` it is the list
    an owner answers for, a card beside the grants rather than a settings page: a
    row opens its dialog (`Admin\AccountController`) and New account the same
    dialog with a person to pick. Without it a row opens nothing. An entry stands
    as Last changed's do, the full width of the card, under the picture or
-   initials the header's account button shows. */
+   initials the header's account button shows.
+   Handed `$colleagues`, `$manage` and `$words`, and with `$manage` also `$types`, `$unreadable` and
+   `$csrf`. */
 
 if (!isset($template)) {
   return;

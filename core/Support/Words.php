@@ -4,24 +4,16 @@ declare(strict_types=1);
 
 namespace Support;
 
-/* The chrome, one flat file per language under `language/`, English the source,
-   and beside it `{language}.fields.php`, the thirty types' field names, and
-   `{language}.terms.php`, what a select's options are called, the two things
-   here a feed document carries, the field names English's own where none ships.
-   A region's file, `de-CH.php` beside `de.php`, holds only the words its
-   spelling differs in and is read first, word by word, then its language's, then
-   English's; it ships as its chrome file, and its field names beside it as a
-   language's do. Readable with no database, as the boot page renders through it
-   in the browser's language. A language ships with a release: an update replaces
-   `language/` whole, and a file a house put there is gone. A word a translation
-   lacks is English's; a word English lacks and a placeholder handed no value
-   halt a page under `zend.assertions`, and production shows the key or the brace
-   rather than no page. Placeholders are named, `{found}`, so a translation may
-   reorder them. A count is keyed by its form, `home.one.records` and
-   `home.many.records`, and a language counting in three forms words the third
-   under `few`, Polish's 2 to 4, which falls back to `many` where a translation
-   has none. `language/` is not under `view/` because the boot page,
-   `Auth\CodeDelivery` and `Http\ErrorHandler` read it too. */
+/* The chrome's words, one flat file per language under `language/`, English the
+   source, with `{language}.fields.php` and `{language}.terms.php` beside it,
+   since a feed document carries the field names and a select's words too. A
+   region's file, `de-CH.php`, holds only the words its spelling differs in and
+   is read first, then its language's, then English's. It stands beside `view/`
+   and not in it, since the boot page, a login mail and the error page read it
+   with no database. A word a translation lacks is English's; a word English
+   lacks halts a page under `zend.assertions` and shows its key in production,
+   since a key is better than no page. Placeholders are named, `{found}`, so a
+   translation may reorder them; a count's third form stands under `few`. */
 final readonly class Words
 {
   private const SOURCE = 'en';
@@ -41,13 +33,13 @@ final readonly class Words
   /** @var array<string, string> */
   private array $words;
 
-  /* The browser's language first, then the house's: a colleague whose browser
-     asks for German reads German in a house set up in English, and the house's
+  /* The browser's language first, then the install's: a colleague whose browser
+     asks for German reads German in an install set up in English, and the install's
      is what a browser naming no shipped language gets. */
-  public function __construct(private string $directory, string $acceptLanguage, ?string $house = null)
+  public function __construct(private string $directory, string $acceptLanguage, ?string $chosen = null)
   {
     $this->source = $this->load(self::SOURCE);
-    $this->language = $this->firstShipped([...$this->accepted($acceptLanguage), $house]);
+    $this->language = $this->firstShipped([...$this->accepted($acceptLanguage), $chosen]);
     $this->words = $this->language === self::SOURCE ? $this->source : $this->layered($this->language, '');
   }
 

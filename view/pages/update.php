@@ -3,16 +3,15 @@
 declare(strict_types=1);
 
 /* The update screen (`Update\UpdateController`): the running version, when the
-   install last checked or that it could not, the last release installed
-   automatically and whether it was a security release, the release that cannot be
-   installed with the reason and the copy by hand named, and last the key
-   downloads are verified against, which a reader looks up and never acts on.
-   The check is red once a day passed without one (`UpdateCheck::stale`), and
-   may be asked for now rather than within the hour, unless a snapshot or a restore
-   holds the lock, which the button waits out; while its own release installs the
-   screen is the waiting page instead (`Update\UpdateController`). Beside the
-   button the choice `config.php` keeps, a switch for installing by itself and,
-   while that is on, one for doing so early (`partials/setting-switch`). */
+   install last checked or that it could not, the last release installed by itself
+   and whether it was a security release, a release that cannot be installed with
+   the reason and the copy by hand named, and last the key downloads are verified
+   against, which a reader looks up and never acts on. The check is red once a day
+   passed without one (`UpdateCheck::stale`), and may be asked for now unless a
+   snapshot or a restore holds the lock. Beside it the two switches `config.php`
+   keeps (`partials/setting-switch`). Handed `$report`, `$version`, `$key`,
+   `$checked`, `$installedAt`, `$stale`, `$busy`, `$enabled`, `$early`,
+   `$switchable`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -34,6 +33,7 @@ if (!isset($template)) {
         $words->get('update.check_now')) ?></button>
     </form>
 <?php $unwritable = $switchable ? null : 'update-unwritable' ?>
+    <div class="setting-switches">
 <?= $template->render('partials/setting-switch', ['action' => '/settings/update/mode', 'name' => 'updates',
   'value' => $enabled ? 'off' : 'on', 'on' => $enabled, 'label' => $words->get('update.automatic'), 'csrf' => $csrf,
   'unwritable' => $unwritable]) ?>
@@ -42,6 +42,7 @@ if (!isset($template)) {
   'value' => $early ? 'on' : 'early', 'on' => $early, 'label' => $words->get('update.early_switch'),
   'csrf' => $csrf, 'unwritable' => $unwritable]) ?>
 <?php endif ?>
+    </div>
   </div>
 <?php if (!$switchable): ?>
   <p class="popover-hint" id="update-unwritable"><?= $template->escape($words->get('general.unwritable')) ?></p>

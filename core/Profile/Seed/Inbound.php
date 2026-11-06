@@ -34,7 +34,7 @@ final readonly class Inbound
         $this->review(), $this->base->thing()),
       new TypeDefinition('Comment', Erasure::Purge, LocaleMode::None, Reach::Public,
         $this->comment(), $this->base->thing()),
-      new TypeDefinition('Message', Erasure::Purge, LocaleMode::None, Reach::House,
+      new TypeDefinition('Message', Erasure::Purge, LocaleMode::None, Reach::Internal,
         $this->message(), $this->base->thing()),
     ];
   }

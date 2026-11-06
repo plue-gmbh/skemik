@@ -31,7 +31,7 @@ use Support\Words;
    file is stored under a generated name and its address is that name, so the
    bytes at an address never change: replacing an asset is a new file and a
    repointed `contentUrl`, and the old bytes leave with the last row holding
-   them, as a purge's do. The address is a path, so a house that moves its
+   them, as a purge's do. The address is a path, so an organisation that moves its
    domain keeps every asset. The file is taken with `move_uploaded_file` at once;
    before that it sat in `upload_tmp_dir`, which is the host's and no `ini_set`
    moves. One door for every file, the library's and a channel's
@@ -196,7 +196,7 @@ final readonly class Intake
     }
   }
 
-  /* Counted as PHP's own `2M` counts, so the cap reads as the hoster's setting does. */
+  /* Counted as PHP's own `2M` counts, so the cap reads as the host's setting does. */
   public static function size(int $bytes): string
   {
     $rounded = fn (int $power): string => rtrim(rtrim(number_format($bytes / (1 << $power), 1, '.', ''), '0'), '.');

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Storage;
 
 /* Nobody gets in after a restore who could not before it: a snapshot puts the
-   holdings back, never an account or a key the house removed since, nor a role,
+   holdings back, never an account or a key the organisation removed since, nor a role,
    a scope, an address or a rule it took back. So an account or a key the copy
-   holds is kept only where the live house still holds it, as the house has it,
+   holds is kept only where the live install still holds it, as the install has it,
    and the owner restoring keeps the account they restore with, their person
    record brought along where the copy lacks it or holds it in the trash. Read
    from the live database, attached, onto a copy already at the live shape, and

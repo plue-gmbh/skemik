@@ -13,7 +13,7 @@ use Support\JsonFailed;
 /* The check for a new version, once an hour, and the report it and the install
    leave (`UpdateReport`). The manifest is read with nothing that identifies the
    install: no id, no domain, no version, no counts, no query string, and the
-   static `User-Agent` every fetch of the house sends, so the address the request
+   static `User-Agent` every fetch of the install sends, so the address the request
    comes from is all that leaves it and the comparison is local; a personalised
    manifest is impossible and not merely unused, which is why the manifest is a
    static file, and why installs we cannot count are what *no further

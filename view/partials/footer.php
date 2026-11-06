@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* The copyright line, on the paper of every admin screen and on the ground
    under the cards a visitor meets before logging in, where it is also what says
    what this is. On that ground it takes the chrome's material, or its ink would
-   be the paper's on a dark floor. */
+   be the paper's on a dark floor.
+   Handed `$ground` and `$words`. */
 
 if (!isset($template)) {
   return;

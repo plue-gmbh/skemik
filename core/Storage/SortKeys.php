@@ -16,7 +16,7 @@ use Support\Json;
    order is German dictionary order and `är` finds `Ärztin`. Written in PHP
    because SQLite has neither casefold nor transliteration. The four German folds
    come first, since intl would make `ä` into `ae`. One folding per install, not
-   per locale: a Swedish house sorts `ä` with `a`, and reversing that is one
+   per locale: a Swedish organisation sorts `ä` with `a`, and reversing that is one
    rewrite of this column. Only the short `text` kind is keyed, and rows by the
    `value` each holds: a long text is searched through the word table and never
    sorted, and a copy of every article body is not a key. */

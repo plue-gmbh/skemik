@@ -12,9 +12,9 @@ use Support\JsonFailed;
 /* The running tree against the `SHA256SUMS` its release ships, since the signature
    is checked on the archive alone and a hand edit or a release half copied would
    stand unseen. `.htaccess` is not listed, its lines outside the Skemik block being
-   the hoster's. A file nobody listed counts where the folder is wholly ours, and at
+   the hosting provider's. A file nobody listed counts where the folder is wholly ours, and at
    the root only as a `.php` beside `index.php` and `config.php`, the root holding the
-   hoster's files and the data folder too. A tree with no list is not compared. Whoever
+   hosting provider's files and the data folder too. A tree with no list is not compared. Whoever
    can change the code can change the list and this reader, so it finds an accident and
    a careless intruder, never a careful one. Once a day, and at once under a release not
    compared yet, since a release copied by hand is the likeliest to be half copied; once

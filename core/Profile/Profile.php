@@ -51,7 +51,7 @@ final readonly class Profile
   }
 
   /** The same thirty under another language's field names (`Support\Words::fields`).
-      A field's name is ours in every language and no house's to change: a renamed
+      A field's name is ours in every language and no organisation's to change: a renamed
       field said one word on the screen and another at the address.
       @param array<string, string> $names */
   public function worded(array $names): self

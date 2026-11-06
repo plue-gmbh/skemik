@@ -7,7 +7,8 @@ declare(strict_types=1);
    entries newest first, each one line, its incident, when, the status and the
    address asked for, and what failed, with where in the code and the trace
    folded under it for whoever the owner forwards it to. An empty log offers
-   no search, since there is nothing to find. */
+   no search, since there is nothing to find.
+   Handed `$entries`, `$incident`, `$shown`, `$when` and `$words`. */
 
 if (!isset($template)) {
   return;

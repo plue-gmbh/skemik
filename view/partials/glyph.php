@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /* One drawing of `partials/glyphs`, by its name: decoration beside a word that
-   already says what it stands for, so hidden from a screen reader. */
+   already says what it stands for, so hidden from a screen reader.
+   Handed `$name`. */
 
 if (!isset($template)) {
   return;

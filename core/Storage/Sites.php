@@ -8,12 +8,12 @@ use Domain\Locale;
 use Support\Clock;
 use Support\Json;
 
-/* The house's own sites, for the header: the public `WebSite`s a `WebPage` is
+/* The organisation's own sites, for the header: the public `WebSite`s a `WebPage` is
    `isPartOf`, one link per host. Read from the holdings and never detected, since
    a feed read carries nothing that names its site; not every published `WebSite`,
    since a showcase list holds other people's sites. A site built wholly in code
    holds no page here and gets no link, a missing one and never a wrong one. The
-   house's first language goes first, so the first link is the site it writes in. */
+   install's first language goes first, so the first link is the site it writes in. */
 final readonly class Sites
 {
   public const WEB_SITE = 'https://schema.org/WebSite';
@@ -26,7 +26,7 @@ final readonly class Sites
     private Json $json = new Json(),
   ) {}
 
-  /** @return array<string, string> each host by the first URL stated under it, in the house's languages' order */
+  /** @return array<string, string> each host by the first URL stated under it, in the install's languages' order */
   public function linked(): array
   {
     $statement = $this->db->prepare("select json_extract(e.props, '$.url') from entity e"
@@ -48,7 +48,7 @@ final readonly class Sites
     return $byUrl;
   }
 
-  /* A site in a language the house no longer holds goes last. */
+  /* A site in a language the install no longer holds goes last. */
   private function languages(): string
   {
     return $this->json->encode(array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales()));

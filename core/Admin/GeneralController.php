@@ -19,7 +19,7 @@ use Storage\SettingStore;
 use Support\Template;
 use Support\Words;
 
-/* `/settings/general`, `manageHouse`, opened from the Settings card: one form
+/* `/settings/general`, `manageInstall`, opened from the Settings card: one form
    over the two stores, saying which is which, since a restore elsewhere brings
    the one and not the other. The address is shown and never edited: a typo would
    send every colleague's login mail to another domain, and moving the domain is
@@ -44,7 +44,7 @@ final readonly class GeneralController
 
   public function show(Account $account, Entity $person, Request $request): Response
   {
-    $this->authorizer->requireHuman(Capability::ManageHouse);
+    $this->authorizer->requireHuman(Capability::ManageInstall);
 
     return $this->screen($account, $person, $request, [], null);
   }
@@ -53,7 +53,7 @@ final readonly class GeneralController
   public function save(Account $account, Entity $person, Request $request): Response
   {
     $this->csrf->require($request);
-    $this->authorizer->requireHuman(Capability::ManageHouse);
+    $this->authorizer->requireHuman(Capability::ManageInstall);
     try {
       $form = GeneralForm::from($request, $this->config->writable() ? $this->config->read() : null, $this->words);
       $form->proving && $this->relay($form)->probe();
@@ -94,7 +94,8 @@ final readonly class GeneralController
   private function screen(Account $account, Entity $person, Request $request, array $typed, ?string $refusal)
     : Response
   {
-    [$shipped, $config] = [$this->words->shipped(), $this->config->read()];
+    $shipped = $this->words->shipped();
+    $config = $this->config->read();
     $held = $this->held($config);
     $main = $this->template->render('pages/general', ['words' => $this->words,
       'values' => [...$held, ...array_intersect_key($typed, $held)],

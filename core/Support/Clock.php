@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Support;
 
-/* The only source of time, and UTC everywhere except at a person: the house's
+/* The only source of time, and UTC everywhere except at a person: the install's
    timezone binds in `render()` and `parse()`, where a person reads a time or
    names a period, a day asked of the feed or the day an offer lapses, and never
    in what is stored, sorted or addressed. An event happens at an instant, so a
-   house that changes its timezone sees every time move by the difference. A
+   install that changes its timezone sees every time move by the difference. A
    `date` passes both without a zone, because a birthday is not an instant and
    must not become the previous evening. Every read is checked by writing it
    back, which refuses 2026-02-30, and a wall time the zone skips is refused
@@ -58,7 +58,7 @@ final readonly class Clock
     return $this->read($format, $typed, $this->zone)->setTimezone($this->utc)->format(self::STORED);
   }
 
-  /* A day's first instant as the house lives it, which is one o'clock where the
+  /* A day's first instant as the install lives it, which is one o'clock where the
      clocks skip midnight rather than a day refused. */
   public function dayStart(string $date): string
   {

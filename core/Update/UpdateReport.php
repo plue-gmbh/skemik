@@ -7,7 +7,7 @@ namespace Update;
 use Support\Clock;
 
 /* What the owner's update screen says, kept as `update.json` in the data folder
-   and outside `holdings/`, since what the machine did is no fact of the house a
+   and outside `holdings/`, since what the machine did is no fact of the install a
    restore should bring back: when the install last checked and whether it
    could, the newest release the manifest named above the running one, the last
    release installed by itself and whether it was a security release, and the

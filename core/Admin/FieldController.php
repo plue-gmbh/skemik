@@ -26,15 +26,15 @@ use Storage\ActivityLog;
 use Storage\Collection;
 use Storage\CollectionField;
 use Storage\CollectionStore;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Support\Words;
 
 /* A collection's fields, for `manageFields`. The dialog opens on the full list,
    since a truncated first screen would be the profile having an opinion about
    which of its fields matter. It asks the write scope, as writing a record does:
    letting a field out discloses every row's value. A key of a value object is a
-   field like any other, added, let out, moved and removed alone, so a house may
+   field like any other, added, let out, moved and removed alone, so an organisation may
    keep the town and drop the street; added, it stands after its kin, under their
    heading. A removal keeps the values, so adding it back loses nothing, and a
    grant's field is a key and not a foreign key, so a rule on a removed field
@@ -133,7 +133,7 @@ final readonly class FieldController
   /** @param list<string> $keys the fields, under the word the log keeps for what was done to them */
   private function logged(Collection $collection, string $done, array $keys): void
   {
-    $this->log->record(ActionType::Update, new HouseObject(HouseItem::Collection, $collection->slug->value),
+    $this->log->record(ActionType::Update, new InstallObject(InstallItem::Collection, $collection->slug->value),
       new Props([$done => $keys]));
   }
 

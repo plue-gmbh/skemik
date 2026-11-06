@@ -9,7 +9,7 @@ use Domain\Status;
 use Support\Json;
 
 /* What the home screen's Needs a look counts over the rows (`Admin\NeedsLook`),
-   one grouped query a finding rather than a record loaded per row, since a house
+   one grouped query a finding rather than a record loaded per row, since an organisation
    with three hundred drafts should not pay for them on every visit to the
    overview. Trashed rows are left out, and each answer is by type, most first,
    the collection a finding opens being the one holding most of it. */

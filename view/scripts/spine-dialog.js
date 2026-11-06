@@ -29,7 +29,8 @@ function withSpine(sent) {
    answers 404, so the row's links to the record follow it. Only those: the same
    row links to other records through its references. */
 function relink(row, before, after) {
-  const [from, to] = [new URL(before, location.origin), new URL(after, location.origin)];
+  const from = new URL(before, location.origin);
+  const to = new URL(after, location.origin);
   row.querySelectorAll("a[href]").forEach((link) => {
     const url = new URL(link.getAttribute("href"), location.origin);
     if (url.pathname !== from.pathname || url.searchParams.get("in") !== from.searchParams.get("in")) return;
@@ -49,7 +50,8 @@ const spineDialog = {
     common() { return this.opened.common; },
     words() { return this.common.words; },
     address() {
-      const [slug, collection] = [slugShown(this.current("slug")), this.common.collection];
+      const slug = slugShown(this.current("slug"));
+      const collection = this.common.collection;
       return this.common.public ? `/feed/${this.current("locale")}/${collection}/${slug}` : `/c/${collection}/${slug}`;
     },
     moved() {
@@ -59,7 +61,8 @@ const spineDialog = {
   mounted() {
     const dialog = this.$refs.dialog;
     dialog.showModal();
-    const [box, at] = [dialog.getBoundingClientRect(), this.opened.chip.getBoundingClientRect()];
+    const box = dialog.getBoundingClientRect();
+    const at = this.opened.chip.getBoundingClientRect();
     const below = at.bottom + 4 + box.height <= window.innerHeight - 8;
     dialog.style.left = Math.max(8, Math.min(at.left, window.innerWidth - box.width - 8)) + "px";
     dialog.style.top = Math.max(8, below ? at.bottom + 4 : at.top - box.height - 4) + "px";

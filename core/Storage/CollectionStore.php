@@ -14,10 +14,10 @@ use Support\Json;
 use Support\Uuid;
 use Support\Words;
 
-/* The seam between the profile and a house: the profile says what an `Article`
-   is, a collection says which of its fields this house carries and lets out.
-   Every house holds one collection per type (`provide`), so the thirty are on
-   every sidebar and a release that adds a type gives every standing house its
+/* The seam between the profile and an organisation: the profile says what an `Article`
+   is, a collection says which of its fields this install carries and lets out.
+   Every install holds one collection per type (`provide`), so the thirty are on
+   every sidebar and a release that adds a type gives every standing install its
    collection: the seed, `/install` and an update all call the same method.
    What would leave a collection unable to hold its type is refused here, not
    only hidden on a screen: a † field removed. A key of a value object is a
@@ -65,7 +65,7 @@ final readonly class CollectionStore
     return $row === false ? null : $this->collection($row);
   }
 
-  /* Every type this house has no collection of yet gets one: its † and ‡ fields,
+  /* Every type this install has no collection of yet gets one: its † and ‡ fields,
      every one withheld. One statement per type, so two requests cannot make two. */
   public function provide(): void
   {

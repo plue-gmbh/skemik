@@ -43,8 +43,8 @@ enum Reason: string
   case OneTarget = 'holds one target, not {count}';
   case QualifierNotWords = '{key} is not a map of locales holding words';
   case WrongTarget = 'points at {target} and takes {targets}';
-  case HeldInHouse = 'another {type} in this house holds it';
-  case HeldInHouseTrashed = 'another {type} in this house holds it, in the trash';
+  case HeldInInstall = 'another {type} in this install holds it';
+  case HeldInInstallTrashed = 'another {type} in this install holds it, in the trash';
   case HeldInScope = 'another {type} in this {scope} holds it';
   case HeldInScopeTrashed = 'another {type} in this {scope} holds it, in the trash';
   case HeldInGroup = 'another {type} in this group holds it';

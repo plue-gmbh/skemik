@@ -5,17 +5,18 @@ declare(strict_types=1);
 /* One tile of the grid view, drawn by the collection screen and by the answer
    to a new record's `POST`, as the table's rows are: the tick where the account
    writes, the picture where the collection carries an image or is the library,
-   and the label, both the link to the record, the spine chip beneath, then the
-   collection's first two fields (`Admin\Glance`) as the table's cells. An asset's tile
-   says its pixels or its kind and how often it is used, under the reader's
-   scope as its record screen counts it, and its one field is the description,
-   titled alt text on a picture and marked where it is missing. Without a record
-   it is the blank tile + New record clones, its label a cell until it has an
-   address. */
+   the label and the spine chip, then the first two fields (`Admin\Glance`). An
+   asset's tile says its pixels or its kind and how often it is used within the
+   reader's scope, as its record screen counts, and its one field is the
+   description, titled alt text and marked where missing. The blank tile + New
+   record clones holds its label as a cell until it has an address. Handed `$row`,
+   null for the blank tile, `$columns`, `$items`, `$glance`, `$collection`,
+   `$firstLocale`, `$ticks` and `$words`; without `$uses` every file counts as unused. */
 
 if (!isset($template)) {
   return;
 }
+$uses ??= [];
 $entity = $row?->entity;
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
 $own = $items->own($row);
@@ -40,7 +41,7 @@ $pixels = $entity === null ? '' : Admin\Rows::pixels($entity);
 $used = $uses[$entity?->id->value ?? ''] ?? 0;
 ?>
 <li class="grid-tile" data-record="<?= $row === null ? '' : $template->escape($entity->id->value) ?>">
-<?php if (($ticks ?? false) && $row !== null): ?>
+<?php if ($ticks && $row !== null): ?>
   <span class="item-tick"><input type="checkbox" data-tick aria-label="<?= $template->escape($words->get('sheet.tick',
     ['label' => $row->label])) ?>"></span>
 <?php endif ?>
@@ -53,7 +54,7 @@ $used = $uses[$entity?->id->value ?? ''] ?? 0;
 <?php if ($row !== null): ?>
     <a class="item-label" href="<?= $template->escape($address) ?>"><?= $template->escape($row->label) ?></a>
     <?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row, 'prefix' => '',
-      'translations' => $own, 'opens' => $opens, 'current' => $house ?? null]) ?>
+      'translations' => $own, 'opens' => $opens, 'current' => $firstLocale]) ?>
 <?php elseif ($label !== null): ?>
     <?= $cell($label, $label->label) ?>
 <?php endif ?>

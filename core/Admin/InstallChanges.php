@@ -18,8 +18,8 @@ use Storage\Activity;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Support\Words;
 
 /* Last changed's lines for an account, a key, a language or a collection,
@@ -34,7 +34,7 @@ use Support\Words;
    that is the disclosure. A dump
    (`ExportController`) is shown to whoever reads the log, named by the types it
    ran under, since who took it is the line's own. */
-final readonly class HouseChanges
+final readonly class InstallChanges
 {
   /* What an arrangement did to its fields, in the order the log keeps: let out, withheld, added, removed. */
   private const ARRANGED = ['let_out' => 'change.let_out', 'withheld' => 'change.withheld',
@@ -49,61 +49,61 @@ final readonly class HouseChanges
   ) {}
 
   /* Null where the reader does not manage it, or its person is gone. */
-  public function label(Account $account, HouseObject $object, Activity $activity): ?string
+  public function label(Account $account, InstallObject $object, Activity $activity): ?string
   {
     if (!$account->can(match ($object->item) {
-      HouseItem::Account => Capability::ManageAccounts,
-      HouseItem::Key => Capability::ManageTokens,
-      HouseItem::Locale => Capability::ManageHouse,
-      HouseItem::Collection => Capability::ManageFields,
-      HouseItem::Dump => Capability::ReadLog,
+      InstallItem::Account => Capability::ManageAccounts,
+      InstallItem::Key => Capability::ManageTokens,
+      InstallItem::Locale => Capability::ManageInstall,
+      InstallItem::Collection => Capability::ManageFields,
+      InstallItem::Dump => Capability::ReadLog,
     })) {
       return null;
     }
 
     return match ($object->item) {
-      HouseItem::Account => $this->person((string) $activity->result?->string('person')),
-      HouseItem::Dump => $this->scope($activity->result ?? new Props([])),
-      HouseItem::Key => $this->tokens->find($object->id)->label,
-      HouseItem::Locale => $object->id,
-      HouseItem::Collection => $this->collection($account, $object)?->name,
+      InstallItem::Account => $this->person((string) $activity->result?->string('person')),
+      InstallItem::Dump => $this->scope($activity->result ?? new Props([])),
+      InstallItem::Key => $this->tokens->find($object->id)->label,
+      InstallItem::Locale => $object->id,
+      InstallItem::Collection => $this->collection($account, $object)?->name,
     };
   }
 
   /* A collection's as the sidebar draws it, and a dump's as the export screen does. */
-  public function glyph(HouseObject $object): string
+  public function glyph(InstallObject $object): string
   {
-    $type = $object->item === HouseItem::Collection ? $this->collection(null, $object)?->type : null;
+    $type = $object->item === InstallItem::Collection ? $this->collection(null, $object)?->type : null;
 
     return match ($object->item) {
-      HouseItem::Account => 'Person',
-      HouseItem::Key => 'key',
-      HouseItem::Dump => 'export',
+      InstallItem::Account => 'Person',
+      InstallItem::Key => 'key',
+      InstallItem::Dump => 'export',
       default => $type === null ? 'activity' : SidebarEntry::glyphOf($type),
     };
   }
 
-  public function href(HouseObject $object): string
+  public function href(InstallObject $object): string
   {
     return match ($object->item) {
-      HouseItem::Account => '/#home-accounts',
-      HouseItem::Key => '/#home-grants',
-      HouseItem::Locale => '/#home-languages',
-      HouseItem::Collection => '/c/' . $object->id,
-      HouseItem::Dump => '/export',
+      InstallItem::Account => '/#home-accounts',
+      InstallItem::Key => '/#home-grants',
+      InstallItem::Locale => '/#home-languages',
+      InstallItem::Collection => '/c/' . $object->id,
+      InstallItem::Dump => '/export',
     };
   }
 
-  public function what(HouseObject $object, Activity $activity): string
+  public function what(InstallObject $object, Activity $activity): string
   {
     return $this->words->get('change.what', ['type' => $this->words->get($this->about($object, $activity)),
       'done' => implode(', ', $this->done($object, $activity))]);
   }
 
   /* An arrangement is about the fields it names, the line's name saying whose. */
-  private function about(HouseObject $object, Activity $activity): string
+  private function about(InstallObject $object, Activity $activity): string
   {
-    $named = $object->item === HouseItem::Collection && $activity->action === ActionType::Update
+    $named = $object->item === InstallItem::Collection && $activity->action === ActionType::Update
       ? count(array_unique(array_merge(...array_map(fn (string $what): array
         => $activity->result?->list($what) ?? [], array_keys(self::ARRANGED))))) : 0;
 
@@ -115,16 +115,16 @@ final readonly class HouseChanges
   }
 
   /** @return list<string> */
-  private function done(HouseObject $object, Activity $activity): array
+  private function done(InstallObject $object, Activity $activity): array
   {
     $kept = $activity->result ?? new Props([]);
 
     return match (true) {
       $activity->action === ActionType::Delete => [$this->words->get('change.removed_item')],
-      $object->item === HouseItem::Account => $this->account($activity->action, $kept),
-      $object->item === HouseItem::Collection => $this->arranged($object, $kept),
-      $object->item === HouseItem::Dump => $this->dumped($kept),
-      $activity->action === ActionType::Create => [$this->words->get($object->item === HouseItem::Key
+      $object->item === InstallItem::Account => $this->account($activity->action, $kept),
+      $object->item === InstallItem::Collection => $this->arranged($object, $kept),
+      $object->item === InstallItem::Dump => $this->dumped($kept),
+      $activity->action === ActionType::Create => [$this->words->get($object->item === InstallItem::Key
         ? 'change.issued' : 'change.added')],
       $kept->has('replaced') => [$this->words->get('change.replaced_key')],
       $kept->has('revoked') => [$this->words->get('change.revoked_key')],
@@ -153,7 +153,7 @@ final readonly class HouseChanges
 
   /** The fields by the names the reader's admin gives them.
       @return list<string> */
-  private function arranged(HouseObject $object, Props $kept): array
+  private function arranged(InstallObject $object, Props $kept): array
   {
     $collection = $this->collection(null, $object);
     $type = $collection === null ? null : $this->profile->byType($collection->type);
@@ -186,7 +186,7 @@ final readonly class HouseChanges
   }
 
   /* Null for a reader outside the type's read scope: what its records would not tell them either. */
-  private function collection(?Account $account, HouseObject $object): ?Collection
+  private function collection(?Account $account, InstallObject $object): ?Collection
   {
     try {
       $collection = $this->collections->bySlug(new Slug($object->id));

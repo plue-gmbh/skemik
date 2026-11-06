@@ -6,7 +6,7 @@ namespace Profile;
 
 use Profile\Seed\Media;
 
-/* What a house asks of its library, its images or its videos and never its PNGs:
+/* What an organisation asks of its library, its images or its videos and never its PNGs:
    every format of `Seed\Media::FORMATS` is of one kind, four by its type's first
    half, an archive by `Seed\Media::ARCHIVES` and any other a document. A kind is
    asked as the values `encodingFormat` takes, which a text filter matches from

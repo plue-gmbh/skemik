@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* The polite region `announce` speaks through (`view/scripts/app.js`): one in the frame and one first in every
    dialog, since an open modal dialog makes all outside it inert, the frame's region too, and a region made only as
-   its words arrive is one some screen readers never hear. */
+   its words arrive is one some screen readers never hear.
+   Handed nothing. */
 
 if (!isset($template)) {
   return;

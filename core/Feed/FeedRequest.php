@@ -21,7 +21,7 @@ use Support\Clock;
 /* The query string as a `Storage\Query`. One sort key, since a page orders the
    fifty it holds. A name given twice is refused, because PHP would keep one in
    silence, so `,` is the one spelling of *any of*. A year, month or day on an
-   instant is read here as the house's, the one place the zone is known. A field
+   instant is read here as the install's, the one place the zone is known. A field
    withheld from this reader is refused in the words of one the type lacks, since
    a filter answering to it reads the value out a guess at a time. A status asks
    among what `PublicFilter` lets this reader read, so a stranger's drafts are
@@ -117,7 +117,7 @@ final readonly class FeedRequest
       : (string) Spelling::held($field, $one, $request->origin()), $values);
   }
 
-  /* A period's first and last second in the house's zone, the last being the one
+  /* A period's first and last second in the install's zone, the last being the one
      before the next period starts, a wall time read in it, and anything else
      left for `Storage\Query` to refuse by name. */
   private function instants(string $value): string

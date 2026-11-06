@@ -108,7 +108,7 @@ final readonly class Request
      connection's own, since `X-Forwarded-*` are headers any client can send.
      Behind a proxy that speaks TLS for the host every visitor is one address and
      every `@id` reads `http://`; a `config.php` key naming the proxy comes when a
-     house behind one asks. An IPv6 connection is usually handed a whole `/64`,
+     organisation behind one asks. An IPv6 connection is usually handed a whole `/64`,
      so an address of its own per request would be a fresh allowance per request;
      an IPv4 address written as IPv6 stays whole. */
   private static function client(string $address): string
@@ -177,7 +177,7 @@ final readonly class Request
   }
 
   /* The origin an `@id` is written under: the name the request came under, so
-     a house answering under two reads right under each. It is checked rather
+     an install answering under two reads right under each. It is checked rather
      than trusted, since anything but a host and a port would be a header the
      caller chose, and it lands in every `@id` of the document. What the install
      says outside a request uses the address `config.php` holds (`Admin\Premises`). */

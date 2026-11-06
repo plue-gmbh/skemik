@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-/* Above the view (`Admin\QueryBar`), one form whose fields are the address. A
-   choice no row holds is not offered, and a field called what the Status group
-   is called names its collection beside it, so the two differ. Search matches what the
-   feed's `?q=` matches, so its placeholder names the collection and not a field.
-   A select at its default reads as quietly as the placeholder, so what narrows or
-   orders the view stands out. n of total is announced, since typing redraws the
-   view where a screen reader does not look. What makes a record stands in the
-   header and not here, since this changes what is seen and nothing else. A
-   narrowing the select cannot show, a value it does not offer or more than one
-   parameter as Needs a look links them, stands in its place in words, each
-   taken away by its own link, and the select returns once none is left. */
+/* Above the view (`Admin\QueryBar`), one form whose fields are the address, and
+   nothing that makes a record, since this changes only what is seen. A choice no
+   row holds is not offered, and a field called what the Status group is called
+   names its collection beside it. Search matches what the feed's `?q=` matches, so
+   its placeholder names the collection and not a field. A select at its default
+   reads as quietly as the placeholder, so what narrows stands out. n of total is
+   announced, since typing redraws where a screen reader does not look. A narrowing
+   the select cannot show stands in words, each taken away by its own link. Handed
+   `$columns`, `$collection`, `$filters`, `$named`, `$parameters`, `$narrowed`,
+   `$narrowing`, `$fixed`, `$all`, `$total` and `$words`. */
 
 if (!isset($template)) {
   return;

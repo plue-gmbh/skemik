@@ -8,7 +8,9 @@ declare(strict_types=1);
    says nothing the form does not. Under them what slows the host and refuses
    nothing, shown only where it does. Every field keeps its label in sight, since
    a placeholder is gone once typed into, and from a value refilled after a
-   refusal. A refusal is announced, since it arrives after a post. */
+   refusal. A refusal is announced, since it arrives after a post.
+   Handed `$requirements`, `$ready`, `$costs`, `$asksFolder`, `$form`, `$timezones`, `$languages`,
+   `$sentence` and `$words`. */
 
 if (!isset($template)) {
   return;

@@ -7,7 +7,8 @@ declare(strict_types=1);
    narrow paper, where five do not fit beside the title, it is a menu of icon and name
    behind one button showing the current view (`$menu`). Both are redrawn with
    the view as the query bar filters (`view/scripts/query-bar.js`), since their links
-   carry what was typed. */
+   carry what was typed.
+   Handed `$view`, `$menu`, `$parameters` and `$words`. */
 
 use Storage\CollectionView;
 

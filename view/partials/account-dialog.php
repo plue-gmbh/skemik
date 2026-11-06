@@ -2,19 +2,16 @@
 
 declare(strict_types=1);
 
-/* One account's dialog on the Accounts card, or a new account's where no colleague
-   is handed in (`view/scripts/accounts.js`). A new one starts at its person, picked
-   through the search every edge uses or named new, so there is no second form
-   for a name that already stands three collections away; a held one shows its
-   person, leading to the record where its name and picture are changed. Each scope editor is
-   folded until asked for, since unscoped is the normal case for both and must
-   not have to be dismissed to stay one: the write scope stands for an editor,
-   the read scope for an editor and a viewer. The read scope's words say what it
-   does, because the alternative is a house believing it hid something: a type
-   left unticked is read as the public reads it, and a type never public says
-   that this leaves nothing at all. The last owner is offered no
-   way down, neither another role nor Disabled nor Delete account, and told why,
-   since the repository would refuse each of them. */
+/* One account's dialog on the Accounts card, or a new account's where `$colleague`
+   is null (`view/scripts/accounts.js`). A new one starts at its person, picked
+   through the search every edge uses or named new, so no second form names a
+   person who already stands; a held one leads to its person's record, where name
+   and picture change. Each scope editor is folded, since unscoped is the normal
+   case and must not have to be dismissed: write for an editor, read for an editor
+   and a viewer. The read scope says a type left unticked is read as the public
+   reads it, or an organisation believes it hid something. The last owner is offered no way
+   down, and told why, since the repository would refuse each. Handed `$colleague`,
+   `$types`, `$unreadable`, `$held`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

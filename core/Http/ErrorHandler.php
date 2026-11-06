@@ -39,7 +39,7 @@ final readonly class ErrorHandler
     $status = $this->status($failure);
     /* A malformed value in a read is a malformed request — the unknown field of
        `Feed\FeedRequest`'s 400, named in the sentence; in a write it is a payload
-       the house understood and refuses. */
+       the install understood and refuses. */
     $status = $status === 422 && $request->reads() ? 400 : $status;
     /* The one address family whose caller is a machine whatever it sends: a
        reader asking for `.csv` gets its refusal as JSON rather than a page, and

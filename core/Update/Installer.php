@@ -11,7 +11,7 @@ namespace Update;
    updated*: the running tree goes into `.previous/` and comes back where the
    new code cannot take over the holdings. `config.php` is never touched, the
    archive not containing it. `.htaccess` is replaced between `# BEGIN Skemik`
-   and `# END Skemik` with every line outside kept: a hoster has a house add the
+   and `# END Skemik` with every line outside kept: a hosting provider has an organisation add the
    line that picks its PHP version there, as IONOS and Strato do, and losing it
    would answer the site with the boot page naming the old PHP. */
 final readonly class Installer
@@ -57,7 +57,8 @@ final readonly class Installer
      fails puts back what was moved. */
   public function swap(): void
   {
-    [$previous, $staged] = [$this->root . '/' . self::PREVIOUS, $this->root . '/' . self::STAGED];
+    $previous = $this->root . '/' . self::PREVIOUS;
+    $staged = $this->root . '/' . self::STAGED;
     $this->backup->remove($previous);
     mkdir($previous, 0700);
     $this->htaccess($staged);
@@ -136,7 +137,8 @@ final readonly class Installer
   private function htaccess(string $staged): void
   {
     $live = (string) file_get_contents($this->root . '/.htaccess');
-    [$begin, $end] = [strpos($live, self::BEGIN), strpos($live, self::END)];
+    $begin = strpos($live, self::BEGIN);
+    $end = strpos($live, self::END);
     if ($begin === false || $end === false || $end < $begin) {
       return;
     }
@@ -150,7 +152,8 @@ final readonly class Installer
   {
     mkdir($to, 0755, true) || throw UpdateRefused::because('could not make ' . $to);
     foreach (array_diff(scandir($from) ?: [], ['.', '..']) as $name) {
-      [$source, $target] = [$from . '/' . $name, $to . '/' . $name];
+      $source = $from . '/' . $name;
+      $target = $to . '/' . $name;
       if (is_dir($source)) {
         $this->copyTree($source, $target);
       } elseif (!copy($source, $target)) {

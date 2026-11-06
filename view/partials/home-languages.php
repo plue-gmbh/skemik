@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-/* Languages, `manageHouse` only (`Admin\LocaleController`): the house's locales,
-   and a card on the overview rather than a settings page, since the language is
-   half of every record's key and stands in every address. A row the card's full
-   width, as Accounts' are, the default first, its badge in the accent and
-   without a remove, since it stays until another is made the default; every
-   other badge is the press that makes its locale the default. A row's remove that would be
-   refused is drawn disabled with the refusal as its title, so the rule is read
-   before it is hit, and both presses that change what an address says, the
-   default and a removal, ask first. Adding one is rare, so its field waits
-   behind New language, which gives way to it. */
+/* Languages, `manageInstall` only (`Admin\LocaleController`): the install's locales, a
+   card on the overview rather than a settings page, since the language is half of
+   every record's key and stands in every address. The default comes first, its
+   badge in the accent and without a remove, since it stays until another is made
+   the default; every other badge is the press that makes its locale the default.
+   A remove that would be refused is drawn disabled with the refusal as its title,
+   so the rule is read before it is hit, and both presses that change what an
+   address says ask first. Adding one is rare, so its field waits behind New
+   language. Handed `$rows`, `$refused`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

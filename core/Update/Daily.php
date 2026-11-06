@@ -8,7 +8,7 @@ use Http\Response;
 use Support\Clock;
 
 /* The snapshot nobody asks for: one a day, on the first request of the day as
-   the house lives it, after the answer has left and under a lock, there being
+   the install lives it, after the answer has left and under a lock, there being
    no daemon and no cron to set up. Where it will not fit the window shrinks
    before the day is lost: the weekly rungs go first, then the days to three,
    and what three days keep is never deleted to make room. What it did is the

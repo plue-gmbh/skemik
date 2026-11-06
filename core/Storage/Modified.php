@@ -6,8 +6,8 @@ namespace Storage;
 
 use Support\Clock;
 
-/* When the house last changed what any reading of it may show, one date for the
-   whole house and never older than a document, at the price of moving for more
+/* When the install last changed what any reading of it may show, one date for the
+   whole install and never older than a document, at the price of moving for more
    than changed: the newest line of the log, since every write is logged and a
    trashing or a purge leaves no row to date; the newest window edge passed, any
    status, since a record goes live or comes down without a write; the newest
@@ -33,7 +33,7 @@ final readonly class Modified
       ...array_map('strval', (array) $window->fetch(\PDO::FETCH_NUM)), $this->lapsed($now)]);
   }
 
-  /* A valid-through date is a day, a month or a year, and lapses as the house's next one begins. */
+  /* A valid-through date is a day, a month or a year, and lapses as the install's next one begins. */
   private function lapsed(string $now): string
   {
     $statement = $this->db->prepare("select distinct json_extract(props, '$.valid_through') from entity"

@@ -97,7 +97,7 @@ final readonly class IngestController
 
   /** The language of a photograph's or a dataset's bytes is read alike on every
       route (`Profile\LocaleMode`), so a new one is written as on the route of the
-      language its document states, where the house holds it: posted back from
+      language its document states, where the install holds it: posted back from
       another tree it is the record it was read as.
       @param array<string, mixed> $document */
   private function spoken(Collection $collection, Route $route, array $document): Route
@@ -270,7 +270,7 @@ final readonly class IngestController
       'violations' => $listed]), 422);
   }
 
-  /* A locale the house does not hold is no address of this install. */
+  /* A locale the install does not hold is no address of this install. */
   private function locale(Route $route): Locale
   {
     $tag = $route->parameter('locale');

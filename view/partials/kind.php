@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* A field kind's glyph in the kind's colour, drawn from `partials/glyphs`:
    decoration beside a label that already says what the field is, so hidden from
    a screen reader, and the kind's name on hover, since the glyph alone is a
-   guess. */
+   guess.
+   Handed `$kind` and `$words`. */
 
 if (!isset($template)) {
   return;

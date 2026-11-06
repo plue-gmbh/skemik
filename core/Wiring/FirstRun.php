@@ -61,7 +61,7 @@ final readonly class FirstRun
   {
     $db = (new Connection())->open($premises->data . '/holdings/data.sqlite');
     $accounts = new AccountRepository($db, new Uuid($this->utc), $this->utc);
-    /* No table or no account, never the shape: a house mid-move differs from it and has an owner. */
+    /* No table or no account, never the shape: an install mid-move differs from it and has an owner. */
     $unfinished = (new Schema((new Seed())->profile()))->empty($db) || $accounts->all() === [];
     return $this->install($unfinished, $premises)->answer($route->endpoint, $this->request);
   }
@@ -73,10 +73,11 @@ final readonly class FirstRun
       $this->template, $this->words);
   }
 
-  /* The house a first run founds, built for the folder it has just settled. */
+  /* The install a first run founds, built for the folder it has just settled. */
   private function founding(Premises $premises): Founding
   {
-    [$uuid, $utc] = [new Uuid($this->utc), $this->utc];
+    $utc = $this->utc;
+    $uuid = new Uuid($utc);
     $db = (new Connection())->open($premises->data . '/holdings/data.sqlite');
     $profile = (new Seed())->profile();
     $schema = new SchemaOrg($profile, new Vocabulary((new Json())->readFile(Vocabulary::FILE)));

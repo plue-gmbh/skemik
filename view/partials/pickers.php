@@ -2,21 +2,16 @@
 
 declare(strict_types=1);
 
-/* The pickers inside the cell editor's popover (`partials/cell-editor`), their
-   components in `view/scripts/pickers.js`, a reference's in `edge-picker.js`
-   and a link's in `file-picker.js`, whose library search the list and the rows
-   share: a key taking a file offers the library's files beneath the address
-   typed, each pick writing the file's path. A reference picks a record of the
-   collections the field points at, each target it holds a link to its record,
-   since the cell it opened from is none. A term field searches its own set
-   alone, and a word it lacks becomes a term on save. A target's pencil, lit
-   where the edge says something, opens it under schema.org's names, closed so a
-   list stays a list. A value object's keys stand under their schema.org names,
-   since the profile gives a repeated object's keys no words of their own, and a
-   key on a closed list is a select of its tokens' words, a held value outside
-   the list offered as it stands, so opening a row never rewrites it. Every hit
-   passes the reader's scope, as `/search`'s do. A file field's Upload sits in
-   the foot, as a picture is added after the search has not found it. */
+/* The pickers in the cell editor's popover (`partials/cell-editor`), their components
+   in `view/scripts/pickers.js`, `edge-picker.js` and `file-picker.js`. A key taking a
+   file offers the library beneath the address, a pick writing the file's path. A
+   reference's targets each link to their record, since the cell is none; a term
+   field searches its own set, and a word it lacks becomes a term on save. A target's
+   pencil opens what the edge says, closed so a list stays a list. A value object's
+   keys stand under their schema.org names, the profile giving them no words, and a
+   held value outside a closed list is offered as it stands, so opening a row never
+   rewrites it. Every hit passes the reader's scope; Upload sits in the foot, since a
+   file is added once the search has not found it. Handed nothing. */
 
 if (!isset($template)) {
   return;

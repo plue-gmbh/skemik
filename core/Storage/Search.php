@@ -48,7 +48,7 @@ final readonly class Search
      most matching words first. The upper bound is the prefix followed by the
      last code point, below which every longer word with it sorts. The terms
      lead by `cross join`, which SQLite never reorders: led by the word table, it
-     scans every word of the house per search. */
+     scans every word of the install per search. */
   public static function hits(string $placeholder = ':match'): string
   {
     $words = "json_each($placeholder, '\$.terms') t cross join entity_word w"

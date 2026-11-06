@@ -64,13 +64,15 @@ final readonly class FindController
       @return list<Entity> */
   private function found(Account $account, string $asked): array
   {
-    [$found, $seen] = [[], []];
-    $house = $this->collections->all();
-    foreach ($this->search->search($asked, $this->rows->readings($account, $house)) as $id) {
+    $found = [];
+    $seen = [];
+    $collections = $this->collections->all();
+    foreach ($this->search->search($asked, $this->rows->readings($account, $collections)) as $id) {
       $entity = $this->entities->find($id);
       $root = TranslationGroup::rootOf($entity)->value;
       if (!isset($seen[$root]) && $this->rows->readable($account, $entity)) {
-        [$seen[$root], $found[]] = [true, $entity];
+        $seen[$root] = true;
+        $found[] = $entity;
       }
     }
 

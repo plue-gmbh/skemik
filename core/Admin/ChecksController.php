@@ -25,11 +25,11 @@ use Support\JsonFailed;
 use Support\Template;
 use Support\Words;
 
-/* `/settings/checks`, `manageHouse`: the holdings report as `Update\Checkup` left
-   it, opened from Needs a look's line, so a house whose records stopped fitting
+/* `/settings/checks`, `manageInstall`: the holdings report as `Update\Checkup` left
+   it, opened from Needs a look's line, so an install whose records stopped fitting
    learns which. A required field missing is listed too, since its own line opens
    one record at a time. No button runs the check now, a mended record leaving at
-   the next slice, and none repairs, since the screen cannot know what the house
+   the next slice, and none repairs, since the screen cannot know what the organisation
    meant. Capped like the error log: a release that gives a type a † can leave
    thousands, and each line reads its record. */
 final readonly class ChecksController
@@ -51,7 +51,7 @@ final readonly class ChecksController
 
   public function show(Account $account, Entity $person, Request $request): Response
   {
-    $this->authorizer->requireHuman(Capability::ManageHouse);
+    $this->authorizer->requireHuman(Capability::ManageInstall);
     $report = $this->settings->holdingsReport();
     $found = $this->ordered($report?->violations ?? []);
     $collections = $this->collections->all();
@@ -65,7 +65,7 @@ final readonly class ChecksController
       new Screen($this->words->get('checks.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
-  /** The house's own first, then what Needs a look counts as the check's, then
+  /** The install's own first, then what Needs a look counts as the check's, then
       the required fields that have their own line.
       @param list<Violation> $violations
       @return list<Violation> */

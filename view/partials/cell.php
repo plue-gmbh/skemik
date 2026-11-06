@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-/* A value displayed, by kind (`Admin\Cells`) — the renderer every view reuses.
-   A select is a pill with its word, titled with the term where the two differ,
-   because the term is what the feed ships. A reference leads to its record, as
-   does a flattened key that refers to one rather than holding a word, except
-   where the reader edits the field: there the whole cell opens its picker,
-   which links each target. A list of them shows and numbers every one, since a
-   member behind a count is one nobody checks; one that is gone and one the
-   reader may not see are both ⇢ missing; an image's chip is its preview and its
-   file name, and what an edge says of its target stands inside its chip, so in
-   a list it reads as that member's (`Admin\Cells`). Empty is — for every kind. A Markdown field's links to
-   records are counted here and drawn as chips on the record screen (`Admin\Prose`). */
+/* A value displayed, by kind (`Admin\Cells`), the renderer every view reuses. A
+   select is a pill with its word, titled with the term where the two differ,
+   because the term is what the feed ships. A reference, or a key that refers,
+   links to its record except where the reader edits the field, whose picker links
+   each target. A list shows and numbers every member, since one behind a count
+   is one nobody checks; a gone one and one the reader may not see are both ⇢
+   missing. What an edge says of its target stands inside its chip, so in a list
+   it reads as that member's. A Markdown field's links to records are counted here
+   and drawn as chips on the record screen (`Admin\Prose`). Handed `$kind`, `$value`, `$shown`, `$chips`,
+   `$empty` and `$words`, and `$locale`, `$many`, `$linked` and `$says`, which an empty cell leaves out. */
 
 use Profile\FieldKind;
 
@@ -20,6 +19,8 @@ if (!isset($template)) {
   return;
 }
 $linked ??= true;
+$many ??= false;
+$says ??= [];
 $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, $words, $linked): string {
   if ($chip->gone) {
     return '<span class="chip is-gone">' . $template->escape($words->get('cell.gone')) . '</span>';
@@ -51,7 +52,7 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 <span class="pill" lang="<?= $template->escape($locale) ?>"<?= $shown !== $value ? ' title="'
   . $template->escape($words->get('cell.term', ['term' => (string) $value]))
   . '"' : '' ?>><?= $template->escape($shown) ?></span>
-<?php elseif (($kind->isReference() || $chips !== []) && !($many ?? false)): ?>
+<?php elseif (($kind->isReference() || $chips !== []) && !$many): ?>
 <?= $chip($chips[0], null, $says[0] ?? '') ?>
 <?php elseif ($kind->isReference()): ?>
 <span class="chips"><?php foreach ($chips as $index => $each): ?><?= $chip($each, $index + 1,

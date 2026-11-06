@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 /* Every record carries it beside its label: the state dot, the slug and, for a
    work, its translations' dots up to three. In the table each row shows its own
-   locale, strong only where it is the house's first, so the other languages read
+   locale, strong only where it is the install's first, so the other languages read
    as the exception. A row with no word for its standing has no dot, since a dot
    with nothing behind it says nothing. Its title is the whole spine in one line.
-   For whoever writes the record it opens the spine dialog. */
+   For whoever writes the record it opens the spine dialog.
+   Handed `$row`, `$prefix`, `$translations`, null in an install of one language, `$opens` and `$words`;
+   `$current`, the install's first locale, may be left out. */
 
 if (!isset($template)) {
   return;
@@ -26,7 +28,7 @@ $shown = count($dots) > 3 ? array_filter($dots,
   fn (Admin\Translation $each): bool => $each->locale === $entity->locale->tag) : $dots;
 $short = fn (string $tag): string => explode('-', $tag)[0];
 $strong = $current ?? $entity->locale->tag;
-$element = ($opens ?? false) ? 'button' : 'span';
+$element = $opens ? 'button' : 'span';
 $opening = $element === 'button'
   ? ' type="button" data-spine="' . $template->escape($entity->id->value) . '" aria-haspopup="dialog"' : '';
 $dot = $public ? 'state-' . $template->escape($row->state) : 'state-own';
@@ -34,10 +36,10 @@ $spoken = ($element === 'button' ? $template->escape($words->get('spine.open')) 
   . $template->escape($title);
 $present = count(array_filter($dots, fn (Admin\Translation $each): bool => $each->record !== null));
 ?>
-<<?= $element ?> class="spine-chip<?= ($prefix ?? '') === '' ? '' : ' is-full' ?>"<?= $opening ?>
+<<?= $element ?> class="spine-chip<?= $prefix === '' ? '' : ' is-full' ?>"<?= $opening ?>
   title="<?= $template->escape($title) ?>"><?php if ($public || $row->own !== null): ?><span
   class="state-dot <?= $dot ?>"></span><?php endif ?><span class="visually-hidden"><?= $spoken ?></span><span
-  class="spine-address" aria-hidden="true"><?php if (($prefix ?? '') !== ''): ?><span
+  class="spine-address" aria-hidden="true"><?php if ($prefix !== ''): ?><span
   class="spine-prefix"><?= $template->escape($prefix) ?></span><?php endif ?><span
   data-spine-slug><?= $template->escape($entity->slug->value) ?></span></span><?php foreach ($shown as $each): ?><span
   class="locale-dot<?= $each->record === null ? ' is-missing' : '' ?><?= $each->locale === $strong

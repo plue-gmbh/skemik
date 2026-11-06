@@ -10,7 +10,7 @@ use Domain\Exceptions\MalformedValue;
    hash. It is an actor in its own name, its writes logged under its label, which
    is why the label is required: *Till* answers who changed an invoice, a blank
    answers nothing. It names its issuer with no foreign key, so a colleague who
-   leaves takes neither the house's integrations nor the record of who set them
+   leaves takes neither the install's integrations nor the record of who set them
    up. *Never* is not representable, since a date decades ahead would say it
    anyway, so a key lives two years at most and is renewed on purpose. Both are
    asked where a key is issued and never of a stored row, so a row reading back

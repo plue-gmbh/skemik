@@ -15,20 +15,20 @@ use Http\Csrf;
 use Http\Request;
 use Http\Response;
 use Storage\ActivityLog;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Storage\SettingStore;
 use Support\Words;
 
-/* The house's locales, `manageHouse` only, written from the Languages card
+/* The install's locales, `manageInstall` only, written from the Languages card
    (`view/partials/home-languages.php`). A setting and not a constant, since how
-   many languages a house runs is its own business and nothing may count on two.
+   many languages an organisation runs is its own business and nothing may count on two.
    The first is the default, so making one the default is moving it to the
    front and not a second operation. The default does not leave, so the last
    one never does, and another locale leaves only while nothing is written in
    it, neither a row nor a record's or an edge's words, or it would leave what
    no route reaches; `Storage\SettingStore` refuses that too. The
-   card counts without a read scope, since only an owner holds `manageHouse`
+   card counts without a read scope, since only an owner holds `manageInstall`
    and an owner reads everything. A refusal is kept for the page the form
    returns to, as a field's addition is on its collection. */
 final readonly class LocaleController
@@ -102,13 +102,13 @@ final readonly class LocaleController
 
   private function logged(ActionType $type, Locale $locale, ?Props $said = null): void
   {
-    $this->log->record($type, new HouseObject(HouseItem::Locale, $locale->tag), $said);
+    $this->log->record($type, new InstallObject(InstallItem::Locale, $locale->tag), $said);
   }
 
   private function guard(Request $request): void
   {
     $this->csrf->require($request);
-    $this->authorizer->requireHuman(Capability::ManageHouse);
+    $this->authorizer->requireHuman(Capability::ManageInstall);
   }
 
   /** @param list<Locale> $locales
@@ -126,7 +126,7 @@ final readonly class LocaleController
   private function held(array $locales, string $tag): Locale
   {
     return array_find($locales, fn (Locale $each): bool => $each->tag === $tag)
-      ?? throw MalformedValue::named('locale of this house', $tag);
+      ?? throw MalformedValue::named('locale of this install', $tag);
   }
 
   /** @param list<Locale> $locales
@@ -137,7 +137,7 @@ final readonly class LocaleController
   }
 
   /* The count is of live records written in the locale or holding words in it,
-     so a record in two counts in both and says so, beside the house's total. A
+     so a record in two counts in both and says so, beside the install's total. A
      locale the refusal still finds held through the trash or an edge's words is
      never called empty beside it. */
   private function counted(int $n, bool $held): string

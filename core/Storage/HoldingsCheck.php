@@ -22,7 +22,7 @@ use Profile\Validator;
 use Support\Json;
 use Support\JsonFailed;
 
-/* The profile and claims tier, the half that needs this house's rows: the shape, the keys,
+/* The profile and claims tier, the half that needs this install's rows: the shape, the keys,
    the word table, and each row against its type, its spine and its two
    derived columns. Read-only but for the sampled pass's cursor, and it reports:
    nothing here takes an update back, which is `Update\Move`'s shape check

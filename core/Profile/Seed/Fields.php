@@ -130,7 +130,7 @@ final readonly class Fields
   /* A closed list of tokens, stored as the token: schema.org's enumeration
      members, which mean the same in every installation, and the few closed sets
      it spells as text. Not a term and never a row, since nothing about
-     `EventCancelled` is a house's to own; its words ship in `language/`. */
+     `EventCancelled` is an organisation's to own; its words ship in `language/`. */
   public function select(string $key, string $label, array $options): FieldDefinition
   {
     return new FieldDefinition($key, $label, FieldKind::Select, Cardinality::S, options: $options);

@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /* Where a view's records fill more than a page: n–m of total, and the pages
-   either side, each link keeping the query it was drawn under, its page size too. */
+   either side, each link keeping the query it was drawn under, its page size too.
+   Handed `$page`, `$perPage`, `$total`, `$shown`, `$parameters` and `$words`. */
 
 if (!isset($template)) {
   return;

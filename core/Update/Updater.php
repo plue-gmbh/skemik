@@ -26,7 +26,7 @@ use Support\FetchFailed;
 final readonly class Updater
 {
   /* The own address gives up after `Fetch`'s seconds while the move runs on: copying, scripts and every record
-     rewritten can take minutes for a large house on a webspace. */
+     rewritten can take minutes for a large install on a webspace. */
   private const WAIT_SECONDS = 900;
 
   public function __construct(
@@ -91,7 +91,8 @@ final readonly class Updater
   /* The release to install, where one is offered and not refused for good. */
   private function checked(): ?Manifest
   {
-    [$now, $report] = [$this->clock->now(), $this->check->report()];
+    $now = $this->clock->now();
+    $report = $this->check->report();
     if ($report->installed === Version::APP) {
       $this->installer->settle();
     }

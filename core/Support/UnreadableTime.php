@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Support;
 
-/* A time that is none, or one the house's timezone skips, carrying what was
+/* A time that is none, or one the install's timezone skips, carrying what was
    typed so a colleague's screen can word it. */
 final class UnreadableTime extends \InvalidArgumentException
 {

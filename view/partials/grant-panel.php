@@ -3,17 +3,15 @@
 declare(strict_types=1);
 
 /* A grant anchor's reviews and issue form (`Admin\TokenController`): everyone who
-   sees the screen sees a live grant's review, and `manageTokens` adds the form
-   and take-it-back, not the information. The form is the grant as a sentence, a
-   name the log will sign with, what it may do, one box per rule, so create and
-   read are one key with one secret, and until when, since every token expires and
-   a form without the date would lie. A name already live is answered with every
-   rule the new secret then holds, the newest secret being the whole key; with
-   nothing granted yet the form stands alone. The secret is shown once, in a state
-   an outside press does not close, and a press copies it where a clipboard is
-   there, HTTPS and localhost, and selects it whole anywhere. Take-it-back asks
-   once more where the press was, since a rule taken back returns only with a new
-   secret. */
+   sees the screen sees a live grant's review, and `manageTokens` adds the form and
+   take-it-back, not the information. The form is the grant as a sentence: a name
+   the log signs with, one box per rule, so create and read are one key with one
+   secret, and until when, since every token expires. A name already live is
+   answered with every rule the new secret holds, since the newest secret is the
+   whole key. The secret is shown once, in a state an outside press does not close.
+   Take-it-back asks once more, since a rule taken back returns only with a new
+   secret. Handed `$badge`, `$collection`, `$back`, `$until`, `$csrf` and `$words`;
+   `$folded` may be left out. */
 
 if (!isset($template)) {
   return;

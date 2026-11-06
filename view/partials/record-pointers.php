@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 /* The record screen's Points here: what refers to the record, read off the edges
-   and never kept, each a link where the reader may open what points. It says
-   what stands and never whether a delete is harmless: an account holding the
-   person refuses it whatever points here (`partials/record-account`), and a
-   retention duty is no edge. A work's translations are one row with a link per
-   language, and the count is of records, since each is one more that a delete
-   leaves pointing nowhere; a labelled thing's words in other languages are such
-   links too, drawn round, being one record. A row names its type in the
-   singular, since it is one record. Nothing pointing draws no card at all. */
+   and never kept, each a link where the reader may open what points. It says what
+   stands and never whether a delete is harmless: an account holding the person
+   refuses it whatever points here (`partials/record-account`), and a retention
+   duty is no edge. A work's translations are one row with a link per language,
+   and the count is of records, since each is one more a delete leaves pointing
+   nowhere; a labelled thing's words in other languages are links drawn round, and
+   a row names its type in the singular, each being one record. Nothing pointing
+   draws no card. Handed `$pointers`, `$pointing`, their count, and `$words`. */
 
 if (!isset($template)) {
   return;

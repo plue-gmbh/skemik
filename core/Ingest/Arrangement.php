@@ -16,11 +16,11 @@ use Storage\CollectionField;
    (`ArrangeController`): each entry of `variableMeasured` the type's own field
    of that name, or the value object arriving on that property, its keys named
    under `valueReference`, each a field of its own and let out where
-   `isAccessibleForFree` says so. What no house arranges by hand is a violation
+   `isAccessibleForFree` says so. What no organisation arranges by hand is a violation
    naming the entry as the document spelt it: a required field left out, a name
    the type does not have, one named twice, a field let out of a type with no
    public state, a value object flagged whole or sent without its keys, since
-   the flag is per key as the catalogue shows it and a house may let the town
+   the flag is per key as the catalogue shows it and an organisation may let the town
    out and keep the street. */
 final readonly class Arrangement
 {

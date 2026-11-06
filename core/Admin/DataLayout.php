@@ -30,7 +30,8 @@ final readonly class DataLayout
       @return list<Requirement> */
   public function requirements(?Premises $configured, string $origin): array
   {
-    [$free, $writable] = [self::free($configured?->data ?? $this->root), is_writable($this->root)];
+    $free = self::free($configured?->data ?? $this->root);
+    $writable = is_writable($this->root);
 
     return [
       new Requirement($this->words->get('install.php', ['found' => PHP_VERSION]), PHP_VERSION_ID >= 80500),
@@ -51,7 +52,7 @@ final readonly class DataLayout
 
   /* The bytes free where a folder lies, null where the host does not say, the
      function disabled or a quota it cannot read: no answer is no shortage, or a
-     house with room is refused its install and every update. */
+     install with room is refused its install and every update. */
   public static function free(string $folder): ?int
   {
     $free = function_exists('disk_free_space') ? disk_free_space($folder) : false;
@@ -118,7 +119,7 @@ final readonly class DataLayout
 
   /** The library `pdo_sqlite` was built with, asked of it: `strict` tables need
       3.37, `format()` and the JSON functions 3.38. Without the extension the line
-      is unmet beside its own, naming what a hoster is asked for.
+      is unmet beside its own, naming what a host is asked for.
       @return list<Requirement> */
   private function sqlite(): array
   {
@@ -158,7 +159,7 @@ final readonly class DataLayout
         @psalm-taint-escape url_path */
     $path = $this->normalised(str_starts_with($typed, '/') ? $typed : $this->root . '/' . $typed);
     /* `scandir` below is the proof itself: it answers empty or not, inside `open_basedir`, to whoever reaches a
-       house before its first run. */
+       install before its first run. */
     $refused = fn (string $key): InstallRefused => InstallRefused::because(
       $this->words->get($key, ['folder' => $typed]));
 

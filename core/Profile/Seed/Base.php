@@ -101,7 +101,7 @@ final readonly class Base
       $f->refs('citation', 'Citation', 'CreativeWork'),
       $f->ref('video', 'Video', 'VideoObject'),
       /* ∂ where the reviews are rows here, typed where they live at a platform
-         this house cannot read: the holdings decide per record. */
+         this install cannot read: the holdings decide per record. */
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
     ];
   }

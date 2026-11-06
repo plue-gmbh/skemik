@@ -28,9 +28,9 @@ final readonly class Trade
     return [
       new TypeDefinition('Offer', Erasure::Purge, LocaleMode::Localise, Reach::Public,
         $this->offer(), $this->base->thing()),
-      new TypeDefinition('Order', Erasure::Hold, LocaleMode::None, Reach::House,
+      new TypeDefinition('Order', Erasure::Hold, LocaleMode::None, Reach::Internal,
         $this->order(), $this->base->thing(), nameParts: ['order_number']),
-      new TypeDefinition('Invoice', Erasure::Hold, LocaleMode::None, Reach::House,
+      new TypeDefinition('Invoice', Erasure::Hold, LocaleMode::None, Reach::Internal,
         $this->invoice(), $this->base->thing(), nameParts: ['identifier']),
     ];
   }
@@ -111,7 +111,7 @@ final readonly class Trade
       $f->select('order_status', 'Status', ['OrderPaymentDue', 'OrderProcessing',
         'OrderInTransit', 'OrderDelivered', 'OrderCancelled', 'OrderReturned'])->starter(),
       $f->dateTime('order_date', 'Ordered')->starter(),
-      /* Offered, not ‡: the invoice's due date is the binding one, and a house
+      /* Offered, not ‡: the invoice's due date is the binding one, and an organisation
          types it once. */
       $f->date('payment_due_date', 'Payment due'),
       $f->text('confirmation_number', 'Confirmation number'),
@@ -141,7 +141,7 @@ final readonly class Trade
 
     return [
       /* Unique per issuer, and that is the whole of what Skemik promises: Paragraph 14
-         UStG also wants the number to run in sequence, which is the house's
+         UStG also wants the number to run in sequence, which is the organisation's
          obligation and not ours to fake. */
       /* schema.org's Invoice has no number of its own, and `confirmationNumber`
          confirms a payment: the number is the invoice's one identifier. Not

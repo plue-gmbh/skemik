@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 /* The holdings check's screen (`Admin\ChecksController`): when the report was
-   made and how a record leaves it, then a line per finding, the house's own
+   made and how a record leaves it, then a line per finding, the organisation's own
    first, each naming its record and collection and opening the record, or its
-   trash, with the field and what does not fit beneath. */
+   trash, with the field and what does not fit beneath.
+   Handed `$report`, null before the first, `$at`, `$count`, `$shown`, `$entries` and `$words`. */
 
 if (!isset($template)) {
   return;

@@ -80,7 +80,7 @@ final readonly class CollectionController
       'trash' => $this->trash($account, $collection),
       'badges' => $this->grants->badges($account, $collection, $columns, $account->can(Capability::ManageTokens)),
       'labels' => $this->keys->labels(), 'until' => $this->keys->until(), 'back' => $this->back($request),
-      'house' => $this->settings->locales()[0]->tag,
+      'firstLocale' => $this->settings->locales()[0]->tag,
       ...$this->fields->screen($account, $collection),
       'csrf' => $this->csrf->token()]);
 
@@ -100,7 +100,7 @@ final readonly class CollectionController
       $query === [] ? '' : '?' . http_build_query($query)), true);
   }
 
-  /* A stranger is refused a sort or a filter on a field the house withholds, so
+  /* A stranger is refused a sort or a filter on a field the install withholds, so
      the address carries neither: what the colleague sorts by need not leave. */
   private function strangerAsks(string $name, Request $request, Collection $collection): bool
   {

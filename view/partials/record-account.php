@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* The record screen of a person an account logs in as: its login address, and
    why the record outlives no delete while the account stands. Whoever manages
    accounts is led on to the account's dialog on the Accounts card, since a
-   role and scopes are set there and nowhere on the record. */
+   role and scopes are set there and nowhere on the record.
+   Handed `$held`, the account or null for none, `$name`, `$images`, `$manages` and `$words`. */
 
 if (!isset($template)) {
   return;

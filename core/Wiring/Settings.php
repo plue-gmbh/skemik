@@ -32,7 +32,8 @@ final readonly class Settings
 
   public function answer(Route $route): Response
   {
-    [$common, $segment] = [$this->common, $route->parameter(...)];
+    $common = $this->common;
+    $segment = $route->parameter(...);
     return match ($route->endpoint) {
       Endpoint::AccountCreate => $this->accountController()->create($common->request),
       Endpoint::AccountEdit => $this->accountController()->edit($common->request, $segment('id')),

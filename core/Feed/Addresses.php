@@ -14,7 +14,7 @@ use Storage\Collection;
 use Storage\EntityRepository;
 use Support\Markup;
 
-/* Where a record of this house leaves, for one caller. An `@id` carries the
+/* Where a record of this install leaves, for one caller. An `@id` carries the
    slug and a slug is a name, so whether a record may be named at all is asked
    here once: a nested target, a translation's link, a text's link and a derived
    number's rows pass the same gates or none of them does. `Targets` is the way back, from an
@@ -24,7 +24,7 @@ use Support\Markup;
    one while the English is a draft, whichever of the two the product names. */
 final readonly class Addresses
 {
-  /** @param list<Collection> $collections the house's */
+  /** @param list<Collection> $collections the install's */
   public function __construct(
     private Profile $profile,
     private EntityRepository $entities,

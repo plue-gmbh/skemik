@@ -110,7 +110,7 @@ final readonly class QueryChoices
       $locales), [...$terms, ...$references]);
   }
 
-  /** Each target worded as its chip is, in the house's first language and ordered by that word,
+  /** Each target worded as its chip is, in the install's first language and ordered by that word,
       and where two in a group share a word, two runs of one course, each with its slug beside it,
       so the two choices differ.
       @param list<Entity> $targets
@@ -175,7 +175,7 @@ final readonly class QueryChoices
       $this->terms->word($column->field, $token, $locale)), $options));
   }
 
-  /** Each kind of the library's files its rows hold, as a house asks for its images and never its
+  /** Each kind of the library's files its rows hold, as an organisation asks for its images and never its
       PNGs, spelled as the formats the kind's filter takes (`Profile\MediaKind`), under a group of its
       own, since the field's name says MIME type and the choices are none.
       @param list<string> $held

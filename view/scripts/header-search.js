@@ -3,7 +3,8 @@
    has no Escape; an empty field asks nothing. On its results, `/find`, the question stands in
    the field, which the page does not repeat. */
 function mountHeaderSearch(form) {
-  const [button, field] = [form.querySelector("button"), form.querySelector("input")];
+  const button = form.querySelector("button");
+  const field = form.querySelector("input");
   const close = () => (field.value = "", open(false), button.focus());
   const open = (opened) => {
     form.classList.toggle("is-open", opened);

@@ -8,7 +8,8 @@ declare(strict_types=1);
    character comes from whatever symbol font a device has and sits at another
    size and height on each. One hidden sprite per page, so a glyph is its name
    wherever it travels, in a page, in an island's JSON or in a script, and
-   `partials/glyph` draws it. */
+   `partials/glyph` draws it.
+   Handed nothing. */
 
 if (!isset($template)) {
   return;

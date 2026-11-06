@@ -25,7 +25,7 @@ final readonly class Media
      and never as the zip it is, and a macro-enabled file by its plain sibling's,
      which is the extension its download gets and under which Office runs no
      macro. Not here on purpose: HTML and XML, which a browser would run from
-     the house's domain; what a phone records, `.mov` and HEIC, which browsers do
+     the install's domain; what a phone records, `.mov` and HEIC, which browsers do
      not show; and Office's files before 2007, which run macros under their plain
      extension, each refused naming what to export or save as (`Admin\Intake`). */
   public const FORMATS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
@@ -85,7 +85,7 @@ final readonly class Media
       $f->text('encoding_format', 'MIME type')->starter(),
       $f->text('content_size', 'File size'),
       $f->text('sha256', 'SHA-256'),
-      /* Pixels, so no unit field: an amount carries `unitCode` only where a house can
+      /* Pixels, so no unit field: an amount carries `unitCode` only where an organisation can
          vary the unit, and an image's dimensions are counted in one thing. */
       $f->number('width', 'Width')->keyOf('QuantitativeValue', 'value', 'width'),
       $f->number('height', 'Height')->keyOf('QuantitativeValue', 'value', 'height'),

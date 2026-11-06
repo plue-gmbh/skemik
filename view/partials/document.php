@@ -9,7 +9,8 @@ declare(strict_types=1);
    shared behaviour, and Vue only where a page mounts an island.
    The referrer policy is said here a second time, as `Http\SecurityHeaders`
    says it, because a host's front can replace the header with a looser one and
-   a browser reads the document's own last. */
+   a browser reads the document's own last.
+   Handed `$title`, `$body`, `$islands` and `$words`. */
 
 if (!isset($template)) {
   return;

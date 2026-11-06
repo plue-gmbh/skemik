@@ -37,7 +37,7 @@ final readonly class Claims
      them, each on the field's entry, whose `PropertyValue` has no word for either:
      a private key would be the second vocabulary the word is there to avoid. */
   private const DOCUMENT_WORDS = [
-    'PropertyValue.isAccessibleForFree' => 'whether a field leaves the house, as an arranging key reads it',
+    'PropertyValue.isAccessibleForFree' => 'whether a field leaves the install, as an arranging key reads it',
     'PropertyValue.inLanguage' => 'that a field holds words per language, in the profile',
   ];
 

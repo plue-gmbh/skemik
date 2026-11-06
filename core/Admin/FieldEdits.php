@@ -29,10 +29,10 @@ use Support\JsonFailed;
 /* What a save sends, applied to the record's fields; the spine is `SpineEdits`'s
    and a reference `EdgeEdits`'s. A value lands in `props`; a list arrives whole,
    its blank entries and an object's blank keys dropped, since an empty line in
-   the editor is not a value. A labelled thing's words in another house locale
+   the editor is not a value. A labelled thing's words in another of the install's locales
    arrive under `l10n` and are its fields' own there, each written as its field
    is written, and a reference's there are what its edges say in that locale. A
-   link under the house's own address lands as its path, as the address stores
+   link under the install's own address lands as its path, as the address stores
    one. A field nobody authors is refused, since an editor not drawn is not a
    rule. */
 final readonly class FieldEdits
@@ -142,7 +142,7 @@ final readonly class FieldEdits
     $localised = new LocalisedText($this->profile->byType($entity->type));
     foreach ($sent as $tag => $words) {
       $locale = array_find($this->settings->locales(), fn (Locale $each): bool => $each->tag === (string) $tag)
-        ?? throw MalformedValue::named('locale of this house', (string) $tag);
+        ?? throw MalformedValue::named('locale of this install', (string) $tag);
       $entity = $localised->write($entity, $locale, $this->words($collection, $entity, $words));
       $edges = $this->spoken($collection, $entity, $locale, $edges, (array) $words);
     }

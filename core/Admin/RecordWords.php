@@ -15,7 +15,7 @@ use Storage\EntityRepository;
 use Storage\SettingStore;
 use Support\Words;
 
-/* A labelled thing's record screen in a house locale other than the one its
+/* A labelled thing's record screen in a locale of the install other than the one its
    words were written in, named by `words`. Read draws the record as that
    locale's route serves it; edit offers the translatable fields alone, each with
    that locale's own words, and an empty one shows the authored words greyed,

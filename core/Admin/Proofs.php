@@ -13,7 +13,7 @@ use Support\Words;
    stranger gets is the proof: a folder inside the domain root is taken only
    refused, `config.php` only once its sentinel stays unseen, and a `PATCH` is
    asked because every save is one, so a front that refuses the method is learnt
-   here and not at the house's first save. Let through, it answers Skemik's own
+   here and not at the install's first save. Let through, it answers Skemik's own
    404, as any address nobody routes does before the first run; a front's
    refusal is its own 403, 405 or 501. */
 final readonly class Proofs

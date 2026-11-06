@@ -7,7 +7,8 @@ declare(strict_types=1);
    for every view by `pages/collection`). Everything else is a
    mark and no control, since the popover changes it and the query bar sorts: a
    green open lock on a public field, a key while a live grant holds, the arrow of
-   the sort. */
+   the sort.
+   Handed `$column`, `$joined`, `$badges`, `$parameters` and `$words`. */
 
 if (!isset($template)) {
   return;

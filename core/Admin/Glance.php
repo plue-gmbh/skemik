@@ -11,7 +11,7 @@ use Profile\Profile;
 use Profile\TypeDefinition;
 
 /* What a list row, a grid tile or a card shows beside its label: the
-   collection's first fields in the order the house sets in the table, skipping
+   collection's first fields in the order the organisation sets in the table, skipping
    what no record holds, so an empty column fills no view. A value object takes
    one place, shown by its first bearing key, an answer by its text and a price
    by its amount, whose cell carries the currency (`Admin\Cells`), never the

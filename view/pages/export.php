@@ -8,7 +8,8 @@ declare(strict_types=1);
    records it will hold, once per language each answers in and so more than the
    overview's total, how many files and about how large it is. The numbers carry
    their name as data, so a check can read them where the words change with the
-   language. */
+   language.
+   Handed `$size`, `$about`, `$complete`, `$public`, `$unfit`, `$notice`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

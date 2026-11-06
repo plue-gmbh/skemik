@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Admin;
 
 use Auth\Account;
-use Auth\Authorizer;
 use Domain\Entity;
 use Domain\EntityId;
 use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
 use Domain\LocalisedText;
-use Domain\Relation;
 use Domain\Slug;
 use Domain\TranslationGroup;
 use Feed\Targets;
@@ -28,25 +26,19 @@ use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\Query;
-use Storage\RelationRepository;
 use Storage\Search;
 use Support\Json;
 
-/* `GET /search?q=` — what Insert link and a picker offer: records across
-   every collection this account may read, matched as the feed's `?q=` matches,
-   best first. With `collection` and `field` it is that field's picker: only the
-   types the field points at, images alone on an image field, and with nothing typed the newest of them, so a
-   short list is picked from without a word — but a field pointing at any type
-   waits for one. A link field's picker, and with `key` a row's link key's, is
-   offered the library's files the link takes, each with the file a pick
-   writes. With `type` it offers that type alone, as the accounts card's
-   people are offered. `record` and `held` name the places of the field's edges a
-   picker still lists, whose targets it is not offered again. A match is asked of
-   the fields the reader reads, a hit passes the reader's scope before it is named, and
-   a record no collection holds is not offered, since the screen could not open it.
-   `in` is the locale of the record being edited: a work is offered once for all
-   its languages, as its translation there, and a labelled thing in its words
-   there, so the picker names what the chip and the document will name. */
+/* `GET /search?q=`: records across every collection this account may read,
+   matched as the feed's `?q=` matches, best first, for Insert link and the
+   pickers. With `collection` and `field` it is that field's picker and offers
+   only the types the field points at, images alone on an image field, and the
+   newest of them while nothing is typed, so a short list is picked from without
+   a word; a field pointing at any type waits for one. `record` and `held` name
+   the edges a picker still lists, so their targets are not offered again. A hit
+   passes the reader's scope before it is named, and a record no collection
+   holds is not offered, since the screen could not open it. `in` is the edited
+   record's locale, so the picker names what the chip and the document will. */
 final readonly class SearchController
 {
   private const HITS = 8;
@@ -59,23 +51,24 @@ final readonly class SearchController
     private Profile $profile,
     private SchemaOrg $schema,
     private Targets $targets,
-    private RelationRepository $relations,
-    private Authorizer $authorizer,
+    private HeldTargets $held,
     private Label $label = new Label(),
     private Json $json = new Json(),
   ) {}
 
   public function hits(Account $account, Request $request): Response
   {
-    $house = $this->collections->all();
+    $collections = $this->collections->all();
     $field = $this->field($request);
     $in = trim((string) $request->query('in')) === '' ? null : new Locale((string) $request->query('in'));
-    [$hits, $seen] = [[], array_fill_keys($this->held($account, $request, $field), true)];
+    $hits = [];
+    $seen = array_fill_keys($this->held->roots($account, $request, $field), true);
     foreach ($this->fitting($account, $request, $field) as $entity) {
       $offered = $this->offered($account, $entity, $in);
       $root = TranslationGroup::rootOf($offered)->value;
-      if (!isset($seen[$root]) && ($hit = $this->hit($offered, $house, $in)) !== null) {
-        [$seen[$root], $hits[]] = [true, [...$hit, 'preview' => $this->rows->pictured($account, $offered)]];
+      if (!isset($seen[$root]) && ($hit = $this->hit($offered, $collections, $in)) !== null) {
+        $seen[$root] = true;
+        $hits[] = [...$hit, 'preview' => $this->rows->pictured($account, $offered)];
       }
       if (count($hits) === self::HITS) {
         break;
@@ -125,47 +118,11 @@ final readonly class SearchController
       @return list<EntityId> best first */
   private function found(Account $account, Request $request, ?array $targets): array
   {
-    $house = $this->collections->all();
+    $collections = $this->collections->all();
     $typed = (string) $request->query('q');
 
-    return trim($typed) === '' && $targets !== null ? $this->newest($house, $targets, $this->narrowed($request))
-      : $this->search->search($typed, $this->readings($account, $house, $targets));
-  }
-
-  /** The targets the field holds at the places the picker still lists, each as its
-      group's root, since a hit stands for its group: a picker names a held target by
-      its place and never by its id (`Chip::held`), so what it holds is read here. Only
-      for a staff reader of the record's type, who reads every field of it and is the
-      only one with a picker, writing being within reading: for anybody else the hits
-      missing would tell of an edge the feed withholds.
-      @return list<string> */
-  private function held(Account $account, Request $request, ?FieldDefinition $field): array
-  {
-    [$record, $places] = [$request->query('record'), (string) $request->query('held')];
-    if ($field === null || $record === null || $places === '') {
-      return [];
-    }
-    $subject = $this->entities->find(new EntityId($record));
-    if ($this->authorizer->readsAsPublic($account, $subject->type)) {
-      return [];
-    }
-    $predicate = (string) $this->schema->propertyName($field->key);
-    $mine = array_values(array_filter($this->relations->outbound($subject->id),
-      fn (Relation $edge): bool => $edge->predicate === $predicate));
-    $edges = array_filter(array_map(fn (string $place): ?Relation => $mine[(int) $place] ?? null,
-      explode(',', $places)));
-
-    return array_values(array_filter(array_map($this->rootOf(...), $edges)));
-  }
-
-  /* A target that is gone is offered by nobody, so it excludes nothing. */
-  private function rootOf(Relation $edge): ?string
-  {
-    try {
-      return TranslationGroup::rootOf($this->entities->find($edge->object))->value;
-    } catch (EntityNotFound) {
-      return null;
-    }
+    return trim($typed) === '' && $targets !== null ? $this->newest($collections, $targets, $this->narrowed($request))
+      : $this->search->search($typed, $this->readings($account, $collections, $targets));
   }
 
   /* A work stands for its whole group: its translation in the locale edited
@@ -188,12 +145,12 @@ final readonly class SearchController
 
   /** Each type the search may offer, as this account reads it, since a match on
       any other field would name a record by a word the reader is not shown.
-      @param list<Collection> $house
+      @param list<Collection> $collections
       @param ?list<string> $targets null for any type
       @return array<string, Query> */
-  private function readings(Account $account, array $house, ?array $targets): array
+  private function readings(Account $account, array $collections, ?array $targets): array
   {
-    $offered = array_filter($house, fn (Collection $collection): bool
+    $offered = array_filter($collections, fn (Collection $collection): bool
       => $targets === null || in_array(basename($collection->type), $targets, true));
 
     return $this->rows->readings($account, array_values($offered));
@@ -239,11 +196,11 @@ final readonly class SearchController
       && ($targets === null || in_array($entity->typeName(), $targets, true));
   }
 
-  /** @param list<Collection> $house @param list<string> $targets @param array<string, list<string>> $narrowed
+  /** @param list<Collection> $collections @param list<string> $targets @param array<string, list<string>> $narrowed
       @return list<EntityId> newest first */
-  private function newest(array $house, array $targets, array $narrowed): array
+  private function newest(array $collections, array $targets, array $narrowed): array
   {
-    $types = array_unique(array_map(fn (Collection $collection): string => $collection->type, $house));
+    $types = array_unique(array_map(fn (Collection $collection): string => $collection->type, $collections));
     $found = [];
     foreach ($types as $type) {
       if (in_array($this->profile->byType($type)->name, $targets, true)) {
@@ -277,13 +234,13 @@ final readonly class SearchController
       on an English site says so, and its type, since an edge to a `MemberProgram`
       says more than one to anything else; its picture, since two photos are told
       apart by looking, is `hits`' to add, being the reader's.
-      @param list<Collection> $house
+      @param list<Collection> $collections
       @return ?array{id: string, label: string, slug: string, glyph: string, collection: string,
         locale: ?string, type: string, file: ?array{address: string, format: string, size: string}}
         null for a record no collection holds */
-  private function hit(Entity $entity, array $house, ?Locale $in): ?array
+  private function hit(Entity $entity, array $collections, ?Locale $in): ?array
   {
-    $holder = array_find($house, fn (Collection $collection): bool => $collection->type === $entity->type);
+    $holder = array_find($collections, fn (Collection $collection): bool => $collection->type === $entity->type);
     if ($holder === null) {
       return null;
     }

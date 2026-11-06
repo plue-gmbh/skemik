@@ -7,11 +7,14 @@ declare(strict_types=1);
    beside it and the feed panel to its right (`partials/feed-panel`), above the
    paper's content the sentence a screen may open with and the warning that the
    data folder runs short (`Admin\Probes`), and at its foot the copyright line,
-   pushed to the bottom where a screen is short. */
+   pushed to the bottom where a screen is short.
+   Handed `$title`, `$main`, `$notice`, null for none, `$space`, `$account`, `$menu`, `$own`, `$entries`,
+   `$open`, `$locale`, `$sites`, `$feed`, `$islands`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
 }
+$notice ??= '';
 ob_start();
 ?>
 <body class="admin" data-unanswered="<?= $template->escape($words->get('frame.unanswered')) ?>">
@@ -21,7 +24,7 @@ ob_start();
 <div class="admin-body">
 <?= $template->render('partials/sidebar', ['words' => $words, 'entries' => $entries, 'open' => $open,
   'locale' => $locale, 'exports' => $account->can(Auth\Capability::ExportHoldings), 'sites' => $sites]) ?>
-<main class="paper" id="main"><?php if (($notice ?? '') !== ''): ?><p class="notice"
+<main class="paper" id="main"><?php if ($notice !== ''): ?><p class="notice"
   role="status"><?= $template->escape($notice) ?></p><?php endif ?><?php if ($space !== ''): ?><p class="notice"
   role="status"><?= $template->escape($space) ?></p><?php endif ?><?= $main ?><?= $template->render('partials/footer',
   ['words' => $words, 'ground' => false]) ?></main>

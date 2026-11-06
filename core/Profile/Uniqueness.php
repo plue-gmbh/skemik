@@ -9,7 +9,7 @@ namespace Profile;
    invoice number per the organisation that issued it.
    Not an enum, because the scope names an edge and edge keys are not a closed
    set. It says only that a duplicate is refused: Skemik generates no numbers
-   and checks no series, which is the house's own obligation. */
+   and checks no series, which is the organisation's own obligation. */
 final readonly class Uniqueness
 {
   private function __construct(public ?string $edge) {}

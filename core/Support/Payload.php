@@ -40,7 +40,8 @@ final readonly class Payload
       @return list<string> */
   public function found(string $check, \Closure $scan): array
   {
-    [$now, $times] = [time(), $this->times()];
+    $now = time();
+    $times = $this->times();
     $fingerprint = md5(serialize($times));
     $marker = $this->data . '/' . self::MARKER;
     $lines = is_file($marker) ? file($marker, FILE_IGNORE_NEW_LINES) ?: [] : [];

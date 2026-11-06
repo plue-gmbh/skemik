@@ -7,9 +7,10 @@ declare(strict_types=1);
    laid out otherwise — the same cells, the same save bar and the same ticks with
    their bar, the one for the page above the tiles. Its last tile is + New
    record, which adds a pending tile as the table adds a row, and in the media
-   library Upload, since an asset of this house is mostly made by its file, and
+   library Upload, since an asset of this install is mostly made by its file, and
    an empty library is that tile alone; the header's + File from elsewhere adds
-   its pending tile ahead of it. */
+   its pending tile ahead of it.
+   Handed what `view-cards` is, and `$uses`, `$uploads` and `$limit` for the library. */
 
 if (!isset($template)) {
   return;
@@ -17,7 +18,7 @@ if (!isset($template)) {
 $library = $glance->media();
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/grid-tile', ['words' => $words,
   'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
-  'ticks' => $creates, 'house' => $house, 'glance' => $glance, 'uses' => $uses]);
+  'ticks' => $creates, 'firstLocale' => $firstLocale, 'glance' => $glance, 'uses' => $uses]);
 $ending = $library ? $uploads : $creates;
 ?>
 <div data-ticked></div>
@@ -56,4 +57,4 @@ $ending = $library ? $uploads : $creates;
 <?= $template->render('partials/sheet-pages', ['words' => $words, 'page' => $page, 'perPage' => $perPage,
   'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
-<?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>
+<?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

@@ -21,7 +21,7 @@ use Support\Words;
 /* `/changes`, `readLog`: the whole log, whose contract is the header of
    `view/pages/activity.php`, a page at a time down the time index, or one
    actor's. Not under `/settings/`, since it is Last changed's way further back
-   and no setting of the house. Every row is a line, so its pages count what the log holds; the
+   and no setting of the install. Every row is a line, so its pages count what the log holds; the
    lines are `Admin\Changes`'s, as Last changed draws them. A former value is
    redacted from its line, `eraseData`, which `Storage\ActivityLog` logs. */
 final readonly class ActivityController

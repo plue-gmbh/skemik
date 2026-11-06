@@ -4,12 +4,12 @@
    key is typed in, the newest with nothing typed, asked of the field and the
    row's key (`Admin\SearchController`), which narrows them to what the link
    takes, and an upload beside them where the account writes the library. A pick
-   writes the file's address, a path of this house and no edge, so the file's
+   writes the file's address, a path of this install and no edge, so the file's
    uses do not count it; where it is placed is each picker's. A row's referring
    key searches here too and picks the record (`objectsPicker`). The hits go
    when the key is left, a moment later, so a press on one of them still lands. */
 const fileSearch = {
-  data: () => ({ hits: [], asking: null, sending: false, refused: "", noted: null }),
+  data: () => ({ hits: [], asking: null, timer: null, sending: false, refused: "", noted: null }),
   methods: {
     takesFile(key) {
       return key in this.field.files || (key === this.field.reference && this.field.kinds[key] === "link");
@@ -32,29 +32,30 @@ const fileSearch = {
     },
     leaving(index, key) {
       window.clearTimeout(this.timer);
-      this.timer = window.setTimeout(() => this.asks(index, key) && ([this.hits, this.asking] = [[], null]), 200);
+      this.timer = window.setTimeout(() => {
+        if (this.asks(index, key)) this.dropHits();
+      }, 200);
+    },
+    dropHits() {
+      this.hits = [];
+      this.asking = null;
     },
     async find(index, key, typed) {
       const query = new URLSearchParams({ q: typed, collection: this.collection, field: this.field.key,
         in: this.locale, ...(key === this.field.reference ? {} : { key }) });
       const { body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
       if (typed !== this.typedAt(index, key)) return;
-      [this.hits, this.asking] = [body.hits ?? [], { index, key }];
+      this.hits = body.hits ?? [];
+      this.asking = { index, key };
     },
     /* What landed, as a hit is, or null with the refusal shown; a draft, which the
        key's line says until it is typed in again, since an announcement alone is heard and not seen. */
     async sent(index, key, event) {
       const file = event.target.files[0];
       if (file === undefined) return null;
-      const body = new FormData();
-      body.set("file", file);
-      body.set("picks", this.kindsOf(key).join());
-      [this.sending, this.refused] = [true, ""];
-      announce(this.words["media.sending"]);
-      const answer = await fetch("/media", { method: "POST", body,
-        headers: { Accept: "application/json", "X-CSRF-Token": this.csrf } })
-        .then((response) => response.json()).catch(() => ({}));
-      [this.sending, event.target.value, this.hits, this.asking] = [false, "", [], null];
+      const answer = await this.posted(file, this.kindsOf(key).join());
+      event.target.value = "";
+      this.dropHits();
       if (!answer.picked) {
         this.refused = answer.error ?? fill(this.words["media.lost"], { limit: this.limit });
         return null;
@@ -62,6 +63,20 @@ const fileSearch = {
       this.noted = { index, key };
       announce(this.words["picker.draft"]);
       return { ...answer.picked, draft: true };
+    },
+    /* The library's answer, or nothing where none came. */
+    async posted(file, picks) {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("picks", picks);
+      this.sending = true;
+      this.refused = "";
+      announce(this.words["media.sending"]);
+      const answer = await fetch("/media", { method: "POST", body,
+        headers: { Accept: "application/json", "X-CSRF-Token": this.csrf } })
+        .then((response) => response.json()).catch(() => ({}));
+      this.sending = false;
+      return answer;
     },
     fill: (text, values) => fill(text, values),
   },

@@ -2,20 +2,16 @@
 
 declare(strict_types=1);
 
-/* The record screen (`Admin\RecordController`): the collection's fields in the
-   table's order, read and edited alike, so a field stays put when editing starts
-   and arranging the table arranges this. Read is the default, editing entered on
-   intent, and nothing is arranged per record — no blocks, no canvas, no layout of
-   one's own: that is the step at which a CMS starts becoming the thing this
-   replaces, refused here rather than resisted later. A field that is not prose
-   opens the table's own editor (`partials/cell-editor`), one implementation and
-   not two, and the type says which field is prose, so no install configures it.
-   Every editable field's name is a label for its cell or textarea, so a click on
-   the name opens the field, prose or not.
-   The words locale is `words` beside `in`, so a link and the reload after a save
-   keep it; each option says Words, since on a type that also forks the Languages
-   card offers a record of its own in the same locales, and names the language
-   alone, uppercase as the spine does, unless two offered share it. */
+/* The record screen (`Admin\RecordController`): the collection's fields in the table's order, read and
+   edited alike, so a field stays put when editing starts and arranging the table arranges this. Nothing is
+   arranged per record, no blocks, no canvas, no layout of one's own: that is the step at which a CMS starts
+   becoming the thing this replaces. A field that is not prose opens the table's own editor
+   (`partials/cell-editor`), and its name is the label that opens it. The words locale is `words` beside
+   `in`, so a link and the reload after a save keep it. Handed `$row`, `$edit`, `$blocks`, `$editing`,
+   `$naming`, `$collection`, `$authored`, `$locale`, null for the record's own, `$offered`, `$chips`, `$prose`,
+   `$pointers`, `$pointing`, `$translations`, `$neighbours`, `$asset`, `$copies`, `$limit`, `$writes`, `$held`,
+   `$manages`, `$badge`, `$labels`, `$until`, `$back`, `$public`, `$query`, `$data`, `$spine`, `$csrf` and
+   `$words`. */
 
 use Profile\FieldKind;
 
@@ -100,13 +96,14 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
     </div>
     <div class="collection-tools">
 <?php if (count($offered) > 1):
+  /* An option says Words, since on a forking type the Languages card offers whole records in the same locales. */
   $languages = array_count_values(array_map(fn (Domain\Locale $each): string => explode('-', $each->tag)[0], $offered));
   $named = fn (string $tag): string => $languages[explode('-', $tag)[0]] > 1 ? $tag
     : strtoupper(explode('-', $tag)[0]) ?>
       <select class="words-select<?= $locale === null ? '' : ' is-on' ?>"
         aria-label="<?= $template->escape($words->get('record.words_in')) ?>"<?= $translations === null ? ''
         : ' title="' . $template->escape($words->get('record.words_same')) . '"' ?> data-words-select>
-<?php foreach ($offered as $index => $each): $current = $each->tag === ($locale ?? $entity->locale)->tag ?>
+<?php foreach ($offered as $index => $each): $current = $each->tag === $shownIn ?>
         <option value="<?= $template->escape(Admin\Rows::address($collection, $entity,
           ltrim($query . ($index === 0 ? '' : '&words=' . rawurlencode($each->tag)),
           '&'))) ?>"<?= $current ? ' selected' : '' ?>><?= $template->escape($named($each->tag)) ?></option>
@@ -288,7 +285,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   'csrf' => $csrf, 'query' => $query, 'pointing' => $pointing]) ?>
 <?php endif ?>
 <?php if ($writes): ?>
-<?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>
+<?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>
 <?php endif ?>
 <?php if ($badge !== null && $labels !== []): ?>
   <datalist id="grant-labels">

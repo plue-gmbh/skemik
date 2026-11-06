@@ -75,7 +75,7 @@ use Update\Updater;
 /* What more than one area answers with, built once per request in the order it
    depends on: the actor before the holdings, because `ActivityLog` binds it when
    built, so no write can be attributed to anybody else. A builder moves here when
-   a second area needs it, and not before. It is a bag of the house's objects,
+   a second area needs it, and not before. It is a bag of the install's objects,
    which becomes a service locator the moment anything below `Wiring` receives
    it, so nothing outside this folder names it. */
 final readonly class Common
@@ -123,7 +123,7 @@ final readonly class Common
     private Clock $utc,
   ) {
     $this->model();
-    $this->house();
+    $this->install();
     $this->asker();
     $this->holdings();
     $this->screens();
@@ -244,7 +244,7 @@ final readonly class Common
     $this->validator = new Validator($this->profile, new EdgeValidator($this->schema));
   }
 
-  private function house(): void
+  private function install(): void
   {
     $this->db = (new Connection())->open($this->premises->data . '/holdings/data.sqlite');
     $this->settings = new SettingStore($this->db, $this->utc, $this->profile);

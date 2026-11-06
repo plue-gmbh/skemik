@@ -9,7 +9,8 @@ declare(strict_types=1);
    snapshot nobody has to take is no button for every page, so Backup is a row
    of the Settings card (`view/partials/home-settings.php`). On narrow screens
    it is a drawer behind the header's menu button (`view/scripts/sidebar.js`),
-   and the house's own sites, which the header then has no room for, head it. */
+   and the install's own sites, which the header then has no room for, head it.
+   Handed `$entries`, `$open`, `$locale`, `$exports`, `$sites` and `$words`. */
 
 if (!isset($template)) {
   return;

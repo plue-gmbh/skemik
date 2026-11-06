@@ -18,11 +18,11 @@ use Support\Clock;
 use Support\Uuid;
 
 /* A word typed into a term field becomes the term of that word in the field's
-   set, made where the set lacks it and the set made where the house lacks it,
+   set, made where the set lacks it and the set made where the organisation lacks it,
    so a term set grows from the record and never from a screen of its own. Both
-   are published as made: a house's vocabulary is not a draft, and a draft term
+   are published as made: an organisation's vocabulary is not a draft, and a draft term
    would leave the key out of every stranger's document. The word is the code,
-   since a code is what the feed says and a house names its own things; a word
+   since a code is what the feed says and an organisation names its own things; a word
    the set holds in another case is that term, as the picker offers it. */
 final readonly class TermMaker
 {

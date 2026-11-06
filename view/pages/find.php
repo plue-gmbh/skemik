@@ -6,7 +6,8 @@ declare(strict_types=1);
    records found, best first, each a link to its screen with its slug and state,
    and a link on to the rest on the collection's own screen under the same `?q=`;
    then for whoever reads the log what it holds of the question. The question is
-   the header field's, so the page repeats it only in its count. */
+   the header field's, so the page repeats it only in its count.
+   Handed `$asked`, `$groups`, `$lines`, `$total` and `$words`. */
 
 if (!isset($template)) {
   return;

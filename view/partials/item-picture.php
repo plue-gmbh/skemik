@@ -7,7 +7,8 @@ declare(strict_types=1);
    else the first image the record points at (`Admin\Glance::image`), else a glyph — the
    file's kind for an asset, the type's elsewhere — and the one load is the preview
    (`Admin\Rows::preview`). A Poster the reader may not see is a gone chip, which has none.
-   A video's Poster carries a play mark, else it reads as a picture. */
+   A video's Poster carries a play mark, else it reads as a picture.
+   Handed `$row`, null for the blank row, `$glance`, `$collection` and `$class`. */
 
 if (!isset($template)) {
   return;

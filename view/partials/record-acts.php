@@ -7,7 +7,8 @@ declare(strict_types=1);
    every view opens the record it would start from. The trash is confirmed in
    `partials/delete-confirm`, and a person holding an account keeps their record,
    so the trash says why instead. A type requiring a value held once, a term its
-   code, offers no copy, which would lack it. */
+   code, offers no copy, which would lack it.
+   Handed `$collection`, `$entity`, `$copies`, `$held`, the account or null for none, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

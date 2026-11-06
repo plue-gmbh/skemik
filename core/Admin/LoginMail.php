@@ -11,7 +11,7 @@ use Support\Words;
 
 /* The login code's mail, in the language of the browser that asked. It names the
    person and the host it logs into, since one mailbox can hold codes for several
-   houses and a code asked for by nobody should say whose door was knocked on.
+   installs and a code asked for by nobody should say whose door was knocked on.
    The code is in the subject too, where a phone's notification shows it. */
 final readonly class LoginMail
 {

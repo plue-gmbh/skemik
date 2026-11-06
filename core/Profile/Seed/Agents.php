@@ -57,7 +57,7 @@ final readonly class Agents
       $f->date('birth_date', 'Date of birth'),
       $f->date('death_date', 'Date of death'),
       /* A term and not schema.org's two members: a German register holds
-         *divers*, and the list is the house's to own. */
+         *divers*, and the list is the organisation's to own. */
       $f->term('gender', 'Gender'),
       $f->listed('nationality', 'Nationality', ClosedList::Country)->repeatable(),
       $f->listed('knows_language', 'Languages', ClosedList::Language)->repeatable(),

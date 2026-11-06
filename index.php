@@ -123,7 +123,8 @@ if ($halt !== null) {
 
 /* The answer: the route first, since a first run resumed and the holdings' move each come before
    a session is resumed or a table read. */
-[$common, $sessioned] = [null, false];
+$common = null;
+$sessioned = false;
 try {
   assert(($running = (new Support\Payload(__DIR__, $data))->running()) === [],
     implode(', ', $running) . ' runs something when included');

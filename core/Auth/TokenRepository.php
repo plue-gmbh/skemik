@@ -10,7 +10,7 @@ use Support\Clock;
 /* Holds tokens as the SHA-256 of their secret. Revocation and expiry are checked
    in the same statement that finds the token, with no cache and no grace period,
    and both answer the same `null`: a machine learning why it was refused learns
-   something about the house. Its last use is written once an hour at most, or a
+   something about the organisation. Its last use is written once an hour at most, or a
    website reading with a key would write the database for every page it shows.
    Issuing is `GrantRepository`'s, because a token is written only together with
    the rules that give it a reason to exist.

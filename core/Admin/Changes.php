@@ -15,7 +15,7 @@ use Storage\ActivityLog;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
-use Storage\HouseObject;
+use Storage\InstallObject;
 use Support\Clock;
 use Support\Words;
 
@@ -27,7 +27,7 @@ use Support\Words;
    record in the trash is listed for whoever may take it back out, opening that
    trash, since the record screen does not open it; a purged one is gone, and
    only the log screen lists it, by the type its purge kept. An account, a key
-   or a language is `Admin\HouseChanges`'s. */
+   or a language is `Admin\InstallChanges`'s. */
 final readonly class Changes
 {
   private const SHOWN = 7;
@@ -46,7 +46,7 @@ final readonly class Changes
     private CollectionStore $collections,
     private Sheet $sheet,
     private Rows $rows,
-    private HouseChanges $house,
+    private InstallChanges $objects,
     private Clock $clock,
     private Moments $moments,
     private Profile $profile,
@@ -56,35 +56,42 @@ final readonly class Changes
   /** A row folds into the line above it before the reader's scope is asked,
       since one thing is in it or out of it whole, and a row the reader cannot
       see breaks no run, so no line split in two says something stood between.
-      A run ends with the house's day, so a line's time never hides a change
+      A run ends with the install's day, so a line's time never hides a change
       made days before it. A line is drawn again only where a row folded in.
       @return list<Change> */
   public function latest(Account $account): array
   {
     $collections = $this->collections->all();
-    [$runs, $lines] = [[], []];
+    $runs = [];
+    $lines = [];
     foreach ($this->log->latest() as $activity) {
       $last = array_key_last($runs);
-      $joined = $last === null || !$this->sameDay($runs[$last], $activity) ? null
-        : $runs[$last]->joined($activity);
+      $joined = $this->folded($last === null ? null : $runs[$last], $activity);
       if ($joined !== null) {
-        [$runs[$last], $lines[$last]] = [$joined, null];
+        $runs[$last] = $joined;
+        $lines[$last] = null;
         continue;
       }
       if (count($runs) === self::SHOWN) {
         break;
       }
       $line = $this->line($account, $activity, $collections);
-      [$runs, $lines] = $line === null ? [$runs, $lines] : [[...$runs, $activity], [...$lines, $line]];
+      if ($line !== null) {
+        $runs[] = $activity;
+        $lines[] = $line;
+      }
     }
 
     return array_values(array_filter(array_map(fn (Activity $run, ?Change $line): ?Change
       => $line ?? $this->line($account, $run, $collections), $runs, $lines)));
   }
 
-  private function sameDay(Activity $newer, Activity $older): bool
+  /* The run a row joins, the line above it on the same day; null where the row starts a line of its own. */
+  private function folded(?Activity $run, Activity $activity): ?Activity
   {
-    return substr($this->clock->render($newer->at), 0, 10) === substr($this->clock->render($older->at), 0, 10);
+    $day = fn (Activity $row): string => substr($this->clock->render($row->at), 0, 10);
+
+    return $run === null || $day($run) !== $day($activity) ? null : $run->joined($activity);
   }
 
   /**
@@ -93,8 +100,8 @@ final readonly class Changes
    */
   public function line(Account $account, Activity $activity, array $collections): ?Change
   {
-    if ($activity->target instanceof HouseObject) {
-      return $this->houseChange($account, $activity, $activity->target);
+    if ($activity->target instanceof InstallObject) {
+      return $this->installChange($account, $activity, $activity->target);
     }
     try {
       $entity = $this->entities->find($activity->target);
@@ -120,27 +127,27 @@ final readonly class Changes
      record as a record's. */
   public function gone(Activity $activity): Change
   {
-    $what = $activity->target instanceof HouseObject ? $this->house->what($activity->target, $activity)
+    $what = $activity->target instanceof InstallObject ? $this->objects->what($activity->target, $activity)
       : $this->what((string) $activity->result?->string('type'), $activity);
 
     return new Change($this->words->get('change.gone'), null, $what, ...$this->said($activity),
       glyph: 'gone');
   }
 
-  private function houseChange(Account $account, Activity $activity, HouseObject $object): ?Change
+  private function installChange(Account $account, Activity $activity, InstallObject $object): ?Change
   {
-    $label = $this->house->label($account, $object, $activity);
+    $label = $this->objects->label($account, $object, $activity);
 
-    return $label === null ? null : new Change($label, $this->house->href($object),
-      $this->house->what($object, $activity), ...$this->said($activity),
-      glyph: $this->house->glyph($object));
+    return $label === null ? null : new Change($label, $this->objects->href($object),
+      $this->objects->what($object, $activity), ...$this->said($activity),
+      glyph: $this->objects->glyph($object));
   }
 
   /** @return array{who: string, state: ?string, by: ?string, ago: string, stamp: string, when: string,
       kept: list<string>, activity: ?string, byKey: bool} */
   private function said(Activity $activity): array
   {
-    $kept = $activity->target instanceof HouseObject ? [] : $this->kept($activity);
+    $kept = $activity->target instanceof InstallObject ? [] : $this->kept($activity);
 
     return [...$this->actor($activity), 'by' => $activity->person ?? $activity->token,
       'ago' => $this->ago($activity->at), 'stamp' => $this->moments->time($activity->at),

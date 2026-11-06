@@ -10,6 +10,8 @@ const UNIT_WORDS = ["years", "months", "weeks", "days", "hours", "minutes", "sec
 const INPUTS = { text: "text", link: "url", number: "number", date: "text",
   date_time: "datetime-local", time: "time", select: "text" };
 const MOVES = { Enter: null, ArrowDown: [1, 0], ArrowUp: [-1, 0], Tab: [0, 1] };
+/* The eight hits `Admin\SearchController` answers, as `.option` draws them, which arrive after placing. */
+const HITS_ROOM = 330;
 
 /* Which editor a field opens: in the cell, or one of the popovers. A select on
    the world's list has no options and edits as text that suggests the list; a
@@ -18,7 +20,7 @@ const modeOf = (field) => (field.prose ? "prose" : field.edge ? "edge" : field.k
   : field.refers ? "refer" : field.kind === "select" && field.options.length > 0 ? "select"
   : field.many ? "list" : field.key in field.files ? "link" : "input");
 
-/* The house's wall clock to the minute, as a `datetime-local` input holds it. */
+/* The install's wall clock to the minute, as a `datetime-local` input holds it. */
 function nowIn(zone) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: zone, year: "numeric",
     month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
@@ -60,7 +62,7 @@ const cellEditor = {
       this.$refs.input.focus();
       return;
     }
-    this.place = placement(this.editing.cell, this.$refs.popover.getBoundingClientRect());
+    this.place = this.placed();
     this.$nextTick(() => { this.unfollow = this.$refs.popover && following(this.editing.cell, this.$refs.popover,
       (at) => { this.place = { ...this.place, ...at }; }); });
     this.outside = (event) => {
@@ -81,6 +83,12 @@ const cellEditor = {
     document.removeEventListener("pointerdown", this.outside, true);
   },
   methods: {
+    /* A picker that searches is placed by the height its hits grow it to, so a row near the foot opens it above. */
+    placed() {
+      const box = this.$refs.popover.getBoundingClientRect();
+      const searching = ["edge", "link", "refer"].includes(this.mode) && !this.editing.words;
+      return placement(this.editing.cell, { width: box.width, height: box.height + (searching ? HITS_ROOM : 0) });
+    },
     /* An empty time offers now: Enter takes it, and passing through leaves the field empty. */
     result(taken = false) {
       const kind = this.editing.field.kind;

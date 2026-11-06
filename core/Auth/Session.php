@@ -45,7 +45,7 @@ final readonly class Session
     $_SESSION['seen'] = $now;
   }
 
-  /* A session where none is open: a login asked for past its limits, or the first run handing the house over. */
+  /* A session where none is open: a login asked for past its limits, or the first run handing the install over. */
   public function begin(): void
   {
     if ($this->active()) {

@@ -19,8 +19,8 @@ use Http\Response;
 use Storage\ActivityLog;
 use Storage\Collection;
 use Storage\CollectionStore;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Storage\RateLimit;
 use Support\Clock;
 use Support\Template;
@@ -34,7 +34,7 @@ use Support\ZipFailed;
    (`Feed\Export`). The screen says before the run which types come out
    complete and which as the public reads them, because a scoped colleague
    pressing Export has every reason to assume it means all of it, and how large
-   the box will be, since it holds the uploads and a house with 4 GB of
+   the box will be, since it holds the uploads and an install with 4 GB of
    photographs should learn that from the button. It is built into `staging/`
    and streamed, so the data folder has to hold it, which is where a cheap
    webspace's quota is met head-on: a run that cannot fit is refused before it
@@ -44,7 +44,7 @@ use Support\ZipFailed;
 final readonly class ExportController
 {
   /* What four documents of a record weigh, generously, beside the files whose
-     bytes are counted: the box of a house without uploads is still not nothing. */
+     bytes are counted: the box of an install without uploads is still not nothing. */
   private const PER_RECORD = 16_000;
   private const STALE_SECONDS = 3600;
   private const LOCK = 'export.lock';
@@ -83,9 +83,9 @@ final readonly class ExportController
 
   /* The box leaves `staging/` once it has been sent, or the download given up,
      which would otherwise stop PHP before the work after it and leave the box in
-     the way of the next run for the hour `sweep` waits; a house's time limit is
+     the way of the next run for the hour `sweep` waits; PHP's time limit is
      lifted, as for a move, since the box is as large as its uploads. Every role
-     may take one and each costs the house a full read of itself, so an account
+     may take one and each costs the install a full read of itself, so an account
      starts ten an hour and one box is built at a time. */
   public function take(Entity $person, Request $request): Response
   {
@@ -167,7 +167,7 @@ final readonly class ExportController
   }
 
   /* Said with the hundred megabytes every screen warns of kept free, so a dump
-     never makes the house unable to save. */
+     never makes the install unable to save. */
   private function unfit(DumpSize $size): ?string
   {
     $free = DataLayout::free($this->data);
@@ -186,7 +186,7 @@ final readonly class ExportController
 
   /* A run PHP stopped half-way left its box behind, and the next would be told
      it does not fit for good; one being sent this moment is older than that on
-     no line a house has. */
+     no line an organisation has. */
   private function sweep(): void
   {
     $stale = $this->clock->now()->getTimestamp() - self::STALE_SECONDS;
@@ -200,7 +200,7 @@ final readonly class ExportController
   private function record(Account $account, Entity $person, int $written, DumpSize $size): void
   {
     $scope = $account->read->stored();
-    $this->log->record(ActionType::Create, new HouseObject(HouseItem::Dump, $this->uuid->generate()),
+    $this->log->record(ActionType::Create, new InstallObject(InstallItem::Dump, $this->uuid->generate()),
       new Props(['person' => $person->id->value, 'records' => $written, 'files' => $size->files,
         'formats' => Export::FORMATS, ...($scope === null ? [] : ['scope' => $scope])]));
   }

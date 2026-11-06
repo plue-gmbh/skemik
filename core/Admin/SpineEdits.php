@@ -113,7 +113,7 @@ final readonly class SpineEdits
     return $sent[$key] === null || $sent[$key] === '' ? null : $this->clock->parse($this->text($sent[$key]));
   }
 
-  /* Also the locale a translation is made in: on a work, and one the house holds. */
+  /* Also the locale a translation is made in: on a work, and one the install holds. */
   public function locale(Entity $entity, mixed $sent): Locale
   {
     if (!$this->profile->byType($entity->type)->locale->forks()) {
@@ -122,7 +122,7 @@ final readonly class SpineEdits
     $tag = $this->text($sent);
 
     return array_find($this->settings->locales(), fn (Locale $locale): bool => $locale->tag === $tag)
-      ?? throw MalformedValue::named('locale of this house', $tag);
+      ?? throw MalformedValue::named('locale of this install', $tag);
   }
 
   private function text(mixed $value): string

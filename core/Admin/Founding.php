@@ -27,7 +27,7 @@ use Storage\Transaction;
 use Support\Clock;
 use Support\Uuid;
 
-/* The house a first run makes, in one transaction so a failure leaves no
+/* The install a first run makes, in one transaction so a failure leaves no
    half-made owner: the settings, its language among them before any record is
    written in one, the `Person`, the one `owner` account beside it and all
    thirty collections — the product, not a choice. Nothing else is
@@ -79,7 +79,7 @@ final readonly class Founding
 
   /* The first code, bound to the browser that ran the install and written to
      `login/` whatever the mail did, so a Webspace whose mail never worked still
-     hands the house over. Answers the cookie that carries the session. */
+     hands the install over. Answers the cookie that carries the session. */
   public function handOver(Account $owner, LoginMail $mail): string
   {
     $this->session->begin();

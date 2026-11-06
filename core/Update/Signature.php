@@ -32,7 +32,8 @@ final readonly class Signature
     if (count($lines) !== 4 || !str_starts_with($lines[2], self::TRUSTED)) {
       throw UpdateRefused::signature('is not a minisign signature');
     }
-    [$signed, $global] = [base64_decode($lines[1], true), base64_decode($lines[3], true)];
+    $signed = base64_decode($lines[1], true);
+    $global = base64_decode($lines[3], true);
     if ($signed === false || strlen($signed) !== 74 || $global === false || strlen($global) !== 64) {
       throw UpdateRefused::signature('is malformed');
     }
@@ -42,7 +43,8 @@ final readonly class Signature
     if (substr($signed, 2, 8) !== $id) {
       throw UpdateRefused::signature('is signed with another key');
     }
-    [$signature, $trusted] = [substr($signed, 10), substr($lines[2], strlen(self::TRUSTED))];
+    $signature = substr($signed, 10);
+    $trusted = substr($lines[2], strlen(self::TRUSTED));
     if (!sodium_crypto_sign_verify_detached($global, $signature . $trusted, $public)) {
       throw UpdateRefused::signature('does not verify over its trusted comment');
     }

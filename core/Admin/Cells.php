@@ -19,7 +19,7 @@ use Support\Words;
 /* One value as `view/partials/cell` draws it, for every view and for the answer
    to a save, so a cell the island just wrote looks like the one the page loaded.
    Numbers and dates are spelled in the chrome language and a date and time is
-   read in the house's timezone; a select's word is the record's language,
+   read in the install's timezone; a select's word is the record's language,
    never the admin's (`Profile\Seed\Terms`), and so are an edge's words; a
    text and a select's word are marked with it, so a screen reader speaks them so. */
 final readonly class Cells
@@ -55,7 +55,7 @@ final readonly class Cells
   }
 
   /** What an editable field holds, in the spelling its editor takes: a date and
-      time in the house's timezone, since that is what a person types, and a list
+      time in the install's timezone, since that is what a person types, and a list
       as its entries.
       @return string|int|float|bool|list<mixed>|null */
   public function editable(Entity $entity, FieldDefinition $field): string|int|float|bool|array|null

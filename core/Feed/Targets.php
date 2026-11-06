@@ -20,7 +20,7 @@ use Storage\Query;
 use Storage\RelationRepository;
 
 /* What a caller means by the name a document gave a target: a record of this
-   house by its address, a term by its code. A filter on an edge and a write
+   install by its address, a term by its code. A filter on an edge and a write
    naming one both ask here, and the admin's query bar with them, so all are
    answered as the feed spells it. Whether the caller reads what it named is the
    asker's to judge, and a filter and a write judge alike: only what a document
@@ -42,7 +42,7 @@ final readonly class Targets
       guessed slug would confirm an edge to a draft. What is no address at all, a
       bare slug or an id, is refused alike for every value, so the refusal
       confirms nothing and still names the mistake. An address is read against each
-      locale in turn: the feed's route, or the house's locales on the admin's path,
+      locale in turn: the feed's route, or the install's locales on the admin's path,
       which names none.
       @param list<Locale> $locales
       @param \Closure(Entity): bool $reads whether the caller reads a target */
@@ -151,7 +151,7 @@ final readonly class Targets
 
   /* Html, Csv and Markdown write an address from the collection on, so one is
      read against the locale route it was asked on. Null for an address of
-     another house, of no record, or of no shape this house serves. */
+     another install, of no record, or of no shape this install serves. */
   public function at(string $address, ?Locale $route = null): ?Entity
   {
     $prefix = $this->origin . '/feed/';

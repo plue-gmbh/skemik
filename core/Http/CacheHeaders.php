@@ -8,7 +8,7 @@ namespace Http;
    revalidated `private` under a token, since a shared cache must never hold a
    scoped reading, `no-store` for the admin and the dump, and `Vary` on all of
    them, one address serving four formats and two readings. Sixty seconds is a
-   constant and not a setting: long enough for a house's visitors to share a
+   constant and not a setting: long enough for an install's visitors to share a
    fetch, short enough that publishing and reloading shows it, and anything longer
    needs a purge. A document's validator is the hash of it rendered, right rather
    than merely cheap, since a record goes live at its start without a write; a

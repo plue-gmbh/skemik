@@ -41,7 +41,8 @@ const edgePicker = {
   data() {
     const items = (this.value ?? []).map((item) => (item.qualifiers
       ? { ...item, qualifiers: { ...item.qualifiers } } : { ...item }));
-    return { items, opened: new Set(), typed: "", hits: [], asked: false, unanswered: "", sending: false, refused: "" };
+    return { items, opened: new Set(), typed: "", hits: [], asked: false, unanswered: "", timer: null,
+      sending: false, refused: "" };
   },
   computed: {
     offered() {
@@ -84,14 +85,20 @@ const edgePicker = {
     },
     async find() {
       const typed = this.typed;
-      if (this.waits) return ([this.hits, this.asked] = [[], false]);
+      if (this.waits) {
+        this.hits = [];
+        this.asked = false;
+        return;
+      }
       const query = new URLSearchParams({
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
         ...(this.held !== "" ? { record: this.record, held: this.held } : {}),
       });
       const { ok, body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
       if (typed !== this.typed) return;
-      [this.hits, this.asked, this.unanswered] = [body.hits ?? [], ok, ok ? "" : body.error];
+      this.hits = body.hits ?? [];
+      this.asked = ok;
+      this.unanswered = ok ? "" : body.error;
     },
     typing() {
       window.clearTimeout(this.timer);
@@ -115,12 +122,14 @@ const edgePicker = {
       const body = new FormData();
       body.set("file", file);
       body.set("picks", this.field.accept.join());
-      [this.sending, this.refused] = [true, ""];
+      this.sending = true;
+      this.refused = "";
       announce(this.words["media.sending"]);
       const answer = await fetch("/media", { method: "POST", body,
         headers: { Accept: "application/json", "X-CSRF-Token": this.csrf } })
         .then((response) => response.json()).catch(() => ({}));
-      [this.sending, this.$refs.file.value] = [false, ""];
+      this.sending = false;
+      this.$refs.file.value = "";
       if (!answer.picked) return (this.refused = answer.error ?? fill(this.words["media.lost"], { limit: this.limit }));
       const item = { ...answer.picked, gone: false, qualifiers: {}, draft: true };
       announce(this.words["picker.draft"]);

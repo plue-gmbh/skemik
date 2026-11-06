@@ -21,7 +21,7 @@ use Support\Json;
    waits for an index. Text compares through `sort_keys` in the words the route
    shows, so an English route never finds a person by a word it does not show; a
    link compares without case, since `Max@` and `max@` are one mailbox. The zone
-   is not read here, so a house's day is the caller's to name. Newest created
+   is not read here, so an install's day is the caller's to name. Newest created
    first unless asked, since an edit is not news, and the empty last either way,
    since a sort is asked of the values. */
 final readonly class Query

@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-/* Last changed (`Admin\Changes`), for everybody: the latest seven actions,
-   read from the log and not from `updated_at`, with who took them, since what
-   changed without who is the question half-answered. A day's run of saves or
-   arrangements of one thing by one hand is one line naming all it changed, so
-   a draft saved six times fills no card. Who is the person's current name, and
-   unknown only for a redacted one; a record the reader could not open is never
-   named, the actor always, since who works in the house is no secret from it.
-   A save names the spine settings and fields it changed that the reader reads,
-   two and the rest counted. A line draws its record's type and never the state
-   it is in since, which the line did not make; one in the trash opens the
-   trash. Two lines each at every width, so a short entry is never cut. */
+/* Last changed (`Admin\Changes`), for everybody: the latest seven actions, read
+   from the log and not from `updated_at`, with who took them, since what changed
+   without who is half the answer. A day's run of saves or arrangements of one
+   thing by one hand is one line, so a draft saved six times fills no card. A
+   record the reader could not open is never named, the actor always, since who
+   works in the organisation is no secret from it. A save names two of the settings and
+   fields it changed that the reader reads and counts the rest. A line draws its
+   record's type and never the state it is in since, which the line did not make.
+   Two lines each at every width, so a short entry is never cut. Handed
+   `$changes`, `$log`, whether the reader reads the whole log, and `$words`. */
 
 if (!isset($template)) {
   return;

@@ -13,20 +13,16 @@ use Profile\Predicate;
 use Support\Json;
 use Support\Uuid;
 
-/* Edges in both directions, and with `EntityRepository` the only class that
-   writes SQL against its table; a target is written only when it is a row of
-   the type and term the edge claims, since the foreign key alone would accept
-   any row's id and the `Validator` judged the edge by its claim.
-   Every `Relation` it returns says what its target is, read by the join that
-   loads it, because `Profile\Validator` checks edges without a database and
-   `Feed\JsonLd` emits a term by its code. `outbound` is the list the `Validator`
-   is handed on the save path and in `HoldingsCheck` alike, so both ask the same
-   question of the same shape. `inbound` and `inboundToGroup` are what
-   `Admin\Showing` counts, read through `relation_object`. An edge under a
-   predicate no type declares any more, left by a release that dropped the field,
-   is read by nobody, since a `Relation` refuses it and a 500 on every screen
-   mends nothing: `strays` names it to the holdings check, and the record's next
-   save leaves it out, as `replace` writes the list a read gave. */
+/* Edges in both directions, and with `EntityRepository` the only class writing
+   SQL against its table. A target is written only when it is a row of the type
+   and term the edge claims, since the foreign key alone would accept any row's
+   id and the `Validator` judged the edge by its claim. Every `Relation` read
+   says what its target is, from the join that loads it, since `Profile\Validator`
+   checks edges without a database and `Feed\JsonLd` emits a term by its code.
+   An edge under a predicate no type declares any more, left by a release that
+   dropped the field, is read by nobody, since a `Relation` refuses it and a 500
+   on every screen mends nothing: `strays` names it to the holdings check, and
+   the record's next save leaves it out, as `replace` writes the list a read gave. */
 final readonly class RelationRepository
 {
   private const SELECT = 'select r.subject_id, r.predicate, r.object_id, r.position,'

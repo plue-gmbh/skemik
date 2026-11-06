@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Support;
 
-/* The one Markdown renderer, written rather than depended on, the same under the
-   feed's `.html`, a document asked rendered and the record screen, and below
-   everything because the feed and the admin both render and neither may reach
-   the other. A heading is the level written, never shifted, since the record's
-   name is the page's `<h1>`, and a block wherever it stands, as a list is after
-   a line of prose: every other renderer reads the same text so. An asterisk
-   beside a space is a footnote's and no emphasis. An image in prose stays its
-   characters, an image being a field with a description somebody was asked for.
-   A link's scheme is the caller's to allow, a link field's where nobody says,
-   and a link to a record is `skemik:` and its id, which a slug change leaves
-   alone. A fence of ``` lines holds its lines as typed, blank ones too, escaped
-   and never marked. A duration given words leaves as *1 month*, and ISO 8601
-   otherwise. */
+/* The one Markdown renderer, written rather than depended on, the same under
+   the feed's `.html`, a document asked rendered and the record screen, and
+   below everything since the feed and the admin both render and neither may
+   reach the other. A heading is the level written, never shifted, since the
+   record's name is the page's `<h1>`; a block stands wherever it stands, as
+   every other renderer reads the text. An asterisk beside a space is a
+   footnote's and no emphasis. An image in prose stays its characters, an image
+   being a field with a description somebody was asked for. A link's scheme is
+   the caller's to allow, and a link to a record is `skemik:` and its id, which
+   a slug change leaves alone. A fence holds its lines as typed, never marked. */
 final readonly class Markup
 {
   public const RECORD = 'skemik:';

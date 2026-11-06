@@ -7,7 +7,7 @@ namespace Admin;
 /* One action as Last changed and the log screen list it: its name, what was
    done to it, who did it, the state that person or key is in now where it has
    one, by the id of the person or the key, and when, as a glance reads it, in
-   full and as the house's wall time. Every line draws a glyph, so every name
+   full and as the install's wall time. Every line draws a glyph, so every name
    starts at one indent: a record's and a collection's their type, never the
    state the record is in since, which the line did not make; a key's as the
    Grants card does, an account's its person, a dump the export, what is gone

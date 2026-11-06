@@ -12,5 +12,5 @@ namespace Profile;
 enum Reach: string
 {
   case Public = 'public';  /* may be published, and the address serves it once it is */
-  case House = 'house';    /* draft, review and archived only: nothing of it leaves the house */
+  case Internal = 'internal'; /* draft, review and archived only: nothing of it leaves the install */
 }

@@ -15,10 +15,10 @@ use Profile\ValueObject;
 use Storage\Collection;
 
 /* The profile at `/feed/{locale}/profile`: every field of the thirty types,
-   built from the release and never from the house, so it is the same in every
+   built from the release and never from the install, so it is the same in every
    install and a machine learns a type without probing a catalogue that shows
    only its own reading. A field is the catalogue's entry typed a `Property` too,
-   and no `@id` joins it to the catalogue's, which lists what one house carries.
+   and no `@id` joins it to the catalogue's, which lists what one install carries.
    What a write must send, may repeat and cannot set is annotated on a
    `CreateAction`'s `result`, as schema.org annotates an action, nested as a
    document nests it (`Properties`). `inLanguage` on an entry has no released

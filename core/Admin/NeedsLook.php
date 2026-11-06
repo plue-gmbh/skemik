@@ -41,7 +41,7 @@ final readonly class NeedsLook
 {
   /* The types whose draft is meant to be finished. A person, an organisation, a
      branch or a place is held as a draft by design, a customer or a member being
-     one, as are a file marked for the house, a term and what somebody did. */
+     one, as are a file marked for the organisation, a term and what somebody did. */
   private const FINISHED = ['Article', 'WebPage', 'WebSite', 'HowTo', 'Course', 'Dataset', 'Book', 'Review',
     'Comment', 'Product', 'Service', 'MemberProgram', 'Brand', 'Offer', 'Event', 'ItemList', 'JobPosting',
     'SoftwareApplication', 'Question'];
@@ -97,9 +97,9 @@ final readonly class NeedsLook
       $this->counted(Overlooked::NoAlt, in_array($media, $read, true) ? $this->oversights->withoutAlt($media)
         : [], $collections, 'encodingFormat=image/'),
       $this->opened(Overlooked::Dangling, $this->oversights->pointingIntoTrash($read), $collections),
-      $account->can(Capability::ManageHouse) ? $this->reported() : null,
+      $account->can(Capability::ManageInstall) ? $this->reported() : null,
       $account->can(Capability::RunBackup) ? $this->snapshot() : null,
-      $account->can(Capability::ManageHouse) ? $this->shipped() : null,
+      $account->can(Capability::ManageInstall) ? $this->shipped() : null,
       $account->can(Capability::RunUpdate) ? $this->update() : null,
       $account->can(Capability::ManageTokens) ? $this->expiring($collections) : null,
     ]));

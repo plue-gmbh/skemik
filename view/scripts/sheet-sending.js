@@ -97,7 +97,9 @@ function sending(sheet) {
       },
       refuse(id, violation) {
         const key = violation.field.replace(/^l10n\.[^.]+\./, "");
-        const [field, label, reason] = [fieldOf(key), rows.get(id).label, violation.reason];
+        const field = fieldOf(key);
+        const label = rows.get(id).label;
+        const reason = violation.reason;
         const name = field?.label ?? spineData?.words[violation.field];
         const button = isSpine(violation.field) ? chipOf(id)
           : field ? cellOf(id, field.key)?.querySelector("[data-edit], [data-prose]") : null;

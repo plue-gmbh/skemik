@@ -97,7 +97,7 @@ final readonly class Derivations
   }
 
   /** An offer with no price or no currency states no range, not a zero, and
-      one whose last valid day has passed in the house states none either: *ab
+      one whose last valid day has passed in the install states none either: *ab
       99 €* for last spring's run is a price nobody can pay.
       @return array<string, array<string, mixed>> */
   private function priced(Entity $offer): array
@@ -112,7 +112,7 @@ final readonly class Derivations
       'priceCurrency' => $currency, 'offerCount' => 1]];
   }
 
-  /* A year or a month runs to its end, so the house's today is cut to its length. */
+  /* A year or a month runs to its end, so the install's today is cut to its length. */
   private function lapsed(Entity $offer): bool
   {
     $through = $offer->props->string('valid_through');

@@ -20,7 +20,8 @@ final readonly class Ranges
   private const NO_WORK = 'an ItemList is no work, so a work holds its lists here and its parts name it by isPartOf';
   private const KIND = 'the target stays one of the thirty and says its kind in additionalType, which a page lifts'
     . ' into @type';
-  private const OWN_TERMS = 'the house\'s own terms, where the vocabulary lists members nobody here has words for';
+  private const OWN_TERMS = 'the organisation\'s own terms, where the vocabulary lists members nobody here has'
+    . ' words for';
   private const REGION = 'a region is a term or a code a reader knows, where the vocabulary wants a record per area';
   private const COUNTRY = 'an ISO 3166 code, as addressCountry takes one, where a Country would be a record of its'
     . ' own';
@@ -44,8 +45,8 @@ final readonly class Ranges
     'Course.hasCourseInstance' => self::KIND,
     'Course.syllabusSections' => 'a course\'s sections are a list of its pages, and no type holds a Syllabus',
     'Dataset.includedInDataCatalog' => 'a catalogue is a list of datasets, and no type holds a DataCatalog',
-    'Person.hasOccupation' => 'an occupation is the house\'s own term, an Occupation being a record of skills and'
-      . ' pay nobody here keeps',
+    'Person.hasOccupation' => 'an occupation is the organisation\'s own term, an Occupation being a record of'
+      . ' skills and pay nobody here keeps',
     'Organization.nonprofitStatus' => self::OWN_TERMS,
     'LocalBusiness.nonprofitStatus' => self::OWN_TERMS,
     'WebPage.specialty' => self::OWN_TERMS,

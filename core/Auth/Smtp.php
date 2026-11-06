@@ -29,7 +29,7 @@ final readonly class Smtp
     #[\SensitiveParameter] private string $password,
     public string $sender,
     /* The install's own host, never the machine's name, which would tell the
-       relay and every recipient the hoster's internal one. */
+       relay and every recipient the host's internal one. */
     private string $name,
   ) {}
 

@@ -9,7 +9,9 @@ declare(strict_types=1);
    record, the one action always shown, and no row number stands, since it would
    be the row's place on this page. A new record is pending like any edit and made
    by a `POST` when saved, so a record the type would refuse is corrected before it
-   exists rather than after. */
+   exists rather than after.
+   Handed `$rows`, `$columns`, `$collection`, `$items`, `$badges`, `$firstLocale`, `$creates`, `$add`, `$total`,
+   `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -42,7 +44,7 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
       <tbody data-rows>
 <?php foreach ($rows as $row): ?>
 <?= $template->render('partials/sheet-row', ['words' => $words, 'columns' => $columns, 'row' => $row,
-  'items' => $items, 'ticks' => $creates, 'house' => $house]) ?>
+  'items' => $items, 'ticks' => $creates, 'firstLocale' => $firstLocale]) ?>
 <?php endforeach ?>
       </tbody>
     </table>
@@ -64,4 +66,4 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
     'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
 </div>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
-<?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>
+<?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

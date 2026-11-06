@@ -48,10 +48,10 @@ final readonly class ActivityLog
 
   /* An account, a key or a language is no record, so its row names it by
      `object_id` and says which under `about`. */
-  public function record(ActionType $type, EntityId|HouseObject|null $target, ?Props $result = null): void
+  public function record(ActionType $type, EntityId|InstallObject|null $target, ?Props $result = null): void
   {
-    $house = $target instanceof HouseObject;
-    $kept = $house ? ['about' => $target->item->value, ...$result?->document() ?? []] : $result?->document();
+    $installObject = $target instanceof InstallObject;
+    $kept = $installObject ? ['about' => $target->item->value, ...$result?->document() ?? []] : $result?->document();
     $this->db->prepare('insert into activity (id, actor_id, actor_kind, actor_name,'
       . ' action_type, target_id, object_id, start_time, result) values (:id, :actor_id,'
       . ' :actor_kind, :actor_name, :action_type, :target_id, :object_id, :now, :result)')
@@ -59,8 +59,8 @@ final readonly class ActivityLog
         'id' => $this->uuid->generate(),
         ...$this->actorColumns(),
         'action_type' => $type->value,
-        'target_id' => $house ? null : $target?->value,
-        'object_id' => $house ? $target->id : null,
+        'target_id' => $installObject ? null : $target?->value,
+        'object_id' => $installObject ? $target->id : null,
         'now' => $this->clock->now()->format(Clock::STORED),
         'result' => $kept === null ? null : $this->json->encode((object) $kept),
       ]);
@@ -162,10 +162,10 @@ final readonly class ActivityLog
   }
 
   /** @param array<string, string|null> $row */
-  private function target(array $row, ?Props $result): EntityId|HouseObject
+  private function target(array $row, ?Props $result): EntityId|InstallObject
   {
     return $row['target_id'] !== null ? new EntityId($row['target_id'])
-      : new HouseObject(HouseItem::from((string) $result?->string('about')), (string) $row['object_id']);
+      : new InstallObject(InstallItem::from((string) $result?->string('about')), (string) $row['object_id']);
   }
 
   /* How many writes an actor made since an instant: a grant's review says whether

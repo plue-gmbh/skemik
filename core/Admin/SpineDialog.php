@@ -20,9 +20,9 @@ use Support\Json;
 use Support\Words;
 
 /* What the spine dialog shows (`partials/spine-dialog`), handed to the island as
-   JSON: once per collection the states its type holds, the house's locales and
+   JSON: once per collection the states its type holds, the install's locales and
    whether the type's second language is a second record; per record its spine as the dialog
-   edits it, the window in the house's wall time, the locales its own words are
+   edits it, the window in the install's wall time, the locales its own words are
    kept in where the type has both mechanisms, and who changed it last. The
    record screen's Languages card reads a work's translations from here, each
    passing the reader's scope first. */
@@ -87,13 +87,13 @@ final readonly class SpineDialog
   }
 
   /* Whether a table row shows its record's language: on a work, since its record
-     is its locale's alone, and only where the house writes in more than one. */
+     is its locale's alone, and only where the organisation writes in more than one. */
   public function multilingual(Collection $collection): bool
   {
     return $this->profile->byType($collection->type)->locale->forks() && count($this->settings->locales()) > 1;
   }
 
-  /** A work's house locales, each with its member or, where none, the records
+  /** The install's locales on a work, each with its member or, where none, the records
       that could be linked; null on a type whose second language is not a second record.
       @return ?list<Translation> */
   public function translations(Account $account, Collection $collection, Entity $entity): ?array

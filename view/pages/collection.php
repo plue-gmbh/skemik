@@ -2,25 +2,31 @@
 
 declare(strict_types=1);
 
-/* One collection (`Admin\CollectionController`), its controls placed by what they
-   change: the header holds what changes the collection, its name, grant badge,
-   fields and + New record, and the row under it what changes only what is seen,
-   the query bar and the view switch. The shape line is a line and not the
-   heading, since the schema.org address it leads with leaves the site. What a
-   delete just trashed is offered back over the view, since the undo belongs where
-   the delete lands. */
+/* One collection (`Admin\CollectionController`), its controls placed by what they change: the header holds
+   what changes the collection, its name, grant badge, fields and + New record, and the row under it what
+   changes only what is seen. The shape line is no heading, since the schema.org address it leads with leaves
+   the site. What a delete just trashed is offered back over the view, where the delete lands. Handed
+   `$collection`, `$columns`, `$view`, `$glance`, `$timeline`, `$fixed`, `$rows`, `$page`, `$perPage`, `$items`,
+   `$parameters`, `$narrowing`, `$narrowed`, `$filters`, `$named`, `$total`, `$all`, `$data`, `$spine`,
+   `$creates`, `$public`, `$trashed`, `$trash`, the count or null, `$badges`, `$labels`, `$until`, `$back`,
+   `$firstLocale`, `$fields`, `$offers`, `$entries`, `$fielded`, `$csrf` and `$words`; the library's `$uses`,
+   `$limit`, `$uploads`, `$uploaded` and `$refused` may be left out. */
 
 if (!isset($template)) {
   return;
 }
+$uploads ??= false;
+$uploaded ??= [];
+$refused ??= [];
+$uses ??= [];
+$limit ??= '';
 $type = basename($collection->type);
 $shown = $words->get('collection.fields_count', ['n' => (string) count($columns)]);
 $letOut = $words->get('collection.public_count',
   ['n' => (string) count(array_filter($columns, fn (Admin\Column $column): bool => $column->feed))]);
 $drawn = isset($badges['']) ? $template->render('partials/grant-badge', ['words' => $words, 'badge' => $badges[''],
   'collection' => $collection, 'csrf' => $csrf, 'back' => $back, 'until' => $until]) : '';
-$add = $words->get(($uploads ?? false) ? 'media.elsewhere' : 'sheet.add');
-$uploading = $uploads ?? false;
+$add = $words->get($uploads ? 'media.elsewhere' : 'sheet.add');
 $switch = fn (bool $menu): string => $template->render('partials/view-switch', ['words' => $words,
   'view' => $view, 'parameters' => $parameters, 'menu' => $menu]);
 $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . $view->value)]);
@@ -46,7 +52,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
       <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu
         title="<?= $template->escape($current) ?>"><?= $template->render('partials/icon',
         ['name' => $view->value]) ?><span class="visually-hidden"><?= $template->escape($current) ?></span></button>
-<?php if ($uploading): $upload = $words->get('media.upload_up_to', ['limit' => $limit]) ?>
+<?php if ($uploads): $upload = $words->get('media.upload_up_to', ['limit' => $limit]) ?>
       <label class="tool-button upload-button"
         title="<?= $template->escape($upload) ?>"><?= $template->render('partials/icon', ['name' => 'upload']) ?><span
         class="visually-hidden"><?= $template->escape($upload) ?></span><input type="file" name="file" form="upload"
@@ -68,7 +74,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
   'back' => $back, 'until' => $until, 'parameters' => $parameters]) ?>
 <?php endforeach ?>
   </header>
-<?php if ($uploading): ?>
+<?php if ($uploads): ?>
   <form id="upload" method="post" action="/media" enctype="multipart/form-data" data-upload
     data-failed="<?= $template->escape($words->get('media.lost', ['limit' => $limit])) ?>">
     <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
@@ -77,10 +83,10 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
 <?php if ($fielded !== ''): ?>
   <p class="page-note is-done" role="status"><?= $template->escape($fielded) ?></p>
 <?php endif ?>
-<?php foreach ($uploaded ?? [] as $sentence): ?>
+<?php foreach ($uploaded as $sentence): ?>
   <p class="page-note is-done" role="status"><?= $template->escape($sentence) ?></p>
 <?php endforeach ?>
-<?php foreach ($refused ?? [] as $sentence): ?>
+<?php foreach ($refused as $sentence): ?>
   <p class="page-note is-refused" role="alert"><?= $template->escape($sentence) ?></p>
 <?php endforeach ?>
 <p class="page-note is-refused" role="alert" data-upload-failed hidden></p>
@@ -116,8 +122,8 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
 <?= $template->render('partials/view-' . $view->value, ['words' => $words, 'collection' => $collection,
   'columns' => $columns, 'rows' => $rows, 'page' => $page, 'perPage' => $perPage, 'total' => $total,
   'narrowed' => $narrowed, 'parameters' => $parameters, 'creates' => $creates, 'badges' => $badges, 'data' => $data,
-  'spine' => $spine, 'items' => $items, 'add' => $add, 'house' => $house, 'glance' => $glance,
-  'timeline' => $timeline, 'uses' => $uses ?? [], 'uploads' => $uploads ?? false, 'limit' => $limit ?? '']) ?>
+  'spine' => $spine, 'items' => $items, 'add' => $add, 'firstLocale' => $firstLocale, 'glance' => $glance,
+  'timeline' => $timeline, 'uses' => $uses, 'uploads' => $uploads, 'limit' => $limit]) ?>
   </div>
 <?php if ($trash !== null): ?>
   <p class="trash-link"><a

@@ -8,6 +8,7 @@ use Admin\CollectionController;
 use Admin\EdgeEdits;
 use Admin\FieldController;
 use Admin\FieldEdits;
+use Admin\HeldTargets;
 use Admin\MediaController;
 use Admin\Prose;
 use Admin\QueryBar;
@@ -35,14 +36,15 @@ final readonly class Records
 
   public function records(Route $route): Response
   {
-    [$common, $segment] = [$this->common, $route->parameter(...)];
+    $common = $this->common;
+    $segment = $route->parameter(...);
     $account = $common->authorizer->requireAccount(...);
     return match ($route->endpoint) {
       Endpoint::Collection => $this->collectionController()->show($account(), $common->requirePerson(),
         $common->request, $segment('collection')),
       Endpoint::Search => (new SearchController($common->search, $common->entities, $common->collections,
-        $common->rows, $common->profile, $common->schema, $common->targets, $common->relations,
-        $common->authorizer))->hits($account(), $common->request),
+        $common->rows, $common->profile, $common->schema, $common->targets, new HeldTargets($common->entities,
+        $common->relations, $common->schema, $common->authorizer)))->hits($account(), $common->request),
       Endpoint::Record => $this->recordController()->show($account(), $common->requirePerson(),
         $common->request, $segment('collection'), $segment('slug')),
       Endpoint::RecordCreate => $this->recordController()->create($account(), $common->request,
@@ -62,7 +64,8 @@ final readonly class Records
 
   public function trash(Route $route): Response
   {
-    [$common, $segment] = [$this->common, $route->parameter(...)];
+    $common = $this->common;
+    $segment = $route->parameter(...);
     $account = $common->authorizer->requireAccount(...);
     return match ($route->endpoint) {
       Endpoint::Trash => $this->trashController()->show($account(), $common->requirePerson(),
@@ -84,7 +87,8 @@ final readonly class Records
 
   public function fields(Route $route): Response
   {
-    [$request, $segment] = [$this->common->request, $route->parameter(...)];
+    $request = $this->common->request;
+    $segment = $route->parameter(...);
     return match ($route->endpoint) {
       Endpoint::FieldAdd => $this->fieldController()->add($request, $segment('collection')),
       Endpoint::FieldEdit => $this->fieldController()->edit($request, $segment('collection'), $segment('key')),
@@ -95,7 +99,8 @@ final readonly class Records
 
   public function media(Route $route): Response
   {
-    [$common, $segment] = [$this->common, $route->parameter(...)];
+    $common = $this->common;
+    $segment = $route->parameter(...);
     return match ($route->endpoint) {
       Endpoint::MediaUpload => $this->mediaController()->upload($common->request),
       Endpoint::MediaReplace => $this->mediaController()->replace($common->request, $segment('collection'),

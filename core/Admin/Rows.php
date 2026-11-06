@@ -48,7 +48,7 @@ final readonly class Rows
   ) {}
 
   /**
-   * @param list<Collection> $collections the house's, for a target's glyph and name
+   * @param list<Collection> $collections the install's, for a target's glyph and name
    * @return array<string, list<Chip>> by field key, in edge order
    */
   public function chips(Account $account, Entity $entity, array $collections): array
@@ -200,13 +200,14 @@ final readonly class Rows
   public static function pixels(Entity $record): string
   {
     $size = $record->props->document();
-    [$width, $height] = [$size['width'] ?? null, $size['height'] ?? null];
+    $width = $size['width'] ?? null;
+    $height = $size['height'] ?? null;
 
     return $record->typeName() === 'MediaObject' && is_int($width) && is_int($height) ? $width . '×' . $height : '';
   }
 
   /** The file an asset holds, as a link picked from the library writes it: its
-      address, a path of this house or the address elsewhere it stands at, with
+      address, a path of this install or the address elsewhere it stands at, with
       the type and the size that go with it; null for any other record.
       @return ?array{address: string, format: string, size: string} */
   public static function file(Entity $asset): ?array

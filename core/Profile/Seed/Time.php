@@ -30,7 +30,7 @@ final readonly class Time
     return [
       new TypeDefinition('Event', Erasure::Purge, LocaleMode::Localise, Reach::Public,
         $this->event(), $this->base->thing()),
-      new TypeDefinition('Reservation', Erasure::Hold, LocaleMode::None, Reach::House,
+      new TypeDefinition('Reservation', Erasure::Hold, LocaleMode::None, Reach::Internal,
         $this->reservation(), $this->base->thing(), nameParts: ['reservation_id']),
     ];
   }
@@ -79,7 +79,7 @@ final readonly class Time
         ->keyOf('VirtualLocation', 'url', 'location'),
       $f->ref('organizer', 'Organizer', 'Organization', 'Person')->starter(),
       $f->refs('performer', 'Performer', 'Person', 'Organization'),
-      $f->refs('attendee', 'Attendee', 'Person'),
+      $f->refs('attendee', 'Attendee', 'Person'), /* for a meeting with attendees and no bookings */
       ...$vo->flatten('PeopleAudience', 'audience', 'Audience', $f),
       $f->refs('offers', 'Tickets', 'Offer')
         ->derived(Derivation::over(Derived::Range, 'item_offered')->inbound()),

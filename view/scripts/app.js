@@ -60,7 +60,8 @@ function glyphMark(name) {
    address, as a query bar's choice does, and at `#edit` where editing was open,
    since the words of the other language are what was being edited. */
 function mountRecord(screen, mounted) {
-  const [read, edit] = [screen.querySelector("[data-record-read]"), screen.querySelector("[data-record-edit]")];
+  const read = screen.querySelector("[data-record-read]");
+  const edit = screen.querySelector("[data-record-edit]");
   const modes = screen.querySelectorAll("[data-record-mode]");
   const show = (mode) => {
     const sheet = mounted.current?.sheet;
@@ -103,8 +104,8 @@ function focusField(target, surface) {
   (touching && typed ? surface : target)?.focus();
 }
 
-/* Popovers: one at a time, under the element that opened it or over it where
-   more room is, never covering what it is about; left-aligned to it, pushed back
+/* Popovers: one at a time, under the element that opened it, or over it where it
+   does not fit under and more room is, never covering what it is about; left-aligned to it, pushed back
    inside the viewport sideways, and capped at that room, since a search's hits
    arrive after it is placed. An outside press and Escape close it; a press on the
    element that opened it is left to that element, whose click opens or closes.
@@ -140,21 +141,25 @@ function cycle(event, element) {
   if (event.key !== "Tab") return;
   const stops = [...element.querySelectorAll("a[href], button, input, select, textarea, [tabindex='0']")]
     .filter((each) => !each.disabled && each.type !== "hidden" && each.getClientRects().length > 0);
-  const [first, last] = [stops[0], stops.at(-1)];
+  const first = stops[0];
+  const last = stops.at(-1);
   const at = document.activeElement;
   if (!first || (at !== element && at !== (event.shiftKey ? first : last))) return;
   event.preventDefault();
   (event.shiftKey ? last : first).focus();
 }
 
-/* In the page's coordinates and not the screen's, so a phone's keyboard coming up
-   or the page scrolling leaves it at its field. Over the field it hangs by its
-   own bottom edge, so hits arriving later grow it away from the field. The width
-   is the document's, since the window's counts the scrollbar and a popover
+/* In the page's coordinates and not the screen's, so the page scrolling leaves it
+   at its field. The room is what the visual viewport shows, since a phone's
+   keyboard covers the window's foot without shrinking it. Over the field it hangs
+   by its own bottom edge, so hits arriving later grow it away from the field. The
+   width is the document's, since the window's counts the scrollbar and a popover
    pushed under it widens the page. */
 function placement(anchor, box = { width: 0, height: 0 }, below = null) {
   const at = anchor.getBoundingClientRect();
-  const [under, over] = [window.innerHeight - at.bottom - 12, at.top - 12];
+  const seen = window.visualViewport;
+  const under = seen.offsetTop + seen.height - at.bottom - 12;
+  const over = at.top - seen.offsetTop - 12;
   below ??= box.height <= under || under >= over;
   const left = Math.max(8, Math.min(at.left, document.documentElement.clientWidth - box.width - 8));
   return { left: window.scrollX + left + "px",
@@ -165,7 +170,8 @@ function placement(anchor, box = { width: 0, height: 0 }, below = null) {
 /* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it: the
    page's, as a popover is, or a dialog's, which is fixed and scrolls its own content. */
 function centred(anchor, element, holder) {
-  const [at, box] = [anchor.getBoundingClientRect(), element.getBoundingClientRect()];
+  const at = anchor.getBoundingClientRect();
+  const box = element.getBoundingClientRect();
   const left = Math.max(8, Math.min(at.left + (at.width - box.width) / 2,
     document.documentElement.clientWidth - box.width - 8));
   const frame = holder === document.body ? null : holder.getBoundingClientRect();
@@ -175,17 +181,24 @@ function centred(anchor, element, holder) {
 }
 
 /* The paper scrolls under the page, not the page, so a popover goes along with its
-   anchor as any container scrolls, on the side it opened and as tall as it was
-   placed, since only its place changes; `apply` takes the place, as the element's
-   own style or as an island's binding. Returns what stops the following. */
+   anchor as any container scrolls, on the side it stands and as tall as it was
+   placed, since only its place changes. A keyboard coming up or going changes the
+   room, so it is placed anew, side and height, by all it holds. `apply` takes the
+   place, as the element's own style or as an island's binding. Returns what stops the following. */
 function following(anchor, element, apply) {
-  const below = element.style.transform === "none";
   const move = () => {
+    const below = element.style.transform === "none";
     const { left, top } = placement(anchor, element.getBoundingClientRect(), below);
     apply({ left, top });
   };
+  const resize = () => apply(placement(anchor, { width: element.offsetWidth,
+    height: Math.max(element.offsetHeight, element.scrollHeight) }));
   document.addEventListener("scroll", move, true);
-  return () => document.removeEventListener("scroll", move, true);
+  window.visualViewport.addEventListener("resize", resize);
+  return () => {
+    document.removeEventListener("scroll", move, true);
+    window.visualViewport.removeEventListener("resize", resize);
+  };
 }
 
 document.addEventListener("click", (event) => {

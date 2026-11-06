@@ -9,7 +9,7 @@ namespace Update;
    `version_compare` on the machine; whether it is a security release; the day it
    is installed from, a staged rollout being the manifest's field and never a
    clock in the install, which one that says `early` in `config.php` does not
-   wait for, so a release meets a few houses first; and where the archive and
+   wait for, so a release meets a few installs first; and where the archive and
    its signature are, on the manifest's own server: the manifest is not signed,
    so one changed on the way names no other server to pull from, and the
    signature is checked only once the bytes lie in `staging/`. */

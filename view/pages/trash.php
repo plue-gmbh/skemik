@@ -9,7 +9,8 @@ declare(strict_types=1);
    references leaving with the record and, for a person who changed records,
    offers to take their name out of the log, which a purge alone leaves there.
    The lot's dialog counts over every ticked row, so each row carries its counts;
-   the retention warning is the type's, and a trash holds one type. */
+   the retention warning is the type's, and a trash holds one type.
+   Handed `$rows`, `$collection`, `$title`, `$total`, `$page`, `$purges`, `$purged`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

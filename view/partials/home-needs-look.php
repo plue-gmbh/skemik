@@ -9,7 +9,8 @@ declare(strict_types=1);
    the mending starts, a filtered collection where a filter names the records and
    the first record where none does; a daily snapshot that failed stands here,
    since one failing for three weeks must be a line and not an absence. None is
-   drawn at nothing, and with none the card says so. */
+   drawn at nothing, and with none the card says so.
+   Handed `$findings` and `$words`. */
 
 if (!isset($template)) {
   return;

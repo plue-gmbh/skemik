@@ -10,7 +10,7 @@ use Support\Json;
 /* Failures, one JSON line each in `log/app.log`, outside `holdings/` so a backup
    never carries it. Never a request body, which is the holdings in a file that is
    not, and never a login code, a token or an address; no requests, which the web
-   server logs and which would hold visitors' addresses the house never asked to
+   server logs and which would hold visitors' addresses the organisation never asked to
    keep. A trace is written without its frames' arguments whatever
    `zend.exception_ignore_args` says, since an argument is where a login code or a
    relay password leaks. It rotates on the write that crosses 8 MB, there being no

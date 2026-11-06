@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-/* The logomark, drawn from the material's own tokens so it sits on chrome and on paper. */
+/* The logomark, drawn from the material's own tokens so it sits on chrome and on paper.
+   Handed `$size`. */
 
 if (!isset($template)) {
   return;

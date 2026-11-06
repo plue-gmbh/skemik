@@ -26,8 +26,8 @@ use Storage\Collection;
 use Storage\CollectionField;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Support\Clock;
 use Support\Json;
 use Support\Uuid;
@@ -189,7 +189,7 @@ final readonly class TokenController
 
   private function logged(ActionType $type, Token $token, ?string $done = null): void
   {
-    $this->log->record($type, new HouseObject(HouseItem::Key, $token->id),
+    $this->log->record($type, new InstallObject(InstallItem::Key, $token->id),
       $done === null ? null : new Props([$done => true]));
   }
 
@@ -271,7 +271,7 @@ final readonly class TokenController
     return $collection ?? throw EntityNotFound::withId($slug);
   }
 
-  /* The last moment of the chosen day in the house's time, so a date means what
+  /* The last moment of the chosen day in the install's time, so a date means what
      it says; `Auth\Token` refuses one that is not in the future. */
   private function expiry(string $date): string
   {

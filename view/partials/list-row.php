@@ -7,7 +7,9 @@ declare(strict_types=1);
    where the account writes, the picture where the type has one, it and the label
    both the link to the record, the spine chip beneath, then the collection's
    first fields (`Admin\Glance`) as the table's cells. Without a record it is the blank
-   row + New record clones, its label a cell until it has an address. */
+   row + New record clones, its label a cell until it has an address.
+   Handed `$row`, null for the blank row, `$columns`, `$items`, `$glance`, `$collection`, `$firstLocale`, `$ticks`
+   and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -25,7 +27,7 @@ $picture = $template->render('partials/item-picture', ['row' => $row, 'glance' =
 $address = $items->address($row);
 ?>
 <li class="list-row" data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
-<?php if ($ticks ?? false): ?>
+<?php if ($ticks): ?>
   <span class="item-tick"><?php if ($row !== null): ?><input type="checkbox" data-tick
     aria-label="<?= $template->escape($words->get('sheet.tick', ['label' => $row->label])) ?>"><?php endif ?></span>
 <?php endif ?>
@@ -38,7 +40,7 @@ $address = $items->address($row);
 <?php if ($row !== null): ?>
     <a class="item-label" href="<?= $template->escape($address) ?>"><?= $template->escape($row->label) ?></a>
     <?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row, 'prefix' => '',
-      'translations' => $own, 'opens' => $opens, 'current' => $house ?? null]) ?>
+      'translations' => $own, 'opens' => $opens, 'current' => $firstLocale]) ?>
 <?php else: ?>
 <?php if ($label !== null): ?>
     <?= $cell($label, $label->label) ?>

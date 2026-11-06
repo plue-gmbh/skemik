@@ -29,7 +29,7 @@ use Support\Rendered;
 
 /* JSON-LD straight from `props`, the payoff of the whole storage model, built for
    one caller's reading, so no document can be rendered for somebody else. A list
-   is named by its type, the same in every house. A member is wrapped whatever it
+   is named by its type, the same in every install. A member is wrapped whatever it
    carries, so the wire shape never follows the content. Edge depth is 1 and
    there is no `expand` parameter: a nested object is a rendering of a record and
    not the record, so only a document fetched at its own address may be cached

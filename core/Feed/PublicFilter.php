@@ -15,7 +15,7 @@ use Storage\CollectionField;
 use Storage\Query;
 use Support\Clock;
 
-/* What may leave the house, by three gates: the type (an invoice never can), the
+/* What may leave the install, by three gates: the type (an invoice never can), the
    record's status read against the clock, there being no daemon to flip a row on
    time, and the field's flag. The status is the gate no flag replaces: one
    collection holds public reference customers and customers who must never

@@ -18,7 +18,7 @@ final readonly class ValueObject
    * @param list<string> $bearing the keys a † on this value object requires —
    *   never one of two, because the profile holds no rule spanning two fields
    * @param bool $amount an amount object: a use carries its bearing keys
-   *   and the unit where a house can vary it, never the range keys nobody fills.
+   *   and the unit where an organisation can vary it, never the range keys nobody fills.
    *   Every other value object gives a use all of its keys.
    * @param ?string $reference the one key that holds a record or a word
    * @param list<string> $targets the types that key may refer to

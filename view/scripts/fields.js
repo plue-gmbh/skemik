@@ -39,7 +39,8 @@ function openFieldPopover(trigger) {
 
 /* A field's grants open under their one line, and close again under it. */
 function foldGrants(element) {
-  const [opener, part] = [element.querySelector("[data-grant-open]"), element.querySelector("[data-grant-part]")];
+  const opener = element.querySelector("[data-grant-open]");
+  const part = element.querySelector("[data-grant-part]");
   opener?.addEventListener("click", () => {
     part.hidden = !part.hidden;
     opener.setAttribute("aria-expanded", String(!part.hidden));

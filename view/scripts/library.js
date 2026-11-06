@@ -49,13 +49,18 @@ function mountUpload(form) {
     if (input.files.length === 0) return;
     const files = [...input.files];
     const bar = note.querySelector("progress");
-    [input.disabled, alert.hidden, note.hidden, bar.value] = [true, true, false, 0];
+    input.disabled = true;
+    alert.hidden = true;
+    note.hidden = false;
+    bar.value = 0;
     announce(note.textContent);
     const answers = await sentAll(form, files, bar);
     if (answers.every((answer) => answer.address)) return location.assign(answers[0].address);
     const refused = answers.find((answer) => answer.error)?.error;
-    [alert.textContent, alert.hidden] = [refused ?? form.dataset.failed, false];
-    [note.hidden, input.disabled] = [true, false];
+    alert.textContent = refused ?? form.dataset.failed;
+    alert.hidden = false;
+    note.hidden = true;
+    input.disabled = false;
   });
 }
 
@@ -71,7 +76,8 @@ function first(files) {
    carries its bottom out of view, and around the preview alone on a file's screen, since a file meant for the
    library and dropped anywhere there would replace the one shown, its bytes gone. */
 function mountDrop(form) {
-  const [input, preview] = [form.elements.file, document.querySelector("[data-drop]")];
+  const input = form.elements.file;
+  const preview = document.querySelector("[data-drop]");
   const zone = preview ?? form.closest(".paper");
   const carried = (event) => event.dataTransfer?.types.includes("Files");
   let entered = 0;

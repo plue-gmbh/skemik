@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 /* A value edited, by kind, one component for the table and the record screen.
    A date is typed as text, since a year alone is a date and the browser's input
-   takes none; an empty date-time shows the house's now, which Enter takes and
+   takes none; an empty date-time shows the install's now, which Enter takes and
    passing through does not, or the browser's picker would open on a day the
    field does not hold. A currency or a country edits as text suggesting names,
    stored as codes, since three hundred buttons are no popover, and prose in a
    textarea, so a row that requires it is made from the table. A link that takes
-   a file opens a popover with the library beneath the address. The keys are a
-   spreadsheet's: Enter commits, the arrows and Tab commit and move, Escape
-   restores. */
+   a file opens the library beneath the address. The keys are a spreadsheet's:
+   Enter commits, the arrows and Tab commit and move, Escape restores. Handed
+   nothing: the island fills it. */
 
 if (!isset($template)) {
   return;

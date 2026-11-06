@@ -13,8 +13,8 @@ use Profile\ValueObject;
 
 /* One spelling of a value at the address and one in `props`, so the spelling a
    document shows finds its row and a write is held as the editor holds it. A
-   link under the house's origin is held as its path and shown whole again, so a
-   house that moves its domain keeps every link. A fixed list's value is held as
+   link under the install's origin is held as its path and shown whole again, so a
+   organisation that moves its domain keeps every link. A fixed list's value is held as
    its token, which a filter names and a table sorts, and the JSON-LD document
    shows it as the member's address, which schema.org's own examples name
    (`SchemaOrg::member`); the flat formats keep the token. The two doors,
@@ -90,7 +90,7 @@ final readonly class Spelling
   }
 
   /** A row's key on a fixed list is spelt as a select's value is, and its link
-      keys as a field's link, a path of the house shown whole.
+      keys as a field's link, a path of the install shown whole.
       @param array<string, mixed> $row @return array<string, mixed> */
   public function row(FieldDefinition $field, array $row): array
   {

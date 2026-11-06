@@ -9,7 +9,8 @@
    browsers, which would load a page per step, so a choice made by keyboard waits
    for Enter or for focus to leave. The page it loads gives focus back to it. */
 function chosen(select, selector, act) {
-  let [stepped, held] = [false, select.value];
+  let stepped = false;
+  let held = select.value;
   const take = () => {
     stepped = false;
     if (select.value === held) return;

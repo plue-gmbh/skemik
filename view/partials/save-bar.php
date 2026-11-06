@@ -7,11 +7,11 @@ declare(strict_types=1);
    changed values and the version the page loaded, so a save can partly fail and
    says so per record. A `412` names who changed it and offers Take theirs or Save
    anyway: overwriting a colleague is possible, never silent, and reaches only the
-   fields this page changed. Pending edits are never kept in browser storage,
-   which would be a second, unversioned draft, and there is no autosave: a write
-   per keystroke races the conditional write it relies on, and ten cells of a price
-   list are one decision. Deleting, translating, uploading and the house's
-   structure are never pending; each applies when its dialog is confirmed. */
+   fields this page changed. Nothing pending is kept in browser storage, a second,
+   unversioned draft, and nothing saves itself: a write per keystroke races the
+   conditional write, and ten cells of a price list are one decision. Deleting,
+   translating, uploading and the structure apply when their dialog is confirmed,
+   never pending. Handed `$data` and `$spine`. */
 
 if (!isset($template)) {
   return;

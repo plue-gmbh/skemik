@@ -10,7 +10,7 @@ use Admin\Colleagues;
 use Admin\ExportController;
 use Admin\FindController;
 use Admin\HomeController;
-use Admin\HouseChanges;
+use Admin\InstallChanges;
 use Admin\NeedsLook;
 use Admin\Register;
 use Auth\Account;
@@ -31,7 +31,8 @@ final readonly class Home
 
   public function answer(Route $route): Response
   {
-    [$common, $account] = [$this->common, $this->common->authorizer->requireAccount(...)];
+    $common = $this->common;
+    $account = $common->authorizer->requireAccount(...);
     return match ($route->endpoint) {
       Endpoint::Activity => $this->activity()->show($account(), $common->requirePerson(), $common->request),
       Endpoint::ActivityRedact => $this->activity()->redact($common->request, $route->parameter('id')),
@@ -104,7 +105,7 @@ final readonly class Home
   {
     $common = $this->common;
     return new Changes($common->log, $common->entities, $common->tokens, $common->collections,
-      $common->sheet(), $common->rows, new HouseChanges($common->entities, $common->tokens, $common->collections,
+      $common->sheet(), $common->rows, new InstallChanges($common->entities, $common->tokens, $common->collections,
         $common->named, $common->words), $common->clock, $common->moments, $common->named, $common->words);
   }
 }

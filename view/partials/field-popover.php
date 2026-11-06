@@ -5,13 +5,13 @@ declare(strict_types=1);
 /* A column's one popover, opened from its name in the header: the field's
    schema.org property, linked where the vocabulary has a page, and its grants
    folded behind one line, since they are read far less often than the field is
-   set. No sentence explains what the header already marks, and a key of a value
-   object is named without its heading, which the header shows. Whether a field
-   leaves is the house's and switched here; its name, key and kind are the type's
-   and only shown. Remove names the grants it breaks, since their rules would fail
-   closed and say nothing, and a † has no such button, since the collection could
-   not hold its type without it. Its form carries the screen's query, so the view
-   comes back as it was narrowed. */
+   set. No sentence explains what the header already marks. Whether a field leaves
+   is the organisation's and switched here; its name, key and kind are the type's and only
+   shown. Remove names the grants it breaks, since their rules would fail closed
+   and say nothing, and a † has no such button, since the type needs it. Its form
+   carries the screen's query, so the view comes back as it was narrowed. Handed
+   `$column`, `$entry`, null where the reader does not manage fields, `$collection`,
+   `$badges`, `$public`, `$parameters`, `$back`, `$until`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

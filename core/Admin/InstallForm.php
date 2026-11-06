@@ -10,10 +10,10 @@ use Http\Request;
 use Profile\ClosedList;
 use Support\Words;
 
-/* The first run's one form: who owns the house, where they
-   log in, the house's clock and the chrome's language. The login address is
+/* The first run's one form: who owns the install, where they
+   log in, the install's clock and the chrome's language. The login address is
    the account's, never copied into the person's `email`, which is content.
-   The chrome's language is also the first the house publishes in, so a house
+   The chrome's language is also the first the organisation publishes in, so an organisation
    set up in English does not write its first record as German: in the region
    the installing browser names for it, `de-AT`, else in the one the language is
    most at home in, `de-DE` and `en-US`. The languages card changes it later. */

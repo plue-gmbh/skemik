@@ -12,7 +12,7 @@ namespace Http;
    since `Expires` is counted from the release's day: an install a year behind
    says of itself that it is stale. No `Canonical`, because behind a proxy an
    install does not know its own scheme, and no `Preferred-Languages`, because
-   the house's are not ours to state. */
+   the organisation's are not ours to state. */
 final readonly class SecurityText
 {
   private const MANUFACTURER = 'mailto:security@skemik.org';
@@ -30,9 +30,9 @@ final readonly class SecurityText
   private function text(): string
   {
     $expires = (new \DateTimeImmutable($this->released, new \DateTimeZone('UTC')))->modify('+1 year');
-    $house = trim((string) $this->contact);
-    $lines = $house === '' ? [] : ['# Who runs this site.',
-      'Contact: ' . (str_contains($house, ':') ? $house : 'mailto:' . $house)];
+    $operator = trim((string) $this->contact);
+    $lines = $operator === '' ? [] : ['# Who runs this site.',
+      'Contact: ' . (str_contains($operator, ':') ? $operator : 'mailto:' . $operator)];
 
     return implode("\n", [...$lines,
       '# plue GmbH, the manufacturer of Skemik, the software this site keeps its data in, and not',

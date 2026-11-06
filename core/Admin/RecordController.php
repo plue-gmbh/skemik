@@ -6,7 +6,7 @@ namespace Admin;
 
 /* A record: its screen at `/c/{collection}/{slug}`, the `POST` that makes one,
    and the `PATCH` every save sends; its group is `TranslationController`'s. The
-   screen is read by slug, as the feed reads it, within the house's locales, since
+   screen is read by slug, as the feed reads it, within the install's locales, since
    the chrome language is no content locale; the writes take `{id}`, because a
    slug is reusable and a `POST` aimed at one can reach another record than the
    one the operator saw. A save's fields and edges are applied by `FieldEdits` and
@@ -116,7 +116,7 @@ final readonly class RecordController
   }
 
   /* A view's pending new record, made when it is saved: a draft in the locale
-     the view is filtered by, else the house's first, under the first free slug
+     the view is filtered by, else the install's first, under the first free slug
      its label gives, since custody never arrives with the values, and validated
      whole before it exists. */
   public function create(Account $account, Request $request, string $slug): Response
@@ -143,19 +143,19 @@ final readonly class RecordController
     SaveRefused::unless($this->validator->check($type, $props->document(), $edges));
     $now = $this->clock->now()->format(Clock::STORED);
     $named = (string) ($props->string($type->namedBy()) ?? $type->name);
-    $draft = (new Entity($id, $type->url(), $this->houseLocale($request->query('locale')),
+    $draft = (new Entity($id, $type->url(), $this->installLocale($request->query('locale')),
       Slug::from($named, 'record'), new Props([]), $now, $now))->withProps($props);
 
     return $this->entities->save($draft, $edges);
   }
 
-  /* A locale the house does not hold is refused by name, as the query bar refuses it. */
-  private function houseLocale(?string $tag): Locale
+  /* A locale the install does not hold is refused by name, as the query bar refuses it. */
+  private function installLocale(?string $tag): Locale
   {
     $locales = $this->settings->locales();
 
     return $tag === null ? $locales[0] : array_find($locales, fn (Locale $locale): bool => $locale->tag === $tag)
-      ?? throw MalformedValue::named('locale of this house', $tag);
+      ?? throw MalformedValue::named('locale of this install', $tag);
   }
 
   /* A row answered to a save opens with no query: the page it lands on keeps its own. */
@@ -172,7 +172,7 @@ final readonly class RecordController
     $drawn = ['list' => 'list-row', 'cards' => 'card', 'grid' => 'grid-tile', 'timeline' => 'timeline-row'];
     $html = $this->template->render('partials/' . ($drawn[$view] ?? 'sheet-row'), ['words' => $this->words,
       'collection' => $collection, 'columns' => $columns, 'row' => $row, 'ticks' => true,
-      'items' => $this->items($collection), 'house' => $this->settings->locales()[0]->tag,
+      'items' => $this->items($collection), 'firstLocale' => $this->settings->locales()[0]->tag,
       'glance' => isset($drawn[$view]) ? $this->collections->glance($collection, $columns) : null]);
 
     return Response::json($this->json->encode([...$this->sheet->saved($row, $columns), 'id' => $saved->id->value,
@@ -216,7 +216,8 @@ final readonly class RecordController
       @return array{Entity, list<Relation>} */
   private function edited(Account $account, Request $request, Collection $collection, Entity $entity): array
   {
-    [$sent, $type] = [$this->fields->sent($request), $this->profile->byType($entity->type)];
+    $sent = $this->fields->sent($request);
+    $type = $this->profile->byType($entity->type);
     [$props, $edges] = $this->fields->applied($account, $collection, $type, $entity->id,
       new Props($type->valued($entity->props->document())), $this->relations->outbound($entity->id),
       array_diff_key($sent, ['spine' => true, LocalisedText::KEY => true]));

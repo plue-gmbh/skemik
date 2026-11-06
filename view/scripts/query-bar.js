@@ -23,7 +23,8 @@ function mountQueryBar(form, mounted) {
     const response = await fetch(url).catch(() => null);
     if (response === null || url !== address()) return;
     const page = new DOMParser().parseFromString(await response.text(), "text/html");
-    const [view, count] = [page.querySelector("[data-view]"), page.querySelector("[data-query-count]")];
+    const view = page.querySelector("[data-view]");
+    const count = page.querySelector("[data-query-count]");
     if (!view) return go();
     mounted.current?.app.unmount();
     document.querySelector("[data-view]").replaceWith(view);

@@ -233,7 +233,7 @@ final readonly class FeedController
       : throw EntityNotFound::withId($slug);
   }
 
-  /* A locale the house does not hold is no address of this install, whatever
+  /* A locale the install does not hold is no address of this install, whatever
      BCP-47 makes of the tag. */
   private function locale(string $tag): Locale
   {

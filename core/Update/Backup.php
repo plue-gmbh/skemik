@@ -13,12 +13,12 @@ use Support\JsonFailed;
    settled file and never a copy of the live WAL, the media tree by hardlink
    where the filesystem allows it and by copy where not. Whether it fits is
    learnt by writing it, since the free space PHP reports is the disk's and not
-   a hoster's quota: a write that fails leaves nothing behind. Written under a
+   a host's quota: a write that fails leaves nothing behind. Written under a
    `.part` name and renamed, so a listing never shows one half written; what
    the ladder has passed leaves after a new one and never before. The daily
    run's report lives beside the snapshots and outside `holdings/`, so a
    restore does not bring an old one back, and the copy holds no `rate_limit`
-   row, so a house restored or moved after a burst of logins does not refuse
+   row, so an install restored or moved after a burst of logins does not refuse
    its owner's for the window that burst opened. */
 final readonly class Backup
 {
@@ -45,7 +45,8 @@ final readonly class Backup
   {
     $at = $this->free($occasion);
     $name = $at->format(self::STAMP) . '-' . $occasion->value;
-    [$part, $folder] = [$this->folder() . '/' . $name . '.part', $this->folder() . '/' . $name];
+    $part = $this->folder() . '/' . $name . '.part';
+    $folder = $this->folder() . '/' . $name;
     /* Outside the cleanup below, so a take racing this one for the second leaves the other's folder alone. */
     mkdir($part, 0700, true)
       || throw SnapshotFailed::writing($name, new \RuntimeException('could not make ' . $part));
@@ -143,12 +144,13 @@ final readonly class Backup
 
   /* The media tree, each file linked to the original and copied where the
      filesystem refuses links: an upload is never changed in place, so a link is
-     a copy that costs nothing. A house without an upload yet has no tree. */
+     a copy that costs nothing. An install without an upload yet has no tree. */
   public function linkTree(string $from, string $to): void
   {
     mkdir($to, 0700, true) || throw new \RuntimeException('could not make ' . $to);
     foreach (is_dir($from) ? scandir($from) ?: [] : [] as $name) {
-      [$source, $target] = [$from . '/' . $name, $to . '/' . $name];
+      $source = $from . '/' . $name;
+      $target = $to . '/' . $name;
       if ($name === '.' || $name === '..') {
         continue;
       }

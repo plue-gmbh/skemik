@@ -6,7 +6,8 @@ declare(strict_types=1);
    grant holds, and the popover of `partials/grant-panel`. A field's grants are
    in its column's field popover instead (`partials/field-popover`). Where no key
    holds and the reader may not issue, the panel would be empty, so the badge is
-   the mark alone, saying that keys exist. */
+   the mark alone, saying that keys exist.
+   Handed `$badge`, `$collection`, `$back`, `$until`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

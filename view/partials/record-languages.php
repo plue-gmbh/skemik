@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-/* The record screen's Languages card, on a work alone: one row per house locale,
+/* The record screen's Languages card, on a work alone: one row per locale the install holds,
    the record's own marked, every other with how much older or newer it is, a
    missing one offered to whoever writes, made or linked from a record already
-   written in it, and a member let go where it is not the one the others name. */
+   written in it, and a member let go where it is not the one the others name.
+   Handed `$translations`, `$collection`, `$entity`, `$writes`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

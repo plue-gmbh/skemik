@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* A person as the header, the Accounts card and an account's card draw them:
    their picture, or the initials of their first two names where they have none
-   the reader may see. Decoration beside the name, so hidden from a screen reader. */
+   the reader may see. Decoration beside the name, so hidden from a screen reader.
+   Handed `$name` and `$picture`, null for none. */
 
 if (!isset($template)) {
   return;

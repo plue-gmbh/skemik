@@ -130,7 +130,7 @@ final readonly class QueryBar
       ? $status : throw MalformedValue::named('status of ' . $collection->name, $value);
   }
 
-  /* A locale the house does not hold is refused by name, as an unknown field is. */
+  /* A locale the install does not hold is refused by name, as an unknown field is. */
   private function locale(?string $tag): ?Locale
   {
     if ($tag === null) {
@@ -138,6 +138,6 @@ final readonly class QueryBar
     }
 
     return array_find($this->settings->locales(), fn (Locale $locale): bool => $locale->tag === $tag)
-      ?? throw MalformedValue::named('locale of this house', $tag);
+      ?? throw MalformedValue::named('locale of this install', $tag);
   }
 }

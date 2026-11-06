@@ -70,20 +70,20 @@ final readonly class HomeController
       account, in order, with the values its partial reads */
   private function cards(Account $account): array
   {
-    $house = $account->can(Capability::ManageHouse);
+    $manages = $account->can(Capability::ManageInstall);
     $manage = $account->can(Capability::ManageAccounts);
     $cards = ['needs_look' => ['findings' => $this->needsLook->findings($account)],
       'grants' => $account->can(Capability::ManageTokens) ? ['entries' => $this->register->entries($account),
         'collections' => $this->register->collections(), 'until' => $this->register->until(),
         'csrf' => $this->csrf->token()] : null,
-      'languages' => $house ? ['rows' => $this->locales->rows(), 'csrf' => $this->csrf->token(),
+      'languages' => $manages ? ['rows' => $this->locales->rows(), 'csrf' => $this->csrf->token(),
         'refused' => (string) $this->session->take('locales')] : null,
       'changes' => ['changes' => $this->changes->latest($account),
         'log' => $account->can(Capability::ReadLog)],
       'accounts' => ['colleagues' => $this->colleagues->all($account), 'manage' => $manage,
         ...$manage ? ['types' => $this->colleagues->types(), 'unreadable' => $this->colleagues->unreadable(),
         'csrf' => $this->csrf->token()] : []],
-      'settings' => $house ? $this->settingsCard($account) : null];
+      'settings' => $manages ? $this->settingsCard($account) : null];
 
     return array_filter($cards, fn (?array $card): bool => $card !== null);
   }
@@ -91,7 +91,8 @@ final readonly class HomeController
   /** @return array<string, string|bool|Health|null> the Settings card's rows, each status row with its health */
   private function settingsCard(Account $account): array
   {
-    [$errors, $slowed] = [$account->can(Capability::ReadLog), $this->probes->costs() !== []];
+    $errors = $account->can(Capability::ReadLog);
+    $slowed = $this->probes->costs() !== [];
 
     return ['general' => $this->general($slowed), 'generalHealth' => $slowed ? Health::Blocked : null,
       'backups' => $this->backups(), 'backupsHealth' => $this->backupsHealth(),

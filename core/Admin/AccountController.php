@@ -29,8 +29,8 @@ use Profile\TypeDefinition;
 use Profile\Validator;
 use Storage\ActivityLog;
 use Storage\EntityRepository;
-use Storage\HouseItem;
-use Storage\HouseObject;
+use Storage\InstallItem;
+use Storage\InstallObject;
 use Storage\SettingStore;
 use Storage\Transaction;
 use Support\Clock;
@@ -164,7 +164,7 @@ final readonly class AccountController
   /** @param array<string, string|bool> $said */
   private function logged(ActionType $type, string $account, EntityId $person, array $said = []): void
   {
-    $this->log->record($type, new HouseObject(HouseItem::Account, $account),
+    $this->log->record($type, new InstallObject(InstallItem::Account, $account),
       new Props(['person' => $person->value, ...$said]));
   }
 

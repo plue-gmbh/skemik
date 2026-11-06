@@ -8,7 +8,7 @@ namespace Profile;
    schema.org spelling is SchemaOrg's business, not this class's.
    Readonly: the marks are applied by building a new instance, never by setting.
    An option's word is `Seed\Terms`'s, per content language and never by the
-   admin's: a house publishing `de-DE` with an English-only admin still gets its
+   admin's: an organisation publishing `de-DE` with an English-only admin still gets its
    German status words. */
 final readonly class FieldDefinition
 {
@@ -128,14 +128,14 @@ final readonly class FieldDefinition
 
   /* The whole test for a †: is there a sensible record without this field? If
      yes it is ‡ at most. A status with a starting value, an author or a date the
-     spine keeps, a price a house quotes on request: each was † once, and each
+     spine keeps, a price an organisation quotes on request: each was † once, and each
      was a wall across ordinary work. */
   public function required(): self
   {
     return $this->with(required: true);
   }
 
-  /* ‡ is what every house of the type adds on its first day; what only a
+  /* ‡ is what every organisation of the type adds on its first day; what only a
      website needs stays behind Fields. */
   public function starter(): self
   {

@@ -8,7 +8,8 @@ declare(strict_types=1);
    them. A rename says that the old address then answers 404, since nothing
    forwards. The window shows wherever it holds a value, since a leftover end
    would otherwise take a record down unseen. Language is a work's alone, its
-   translations being the record screen's Languages card. */
+   translations being the record screen's Languages card.
+   Handed `$spine`. */
 
 if (!isset($template)) {
   return;

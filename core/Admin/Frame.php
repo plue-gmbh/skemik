@@ -16,8 +16,8 @@ use Support\Words;
 
 /* The chrome around every admin screen (`view/partials/frame.php`), built in
    one place for every screen that has one, since no screen chooses it: the
-   sidebar and the house's sites, the account menu, the probes' line and the
-   house's first locale, around what the screen brings (`Admin\Screen`). The
+   sidebar and the install's sites, the account menu, the probes' line and the
+   install's first locale, around what the screen brings (`Admin\Screen`). The
    menu's name opens the account's person where the account reads it, since its
    name and picture are that record's. A screen
    opening on the sentence that a record is unknown answers 404 with it, since

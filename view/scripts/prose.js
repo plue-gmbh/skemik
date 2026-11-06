@@ -19,7 +19,9 @@ const MARKS = { heading: ["## ", /^#{1,6} /], quote: ["> ", /^> ?/], bold: ["**"
    line, a selection takes the lines. At the text's start no newline is looked
    for, since `lastIndexOf` reads -1 as 0. */
 function prefix(area, mark, pattern) {
-  const [value, from, to] = [area.value, area.selectionStart, area.selectionEnd];
+  const value = area.value;
+  const from = area.selectionStart;
+  const to = area.selectionEnd;
   const start = from === 0 ? 0 : value.lastIndexOf("\n", from - 1) + 1;
   const stop = value.indexOf("\n", Math.max(start, to > from ? to - 1 : to));
   const end = stop === -1 ? value.length : stop;
@@ -41,10 +43,16 @@ function prefix(area, mark, pattern) {
    bold text is no italic one, but the second asterisk of an empty pair is its
    closing one. */
 function wrap(area, marks) {
-  const [value, from, to, n] = [area.value, area.selectionStart, area.selectionEnd, marks.length];
+  const value = area.value;
+  const from = area.selectionStart;
+  const to = area.selectionEnd;
+  const n = marks.length;
   const chosen = value.slice(from, to);
-  const [lead, trail] = [chosen.length - chosen.trimStart().length, chosen.length - chosen.trimEnd().length];
-  const [inner, at, until] = [chosen.slice(lead, chosen.length - trail), from + lead, to - trail];
+  const lead = chosen.length - chosen.trimStart().length;
+  const trail = chosen.length - chosen.trimEnd().length;
+  const inner = chosen.slice(lead, chosen.length - trail);
+  const at = from + lead;
+  const until = to - trail;
   const marked = (text, before) => text.length >= 2 * n && text.startsWith(marks) && text.endsWith(marks)
     && !(marks === "*" && ((text.length > 2 && text[1] === "*") || before === "*"));
   if (marked(inner, value[at - 1])) return area.setRangeText(inner.slice(n, -n), at, until, "select");
@@ -58,7 +66,9 @@ function wrap(area, marks) {
 /* A selection over more than one line is fenced whole, the fence on lines of its
    own, and unfenced again where the lines around it are a bare fence. */
 function fence(area) {
-  const [value, from, to] = [area.value, area.selectionStart, area.selectionEnd];
+  const value = area.value;
+  const from = area.selectionStart;
+  const to = area.selectionEnd;
   const start = from === 0 ? 0 : value.lastIndexOf("\n", from - 1) + 1;
   const stop = value.indexOf("\n", to);
   const end = stop === -1 ? value.length : stop;
@@ -84,7 +94,8 @@ function mark(button) {
    refuses shows as plain words once read. */
 function linkWeb(button, words) {
   const area = button.closest("[data-field]").querySelector("[data-prose]");
-  const [from, to] = [area.selectionStart, area.selectionEnd];
+  const from = area.selectionStart;
+  const to = area.selectionEnd;
   const input = Object.assign(document.createElement("input"), { type: "url", className: "popover-input",
     placeholder: "https://", autocomplete: "off" });
   input.setAttribute("aria-label", words["record.link_address"]);
@@ -112,7 +123,8 @@ function insertLink(button, words) {
   const id = button.closest("[data-record]").dataset.record;
   const locale = JSON.parse(document.getElementById("sheet-data").textContent).rows
     .find((row) => row.id === id)?.locale ?? "";
-  const [from, to] = [area.selectionStart, area.selectionEnd];
+  const from = area.selectionStart;
+  const to = area.selectionEnd;
   const search = Object.assign(document.createElement("input"), { type: "search", className: "popover-input",
     placeholder: words["record.link_search"], autocomplete: "off" });
   search.setAttribute("aria-label", words["record.link_search"]);

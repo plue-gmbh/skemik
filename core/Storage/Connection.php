@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Storage;
 
-/* Opens the PDO handle, with the same pragmas on every connection and no
-   exception: SQLite forgets them when the handle closes. `foreign_keys` is what
-   keeps dangling edges out, WAL is what makes concurrent readers survive a
-   writer, and the busy timeout is what makes two editors survive each other:
-   five seconds of waiting, and a save waiting longer is an error, since a lock
-   held that long is a fault and not a colleague. `synchronous = normal` can lose
-   the last commit to a power cut and never damages the file, which WAL allows
-   and which a house's saves can afford for the fsync each would cost.
-   `secure_delete` overwrites what a purge deletes, since a freed page keeps its
-   bytes until something reuses it and a copy of `holdings/` carries them: some
-   builds of SQLite default it on, a house's hoster's need not. */
+/* Opens the PDO handle with the same pragmas on every connection, since SQLite
+   forgets them when the handle closes. `foreign_keys` keeps dangling edges out,
+   WAL lets readers survive a writer, and the busy timeout lets two editors
+   survive each other: five seconds, since a lock held longer is a fault.
+   `synchronous = normal` can lose the last commit to a power cut and never
+   damages the file under WAL, which saves can afford for the fsync each would
+   cost. `secure_delete` overwrites what a purge deletes, since a freed page
+   keeps its bytes until reused and a copy of `holdings/` carries them: some
+   builds of SQLite default it on, a host's need not. */
 final readonly class Connection
 {
   private const PRAGMAS = [

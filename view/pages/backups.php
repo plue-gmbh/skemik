@@ -8,7 +8,9 @@ declare(strict_types=1);
    which is disabled where PHP may not write it, and the snapshots newest first,
    each with when, what for, its size, its path, its download, and its restore
    behind a dialog saying what a restore is. A snapshot too large for the
-   browser keeps its download and says to fetch the folder over SFTP. */
+   browser keeps its download and says to fetch the folder over SFTP.
+   Handed `$rows`, `$report`, `$daily`, `$notice` and `$refusal`, each a sentence or null, `$switchable`,
+   `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -48,7 +50,9 @@ if (!isset($template)) {
   <p class="sheet-empty"><?= $template->escape($words->get('backups.empty')) ?></p>
 <?php endif ?>
   <ul class="record-rows">
-<?php foreach ($rows as $row): [$name, $when] = [$row->snapshot->name, $template->escape($row->when)] ?>
+<?php foreach ($rows as $row):
+  $name = $row->snapshot->name;
+  $when = $template->escape($row->when) ?>
     <li class="record-row">
       <span class="record-row-name"><?= $when ?></span>
       <span class="record-row-note"><?= $template->escape($words->get('backups.for.' . $row->snapshot->occasion->value))

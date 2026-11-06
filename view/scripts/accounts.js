@@ -90,13 +90,15 @@ function mountRemove(form) {
   if (!ask) return;
   const remove = removing.querySelector("[data-account-remove]");
   ask.addEventListener("click", () => {
-    [ask.hidden, removing.hidden] = [true, false];
+    ask.hidden = true;
+    removing.hidden = false;
     remove.focus();
   });
   remove.addEventListener("click", () =>
     answerAccount(form, fetch(remove.dataset.accountRemove, { method: "POST", headers: accountHeaders(form) })));
   form.addEventListener("reset", () => {
-    [ask.hidden, removing.hidden] = [false, true];
+    ask.hidden = false;
+    removing.hidden = true;
     form.querySelectorAll("[data-scope-said], [data-account-error]").forEach((line) => { line.textContent = ""; });
   });
 }
@@ -107,11 +109,14 @@ function mountPerson(person) {
   const form = person.closest("form");
   const search = person.querySelector("[data-person-search]");
   const options = person.querySelector("[data-person-options]");
-  const [chosen, find] = [person.querySelector("[data-person-chosen]"), person.querySelector("[data-person-find]")];
+  const chosen = person.querySelector("[data-person-chosen]");
+  const find = person.querySelector("[data-person-find]");
   const choose = (id, name, label) => {
-    [form.elements.namedItem("person").value, form.elements.namedItem("name").value] = [id, name];
+    form.elements.namedItem("person").value = id;
+    form.elements.namedItem("name").value = name;
     person.querySelector("[data-person-label]").textContent = label;
-    [chosen.hidden, find.hidden] = [label === "", label !== ""];
+    chosen.hidden = label === "";
+    find.hidden = label !== "";
     label === "" ? search.focus() : form.elements.email.focus();
   };
   let typing = 0;
@@ -124,8 +129,10 @@ function mountPerson(person) {
     && (event.preventDefault(), options.querySelector("button")?.click()));
   person.querySelector("[data-person-change]").addEventListener("click", () => choose("", "", ""));
   form.addEventListener("reset", () => {
-    [form.elements.namedItem("person").value, form.elements.namedItem("name").value] = ["", ""];
-    [chosen.hidden, find.hidden] = [true, false];
+    form.elements.namedItem("person").value = "";
+    form.elements.namedItem("name").value = "";
+    chosen.hidden = true;
+    find.hidden = false;
     options.replaceChildren();
   });
 }

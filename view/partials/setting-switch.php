@@ -5,7 +5,8 @@ declare(strict_types=1);
 /* One choice `config.php` keeps, on or off, switched by posting its opposite, so it
    works without a script and the page it comes back to shows the new state. A
    switch's role, so a screen reader says on or off; disabled where PHP may not
-   write the file, described by the note on the page that says so. */
+   write the file, described by the note on the page that says so.
+   Handed `$action`, `$name`, `$value`, `$on`, `$label`, `$csrf` and `$unwritable`, the note's id or null. */
 
 if (!isset($template)) {
   return;

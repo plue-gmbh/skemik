@@ -46,7 +46,7 @@ final readonly class Structure
       new TypeDefinition('SoftwareApplication', Erasure::Purge, LocaleMode::Localise, Reach::Public,
         $this->softwareApplication(),
         [...$this->base->creativeWork(LocaleMode::Localise), ...$thing]),
-      /* An FAQ entry the house writes is the expected case, so it forks like
+      /* An FAQ entry the organisation writes is the expected case, so it forks like
          any work. */
       new TypeDefinition('Question', Erasure::Purge, LocaleMode::Fork, Reach::Public,
         $this->question(), $thing),
@@ -65,7 +65,7 @@ final readonly class Structure
     $f = $this->f;
 
     return [
-      /* ∂ — the array has a length. Order leaves the house in the edge's
+      /* ∂ — the array has a length. Order leaves the install in the edge's
          position and nowhere else: a JSON-LD array is an unordered set. */
       $f->number('number_of_items', 'Items')->whole()
         ->derived(Derivation::over(Derived::Count, 'item_list_element')),
@@ -85,7 +85,7 @@ final readonly class Structure
     return [
       /* Unique per set, since a write names a term by its code alone: a second
          `EUR` beside the first leaves the code naming neither. A term with no set
-         is a set, a root, so a house makes its first one with one record; the
+         is a set, a root, so an organisation makes its first one with one record; the
          roots' codes are unique among the roots. */
       $f->text('term_code', 'Code')->required()->unique('in_defined_term_set'),
       $f->ref('in_defined_term_set', 'Term set', 'DefinedTerm')->starter(),

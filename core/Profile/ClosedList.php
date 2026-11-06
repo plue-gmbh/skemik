@@ -6,7 +6,7 @@ namespace Profile;
 
 use Domain\Locale;
 
-/* What the world closes and no house owns: a code from a list a standards body
+/* What the world closes and no organisation owns: a code from a list a standards body
    keeps, stored and emitted as that code, which is what schema.org asks of
    `priceCurrency` and `addressCountry`, and named by `intl` in the language of
    the content, as `Seed\Terms` names an enumeration. A field on one is a select
@@ -14,7 +14,7 @@ use Domain\Locale;
    The codes are committed and never read from the host's ICU, so two installs
    refuse the same code; a name the host's data lacks reads as the English one,
    then as the code. Currency is ISO 4217's tender codes and none of its fund and
-   metal codes, since a price in XAU is no price a house quotes. A language is
+   metal codes, since a price in XAU is no price an organisation quotes. A language is
    ISO 639-1's two letters, the ones a locale is spelt in (`Domain\Locale`). */
 enum ClosedList: string
 {

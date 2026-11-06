@@ -13,7 +13,7 @@ use Update\Restore;
 use Update\UpdateCheck;
 use Update\Version;
 
-/* What a hoster can change under a running install and a request cannot see for
+/* What a host can change under a running install and a request cannot see for
    free, asked again of what `/install` proved: that the data folder and
    `sessions/` take a write and that a folder inside the domain root is still not
    served. Behind a marker that lasts an hour, stamped with PHP's version and
@@ -65,7 +65,7 @@ final readonly class Probes
     return $failed === null ? null : new Halt($this->words->get($failed));
   }
 
-  /** What `/install` named as slowing every answer and refusing nothing, asked on every visit, since a hoster
+  /** What `/install` named as slowing every answer and refusing nothing, asked on every visit, since a host
       changes it under a running install and `ini_get` is free.
       @return list<Requirement> only those that cost */
   public function costs(): array

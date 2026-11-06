@@ -12,7 +12,7 @@ use Storage\Collection;
 use Storage\CollectionField;
 
 /* The holdings as one `DataCatalog`, a function of the caller: a collection
-   missing from one reading is not absent from the house. Each collection is a
+   missing from one reading is not absent from the install. Each collection is a
    `DataFeed` carrying its fields' names in `variableMeasured`, so a page prints
    Contact without typing it, one request per locale and nothing added to a
    record; schema.org's enumeration members carry their words under
@@ -35,9 +35,9 @@ final readonly class Catalog
     private array $arranged = [],
   ) {}
 
-  /** The house's one date, said on the smallest document and on no entry, which
+  /** The install's one date, said on the smallest document and on no entry, which
       would claim a date per collection it is not (`Storage\Modified`).
-      @param list<Locale> $locales the house's, the first of them its default
+      @param list<Locale> $locales the install's, the first of them its default
       @return array<string, mixed> */
   public function locales(array $locales, string $modified): array
   {
@@ -52,7 +52,7 @@ final readonly class Catalog
   }
 
   /**
-   * @param list<Collection> $collections every collection of the house
+   * @param list<Collection> $collections every collection of the install
    * @return array<string, mixed>
    */
   public function collections(array $collections, Locale $locale): array
@@ -101,7 +101,7 @@ final readonly class Catalog
     return $variables;
   }
 
-  /** @return list<array<string, mixed>> every field carried, each flagged where it leaves the house */
+  /** @return list<array<string, mixed>> every field carried, each flagged where it leaves the install */
   private function arrangement(Collection $collection, TypeDefinition $type, Locale $locale): array
   {
     $carried = array_filter(array_map(fn (CollectionField $held): ?FieldDefinition
@@ -118,7 +118,7 @@ final readonly class Catalog
     return in_array($collection->slug->value, $this->arranged, true);
   }
 
-  /* The house answers under the address it was asked at, which is the one fact
+  /* The install answers under the address it was asked at, which is the one fact
      about itself an install never has to be told. */
   private function name(): string
   {

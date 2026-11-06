@@ -6,14 +6,16 @@ declare(strict_types=1);
    the table's rows laid out otherwise — the same cells, the same save bar and
    the same ticks with their bar, the one for the page above the rows. A few
    fields and no columns, so nothing to click to sort by: the query bar's select
-   orders it. + New record below adds a pending row as the table's does. */
+   orders it. + New record below adds a pending row as the table's does.
+   Handed `$rows`, `$columns`, `$collection`, `$items`, `$glance`, `$firstLocale`, `$creates`, `$add`, `$total`,
+   `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
 }
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/list-row', ['words' => $words,
   'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
-  'ticks' => $creates, 'house' => $house, 'glance' => $glance]);
+  'ticks' => $creates, 'firstLocale' => $firstLocale, 'glance' => $glance]);
 ?>
 <div data-ticked></div>
 <div class="sheet-card">
@@ -44,4 +46,4 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/list-r
     'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
 </div>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
-<?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>
+<?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

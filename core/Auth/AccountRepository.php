@@ -19,7 +19,7 @@ use Support\Uuid;
    account, so a content row carries no trace of whether somebody can log in as it.
    The last owner is guarded here and not in a controller, inside the write's own
    `begin immediate`, so two owners demoting each other at once cannot both
-   succeed. Disabling counts as demoting: a house whose only owner is disabled has
+   succeed. Disabling counts as demoting: an install whose only owner is disabled has
    no owner. `heldBy` is the question `Storage\Trash` asks before a
    `Person` is trashed or purged, so the refusal names the account rather
    than surfacing as a foreign-key error. */

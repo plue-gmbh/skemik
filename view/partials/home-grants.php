@@ -2,18 +2,16 @@
 
 declare(strict_types=1);
 
-/* Grants, `manageTokens` only: the token register, the question what may
-   write here asked the other way round and the only place a whole key is seen,
-   so no settings screen lists keys. Only the owner sees it since every row of it
-   is a revoke; what a key may do is no secret from the house, and each
-   collection's badge shows it to everyone who opens the collection. Who writes
-   in is a different question from where it can be read, which is why it is not
-   a footer of an addresses table. Beneath the rows the set-up key is issued,
-   through the badge's own form and route (`view/scripts/grants.js`,
-   `Admin\TokenController`): a name, a date, four boxes that each become a
-   rule on every collection, configuring ticked and creating, modifying and
-   reading beside it, since a script that sets a house up brings its records
-   in too, and the secret shown once. */
+/* Grants, `manageTokens` only: the token register, the question what may write
+   here asked the other way round and the only place a whole key is seen, so no
+   settings screen lists keys. Only the owner sees it, since every row is a revoke;
+   what a key may do is no secret, and each collection's badge shows it to everyone.
+   Who writes in is a different question from where it can be read, so this is no
+   footer of an addresses table. Beneath the rows the set-up key is issued through
+   the badge's own form and route (`Admin\TokenController`): four boxes, each a rule
+   on every collection, configuring ticked and the rest beside it, since a script
+   that sets an organisation up brings its records in too. Handed `$entries`,
+   `$collections`, `$until`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

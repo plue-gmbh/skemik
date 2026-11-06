@@ -7,7 +7,7 @@ namespace Admin;
 /* A work's group from its record screen's Languages card: a translation made
    as a draft, a record already written in another locale linked in, and a
    member let go; and the copy that leaves the group, here since a translation
-   is a copy too. A house moving in brings its German and its English blog side
+   is a copy too. An organisation moving in brings its German and its English blog side
    by side, and a link is how they become one group without a copy made and the
    original deleted. The record named is joined to this one's root and never the
    other way, so two groups are never merged; `Storage\Collisions` refuses what

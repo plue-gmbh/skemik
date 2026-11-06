@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-/* The whole log (`Admin\ActivityController`), the owner's: a line per
-   creation, save, new address, trash, restore and purge, and per change to an
-   account, a key, a language or a collection's fields, newest first and
-   paged back to the first, each as Last changed draws it and under who did it,
-   whose name narrows the log to theirs. A record purged since is a line with no
-   name, since its name went with it. Where a line keeps a former address, a
-   number or an edge a purge took, it shows them, since that is what a
-   redaction takes, behind a dialog saying it cannot be undone; the line stays,
-   so the log still says that something changed and who changed it. The time
-   is the house's, in full, since a line is read for when as often as for what. */
+/* The whole log (`Admin\ActivityController`), the owner's: a line per creation, save,
+   new address, trash, restore and purge, and per change to an account, a key, a
+   language or a collection's fields, newest first, each as Last changed draws it and
+   under who did it, whose name narrows the log to theirs. A record purged since is a
+   line with no name, its name gone with it. Where a line keeps a former address, a
+   number or an edge a purge took, it shows them behind a dialog saying a redaction
+   cannot be undone; the line stays, so the log still says who changed something. The
+   time is the install's, in full, since a line is read for when as often as for what.
+   Handed `$lines`, `$total`, `$page`, `$perPage`, `$by`, null for everyone, `$redacts`,
+   `$notice`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

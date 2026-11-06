@@ -13,7 +13,7 @@ use Domain\Violation;
    walking an install. */
 final readonly class Promises
 {
-  /* What a house transacts, and the field that says how each stands. */
+  /* What an organisation transacts, and the field that says how each stands. */
   public const STANDING = ['Order' => 'order_status', 'Invoice' => 'payment_status',
     'Reservation' => 'reservation_status', 'Event' => 'event_status', 'Action' => 'action_status'];
 
@@ -66,7 +66,7 @@ final readonly class Promises
     return $violations;
   }
 
-  /** No second system for what a house transacts: each says how it stands in a
+  /** No second system for what an organisation transacts: each says how it stands in a
       closed list of its own. @return list<Violation> */
   private function checkTransactions(): array
   {

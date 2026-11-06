@@ -3,15 +3,14 @@
 declare(strict_types=1);
 
 /* On every admin page, one row: the menu button on a narrow screen, the mark as
-   the link home; then the house's own sites (`Storage\Sites`), where the row has
-   room for them, the search, which opens into its field and answers on `/find`,
-   the Feed button and the account. Settings, updates and help are no header
-   items, because each belongs to a screen: the version and the door to the
-   update screen are the Settings card's updates row. The admin has no light/dark
-   switch but three materials, chrome, paper and terminal, each a scope redefining
-   the same tokens in `view/style.css`, so a region says its role by its material
-   and every component sits right on any ground; the scope sets `color` too, or
-   inherited text keeps the paper's ink. */
+   the link home, the install's own sites (`Storage\Sites`) where the row has room,
+   the search, which answers on `/find`, the Feed button and the account. Settings,
+   updates and help are no header items, because each belongs to a screen. The
+   admin has no light/dark switch but three materials, chrome, paper and terminal,
+   each a scope redefining the same tokens in `view/style.css`, so a region says
+   its role by its material; the scope sets `color` too, or inherited text keeps
+   the paper's ink. Handed `$menu`, `$own`, the address of the reader's own record
+   or null, `$sites`, `$feed`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

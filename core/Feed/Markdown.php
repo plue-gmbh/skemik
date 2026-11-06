@@ -15,7 +15,7 @@ use Support\Markup;
    The body is the record's `text`, which is the one Markdown field the profile
    declares, and it is passed through rather than rendered: this format is the
    one whose syntax it is already written in, a link to a record going on to its
-   `.md` as every other link here does. Nothing here is in the house's
+   `.md` as every other link here does. Nothing here is in the install's
    chrome language — a reader of this file is a machine or somebody reading a
    dump, and neither is on the admin's screen. */
 final readonly class Markdown

@@ -9,17 +9,20 @@ declare(strict_types=1);
    its prose too, so a type that requires a text is made here, and what the type
    requires marked while it is still empty, before a save is refused for it
    (`partials/sheet-cell`). The tick stands where the account writes, and a row
-   not made yet has none to tick. */
+   not made yet has none to tick.
+   Handed `$row`, null for the blank row, `$columns`, `$items`, `$ticks` and `$words`; the blank row leaves out
+   `$firstLocale`. */
 
 if (!isset($template)) {
   return;
 }
+$firstLocale ??= null;
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
 $open = $items->address($row);
 $own = $items->own($row);
 ?>
         <tr data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
-<?php if ($ticks ?? false): ?>
+<?php if ($ticks): ?>
           <td class="sheet-tick"><?php if ($row !== null): ?><input type="checkbox" data-tick
             aria-label="<?= $template->escape($words->get('sheet.tick',
             ['label' => $row->label])) ?>"><?php endif ?></td>
@@ -32,7 +35,7 @@ $own = $items->own($row);
           <td class="sheet-spine"><?= $row === null ? '<span class="spine-chip is-new">'
             . $template->escape($words->get('sheet.new')) . '</span>' : $template->render('partials/spine-chip',
             ['words' => $words, 'row' => $row, 'prefix' => '', 'translations' => $own, 'opens' => $opens,
-            'current' => $house ?? null]) ?></td>
+            'current' => $firstLocale]) ?></td>
 <?php foreach ($columns as $column): ?>
           <?= $template->render('partials/sheet-cell', ['words' => $words, 'column' => $column, 'row' => $row,
   'element' => 'td', 'cell' => $row?->cells[$column->field->key]]) ?>

@@ -8,7 +8,7 @@ use Support\Clock;
 use Support\UnreadableTime;
 use Support\Words;
 
-/* A stored time worded for the reader, in the chrome's language and the house's
+/* A stored time worded for the reader, in the chrome's language and the install's
    timezone: the day alone, or the day with its time as `IntlDateFormatter`
    styles it, short as a rule. A date passes as the day it names, there being no
    zone to read it in, and one known only to its month or year is said as
@@ -30,7 +30,7 @@ final readonly class Moments
     return $this->worded($at, $style);
   }
 
-  /* The house's wall time read back as a wall time, so no zone moves it twice. */
+  /* The install's wall time read back as a wall time, so no zone moves it twice. */
   private function worded(string|\DateTimeInterface $at, int $style): string
   {
     if (is_string($at) && strlen($at) < strlen(self::DAY)) {

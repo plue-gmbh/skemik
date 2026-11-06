@@ -57,7 +57,7 @@ final readonly class Commerce
       $f->term('material', 'Material'),
       $f->term('pattern', 'Pattern'),
       $f->term('size', 'Size'),
-      /* An amount is its bearing key, plus the unit where a house can vary
+      /* An amount is its bearing key, plus the unit where an organisation can vary
          it — a shipping weight in kg or lb is not the same number. */
       $f->number('width', 'Width')->keyOf('QuantitativeValue', 'value', 'width'),
       $f->text('width_unit', 'Width: unit')->keyOf('QuantitativeValue', 'unitCode', 'width'),
@@ -157,7 +157,7 @@ final readonly class Commerce
       $f->image('logo', 'Logo')->starter(),
       $this->base->image()->starter(),
       /* The brand tokens. Four names are ours — color-primary, color-ink,
-         font-body, font-display — and a house adds its own, color-headline,
+         font-body, font-display — and an organisation adds its own, color-headline,
          since a name we made up is no vocabulary to close. The
          step off-domain costs the proof link and nothing else. A font token's
          value is the typeface's name and free text: a fact about the brand that

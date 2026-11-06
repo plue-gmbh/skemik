@@ -7,7 +7,7 @@ namespace Admin;
 use Support\Clock;
 
 /* The day a timeline files a record under: its date (`Glance::date`) as the
-   house lives it, so an evening event stays on its evening and not on the UTC
+   install lives it, so an evening event stays on its evening and not on the UTC
    day after, and the words for that day in the reader's language. Where the
    collection carries no date it is the day the record was made, the order the
    address gives a list asked for none, so no type is left without a timeline.
@@ -30,7 +30,7 @@ final readonly class Timeline
       : substr($this->clock->render($value), 0, strlen(self::DAY));
   }
 
-  /* The house's day, where the timeline draws its line between what has been and what comes. */
+  /* The install's day, where the timeline draws its line between what has been and what comes. */
   public function today(): string
   {
     $now = $this->clock->now()->format(Clock::STORED);

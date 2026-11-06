@@ -9,7 +9,8 @@ declare(strict_types=1);
    inbox as a block of its own.
    Mail clients drop stylesheets and most of CSS, so every style is inline and
    the layout is tables; the mark is left out, since an SVG shows in few of them,
-   and no font or image is fetched, which a client would block or report. */
+   and no font or image is fetched, which a client would block or report.
+   Handed `$greeting`, `$code`, `$host`, `$valid`, `$ignore` and `$words`. */
 
 if (!isset($template)) {
   return;

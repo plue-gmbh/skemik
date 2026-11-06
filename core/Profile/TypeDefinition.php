@@ -164,7 +164,7 @@ final readonly class TypeDefinition
   /**
    * What the Fields dialog offers: own fields first, then inherited, minus
    * what the collection already uses. A computed field is offered too: nobody
-   * types it, but whether the documents state it is the house's to decide.
+   * types it, but whether the documents state it is the organisation's to decide.
    *
    * @param list<string> $taken keys the collection already carries
    * @return list<FieldDefinition>

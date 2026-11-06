@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-/* The right-hand column on every admin screen, what leaves the house beside the
+/* The right-hand column on every admin screen, what leaves the install beside the
    holdings, kept open across pages by a cookie. The address is the screen's and
    carries none of the admin's own parameters, so a status filter shows a draft
    on the left and the address lists what is published on the right, nor a sort
-   or a filter on a field the house withholds, which the stranger is refused. The stranger
+   or a filter on a field the install withholds, which the stranger is refused. The stranger
    is fetched from the address as any consumer fetches it, so a never-public
    collection shows its 404 here and never a reading nobody gets; the key reading
    what the colleague reads is fetched from `/feed-panel/…`, the same routes
-   behind the session. */
+   behind the session.
+   Handed `$feed` and `$words`. */
 
 if (!isset($template)) {
   return;

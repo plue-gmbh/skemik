@@ -31,9 +31,12 @@ window.addEventListener("pageshow", (event) => {
    sentence is announced through the polite region once it changes, as the bar's
    is. Ctrl or ⌘ S saves while something is pending or was refused. */
 document.querySelectorAll("[data-save-bar]").forEach((bar) => {
-  const [form, sentence, dot] = [bar.closest("form"), bar.querySelector("[data-sentence]"),
-    bar.querySelector(".save-bar-dot")];
-  const [said, done, kept] = [sentence.textContent, bar.classList.contains("is-done"), "kept" in bar.dataset];
+  const form = bar.closest("form");
+  const sentence = bar.querySelector("[data-sentence]");
+  const dot = bar.querySelector(".save-bar-dot");
+  const said = sentence.textContent;
+  const done = bar.classList.contains("is-done");
+  const kept = "kept" in bar.dataset;
   const differs = (field) => (field.tagName === "SELECT"
     ? [...field.options].some((option) => option.selected !== option.defaultSelected)
     : field.type !== "hidden" && field.value !== field.defaultValue);

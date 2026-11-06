@@ -125,7 +125,7 @@ final readonly class RecordPage
     return $prose;
   }
 
-  /* The locale the link named first, then the house's locales in order: the
+  /* The locale the link named first, then the install's locales in order: the
      admin path carries no locale, so the screen says which one it opened. */
   public function find(Account $account, Request $request, Collection $collection, string $slug): ?Entity
   {
@@ -269,7 +269,7 @@ final readonly class RecordPage
     return $locales;
   }
 
-  /** Each translation's address in the house's order of its locales.
+  /** Each translation's address in the install's order of its locales.
       @param list<Entity> $members
       @return array<string, string> */
   private function locales(array $members, ?Collection $holder): array

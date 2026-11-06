@@ -39,7 +39,8 @@ final readonly class ObjectRows
    */
   public function stored(FieldDefinition $field, array $rows): array
   {
-    [$object, $kinds] = [$this->profile->referring($field), $this->profile->valueObject((string) $field->ref)];
+    $object = $this->profile->referring($field);
+    $kinds = $this->profile->valueObject((string) $field->ref);
     $rows = $rows !== [] && !array_is_list($rows) ? [$rows] : $rows;
 
     return array_map(fn (mixed $row): mixed

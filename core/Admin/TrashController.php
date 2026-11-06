@@ -26,20 +26,16 @@ use Storage\Trash;
 use Support\Template;
 use Support\Words;
 
-/* The trash: a delete is an undo and not a removal, immediate rather than
-   pending, and the way back out of it. Every write takes the record's id, never
-   its slug — a trashed record keeps its slug, so nothing can take its address
-   meanwhile. The purge is the other verb, `eraseData` and not `writeContent`, and
-   it is offered on the trash screen alone: a record is purged from the trash, so
-   the record screen holds one verb and the wrong one cannot be clicked there.
-   Whoever writes a collection sees its trash, since they filled it. Nothing
-   empties it by itself: there is no daemon to, and a purge is a decision, so a
-   deleted customer is held, whole and restorable, until the owner purges them.
-   The table's ticked rows go in and come back out together, and the trash's
-   ticked rows come back out or are purged together (`Storage\Trash`): every id
-   is a record of the collection, in or out of its trash as the verb needs, before
-   the first moves, the screen returned to offers the lot back as it offers one,
-   and one dialog counts what a purge takes over the lot. */
+/* The trash: a delete is an undo, immediate and not pending, and the way back
+   out of it. Every write takes the record's id, never its slug, since a trashed
+   record keeps its slug and nothing may take its address meanwhile. The purge
+   is the other verb, `eraseData` and not `writeContent`, offered on the trash
+   screen alone, so the record screen holds one verb and the wrong one cannot
+   be clicked there. Whoever writes a collection sees its trash, since they
+   filled it. Nothing empties it by itself: a purge is a decision, so a deleted
+   customer is held, whole and restorable, until the owner purges them. Ticked
+   rows go in, come back out or are purged together (`Storage\Trash`), every id
+   checked before the first moves, and one dialog counts what a purge takes. */
 final readonly class TrashController
 {
   public function __construct(

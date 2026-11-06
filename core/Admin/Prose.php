@@ -15,7 +15,7 @@ use Storage\EntityRepository;
 use Support\Markup;
 
 /* The record screen's reading of a Markdown field: `Support\Markup`'s, under
-   the screen's own headings, and the one addition is the house's own link:
+   the screen's own headings, and the one addition is the install's own link:
    `skemik:` and an id, which survives a slug change because it names the
    record. It becomes a chip that opens that record, or ⇢ and its text struck
    through where the record is gone or not this reader's to see — the same

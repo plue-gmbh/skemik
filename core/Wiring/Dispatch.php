@@ -19,22 +19,36 @@ final readonly class Dispatch
 {
   public function __construct(private Common $common) {}
 
+  /* An answer carries one piece of work after it, so the first hook that is due takes it and the rest wait for a
+     later answer: the day's snapshot, then the release, then the release's files, each due once a day, and the
+     slice fills in behind them. */
   public function answer(Route $route): Response
   {
-    $records = new Records($this->common);
-    $answer = match ($route->endpoint) {
+    $answer = $this->area($route);
+    $answer = $this->daily()->after($answer);
+    $answer = $this->common->updater()->after($answer);
+    $answer = $this->common->files()->after($answer);
+
+    return $this->checkup()->after($answer);
+  }
+
+  private function area(Route $route): Response
+  {
+    return match ($route->endpoint) {
       Endpoint::LoginForm, Endpoint::LoginAsk, Endpoint::LoginRedeem, Endpoint::Logout
         => (new Login($this->common))->answer($route),
       Endpoint::Home, Endpoint::Find, Endpoint::Activity, Endpoint::ActivityRedact, Endpoint::Export,
         Endpoint::ExportTake => (new Home($this->common))->answer($route),
       Endpoint::Collection, Endpoint::Search, Endpoint::Record, Endpoint::RecordCreate,
         Endpoint::RecordPatch, Endpoint::RecordTranslation, Endpoint::RecordDuplicate, Endpoint::RecordLink,
-        Endpoint::RecordUnlink => $records->records($route),
+        Endpoint::RecordUnlink => (new Records($this->common))->records($route),
       Endpoint::Trash, Endpoint::RecordDelete, Endpoint::RecordRestore, Endpoint::RecordPurge,
-        Endpoint::RecordsDelete, Endpoint::RecordsRestore, Endpoint::RecordsPurge => $records->trash($route),
-      Endpoint::FieldAdd, Endpoint::FieldEdit, Endpoint::FieldRemove => $records->fields($route),
+        Endpoint::RecordsDelete, Endpoint::RecordsRestore, Endpoint::RecordsPurge
+        => (new Records($this->common))->trash($route),
+      Endpoint::FieldAdd, Endpoint::FieldEdit, Endpoint::FieldRemove
+        => (new Records($this->common))->fields($route),
       Endpoint::MediaUpload, Endpoint::MediaReplace, Endpoint::MediaFile, Endpoint::MediaThumb
-        => $records->media($route),
+        => (new Records($this->common))->media($route),
       Endpoint::AccountCreate, Endpoint::AccountEdit, Endpoint::AccountRemove, Endpoint::TokenIssue,
         Endpoint::TokenRuleRemove, Endpoint::TokenRevoke, Endpoint::LocaleAdd, Endpoint::LocaleOrder,
         Endpoint::LocaleRemove, Endpoint::General, Endpoint::GeneralSave, Endpoint::Backups,
@@ -47,13 +61,8 @@ final readonly class Dispatch
         Endpoint::PanelLocale, Endpoint::PanelCollection, Endpoint::PanelRecord
         => (new Address($this->common))->answer($route),
     };
-
-    return $this->checkup()->after($this->common->files()->after($this->common->updater()->after($this->daily()->after(
-      $answer))));
   }
 
-  /* The day's snapshot first, then the release, then the release's files, each due once a day, and the slice
-     fills in behind them. */
   private function daily(): Daily
   {
     return new Daily($this->common->backup(), $this->common->clock);

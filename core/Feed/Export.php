@@ -23,7 +23,7 @@ use Support\Json;
 use Support\Words;
 use Support\Zip;
 
-/* The dump a house takes with it, written into one box: a tree per format, a
+/* The dump an organisation takes with it, written into one box: a tree per format, a
    file per record and a listing per page, the files under `media/`, and
    `manifest.jsonld` at the root. It runs under the reader's read scope through
    `PublicFilter`, so every question of what comes out is that one object's
@@ -31,7 +31,7 @@ use Support\Zip;
    screen, nor lack one they could; the role is not consulted, since a `viewer`
    reading everything dumps everything. The catalogue shows what the taker may
    arrange as a key that arranges it reads it, since which fields leave the
-   house is the one thing a dump posted back could not restore otherwise. The
+   install is the one thing a dump posted back could not restore otherwise. The
    manifest's record keys are this app's own: custody has no home in the
    vocabulary, which is why it travels beside the documents. */
 final readonly class Export
@@ -76,7 +76,7 @@ final readonly class Export
       array_sum(array_map(fn (string $file): int => (int) filesize($file), $files)));
   }
 
-  /** @return int the records written, over every locale the house holds */
+  /** @return int the records written, over every locale the install holds */
   public function write(): int
   {
     $entries = [];
@@ -239,7 +239,7 @@ final readonly class Export
   }
 
   /* The fields' names and the enumerations' words in the language of the
-     content, which a house that leaves takes with it: nothing else holds them. */
+     content, which an organisation that leaves takes with it: nothing else holds them. */
   private function catalog(Locale $locale): Catalog
   {
     $arranged = array_filter($this->collections->all(),

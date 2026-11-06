@@ -12,12 +12,12 @@ use Storage\SettingStore;
 use Support\Template;
 use Support\Words;
 
-/* First run: answers while the house has no account and 404s forever
+/* First run: answers while the install has no account and 404s forever
    after — no flag, no setting and no file to delete, so there is no step anyone
    can forget. The requirements come first, because an install that fails on the
    fourth screen has already created rows; the order after them is the folder
    and `config.php`, both proven, then the shape and the rows. A run that
-   stopped after writing `config.php` resumes with the folder and house it
+   stopped after writing `config.php` resumes with the folder and install it
    names. No CSRF token: while this answers, anybody may post it directly, so a
    forged post can do nothing a direct one cannot. */
 final readonly class InstallController

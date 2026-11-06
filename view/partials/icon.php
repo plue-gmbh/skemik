@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* The drawn tool glyphs: one hand, a 16 grid, a 1.5 stroke, which the
    collections' glyphs share (`partials/glyphs`). A character from a font sits at
-   another height on every machine. */
+   another height on every machine.
+   Handed `$name`. */
 
 if (!isset($template)) {
   return;

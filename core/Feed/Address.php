@@ -34,7 +34,7 @@ final readonly class Address
     return new self($prefix, '', '');
   }
 
-  /** @param string $uploads the address the house serves its files under */
+  /** @param string $uploads the address the organisation serves its files under */
   public static function inDump(string $prefix, string $suffix, string $uploads): self
   {
     return new self($prefix, '../', $suffix, $uploads);

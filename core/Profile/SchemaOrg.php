@@ -97,7 +97,7 @@ final readonly class SchemaOrg
   }
 
   /* The code of the set a term field draws on: the property's name, so every
-     `keywords` field of the house shares one list, unless the seed names one. */
+     `keywords` field of the organisation shares one list, unless the seed names one. */
   public function termSet(FieldDefinition $field): string
   {
     return $field->set ?? (string) $this->propertyName($field->key);
@@ -166,7 +166,7 @@ final readonly class SchemaOrg
 
   /* A fixed list's value as the JSON-LD document spells it: the member's address,
      `https://schema.org/EventScheduled`, where the vocabulary types the token as a
-     member of an enumeration, and null for a token of the house's own. */
+     member of an enumeration, and null for a token of the organisation's own. */
   public function member(string $token): ?string
   {
     return $this->vocabulary->enumerationsOf($token) === [] ? null : self::BASE . $token;
@@ -243,7 +243,7 @@ final readonly class SchemaOrg
   /** What an editor suggests for a record's kind: every class a write would take,
       by name, since a list closed on the screen and open at the address lets a
       bakery say so through a key and not by hand. No kind leads: which one a
-      house needs is not the profile's to guess.
+      organisation needs is not the profile's to guess.
       @return list<string> */
   public function kindsOf(TypeDefinition $type): array
   {

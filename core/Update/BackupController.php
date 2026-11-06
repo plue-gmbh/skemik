@@ -32,7 +32,7 @@ use Support\ZipFailed;
    it went wrong, and the switch for the daily ones, which is `config.php`'s,
    disabled where PHP may not write that. A snapshot taken here is thinned like a daily one, and the
    restore stands behind a dialog saying what one is. The download is the one
-   copy off the server a house without SFTP has: a zip that unpacked into
+   copy off the server an install without SFTP has: a zip that unpacked into
    `backups/` is the snapshot again. From a gigabyte the screen says to use SFTP,
    since a zip the host cut short does not open, its index standing at its end.
    Here beside the two files it drives and not in `core/Admin`. */
@@ -94,7 +94,7 @@ final readonly class BackupController
 
   /* Under the lock the daily snapshot and the update hold, since either would
      read holdings swapped under it, and the daily take a failure for want of
-     room. A refused restore left the house as it was and is said like a refused
+     room. A refused restore left the install as it was and is said like a refused
      snapshot. The answer carries work after it that does nothing, so neither a
      check nor a daily snapshot runs on the handle this request opened: that is
      the displaced database. */
@@ -150,7 +150,7 @@ final readonly class BackupController
   }
 
   /* Said with the hundred megabytes every screen warns of kept free, so a
-     download never makes the house unable to save. */
+     download never makes the install unable to save. */
   private function unfit(Snapshot $snapshot): ?string
   {
     $free = DataLayout::free($this->backup->folder());
@@ -162,7 +162,7 @@ final readonly class BackupController
   }
 
   /* Under the snapshot's own name, and `media/` written even empty, since a
-     restore wants the folder. A house's time limit is lifted, since the box is
+     restore wants the folder. PHP's time limit is lifted, since the box is
      as large as its uploads, and so is a download given up, which would stop PHP
      before the work that removes the box. */
   private function pack(Snapshot $snapshot): void

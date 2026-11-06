@@ -10,7 +10,8 @@ function mountSheet(root) {
   const data = JSON.parse(document.getElementById("sheet-data").textContent);
   const table = document.querySelector("[data-sheet]");
   if (!table) return null;
-  const [wordsIn, dated] = [table.dataset.words, table.dataset.dated];
+  const wordsIn = table.dataset.words;
+  const dated = table.dataset.dated;
   const spineData = JSON.parse(document.getElementById("spine-data")?.textContent ?? "null");
   const rows = new Map(data.rows.map((row) => [row.id, row]));
   const isNew = (id) => id.startsWith("new-");
@@ -42,7 +43,8 @@ function mountSheet(root) {
       saved() { return this.done && this.count === 0; },
       open() { return this.count > 0 || this.done || this.conflict !== null || this.refusals.length > 0; },
       sentence() {
-        const [words, conflict] = [this.words, this.conflict];
+        const words = this.words;
+        const conflict = this.conflict;
         if (conflict) {
           return fill(words["sheet.conflict"], { label: rows.get(conflict.id).label, name: conflict.body.by });
         }
@@ -59,7 +61,8 @@ function mountSheet(root) {
       this.adding = (event) => event.target.closest("[data-add-row]") && this.add();
       document.addEventListener("click", this.adding);
       table.querySelectorAll("[data-prose]").forEach((area) => {
-        const [id, key] = [area.closest("[data-record]").dataset.record, area.closest("[data-field]").dataset.field];
+        const id = area.closest("[data-record]").dataset.record;
+        const key = area.closest("[data-field]").dataset.field;
         area.addEventListener("input", () => this.change(id, key, area.value === "" ? null : area.value));
       });
       this.opening = (event) => {
@@ -90,7 +93,8 @@ function mountSheet(root) {
         return key in (this.pending[id] ?? {}) ? this.pending[id][key] : original(id, key);
       },
       edit(id, key, all = false) {
-        const [field, cell] = [fieldOf(key), cellOf(id, key)];
+        const field = fieldOf(key);
+        const cell = cellOf(id, key);
         if (field.kind === "boolean") return cell.querySelector("[data-edit]").focus();
         const terms = data.terms[rows.get(id).locale] ?? {};
         this.editing = { id, field, cell, terms, value: all ? null : this.current(id, key), collection: data.collection,
@@ -156,9 +160,10 @@ function mountSheet(root) {
           this.language, this.words));
       },
       /* The chip marks a pending spine edit and shows a pending slug and language. A
-         view's dot is strong for the house's first language; the record screen's for its own. */
+         view's dot is strong for the install's first language; the record screen's for its own. */
       drawSpine(id) {
-        const [chip, values] = [chipOf(id), this.pending[id] ?? {}];
+        const chip = chipOf(id);
+        const values = this.pending[id] ?? {};
         if (!chip) return;
         Object.keys(values).some(isSpine) ? (chip.dataset.pending = "") : delete chip.dataset.pending;
         const slug = values["spine.slug"] ?? spineData.rows[id].slug;

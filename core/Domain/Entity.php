@@ -44,7 +44,8 @@ final readonly class Entity
     if ($version < 1) {
       throw MalformedValue::named('version', (string) $version);
     }
-    $this->checkInstants([$createdAt, $updatedAt, $publishFrom, $publishTo, $deletedAt]);
+    self::checkInstants([$createdAt, $updatedAt, $publishFrom, $publishTo, $deletedAt]);
+    $this->checkWindow();
   }
 
   public function typeName(): string
@@ -91,7 +92,7 @@ final readonly class Entity
     return $edited;
   }
 
-  /* A file of this house keeps the address and the type its upload wrote, since
+  /* A file of this install keeps the address and the type its upload wrote, since
      the bytes are found by both, and no edit claims one: `Admin\Intake` is the
      one writer of a `/media/` path, through `withFile`. */
   public function keeps(string $key): bool
@@ -104,8 +105,8 @@ final readonly class Entity
      record is made anew at `$at` and orders as one, its log keeping when it was first. */
   public function withFile(Props $props, string $at): self
   {
+    self::checkInstants([$at]);
     $edited = clone($this, ['props' => $props, 'createdAt' => $at]);
-    $edited->checkInstants([$at]);
 
     return $edited->holdsFile() ? $edited : throw ForbiddenTransition::fileKept('content_url');
   }
@@ -144,20 +145,25 @@ final readonly class Entity
   /* A clone skips the constructor, so the window is checked here as it is there. */
   public function withWindow(?string $publishFrom, ?string $publishTo): self
   {
+    self::checkInstants([$publishFrom, $publishTo]);
     $next = clone($this, ['publishFrom' => $publishFrom, 'publishTo' => $publishTo]);
-    $next->checkInstants([$publishFrom, $publishTo]);
+    $next->checkWindow();
 
     return $next;
   }
 
   /** @param list<?string> $instants */
-  private function checkInstants(array $instants): void
+  private static function checkInstants(array $instants): void
   {
     foreach ($instants as $instant) {
       if ($instant !== null && preg_match(self::INSTANT, $instant) !== 1) {
         throw MalformedValue::named('stored instant', $instant);
       }
     }
+  }
+
+  private function checkWindow(): void
+  {
     $window = [$this->publishFrom, $this->publishTo];
     if (!in_array(null, $window, true) && $this->publishTo <= $this->publishFrom) {
       throw MalformedValue::named('publication window', $this->publishFrom . ' – ' . $this->publishTo);

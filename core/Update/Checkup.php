@@ -13,9 +13,9 @@ use Storage\SettingStore;
 use Support\Clock;
 
 /* Runs `Storage\HoldingsCheck`, the half of the profile and claims tier that
-   needs this house's rows, and keeps its report, which reverts nothing: only
+   needs this install's rows, and keeps its report, which reverts nothing: only
    `Move`'s shape check takes an update back. `Profile\Claims` is the release's
-   answer, the same in every house, so it is asked before a release and by no install. A
+   answer, the same in every install, so it is asked before a release and by no install. A
    pass a day, a slice every ten minutes after an answer nobody waits for until
    the cursor has come round, so three thousand records are read whole within
    the hour and no answer waits on a pass; the day counts from the pass's last

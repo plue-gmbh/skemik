@@ -75,7 +75,8 @@ final readonly class GeneralForm
     }
     $port = filter_var(trim((string) $request->form('port')), FILTER_VALIDATE_INT,
       ['options' => ['min_range' => 1, 'max_range' => 65535]]);
-    [$user, $sender] = [trim((string) $request->form('user')), trim((string) $request->form('sender'))];
+    $user = trim((string) $request->form('user'));
+    $sender = trim((string) $request->form('sender'));
     $typed = (string) $request->form('password');
     $password = $typed === '' && $host === $held['host'] && $user === $held['user'] ? $held['password'] : $typed;
     match (true) {
@@ -106,7 +107,8 @@ final readonly class GeneralForm
       @return array{login_note: ?string, login_link: ?string} */
   private static function line(Request $request, \Closure $refused): array
   {
-    [$note, $link] = [trim((string) $request->form('note')), trim((string) $request->form('link'))];
+    $note = trim((string) $request->form('note'));
+    $link = trim((string) $request->form('link'));
     $linked = preg_match('#^https?://#i', $link) === 1 && filter_var($link, FILTER_VALIDATE_URL) !== false;
     match (true) {
       mb_strlen($note) > self::LINE || preg_match('/\p{Cc}/u', $note) === 1 => throw $refused('note'),

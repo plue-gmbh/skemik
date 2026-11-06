@@ -93,7 +93,7 @@ final readonly class SettingStore
       trash written in it, one record counted once, for the Languages card: one
       pass, and a record's words read of the types that localise alone, through
       the type index, since only those carry `l10n` (`Profile\Validator`) and a
-      grown house is mostly orders.
+      grown install is mostly orders.
       @return array<string, int> by tag */
   public function held(): array
   {

@@ -10,7 +10,7 @@ use Support\Clock;
 
 /* Puts a snapshot back whole, never the database or the media alone, since a
    half-restored pair is the state a snapshot of both exists to make
-   unreachable, and who may get in as the house has it now (`Storage\Admission`).
+   unreachable, and who may get in as the install has it now (`Storage\Admission`).
    The copy is built beside the live folder first, since the snapshot of the live
    holdings, *before the restore*, thins the ladder and may pass the very one
    being put back, and moved to the running version as a copied release is
@@ -75,8 +75,9 @@ final readonly class Restore
 
   private function swap(): void
   {
-    [$live, $staged, $displaced] = [$this->data . '/holdings', $this->data . '/' . self::STAGED,
-      $this->data . '/' . self::DISPLACED];
+    $live = $this->data . '/holdings';
+    $staged = $this->data . '/' . self::STAGED;
+    $displaced = $this->data . '/' . self::DISPLACED;
     $this->backup->remove($displaced);
     rename($live, $displaced) || throw SnapshotFailed::restoring('move the live holdings aside');
     if (!rename($staged, $live)) {

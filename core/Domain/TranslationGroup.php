@@ -47,7 +47,7 @@ final readonly class TranslationGroup
       member in the first of the locales given, else in none of them; a record that is no
       work stands for itself.
       @param list<Entity> $records
-      @param list<Locale> $locales the house's, in its order
+      @param list<Locale> $locales the install's, in its order
       @return list<Entity> */
   public static function once(array $records, array $locales): array
   {

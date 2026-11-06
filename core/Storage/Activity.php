@@ -20,7 +20,7 @@ final readonly class Activity
 
   public function __construct(
     public string $id,
-    public EntityId|HouseObject $target,
+    public EntityId|InstallObject $target,
     public ActionType $action,
     public ?Props $result,
     public string $at,

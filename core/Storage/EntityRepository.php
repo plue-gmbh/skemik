@@ -214,7 +214,8 @@ final readonly class EntityRepository
   private function changed(Entity $entity, Entity $stored, array $edges): array
   {
     $predicates = $this->relations->changed($entity->id, $edges);
-    [$was, $is] = [$stored->props->document(), $entity->props->document()];
+    $was = $stored->props->document();
+    $is = $entity->props->document();
     $value = fn (array $document, string $key): array => [$document[$key] ?? null, array_filter(array_map(
       fn (mixed $own): mixed => is_array($own) ? $own[$key] ?? null : null, $document[LocalisedText::KEY] ?? []),
       fn (mixed $words): bool => $words !== null)];

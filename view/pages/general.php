@@ -3,17 +3,15 @@
 declare(strict_types=1);
 
 /* The general screen (`Admin\GeneralController`): one form of boxes by topic in
-   three columns that each stack their own, as the overview's cards do, each
-   legend naming where its values are kept, since that decides what a restore
-   elsewhere brings. What is edited fills the first two; the third holds what
-   nothing here changes, the address and the host's box, the largest upload and
-   each cost `/install` named, a warning while it costs, each value under its
-   label as a field's is. Where PHP cannot write `config.php` its boxes are
-   disabled under one note saying so. A kept password shows only as dots. Every
-   field keeps its label in sight and its hint tied to it. It is saved from the
-   records' save pill, `view/scripts/forms.js` its behaviour, which says what
-   the post answered, saved or refused, and announces a refusal, since it
-   arrives after a post. */
+   three columns, each legend naming where its values are kept, since that decides
+   what a restore elsewhere brings. What is edited fills the first two; the third
+   holds what nothing here changes, the address, the host's box, the largest upload
+   and each cost `/install` named. Where PHP cannot write `config.php` its boxes are
+   disabled under one note saying so, and a kept password shows only as dots. It
+   saves from the records' save pill (`view/scripts/forms.js`), which announces a
+   refusal, since it arrives after a post. Handed `$values`, `$kept`, `$address`,
+   `$writable`, `$timezones`, `$languages`, `$upload`, `$costs`, `$notice` and
+   `$refusal`, each a sentence or null, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -125,7 +123,7 @@ $said = $notice ?? $refusal;
       $words->get('sheet.pending', ['n' => '{n}'])) ?>">
       <span class="save-bar-text" role="<?= $refusal === null ? 'status' : 'alert' ?>"><span class="save-bar-dot"
         aria-hidden="true"<?= $said === null ? ' hidden' : '' ?>></span><span data-sentence><?=
-        $template->escape($said ?? '') ?></span></span>
+        $template->escape($said) ?></span></span>
       <button type="reset" class="button-quiet" hidden><?= $template->escape($words->get('sheet.discard'))
         ?></button>
       <button type="submit" class="button-primary" aria-keyshortcuts="Control+S Meta+S"><?= $template->escape(

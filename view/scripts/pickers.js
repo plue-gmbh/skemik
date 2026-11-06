@@ -66,7 +66,7 @@ const listPicker = {
     },
     pick(index, hit) {
       this.items[index] = hit.file.address;
-      [this.hits, this.asking] = [[], null];
+      this.dropHits();
       this.changed();
     },
     async upload(event) {
@@ -140,7 +140,7 @@ const objectsPicker = {
     refer(entry, hit) {
       entry[this.field.reference] = { id: hit.id, label: hit.label, glyph: hit.glyph, preview: hit.preview,
         gone: false, ...(hit.draft ? { draft: true } : {}) };
-      [this.hits, this.asking] = [[], null];
+      this.dropHits();
       this.changed();
     },
     /* The keys schema.org gives a file, filled from the asset wherever the value
@@ -149,7 +149,7 @@ const objectsPicker = {
       const facts = { [key]: hit.file.address, encodingFormat: hit.file.format, contentSize: hit.file.size };
       const carried = Object.entries(facts).filter(([name]) => this.field.keys.includes(name));
       Object.assign(entry, Object.fromEntries(carried));
-      [this.hits, this.asking] = [[], null];
+      this.dropHits();
       this.changed();
     },
     async upload(index, key, event) {
@@ -187,7 +187,7 @@ const referPicker = {
   emits: ["draft", "done"],
   data() {
     const held = this.value !== null && typeof this.value === "object" ? this.value : null;
-    return { held, word: held === null ? String(this.value ?? "") : "", hits: [] };
+    return { held, word: held === null ? String(this.value ?? "") : "", hits: [], timer: null };
   },
   mounted() {
     focusField(this.$refs.word, this.$el.closest(".popover"));

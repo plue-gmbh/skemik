@@ -18,7 +18,7 @@ use Support\Clock;
 use Support\Words;
 
 /* The collection list on every admin screen. Empty collections sort below the
-   filled ones, each group by name, so a new house's three working collections are
+   filled ones, each group by name, so a new install's three working collections are
    not pushed out of view by the empty ones. A mark that does not apply is absent
    rather than drawn grey, so a list of thirty is read by what stands out. The
    serving mark is read from the clock, so a collection whose only record goes live
@@ -65,7 +65,7 @@ final readonly class Sidebar
     return [...$filled, ...$empty];
   }
 
-  /** The house's own sites, which the header draws where it has room and the drawer
+  /** The organisation's own sites, which the header draws where it has room and the drawer
       where it has not, and only while the feed lets their `url` out: everybody is
       shown them, and a colleague reading `WebSite` as a stranger must not be shown
       what a stranger is not.

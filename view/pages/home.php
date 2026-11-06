@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* The overview (`Admin\HomeController`): the title, one line naming the house by
+/* The overview (`Admin\HomeController`): the title, one line naming the organisation by
    the address it answers on, so a colleague with two installs open knows which
    this is, and its totals, and the cards in the order their contract argues,
    read across three columns that each stack their own, so a short card leaves
@@ -10,7 +10,8 @@ declare(strict_types=1);
    column as the eye does. Too narrow for three, the cards flow down two
    balanced columns and then one in that same order, since a grid's rows would
    leave the hole again. The frame is the card's title and subtitle,
-   the same for all six; what stands under them is the card's own partial. */
+   the same for all six; what stands under them is the card's own partial.
+   Handed `$address`, `$collections`, `$records`, `$cards` and `$words`. */
 
 if (!isset($template)) {
   return;

@@ -80,7 +80,8 @@ final readonly class ErrorLog
   {
     $handle = fopen($path, 'rb');
     try {
-      [$position, $rest] = [(int) filesize($path), ''];
+      $position = (int) filesize($path);
+      $rest = '';
       while ($position > 0) {
         $size = min(self::CHUNK, $position);
         $position -= $size;

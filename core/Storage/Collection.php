@@ -8,9 +8,9 @@ use Domain\Exceptions\MalformedValue;
 use Domain\Exceptions\UnknownType;
 use Domain\Slug;
 
-/* One `collection` row: which of its type's fields a house carries, in order,
-   and nothing else — every house holds one collection per type, given by the
-   release and never made, named or ordered by a house. So the address is this
+/* One `collection` row: which of its type's fields an organisation carries, in order,
+   and nothing else — every install holds one collection per type, given by the
+   release and never made, named or ordered by an organisation. So the address is this
    table's and the same in every install, and the name is the chrome's word for the type, which `CollectionStore` reads
    from `language/`. `type` is the schema.org URL, as on `entity`. */
 final readonly class Collection

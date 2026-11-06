@@ -25,19 +25,16 @@ use Storage\CollectionStore;
 use Support\Clock;
 use Support\Markup;
 
-/* Maps a JSON-LD or plain JSON body onto profile fields, as the exact inverse of
-   `Feed\JsonLd`: a record from a dump posted straight back is an equal record,
-   and where the two disagree one of them is a bug. The spine is read as the feed
-   writes it: `@type` is the collection's, a kind lifted into it as a page marks
-   one up being `additionalType`; the language is the record's where the type
-   forks (`Payload`), and on any other the field it names, a message's; a
-   translation names the record it translates, which never names it back. What is computed at emit
-   is dropped, since nothing stores it. An instant with an offset is one instant
-   and is converted to UTC; one without is refused by the `Validator`, never read
-   in the house's zone, since an agent is not a person at the editor. A link under
-   this origin is stored as its path (`Spelling::held`). A property no field of
-   the type declares is refused by name: kept, it would be stored where no document
-   and no screen shows it. Each property that cannot be read is named, not the first. */
+/* Maps a JSON-LD or plain JSON body onto profile fields, as the exact inverse
+   of `Feed\JsonLd`: a record from a dump posted straight back is an equal
+   record, and where the two disagree one of them is a bug. The spine is read as
+   the feed writes it, `@type` the collection's and a kind `additionalType`, the
+   language the record's where the type forks (`Payload`) and the field it
+   names on any other. What is computed at emit is dropped, since nothing stores
+   it. An instant with an offset is converted to UTC; one without is refused by
+   the `Validator` rather than read in the install's zone, since an agent is not
+   a person at the editor. A property no field of the type declares is refused by
+   name: kept, it would be stored where no document and no screen shows it. */
 final readonly class PayloadMapper
 {
   /* Read beside the fields, or passed over. */

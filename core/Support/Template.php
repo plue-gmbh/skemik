@@ -6,9 +6,9 @@ namespace Support;
 
 /* Renders one file under `view/` to a string, so a controller answers with a
    body and `index.php` stays the only writer of output. A template sees the
-   values it was handed and `$template`, for escaping and for partials, and
-   nothing else. Escaping is `escape()` at the boundary and nowhere earlier: a
-   value escaped twice shows `&amp;` to a house that typed `&`.
+   values it was handed, `$template` for escaping and for partials, and the
+   renderer's `$__path` and `$__values`. Escaping is `escape()` at the boundary
+   and nowhere earlier: a value escaped twice shows `&amp;` to an organisation that typed `&`.
    A failure halfway through a template discards what it wrote, so an error page
    never arrives inside half of the page that failed.
    A template answers nothing when requested directly — it returns while
@@ -28,16 +28,20 @@ final readonly class Template
       throw new \LogicException(sprintf('no template %s', $name));
     }
     assert(!isset($values['template']), 'a value named template is the renderer');
-    /* No named parameters, which a value of the same name would silently lose to. */
-    $render = function (): void {
-      extract(func_get_arg(1));
+    assert(!isset($values['__path']) && !isset($values['__values']),
+      'a value named __path or __values is the renderer\'s own');
+    /** @psalm-taint-escape extract */
+    $handed = $values; /* its keys are the caller's literals, so no request value names a variable */
+    $render = function (string $__path, array $__values): void {
+      /* Without overwriting, so where assertions are off a value can never change which file is required. */
+      extract($__values, EXTR_SKIP);
       $template = $this;
-      require func_get_arg(0);
+      require $__path;
     };
     $level = ob_get_level();
     ob_start();
     try {
-      $render($path, $values);
+      $render($path, $handed);
     } catch (\Throwable $failure) {
       while (ob_get_level() > $level) {
         ob_end_clean();

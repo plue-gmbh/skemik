@@ -2,25 +2,23 @@
 
 declare(strict_types=1);
 
-/* The timeline view: the table's rows laid out otherwise, as the list's are —
-   the same cells, the same save bar and the same ticks with their bar, the one
-   for the page above the rows — filed by the type's date (`Admin\Glance::date`)
-   under its months, each row a day (`partials/timeline-row`), and what has no
-   date last under No date yet. Ordered by that date and nothing else, which
-   the query bar says, and where the collection carries none by when each
-   record was made (`Admin\Timeline`). + New record adds its pending row under
-   No date yet, drawn empty and hidden until it holds one, and a save that
-   dates a row, or makes one where the day is its making, reads the page
-   again, since that files it (`view/scripts/sheet.js`). Where the page holds
-   rows on both sides of the house's day, a line says Today between them, above
-   today's own, so a calendar shows what comes next without a filter. */
+/* The timeline view: the list's rows laid out otherwise, with the same cells,
+   save bar and ticks, filed under months by the type's date (`Admin\Glance::date`),
+   each row a day (`partials/timeline-row`), and what has no date last under No
+   date yet. Ordered by that date alone, or by when each record was made where the
+   type has none (`Admin\Timeline`). + New record's pending row waits hidden under
+   No date yet, and a save that dates a row reads the page again, since that files
+   it. Where the page holds rows on both sides of the install's day, a line says
+   Today between them, so a calendar shows what comes next without a filter.
+   Handed `$rows`, `$columns`, `$collection`, `$items`, `$glance`, `$firstLocale`, `$timeline`, `$creates`,
+   `$add`, `$total`, `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
 }
 $dated = $glance->date();
 $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/timeline-row', ['words' => $words,
-  'columns' => $columns, 'row' => $row, 'items' => $items, 'ticks' => $creates, 'house' => $house,
+  'columns' => $columns, 'row' => $row, 'items' => $items, 'ticks' => $creates, 'firstLocale' => $firstLocale,
   'glance' => $glance, 'timeline' => $timeline]);
 $under = null;
 $today = $timeline->today();
@@ -37,7 +35,10 @@ $before = null;
       data-tick-all><?= $template->escape($words->get('sheet.tick_all')) ?></label>
 <?php endif ?>
     <ul class="item-list timeline" data-rows aria-label="<?= $template->escape($collection->name) ?>">
-<?php foreach ($rows as $row): [$when, $month, $was] = [$timeline->when($row), $under, $before] ?>
+<?php foreach ($rows as $row):
+  $when = $timeline->when($row);
+  $month = $under;
+  $was = $before ?>
 <?php if (($before = $reached($when)) === true && $was === false): ?>
       <li class="timeline-now"><span><?= $template->escape($words->get('timeline.today')) ?></span></li>
 <?php endif ?>
@@ -68,4 +69,4 @@ $before = null;
     'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
 </div>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
-<?= $template->render('partials/save-bar', ['words' => $words, 'data' => $data, 'spine' => $spine]) ?>
+<?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

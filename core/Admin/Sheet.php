@@ -27,7 +27,7 @@ use Support\Words;
 
 /* The table's rows and the island's data, for the collection screen and for the
    answer to a save alike, so a row the island wrote comes back drawn by the same
-   hand. A select's words come along for every house locale, since a new row is
+   hand. A select's words come along for every locale the install holds, since a new row is
    written in the locale the table is filtered by whether or not a row of it is
    on the page. The island reads JSON and nothing else: holdings never reach it
    as markup inside its root (`Http\SecurityHeaders`), and every word it shows is
@@ -132,11 +132,11 @@ final readonly class Sheet
   public function data(Collection $collection, array $columns, array $rows, string $csrf): string
   {
     $editable = array_values(array_filter($columns, fn (Column $column): bool => $column->editable));
-    $house = $this->settings->locales()[0]->tag;
+    $firstLocale = $this->settings->locales()[0]->tag;
     $locales = array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales());
 
     return (new Json())->encode(['collection' => $collection->slug->value, 'csrf' => $csrf,
-      'language' => $this->words->language, 'locale' => $house, 'zone' => $this->clock->zone->getName(),
+      'language' => $this->words->language, 'locale' => $firstLocale, 'zone' => $this->clock->zone->getName(),
       'limit' => Intake::size(Upload::limit()),
       'fields' => array_map(fn (Column $column): array => $this->field($column,
         $this->profile->byType($collection->type)), $editable),

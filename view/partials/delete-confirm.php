@@ -9,7 +9,8 @@ declare(strict_types=1);
    afterwards, so the sentence says only that none shows this one. It is the trash,
    immediate rather than pending, and the collection screen it returns to
    offers Restore at once, as its trash does afterwards. A view deletes by its
-   ticks and never per record, so this dialog is the record screen's alone. */
+   ticks and never per record, so this dialog is the record screen's alone.
+   Handed `$row`, `$collection`, `$pointing`, `$query`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

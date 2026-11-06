@@ -22,7 +22,8 @@ final readonly class Downloader
   {
     $this->clear();
     is_dir($this->staging) || mkdir($this->staging, 0700, true);
-    [$archive, $signature] = [$this->staging . '/' . self::ARCHIVE, $this->staging . '/' . self::ARCHIVE . '.minisig'];
+    $archive = $this->staging . '/' . self::ARCHIVE;
+    $signature = $archive . '.minisig';
     $this->fetch->save($manifest->archive, $archive, self::LIMIT_BYTES);
     $this->fetch->save($manifest->signature, $signature, 4096);
 

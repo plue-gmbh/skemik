@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /* What a visitor or an editor sees when a request fails (`Http\ErrorHandler`):
-   the boot page's shape, one sentence and the way back, no trace. */
+   the boot page's shape, one sentence and the way back, no trace.
+   Handed `$sentence` and `$words`. */
 
 if (!isset($template)) {
   return;

@@ -29,7 +29,7 @@ use Support\Json;
    once among them. A value is held as spelt, `RE-1` and `re-1` being two. A
    record in the trash keeps its slug and its values, so restoring never
    collides, and the refusal says so. A repeated order is answered by its live
-   holder only: taking one out of the trash is the house's act, not a channel's. */
+   holder only: taking one out of the trash is the organisation's act, not a channel's. */
 final readonly class Collisions
 {
   public const IN_LOCALE = '(locale = :locale or type in (select value from json_each(:across)))';
@@ -93,7 +93,7 @@ final readonly class Collisions
         $scope = $type->field((string) $field->unique?->edge);
         $trashed = $this->inTrash($holder);
         $reason = match (true) {
-          $scope === null => $trashed ? Reason::HeldInHouseTrashed : Reason::HeldInHouse,
+          $scope === null => $trashed ? Reason::HeldInInstallTrashed : Reason::HeldInInstall,
           default => $trashed ? Reason::HeldInScopeTrashed : Reason::HeldInScope,
         };
         $named = $scope === null ? [] : ['scope' => $scope->label, 'key' => $scope->key];

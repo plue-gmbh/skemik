@@ -74,7 +74,9 @@ final readonly class Address
   /* A re-import of a dump is a till with a long queue: ten writes a second per key and address. */
   private function ingest(): IngestController
   {
-    [$common, $targets, $origin] = [$this->common, $this->common->targets, $this->common->request->origin()];
+    $common = $this->common;
+    $targets = $common->targets;
+    $origin = $common->request->origin();
     $reads = fn (Entity $target): bool => $this->feed()->reads($target);
     return new IngestController($common->authorizer, $this->feed(), $common->collections, $common->settings,
       $common->entities, $common->relations, $common->collisions,
