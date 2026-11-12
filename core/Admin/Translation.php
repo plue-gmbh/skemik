@@ -9,7 +9,7 @@ use Domain\Entity;
 /* One of the install's locales on a work on its record screen: the member written in it, or
    none yet and the records in that locale that could be linked in its place.
    Its age is how much older or newer the member was last saved than the record
-   viewed, empty within the hour. */
+   viewed, empty within the hour. Its marker is what the spine chip draws for it. */
 final readonly class Translation
 {
   /** @param list<Translation> $candidates */
@@ -21,5 +21,11 @@ final readonly class Translation
     public ?string $href = null,
     public array $candidates = [],
     public string $age = '',
+    public string $marker = '',
   ) {}
+
+  public function marked(string $marker): self
+  {
+    return clone($this, ['marker' => $marker]);
+  }
 }

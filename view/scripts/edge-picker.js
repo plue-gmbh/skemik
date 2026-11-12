@@ -42,7 +42,7 @@ const edgePicker = {
     const items = (this.value ?? []).map((item) => (item.qualifiers
       ? { ...item, qualifiers: { ...item.qualifiers } } : { ...item }));
     return { items, opened: new Set(), typed: "", hits: [], asked: false, unanswered: "", timer: null,
-      sending: false, refused: "" };
+      sending: false, refused: "", answered: false };
   },
   computed: {
     offered() {
@@ -58,12 +58,15 @@ const edgePicker = {
         && !this.hits.some((hit) => hit.label.toLocaleLowerCase() === word);
     },
   },
-  watch: { held() { this.find(); } },
+  watch: {
+    held() { this.find(); },
+    /* The opening answer leaves the popover at its top, where the targets held stand. */
+    offered: { handler() { if (this.answered) this.reveal(); this.answered = true; }, flush: "post" },
+  },
   mounted() {
-    const popover = this.$el.closest(".popover");
-    if (this.fixed) return focusField(this.$el.querySelector(".picker-value"), popover);
+    if (this.fixed) return this.$el.querySelector(".picker-value")?.focus();
     this.find();
-    focusField(this.$refs.search, popover);
+    this.$refs.search.focus();
   },
   methods: {
     result() {
@@ -100,6 +103,14 @@ const edgePicker = {
       this.asked = ok;
       this.unanswered = ok ? "" : body.error;
     },
+    /* Hits or targets changing above the foot scroll the popover down to it, as far as the search stays in sight. */
+    reveal() {
+      const popover = this.$el.closest(".popover");
+      if (!popover || !this.$refs.search) return;
+      const below = popover.scrollHeight - popover.clientHeight - popover.scrollTop;
+      const room = this.$refs.search.getBoundingClientRect().top - popover.getBoundingClientRect().top - 8;
+      popover.scrollTop += Math.min(below, room);
+    },
     typing() {
       window.clearTimeout(this.timer);
       this.timer = window.setTimeout(() => this.find(), 200);
@@ -107,6 +118,7 @@ const edgePicker = {
     take(item) {
       if (!this.field.many) return this.$emit("done", [item]);
       this.items.push(item);
+      this.$nextTick(() => { this.$refs.items.scrollTop = this.$refs.items.scrollHeight; });
       this.typed = "";
       this.changed();
       this.find();

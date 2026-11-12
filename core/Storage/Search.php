@@ -45,18 +45,20 @@ final readonly class Search
   /* The records matching a question, the placeholder holding what `match()`
      answers and `:now` the clock: every term as a prefix in any of the reader's
      fields, its tags or the names of what it points at, all of them met, the
-     most matching words first. The upper bound is the prefix followed by the
-     last code point, below which every longer word with it sorts. The terms
-     lead by `cross join`, which SQLite never reorders: led by the word table, it
-     scans every word of the install per search. */
+     most matching words first. `named` counts the terms its own name holds, for
+     `search()`. The upper bound is the prefix followed by the last code point,
+     below which every longer word with it sorts. The terms lead by `cross join`,
+     which SQLite never reorders: led by the word table, it scans every word of
+     the install per search. */
   public static function hits(string $placeholder = ':match'): string
   {
     $words = "json_each($placeholder, '\$.terms') t cross join entity_word w"
       . ' on w.word >= t.value and w.word < t.value || char(1114111)';
 
-    return "select entity_id, count(*) as hits from (select w.entity_id, t.key as term from $words"
+    return 'select entity_id, count(*) as hits, count(distinct case when named then term end) as named from ('
+      . "select w.entity_id, t.key as term, w.field = json_extract($placeholder, '\$.name') as named from $words"
       . " where w.field in (select value from json_each($placeholder, '\$.fields'))"
-      . " union all select r.subject_id, t.key from $words"
+      . " union all select r.subject_id, t.key, 0 from $words"
       . " cross join relation r on r.object_id = w.entity_id and w.field = 'term_code'"
       . " where r.predicate in (select value from json_each($placeholder, '\$.tags'))"
       . ' and exists (select 1 from entity e where e.id = w.entity_id and e.deleted_at is null and '
@@ -67,17 +69,18 @@ final readonly class Search
   /* A word of a target's name reaches each record pointing at it under a predicate
      `match()` named, where the target is of the type and in the reading it named.
      The naming fields are asked of the word first, so a long text's words probe
-     no edge. */
+     no edge. The edge leads the relation, which is then one indexed step by target
+     and predicate: led by the relation, a name every order points at read its
+     30 000 edges once per edge asked, 1.8 s on the volume install. */
   private static function pointed(string $placeholder, string $words): string
   {
     $named = "(select json_extract(n.value, '\$.named') from json_each($placeholder, '\$.edges') n)";
 
-    return " union all select r.subject_id, t.key from $words"
-      . ' cross join relation r on r.object_id = w.entity_id'
-      . " cross join json_each($placeholder, '\$.edges') g on r.predicate = json_extract(g.value, '\$.predicate')"
-      . " and w.field = json_extract(g.value, '\$.named')"
+    return " union all select r.subject_id, t.key, 0 from $words"
+      . " cross join json_each($placeholder, '\$.edges') g on w.field = json_extract(g.value, '\$.named')"
       . " cross join entity e on e.id = w.entity_id and e.type = json_extract(g.value, '\$.type')"
       . ' and e.deleted_at is null'
+      . " cross join relation r on r.object_id = w.entity_id and r.predicate = json_extract(g.value, '\$.predicate')"
       . " where w.field in $named and (json_array_length(g.value, '\$.statuses') = 0 or " . Query::STATUS
       . " in (select value from json_each(g.value, '\$.statuses')))"
       . " and (json_array_length(g.value, '\$.ids') = 0 or e.id in (select value from json_each(g.value, '\$.ids')))";
@@ -103,6 +106,9 @@ final readonly class Search
   }
 
   /**
+   * A box and a picker are asked what a record is called and show eight: the name holding more of the terms
+   * comes first, the shorter name before the longer, and only then the most matching words.
+   *
    * @param array<string, Query> $readings per type, what the reader reads of it, its fields among that
    * @return list<EntityId> best match first, trashed records left out
    */
@@ -112,28 +118,36 @@ final readonly class Search
     $bindings = ['now' => $this->clock->now()->format(Clock::STORED)];
     foreach (array_values($readings) as $index => $reading) {
       $type = $this->profile->byType($reading->type);
-      $arms[] = sprintf('select e.id, s.hits from (%1$s) s join entity e on e.id = s.entity_id'
-        . ' where e.type = :type%2$d and e.deleted_at is null',
-        self::hits(":match$index"), $index);
+      $arms[] = self::arm($index);
       $bindings += ["match$index" => $this->match($typed, $type, $reading->through($readings)),
         "type$index" => $type->url()];
     }
     if ($arms === []) {
       return [];
     }
-    $statement = $this->db->prepare('select id from (' . implode(' union all ', $arms) . ') order by hits desc'
-      . ' limit ' . self::LIMIT);
+    $statement = $this->db->prepare('select id from (' . implode(' union all ', $arms)
+      . ') order by named desc, size, hits desc limit ' . self::LIMIT);
     $statement->execute($bindings);
 
     return array_map(fn (string $id): EntityId => new EntityId($id), $statement->fetchAll(\PDO::FETCH_COLUMN));
   }
 
+  /* One type's hits, each with the size of its name where the name holds a term: its words in the word table. */
+  private static function arm(int $index): string
+  {
+    return sprintf('select e.id, s.hits, s.named, case when s.named > 0 then (select count(*) from entity_word n'
+      . " where n.entity_id = e.id and n.field = json_extract(:match%2\$d, '$.name')) else 0 end as size"
+      . ' from (%1$s) s join entity e on e.id = s.entity_id where e.type = :type%2$d and e.deleted_at is null',
+      self::hits(":match$index"), $index);
+  }
+
   /* Nothing typed that is a word, or nothing read that holds words, matches
      nothing rather than failing. The query says which fields of the type the
-     reader reads and what they read of every type an edge may reach. */
+     reader reads and what they read of every type an edge may reach. The name is
+     the field the type is named by, or the slug where the reader does not read it. */
   public function match(string $typed, TypeDefinition $type, Query $query): string
   {
-    $terms = $this->tokens($typed);
+    $terms = self::tokens($typed);
     if (count($terms) > self::WORDS) {
       throw AskedTooMuch::words(self::WORDS);
     }
@@ -141,6 +155,7 @@ final readonly class Search
       => in_array($field->key, $query->searchIn, true)));
 
     return $this->json->encode(['terms' => $terms,
+      'name' => in_array($type->namedBy(), $query->searchIn, true) ? $type->namedBy() : 'slug',
       'fields' => ['slug', ...array_values(array_intersect($this->profile->searchedKeys(), $query->searchIn))],
       'tags' => $this->tags($read), 'edges' => $this->edges($read, $query->searchThrough)]);
   }
@@ -188,10 +203,24 @@ final readonly class Search
       'ids' => $reading->filters['id'] ?? []];
   }
 
+  /* What was typed up to its last word that `match()` takes, for the admin's boxes, where a pasted
+     sentence is searched by its start rather than refused. A word folding splits counts as two. */
+  public static function bounded(string $typed): string
+  {
+    preg_match_all('/[\p{L}\p{M}\p{N}]+/u', $typed, $words, PREG_OFFSET_CAPTURE);
+    $before = fn (int $word): string => substr($typed, 0, $words[0][$word][1] ?? strlen($typed));
+    $kept = min(self::WORDS, count($words[0]));
+    while (count(self::tokens($before($kept))) > self::WORDS) {
+      $kept--;
+    }
+
+    return $kept === count($words[0]) ? $typed : rtrim($before($kept));
+  }
+
   /** Lower-case words with their diacritics folded, as a search is typed, so
       `Ärztin` is `arztin` whether typed with the umlaut or without.
       @return list<string> */
-  private function tokens(string $text): array
+  private static function tokens(string $text): array
   {
     $decomposed = (string) \Normalizer::normalize(mb_strtolower($text), \Normalizer::FORM_D);
     $folded = (string) preg_replace('/\p{Mn}/u', '', $decomposed);
@@ -205,9 +234,9 @@ final readonly class Search
   private function indexed(string $text): array
   {
     $composed = (string) \Normalizer::normalize(mb_strtolower($text), \Normalizer::FORM_C);
-    $folded = $this->tokens($composed);
+    $folded = self::tokens($composed);
 
-    return [...$folded, ...array_values(array_diff($this->tokens(strtr($composed, self::GERMAN)), $folded))];
+    return [...$folded, ...array_values(array_diff(self::tokens(strtr($composed, self::GERMAN)), $folded))];
   }
 
   /** A short text of words names something, and a name is often one compound word, *Grundkurs* or

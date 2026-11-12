@@ -134,7 +134,9 @@ final readonly class CollectionController
       'timeline' => new Timeline($glance?->date(), $this->clock, $this->words->language),
       'fixed' => $view === CollectionView::Timeline,
       'rows' => $rows, 'page' => $query->page ?? 1, 'perPage' => $query->perPage ?? Query::PER_PAGE,
-      'items' => new Items($collection, $request->query, $this->dialog->multilingual($collection)),
+      'items' => new Items($collection, $request->query, $this->dialog->markers($collection),
+        ($query?->grouped ?? []) === [] ? [] : $this->dialog->languages($account, $rows),
+        array_any($columns, fn (Column $column): bool => $column->editable)),
       'parameters' => $request->query, 'narrowing' => $this->bar->narrowing($request),
       ...$this->counted($account, $collection, $query),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
@@ -153,7 +155,8 @@ final readonly class CollectionController
     $whole = $query !== null && $query->filters === [] && $query->statuses === [] && $query->locale === null
       && $query->search === '';
 
-    return ['total' => $total, 'all' => $whole ? $total : $this->bar->total($account, $collection)];
+    return ['total' => $total,
+      'all' => $whole ? $total : $this->bar->total($account, $collection, $query?->grouped ?? [])];
   }
 
   /* The view asked for, which the session then keeps; else the one kept, else the table. */

@@ -139,8 +139,8 @@ final readonly class PublicFilter
   {
     $filters = $subjects === [] ? $query->filters : [...$query->filters, 'id' => $subjects];
 
-    return new Query($query->type, $filters, $statuses, $query->locale, $query->sort,
-      $query->descending, $query->search, $query->page, $query->perPage, $query->searchIn, $query->searchThrough);
+    return new Query($query->type, $filters, $statuses, $query->locale, $query->sort, $query->descending,
+      $query->search, $query->page, $query->perPage, $query->searchIn, $query->searchThrough, grouped: $query->grouped);
   }
 
   /** What this caller reads of each collection, as the query narrowing to it and

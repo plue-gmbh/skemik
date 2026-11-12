@@ -20,7 +20,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
 ?>
 <script type="text/x-template" id="edge-picker-template">
   <div class="picker">
-    <ol class="picker-items" v-if="field.many">
+    <ol ref="items" class="picker-items is-scrolling" v-if="field.many">
       <li v-for="(item, index) in items" :key="index" class="picker-target">
         <div class="picker-item">
           <component :is="item.href ? 'a' : 'span'" :href="item.href || null" class="chip"
@@ -31,7 +31,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
           <span class="picker-tools" v-if="!fixed">
             <button v-if="speaks(item)" type="button" class="picker-tool" :class="{ 'is-said': saying(item) }"
               :title="pencil(item)" :aria-label="pencil(item)" :aria-expanded="shows(item) ? 'true' : 'false'"
-              @click="toggle(item)"><?= $icon('edit') ?></button>
+              @click="toggle(item)"><?= $icon('says') ?></button>
             <button type="button" class="picker-tool" :title="words['picker.up']" :aria-label="words['picker.up']"
               :disabled="index === 0" @click="move(index, -1)"><?= $icon('up') ?></button>
             <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
@@ -58,7 +58,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
         <span class="picker-tools" v-if="!fixed && speaks(items[0])">
           <button type="button" class="picker-tool" :class="{ 'is-said': saying(items[0]) }"
             :title="pencil(items[0])" :aria-label="pencil(items[0])"
-            :aria-expanded="shows(items[0]) ? 'true' : 'false'" @click="toggle(items[0])"><?= $icon('edit') ?></button>
+            :aria-expanded="shows(items[0]) ? 'true' : 'false'" @click="toggle(items[0])"><?= $icon('says') ?></button>
         </span>
       </div>
       <p v-if="items[0].draft" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
@@ -70,7 +70,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
         :placeholder="words[field.many ? 'picker.add_search' : 'picker.search']"
           :aria-label="words[field.many ? 'picker.add_search' : 'picker.search']"
         @keydown.enter.prevent="enter">
-      <div class="options" :class="{ 'is-pictures': field.kind === 'image' }">
+      <div class="options is-scrolling" :class="{ 'is-pictures': field.kind === 'image' }">
         <button v-for="hit in offered" :key="hit.id" type="button" class="option" @click="pick(hit)">
           <img v-if="hit.preview" class="option-preview" :src="hit.preview" alt="">
           <span v-else class="chip-mark"><svg class="glyph" aria-hidden="true"><use
@@ -135,7 +135,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
           </span>
         </div>
         <p v-if="noted?.index === index" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
-        <div class="options" :class="{ 'is-pictures': pictures(field.key) }" v-if="asks(index, field.key)"
+        <div class="options is-scrolling" :class="{ 'is-pictures': pictures(field.key) }" v-if="asks(index, field.key)"
           role="group" :aria-label="words['picker.search']">
           <button v-for="hit in hits" :key="hit.id" type="button" class="option" @click="pick(index, hit)">
             <img v-if="hit.preview" class="option-preview" :src="hit.preview" alt="">

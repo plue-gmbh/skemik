@@ -167,13 +167,16 @@ final readonly class RecordPage
   }
 
   /** The records before and after this one in the query it was opened from, on
-      its page or across the page's edge; null at either end.
+      its page or across the page's edge; null at either end. Where the query lists
+      a work once, a translation stands where its work's row does.
       @return array{?string, ?string} */
   public function neighbours(Account $account, Request $request, Collection $collection, Entity $entity): array
   {
     $query = $this->bar->query($account, $request->without('in'), $collection);
     $ids = $query === null ? [] : $this->page($query, $query->page);
-    $index = array_search($entity->id->value, array_keys($ids), true);
+    $row = fn (Entity $each): string => ($query?->grouped ?? []) === [] ? $each->id->value
+      : TranslationGroup::rootOf($each)->value;
+    $index = array_search($row($entity), array_map(fn (array $at): string => $row($at[0]), array_values($ids)), true);
     if ($query === null || $index === false) {
       return [null, null];
     }
@@ -191,7 +194,8 @@ final readonly class RecordPage
   private function page(Query $query, int $page): array
   {
     $paged = new Query($query->type, $query->filters, $query->statuses, $query->locale, $query->sort,
-      $query->descending, $query->search, $page, $query->perPage, $query->searchIn, $query->searchThrough);
+      $query->descending, $query->search, $page, $query->perPage, $query->searchIn, $query->searchThrough,
+      grouped: $query->grouped);
     $ids = [];
     foreach ($this->entities->list($paged) as $entity) {
       $ids[$entity->id->value] = [$entity, $page];

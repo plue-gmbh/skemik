@@ -20,6 +20,7 @@ use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\Query;
+use Storage\Search;
 use Storage\SettingStore;
 use Support\Words;
 
@@ -28,12 +29,15 @@ use Support\Words;
    parsed by `Feed\FeedRequest` as for `/feed`, the admin reads its own: `status`
    and `locale`, and on the record screen `in` and `words`. A filter without a
    status shows drafts too, since inside the holding filtering to what one is
-   working on must not hide it. Outside the read scope the query goes through
-   `Feed\PublicFilter`, like every read there. A reference in the address is read
-   by `Feed\Targets` as the feed reads it. */
+   working on must not hide it. A collection of works lists each once, in the
+   install's earliest locale it holds, unless `locale` asks for one or for each.
+   Outside the read scope the query goes through `Feed\PublicFilter`, like every
+   read there. A reference in the address is read by `Feed\Targets` as the feed
+   reads it. */
 final readonly class QueryBar
 {
   public const OWN = ['status', 'locale', 'in', 'words', 'view'];
+  public const EACH = 'each';
   private const FEED = ['sort', 'q', 'page', 'per_page'];
 
   public function __construct(
@@ -62,7 +66,8 @@ final readonly class QueryBar
     $status = $request->query('status');
     $statuses = $status === null ? [] : [$this->status($collection, $status)];
     $query = $this->addresses->filtered(new Query($parsed->type, $filters, $statuses, $parsed->locale,
-      $parsed->sort, $parsed->descending, $parsed->search, $parsed->page, $parsed->perPage, $parsed->searchIn),
+      $parsed->sort, $parsed->descending, Search::bounded($parsed->search), $parsed->page, $parsed->perPage,
+      $parsed->searchIn, grouped: $this->grouped($request, $collection)),
       [...($parsed->locale === null ? [] : [$parsed->locale]), ...$this->settings->locales()],
       fn (Entity $target): bool => $this->rows->readable($account, $target))
       ->through($this->rows->readings($account, $this->collections->all()));
@@ -70,10 +75,11 @@ final readonly class QueryBar
     return $public ? $this->filter->query($query, $collection) : $query;
   }
 
-  /* The whole reading, which a filtered count is said against. */
-  public function total(Account $account, Collection $collection): int
+  /** The whole reading, which a filtered count is said against, as the page groups it.
+      @param list<string> $grouped */
+  public function total(Account $account, Collection $collection, array $grouped): int
   {
-    $all = new Query($collection->type);
+    $all = new Query($collection->type, grouped: $grouped);
     $query = $this->authorizer->readsAsPublic($account, $collection->type)
       ? $this->filter->query($all, $collection)
       : $all;
@@ -116,6 +122,7 @@ final readonly class QueryBar
 
     return match (true) {
       $status !== null => $this->words->get('status.' . $status->value),
+      $parameter === 'locale' && $value === self::EACH => $this->words->get('query.locale_each'),
       $column !== null && $column->field->options !== [] => $this->terms->word($column->field, $value,
         $this->settings->locales()[0]),
       default => $value,
@@ -130,10 +137,21 @@ final readonly class QueryBar
       ? $status : throw MalformedValue::named('status of ' . $collection->name, $value);
   }
 
+  /** The install's locales where a work is listed once, none where every record is its own row.
+      @return list<string> */
+  private function grouped(Request $request, Collection $collection): array
+  {
+    $locales = $this->settings->locales();
+    $once = $request->query('locale') === null && count($locales) > 1
+      && $this->profile->byType($collection->type)->locale->forks();
+
+    return $once ? array_map(fn (Locale $locale): string => $locale->tag, $locales) : [];
+  }
+
   /* A locale the install does not hold is refused by name, as an unknown field is. */
   private function locale(?string $tag): ?Locale
   {
-    if ($tag === null) {
+    if ($tag === null || $tag === self::EACH) {
       return null;
     }
 

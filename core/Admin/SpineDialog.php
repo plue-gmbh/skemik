@@ -20,12 +20,12 @@ use Support\Json;
 use Support\Words;
 
 /* What the spine dialog shows (`partials/spine-dialog`), handed to the island as
-   JSON: once per collection the states its type holds, the install's locales and
-   whether the type's second language is a second record; per record its spine as the dialog
-   edits it, the window in the install's wall time, the locales its own words are
-   kept in where the type has both mechanisms, and who changed it last. The
-   record screen's Languages card reads a work's translations from here, each
-   passing the reader's scope first. */
+   JSON: once per collection the states its type holds, the install's locales with
+   their markers and whether the type's second language is a second record; per
+   record its spine as the dialog edits it, the window in the install's wall time,
+   the locales its own words are kept in where the type has both mechanisms, and
+   who changed it last. The record screen's Languages card reads a work's
+   translations from here, each passing the reader's scope first. */
 final readonly class SpineDialog
 {
   private const WORDS = ['spine.open', 'spine.slug', 'spine.moved', 'spine.status',
@@ -49,6 +49,7 @@ final readonly class SpineDialog
   {
     $type = $this->profile->byType($collection->type);
     $holds = Status::heldBy($type);
+    $locales = array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales());
     $names = $this->log->lastActorNames(array_map(fn (SheetRow $row): EntityId => $row->entity->id, $rows));
     $spine = fn (SheetRow $row): array => $this->spine($collection, $row, $names[$row->entity->id->value] ?? null);
 
@@ -56,7 +57,7 @@ final readonly class SpineDialog
       'public' => in_array(Status::Published, $holds, true), 'forks' => $type->locale->forks(),
       'statuses' => array_map(fn (Status $status): array => ['value' => $status->value,
         'word' => $this->words->get('status.' . $status->value)], $holds),
-      'locales' => array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales()),
+      'locales' => $locales, 'markers' => (object) Locale::short($locales),
       'words' => (object) array_combine(self::WORDS, array_map(fn (string $key): string => $this->words->get($key,
         ['locales' => '{locales}']), self::WORDS)),
       'rows' => (object) array_combine(array_map(fn (SheetRow $row): string => $row->entity->id->value, $rows),
@@ -86,15 +87,19 @@ final readonly class SpineDialog
       'own' => $this->own($collection, $row), 'footer' => $this->footer($entity, $lastBy)];
   }
 
-  /* Whether a table row shows its record's language: on a work, since its record
-     is its locale's alone, and only where the organisation writes in more than one. */
-  public function multilingual(Collection $collection): bool
+  /** The install's locales' markers where a table row shows its record's language, none elsewhere: on a
+      work, since its record is its locale's alone, and only where the organisation writes in more than one.
+      @return array<string, string> by locale */
+  public function markers(Collection $collection): array
   {
-    return $this->profile->byType($collection->type)->locale->forks() && count($this->settings->locales()) > 1;
+    $locales = array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales());
+
+    return $this->profile->byType($collection->type)->locale->forks() && count($locales) > 1
+      ? Locale::short($locales) : [];
   }
 
-  /** The install's locales on a work, each with its member or, where none, the records
-      that could be linked; null on a type whose second language is not a second record.
+  /** The install's locales on a work, each with its marker and its member or, where none, the
+      records that could be linked; null on a type whose second language is not a second record.
       @return ?list<Translation> */
   public function translations(Account $account, Collection $collection, Entity $entity): ?array
   {
@@ -103,7 +108,7 @@ final readonly class SpineDialog
     }
     $group = $this->entities->group($entity);
 
-    return array_map(function (Locale $locale) use ($account, $collection, $entity, $group): Translation {
+    return $this->marked(array_map(function (Locale $locale) use ($account, $collection, $entity, $group): Translation {
       $member = $group->inLocale($locale);
       if ($member === null) {
         $linkable = array_filter($this->entities->ungrouped($entity->type, $locale),
@@ -115,7 +120,34 @@ final readonly class SpineDialog
 
       return $this->rows->readable($account, $member) ? $this->translation($collection, $member, $entity)
         : new Translation($locale->tag);
-    }, $this->settings->locales());
+    }, $this->settings->locales()));
+  }
+
+  /** @param list<Translation> $languages
+      @return list<Translation> each with its marker among them */
+  private function marked(array $languages): array
+  {
+    $markers = Locale::short(array_map(fn (Translation $each): string => $each->locale, $languages));
+
+    return array_map(fn (Translation $each): Translation => $each->marked($markers[$each->locale]), $languages);
+  }
+
+  /** Each of the install's locales on each row's work, its member where the reader reads one: what a row
+      standing for its group shows, without the records that could be linked, which its screen offers.
+      @param list<SheetRow> $rows
+      @return array<string, list<Translation>> by the row's record */
+  public function languages(Account $account, array $rows): array
+  {
+    $read = fn (?Entity $member): ?Entity => $member !== null && $this->rows->readable($account, $member)
+      ? $member : null;
+    $languages = [];
+    foreach ($rows as $row) {
+      $group = $this->entities->group($row->entity);
+      $languages[$row->entity->id->value] = array_map(fn (Locale $locale): Translation
+        => new Translation($locale->tag, $read($group->inLocale($locale))), $this->settings->locales());
+    }
+
+    return $languages;
   }
 
   private function translation(Collection $collection, Entity $member, ?Entity $viewed = null): Translation

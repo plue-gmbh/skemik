@@ -6,12 +6,13 @@ declare(strict_types=1);
    edited alike, so a field stays put when editing starts and arranging the table arranges this. Nothing is
    arranged per record, no blocks, no canvas, no layout of one's own: that is the step at which a CMS starts
    becoming the thing this replaces. A field that is not prose opens the table's own editor
-   (`partials/cell-editor`), and its name is the label that opens it. The words locale is `words` beside
-   `in`, so a link and the reload after a save keep it. Handed `$row`, `$edit`, `$blocks`, `$editing`,
-   `$naming`, `$collection`, `$authored`, `$locale`, null for the record's own, `$offered`, `$chips`, `$prose`,
-   `$pointers`, `$pointing`, `$translations`, `$neighbours`, `$asset`, `$copies`, `$limit`, `$writes`, `$held`,
-   `$manages`, `$badge`, `$labels`, `$until`, `$back`, `$public`, `$query`, `$data`, `$spine`, `$csrf` and
-   `$words`. */
+   (`partials/cell-editor`), and its name is the label that opens it. The head but its way back stays in sight
+   as the record scrolls, on a narrow paper only its tools, since the whole head would take a third of a phone.
+   The words locale is `words` beside `in`, so a link and the reload after a save keep it. Handed `$row`,
+   `$edit`, `$blocks`, `$editing`, `$naming`, `$collection`, `$authored`, `$locale`, null for the record's own,
+   `$offered`, `$chips`, `$prose`, `$pointers`, `$pointing`, `$translations`, `$neighbours`, `$asset`,
+   `$copies`, `$limit`, `$writes`, `$held`, `$manages`, `$badge`, `$labels`, `$until`, `$back`, `$public`,
+   `$query`, `$data`, `$spine`, `$csrf` and `$words`. */
 
 use Profile\FieldKind;
 
@@ -83,7 +84,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 };
 ?>
 <div class="page record-page" data-record-screen>
-  <header class="collection-head">
+  <header class="collection-head" data-sticks>
     <div class="collection-title">
       <a class="record-back" href="<?= $template->escape($back) ?>"><?= $template->render('partials/icon',
         ['name' => 'back']) ?><?= $template->escape($collection->name) ?></a>
@@ -91,15 +92,17 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         <span><?= $template->escape($row->label) ?></span>
       </h1>
       <p class="record-spine"><?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row,
-        'prefix' => $prefix, 'translations' => $translations, 'opens' => $writes]) ?><?php if (!$public): ?> <span
+        'prefix' => $prefix, 'opens' => $writes, 'translations' => $translations === null ? null : array_map(
+          fn (Admin\Translation $each): Admin\Translation => new Admin\Translation($each->locale, $each->record,
+            marker: $each->marker), $translations)]) ?><?php if (!$public): ?> <span
         class="tag-never"><?= $template->escape($words->get('record.private')) ?></span><?php endif ?></p>
     </div>
-    <div class="collection-tools">
+    <div class="collection-tools" data-sticks>
 <?php if (count($offered) > 1):
   /* An option says Words, since on a forking type the Languages card offers whole records in the same locales. */
-  $languages = array_count_values(array_map(fn (Domain\Locale $each): string => explode('-', $each->tag)[0], $offered));
-  $named = fn (string $tag): string => $languages[explode('-', $tag)[0]] > 1 ? $tag
-    : strtoupper(explode('-', $tag)[0]) ?>
+  $markers = Domain\Locale::short(array_map(fn (Domain\Locale $each): string => $each->tag, $offered));
+  $named = fn (string $tag): string => str_contains($markers[$tag], '-') ? $markers[$tag]
+    : strtoupper($markers[$tag]) ?>
       <select class="words-select<?= $locale === null ? '' : ' is-on' ?>"
         aria-label="<?= $template->escape($words->get('record.words_in')) ?>"<?= $translations === null ? ''
         : ' title="' . $template->escape($words->get('record.words_same')) . '"' ?> data-words-select>

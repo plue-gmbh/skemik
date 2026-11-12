@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.17](https://img.shields.io/badge/version-1.0.17-1f6feb)
+![Version 1.0.18](https://img.shields.io/badge/version-1.0.18-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.16)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.18)
 
 The demo install's events, read with no key:
 
@@ -33,8 +33,7 @@ curl https://demo.skemik.org/feed/en-GB/events
 **For whoever builds on the address:** [Addresses](#addresses) ·
 [Collections](#collections) · [Reading the feed](#reading-the-feed) ·
 [Writing through the feed](#writing-through-the-feed) ·
-[Reading it from PHP](#reading-it-from-php) ·
-[How to build a website](#how-to-build-a-website)
+[Working with it in PHP](#working-with-it-in-php)
 
 **Why:** [Decisions](#decisions) · [Contributing](#contributing) ·
 [Licence and trademark](#licence-and-trademark)
@@ -117,8 +116,8 @@ curl -X POST http://localhost:8080/feed/en-US/events \
 The answer is `201`. The record lands as a draft, which the organisation
 publishes in the admin. From then on it is read at the address in `Location`.
 
-**6. Build on it.** A website reads the feed as *Reading it from PHP* and *How
-to build a website* show. `/feed/en-US/profile` says what each type can hold.
+**6. Build on it.** A website reads the feed as *Working with it in PHP* shows.
+`/feed/en-US/profile` says what each type can hold.
 
 ## What it is
 
@@ -588,7 +587,9 @@ locales, the collections and the profile are JSON-LD only. Every reading
 carries an `ETag`, and a request sending it as `If-None-Match` is answered
 `304` while nothing changed. An asset's file at its `contentUrl`, and the
 preview at `/thumb` behind it, carry the file's name as their tag, since that
-address names bytes that never change. They answer `304` only to whoever may
+address names bytes that never change. The file comes through the install's
+PHP, one worker per file per visitor, so a site that shows many serves copies
+of its own. They answer `304` only to whoever may
 read the file: a stranger revalidating a draft is refused and never told it is
 there. A refusal is JSON whatever was asked. `error` says what went wrong. A
 `422` on a write adds `violations`, with a `field` and a `reason` for each
@@ -782,7 +783,7 @@ way.
 
 Past a site's home page, `url` is the address of a thing that lives on somebody
 else's domain, and it stays empty for a thing held here. Where a page is
-published is the frontend's route, as *How to build a website* says.
+published is the frontend's route.
 `workTranslation` says which record is the translation of which. Purging an
 original leaves its translations as one group, naming each other. An edge to a
 work names its translation in the reader's language where there is one to read.
@@ -1054,7 +1055,9 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   install holds no term for what the world closes.
 
 - **A new record lands as a draft**, with a slug made from its name, `till`,
-  then `till-2`. Status, slug and version never travel in a document, and no
+  then `till-2`. A slug is lowercase letters and digits joined by single
+  hyphens, whatever the name holds, so `Über_Uns v2.0` lands as
+  `ueber-uns-v2-0`, and a frontend may rest on that shape. Status, slug and version never travel in a document, and no
   key publishes or trashes. What a script wrote, the organisation sees before
   the world does, and a stray record leaves as a draft nobody saw. A run that
   leaves eighty drafts across ten collections is not eighty visits. Each
@@ -1076,6 +1079,15 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   `ExerciseAction`, with the member as `agent` and the workout as `object`. It
   reads a member's workouts back with `?agent=`, and corrects a wrong entry
   with a `PATCH`.
+
+- **A field of rows is written inline**, on any record, and its rows are no
+  records. A button is a label and a link, so `potentialAction` is rows of
+  `name` and `target`, read back in their order. It is not a record of the
+  `Action` collection, which holds what somebody did. An organisation's
+  register entry is a row of `identifier`, a `name` and a `value` each. So a
+  page prints *Handelsregister* above *HRB 784950* and never the field's word,
+  and `?identifier=` and `?q=` find the value. A bare string is refused. An
+  invoice's `identifier` stays its number, one string.
 
 - **An order arriving twice is one order.** A `POST` repeating an order number
   under the same `seller` answers that order as held and writes nothing, `200`
@@ -1120,377 +1132,76 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   it may configure. What stays by hand: the install's languages and settings,
   which no collection carries, and publishing and trashing.
 
-## Reading it from PHP
+## Working with it in PHP
 
-Copy the PHP below into a page on ordinary webspace and it reads the feed with
-nothing else: no library, no build step, and one folder `cache/` beside the
-script that PHP may write. The blocks are general to any install and free to
-copy, as *Licence and trademark* says. Every release runs them against a trial
-install, so no release breaks them unnoticed. They need PHP 8.0 or newer, years
-behind what Skemik itself asks, so a site on the host's older PHP reads the
-feed as well.
+The class `Skemik` reads the feed from a site on ordinary webspace, and writes
+to it, with nothing else: no library and no build step. It is one file in a
+repository of its own, [skemik-php](https://github.com/plue-gmbh/skemik-php),
+general to any install and under the Zero-Clause BSD licence, `0BSD`: copy it
+into a client's site, change it and pass it on, without restriction and
+without naming us. Its README there says every call, and a way to build a
+website whose pages are records. Every release is run against the class before
+it leaves, so no release breaks it unnoticed. It needs PHP 8.0 or newer with
+curl, years behind what Skemik itself asks, so a site on the host's older PHP
+reads the feed as well.
 
-**The documents a page needs, in one call.** A copy is kept while the install's
-`dateModified` stands. `changed()` asks `/feed` for the date at most once a
-minute, so an install nobody writes to is read from its copies for days. Once
-the date has moved, a copy is revalidated by its `ETag`. It counts as current
-only when answered more than a minute after the move was seen, since a cache in
-between may hold what came before for that minute, and a write in the same
-second moves no date. A copy is stamped before it is fetched again, so two
-pages asked in the same second refresh it once, and a feed that fails is asked
-again a minute later. The last copy stands while the feed fails, an answer cut
-off by the timeout counting as a failure, and goes when the address answers
-`404`. A key reads what a stranger cannot, an invoice by the bookkeeping's key,
-and its copies are kept apart from the stranger's. `reads()` takes every
-address a page needs and fetches the ones not kept, four at once. So the page
-waits for a quarter of its answers in turn and not for each. Against an install
-on another host the round trip is what costs, a `304` as much as a `200`. On
-the same host the site and its install share one pool of PHP workers, and four
-at once keep a page to five of them, however many addresses it asks. `read()`
-is one address.
+**Start it** with the feed's address on one language's route, then read. A
+blog is these lines, the articles newest first with their texts rendered. Read
+with `render=html`, every text is HTML, a `headline` as much as a `text`, so
+it is printed as read and never escaped again. Read without, a text is as
+stored and is escaped where it is printed.
 
 ```php
-function fetching(string $address, string $file, array $headers): CurlHandle
-{
-  if (is_file($file . '.etag')) {
-    $headers[] = 'If-None-Match: ' . file_get_contents($file . '.etag');
-  }
-  $curl = curl_init($address);
-  $etag = function ($curl, string $line) use ($file): int {
-    if (stripos($line, 'ETag:') === 0) {
-      file_put_contents($file . '.etag', trim(substr($line, 5)));
-    }
-    return strlen($line);
-  };
-  curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $headers,
-    CURLOPT_TIMEOUT => 5, CURLOPT_HEADERFUNCTION => $etag,
-    CURLOPT_USERAGENT => $_SERVER['HTTP_HOST'] ?? 'php']);
-  return $curl;
-}
-
-function kept(string $file, int $status, ?string $body): void
-{
-  if ($status === 200 && $body !== null) {
-    file_put_contents($file . '.part', $body);
-    rename($file . '.part', $file);
-    return;
-  }
-  if ($status === 404) {
-    foreach (glob($file . '*') ?: [] as $kept) {
-      unlink($kept);
-    }
-    return;
-  }
-  if ($status === 0 && is_file($file . '.etag')) {
-    unlink($file . '.etag');
-  }
-  if (is_file($file)) {
-    touch($file);
-  }
-}
-
-function changed(string $address): int
-{
-  $root = preg_replace('#(?<!/)/feed\b.*#', '/feed', $address);
-  $file = __DIR__ . '/cache/' . md5($root) . '.date';
-  [$date, $since] = is_file($file) ? explode("\n", (string) file_get_contents($file)) + ['', '0'] : ['', '0'];
-  if (!is_file($file) || filemtime($file) <= time() - 60) {
-    file_put_contents($file, $date . "\n" . $since);
-    $curl = fetching($root, $file, ['Accept: application/ld+json']);
-    $seen = json_decode((string) curl_exec($curl), true)['dateModified'] ?? $date;
-    if (curl_errno($curl) !== 0 && is_file($file . '.etag')) {
-      unlink($file . '.etag');
-    }
-    if ($seen !== $date) {
-      $date = $seen;
-      $since = time() + 60;
-      file_put_contents($file, $date . "\n" . $since);
-    }
-  }
-  return (int) $since;
-}
-
-function reads(array $addresses, string $key = ''): array
-{
-  $headers = ['Accept: application/ld+json', ...($key === '' ? [] : ['Authorization: Bearer ' . $key])];
-  if (!is_dir(__DIR__ . '/cache')) {
-    mkdir(__DIR__ . '/cache');
-  }
-  $files = [];
-  foreach ($addresses as $address) {
-    $files[$address] = __DIR__ . '/cache/' . md5($key . $address);
-  }
-  $multi = curl_multi_init();
-  curl_multi_setopt($multi, CURLMOPT_MAX_TOTAL_CONNECTIONS, 4);
-  curl_multi_setopt($multi, CURLMOPT_PIPELINING, CURLPIPE_NOTHING);
-  $fetching = [];
-  foreach ($files as $address => $file) {
-    $stale = !is_file($file . '.etag') || filemtime($file . '.etag') <= changed($address);
-    if (!is_file($file) || $stale && filemtime($file) <= time() - 60) {
-      if (is_file($file)) {
-        touch($file);
-      }
-      $fetching[$file] = fetching($address, $file, $headers);
-      curl_multi_add_handle($multi, $fetching[$file]);
-    }
-  }
-  do {
-    curl_multi_exec($multi, $running);
-    if ($running) {
-      curl_multi_select($multi);
-    }
-  } while ($running);
-  while ($done = curl_multi_info_read($multi)) {
-    $curl = $done['handle'];
-    kept(array_search($curl, $fetching, true), $done['result'] === CURLE_OK
-      ? curl_getinfo($curl, CURLINFO_RESPONSE_CODE) : 0, curl_multi_getcontent($curl));
-  }
-  return array_map(fn (string $file): ?array
-    => is_file($file) ? json_decode((string) file_get_contents($file), true) : null, $files);
-}
-
-function read(string $address, string $key = ''): ?array
-{
-  return reads([$address], $key)[$address];
-}
-```
-
-**A list's members, and what an edge points at.** The two lines of consumer
-contract from *Reading the feed*, as code. A member is its `item`. A `Role` or
-a `ProgramMembership` is opened onto its target, one inside another, with the
-edge's own words first.
-
-```php
-function members(array $list): array
-{
-  return array_map(fn (array $member): array => target($member['item'] ?? $member, 'item'),
-    $list['itemListElement'] ?? []);
-}
-
-function target(array $value, string $property): array
-{
-  if (!in_array($value['@type'] ?? '', ['Role', 'ProgramMembership'], true)) {
-    return $value;
-  }
-  $key = isset($value[$property]) ? $property : 'program';
-  return [...target($value[$key], 'program'), ...array_diff_key($value, ['@type' => 1, $key => 1])];
-}
-```
-
-**The catalogue's words.** A type's field names in the route's language, as
-`/feed/{locale}` gives them, so a page prints *Starts* without typing it.
-
-```php
-function labels(array $catalog, string $type): array
-{
-  foreach ($catalog['dataset'] ?? [] as $collection) {
-    if (($collection['about'] ?? '') === 'https://schema.org/' . $type) {
-      return array_column($collection['variableMeasured'], 'name', 'propertyID');
-    }
-  }
-  return [];
-}
-```
-
-**A page's head.** A page's address is the one it states, which only a home
-page does, or else its slug after its site's address. Its title stands alone on
-the home page and before the site's name elsewhere. Its other languages are
-the page's `translationOfWork` and `workTranslation`, addresses read together
-for their language and their site. Where there are any, the page lists every
-version, itself among them, since a search engine trusts an alternate only
-where each version names every other. The English one is listed again as
-`x-default`, the version shown to a reader of none of these languages.
-
-```php
-function address(array $site, array $page): string
-{
-  return $page['url'] ?? rtrim($site['url'], '/') . '/' . basename($page['@id']);
-}
-
-function head(array $site, array $page): string
-{
-  $title = isset($page['url']) ? $page['name'] : $page['name'] . ' – ' . $site['name'];
-  $lines = ['<title>' . htmlspecialchars($title) . '</title>',
-    '<meta name="description" content="'
-      . htmlspecialchars($page['description'] ?? $site['description'] ?? '') . '">',
-    '<link rel="canonical" href="' . htmlspecialchars(address($site, $page)) . '">'];
-  $others = array_column([...$page['translationOfWork'] ?? [], ...$page['workTranslation'] ?? []], '@id');
-  $versions = array_filter([$page, ...reads($others)]);
-  $tagged = count($versions) > 1 ? array_column($versions, null, 'inLanguage') : [];
-  $english = preg_grep('/^en/', array_keys($tagged));
-  $tagged += $english === [] ? [] : ['x-default' => $tagged[reset($english)]];
-  foreach ($tagged as $tag => $version) {
-    $lines[] = '<link rel="alternate" hreflang="' . htmlspecialchars($tag) . '" href="'
-      . htmlspecialchars(address($version['isPartOf'] ?? $site, $version)) . '">';
-  }
-  return implode("\n", $lines);
-}
-```
-
-**Who acts for an organisation**, as an imprint names them: the people whose
-`worksFor` edge to it says a `roleName`, grouped under that role, and nobody
-whose edge says none. A filter names an edge as a document names it, so
-`named()` cuts an address to its collection and slug.
-
-```php
-function named(string $address): string
-{
-  return implode('/', array_slice(explode('/', $address), -2));
-}
-
-function staff(array $organization): array
-{
-  $people = read(dirname($organization['@id'], 2) . '/people?worksFor=' . named($organization['@id']));
-  $staff = [];
-  foreach (members($people ?? []) as $person) {
-    foreach ($person['worksFor'] ?? [] as $edge) {
-      $to = target($edge, 'worksFor');
-      if (isset($to['roleName']) && $to['@id'] === $organization['@id']) {
-        $staff[$to['roleName']][] = $person;
-      }
-    }
-  }
-  return $staff;
-}
-```
-
-**A text's links, onto the site.** A link to a record leaves as its `@id`, so
-`local()` turns every link in a rendered document before a visitor follows it.
-A link becomes the page it names, or the site's page whose `mainEntity` is the
-record it names, and its words alone where there is no such page. Every link
-is asked in one call. A page of this site becomes its path, so a preview keeps
-its visitor on the host previewed. A page of another site becomes its address.
-A page is then `local(read($feed . '/web-pages/about?render=html'), $site)`.
-
-```php
-function local(array $document, array $site): array
-{
-  $pattern = '#<a href="(' . preg_quote(dirname($site['@id'], 3), '#') . '/[^"]+)">(.*?)</a>#s';
-  $found = [];
-  array_walk_recursive($document, function ($value) use ($pattern, &$found): void {
-    preg_match_all($pattern, is_string($value) ? $value : '', $links);
-    $found = [...$found, ...$links[1]];
-  });
-  $to = destinations(array_unique($found), $site);
-  array_walk_recursive($document, function (&$value) use ($pattern, $to): void {
-    $value = !is_string($value) ? $value : preg_replace_callback($pattern, fn (array $link): string
-      => $to[$link[1]] === null ? $link[2] : '<a href="' . htmlspecialchars($to[$link[1]]) . '">' . $link[2] . '</a>',
-      $value);
-  });
-  return $document;
-}
-
-function destinations(array $addresses, array $site): array
-{
-  $asked = [];
-  foreach ($addresses as $address) {
-    $asked[$address] = str_contains($address, '/web-pages/') ? $address : dirname($site['@id'], 2)
-      . '/web-pages?isPartOf=' . named($site['@id']) . '&mainEntity=' . named($address);
-  }
-  $answers = reads($asked);
-  $to = [];
-  foreach ($asked as $address => $asking) {
-    $page = $asking === $address ? $answers[$asking] : members($answers[$asking] ?? [])[0] ?? null;
-    $to[$address] = match (true) {
-      $page === null => null,
-      ($page['isPartOf']['@id'] ?? null) === $site['@id'] => parse_url(address($site, $page), PHP_URL_PATH) ?: '/',
-      default => address($page['isPartOf'], $page),
-    };
-  }
-  return $to;
-}
-```
-
-**A blog is these lines**, the articles newest first with their texts rendered,
-and a bookkeeping view is `read($feed . '/invoices', $key)` under the same
-loop.
-
-```php
-$feed = 'https://example.com/feed/de-DE';
-$words = labels(read($feed), 'Article');
-foreach (members(read($feed . '/articles?sort=-datePublished&render=html')) as $article) {
-  echo '<article><h2>', htmlspecialchars($article['headline']), '</h2>', $article['text'] ?? '';
-  echo '<p>', $words['datePublished'], ': ', htmlspecialchars($article['datePublished'] ?? '');
+$skemik = new Skemik('https://example.com/feed/de-DE');
+foreach ($skemik->members($skemik->read('/articles?sort=-datePublished&render=html')) as $article) {
+  echo '<article><h2>', $article['headline'], '</h2>', $article['text'] ?? '';
+  echo '<p>', $skemik->word('Article', 'datePublished'), ': ', $article['datePublished'] ?? '';
   echo '</p>';
   echo '</article>';
 }
 ```
 
-## How to build a website
+**What a release holds it to**, each against a trial install:
 
-This is one way to build a website, and the way skemik.com is built, so that
-changing the site is changing records and not code. Each thing it shows has
-one home in the feed, found by a rule a person can state. The feed enforces
-none of it. An imprint may as well be a page whose `text` is typed whole.
+- **It reads** one document, or every document a page needs in one call, and
+  with a key what a stranger cannot. A list is its records, and an edge is
+  opened onto its target with the edge's own words, a membership onto its
+  programme with its number. A field's name comes in the route's language, the
+  catalogue's or else the profile's, for a type never public too.
 
-- **The site** is a `WebSite`, the one whose `url` is the address the frontend
-  serves. On each route that is the address it serves that language under, so
-  `web-sites?url=https://www.example.com/en` on the English route, where the
-  English site states that address. A preview names the site it shows in its
-  own configuration, never in the holdings, since which host previews what is
-  the deployment's business and not a fact about the site.
+- **It keeps a copy** of what it read while the install's `dateModified`
+  stands, asking `/feed` for the date at most once a minute. Once the date has
+  moved it revalidates its copies, reads a changed record anew and drops one
+  gone from its address. While the feed fails the last copy stands, an answer
+  cut off by the timeout counting as a failure.
 
-- **The home page** is the site's `WebPage` that states the site's `url` as its
-  own, the one page that states a `url`: `web-pages?isPartOf=web-sites/…&url=…`.
-  Every other page's path is its slug, `/imprint` being `web-pages/imprint`.
-  So two sites of one install cannot both have an `/imprint`.
+- **It asks four at once and no more**, the addresses a page reads and the
+  files it shows alike, however many there are.
 
-- **A page's sections** are its `hasPart`, lists in their order, each member
-  drawn by its type. A list of terms is chips, alphabetical in the page's
-  language, with a term's `broader` kept in the data and not shown. A
-  screenshot right after a claim is drawn inside the claim's card.
+- **It links a file** at the feed's `contentUrl` until its own copy stands,
+  copies it once the page has left, and links the copy from then on. A fourth
+  argument to `new Skemik()` names the folder the copies are kept in and linked
+  under, and a fifth the types copied.
 
-- **The menu and the footer** are the site's own `hasPart`. The first list is
-  the menu, and each further list is a column of the footer. A section in them
-  links to its place on the home page, and a page links to its path. The order
-  means something, and a reordering shows at once.
+- **It writes** with the key it was built with: a new record, of which it
+  keeps no copy, and a change under the `ETag` it last read or wrote the
+  record at. Where somebody wrote in between the answer is `412`, and the
+  change goes through once the record is read anew.
 
-- **Buttons** are the site's `potentialAction`, which stand on every page, and
-  a page's own, which stand on that page. A button is a label and a link, so
-  `potentialAction` is written inline on any record as rows of `name` and
-  `target`. It is not a record of the `Action` collection, which holds what
-  somebody did.
-
-- **The look** is the `Brand` the site is `about`. Its colours and typefaces
-  are rows of its `additionalProperty`, a `name` and a `value` each. Four names
-  are our convention, `color-primary`, `color-ink`, `font-body` and
-  `font-display`, so a frontend built for one organisation finds the same
-  tokens at the next. None is required and none is closed. A font's value is
-  the typeface's name. Its files are the woff2 `MediaObject`s that are `about`
-  the brand, `media?encodingFormat=font/woff2&about=brands/…`.
-
-- **A page about a record**, an imprint, shows its `mainEntity`'s fields under
-  the catalogue's words in the page's language, never retyped. For an
-  organisation it shows who may act for it, under the `roleName` their
-  `worksFor` edge to it says, and nobody whose edge says none:
-  `people?worksFor=organizations/…`. Its `text` holds only what is typed
-  nowhere else, the liability and copyright wording. A register entry is a row
-  of `identifier`, a `name` and a `value` each, as the brand's tokens are. So
-  the page prints *Handelsregister* above *HRB 784950* and never the field's
-  word, and `?identifier=` and `?q=` find the value. A bare string is refused.
-  An invoice's `identifier` stays its number, one string.
-
-- **A link in a text** goes to the page it names, or to the site's page whose
-  `mainEntity` is the record it names, `web-pages?isPartOf=…&mainEntity=…`. It
-  is its words alone where no page is about the record. A visitor never lands
-  in the feed.
-
-- **Pictures and fonts** are served from the frontend's own copies, never from
-  the feed's address in an `<img>`. A file at its `contentUrl` comes through
-  the install's PHP, one worker per picture per visitor, while a copy costs the
-  install one read per file in fifteen minutes. The copy is made once the page
-  has left, never on a visitor's path. A file the feed no longer serves,
-  `404`, loses its copy, so a picture taken offline leaves the site within the
-  quarter hour. skemik.com keeps its copies under its own `media/`.
-
-- **Words** such as *Licence* are the catalogue's names of the fields. The site
-  has none of its own.
-
-Two rules keep it so. **Placement lives in lists and only there.** An article a
-section holds names no page, since two homes for one fact drift apart, and
-`isPartOf` says which site a page belongs to and nothing else. **`about` is
-what a record is about**, true wherever it stands, and a site reads it only for
-its own look.
+- **It builds a site whose pages are records**, from a `WebSite` or, where
+  none stands, from the home page in its place. A page's head carries its
+  title, its canonical address and every language, read from either side. A
+  link in a text goes to the site's page it names, to the page about the
+  record it names, or else to the record's own page. That page stands at the
+  place the frontend names for its collection, a path or a function of the
+  record, and under each language's site for a record that is one in every
+  language. An organisation's people stand under their roles. The sitemap
+  lists every page of the site in each language at its address and every
+  record at its place. It leaves out a record a page is about, a page that
+  states another address and every page of another site. And the class finds
+  the record whose page stands at an address: the home page, a page by its
+  slug whatever query string follows, a record at its place, and none where
+  nothing stands.
 
 ## Decisions
 
@@ -1781,12 +1492,6 @@ day on.
   Skemik hosting by public offer, newsletter or price list, and none as a
   one-click installation or a pre-installed image of a hosting product. A
   licence for that is asked of plue GmbH, for a fee.
-
-- **The code blocks in this README are free to copy.** A read with a cache
-  pasted into a client's site is that site's, so every block here is also under
-  the Zero-Clause BSD licence, `0BSD`: use, change and pass it on without
-  restriction and without naming us. Everything else at the tag is under the
-  licence with the code.
 
 - **The name is not part of the licence.** Skemik™ and its mark are plue
   GmbH's. Say truthfully what something works with — for example *a theme for

@@ -11,9 +11,9 @@ namespace Update;
    updated*: the running tree goes into `.previous/` and comes back where the
    new code cannot take over the holdings. `config.php` is never touched, the
    archive not containing it. `.htaccess` is replaced between `# BEGIN Skemik`
-   and `# END Skemik` with every line outside kept: a hosting provider has an organisation add the
-   line that picks its PHP version there, as IONOS and Strato do, and losing it
-   would answer the site with the boot page naming the old PHP. */
+   and `# END Skemik`, and every line outside is kept. A host may add the line
+   that picks the PHP version there, and losing it would answer the site with
+   the boot page naming the old PHP. */
 final readonly class Installer
 {
   public const PAYLOAD = ['core', 'view', 'language', 'migrations', 'index.php', '.htaccess'];
@@ -134,6 +134,7 @@ final readonly class Installer
     return count($entries) === 1 && is_dir($unpacked . '/' . $entries[0]) ? $unpacked . '/' . $entries[0] : $unpacked;
   }
 
+  /* The shipped file is the block alone, or each update would add its lines outside again. */
   private function htaccess(string $staged): void
   {
     $live = (string) file_get_contents($this->root . '/.htaccess');

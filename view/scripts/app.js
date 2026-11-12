@@ -94,7 +94,8 @@ function grow(area) {
 /* A finger raises no keyboard it did not ask for: after a touch, and on a page
    first seen on a touch screen, a text field waits until it is itself tapped, and
    the surface it opened on takes focus instead, so a screen reader still lands
-   inside. A key pressed says a keyboard is at hand again. */
+   inside. A key pressed says a keyboard is at hand again. A cell's pickers focus
+   their field themselves (`pickers.js`). */
 let touching = matchMedia("(pointer: coarse)").matches;
 document.addEventListener("pointerdown", (event) => { touching = event.pointerType !== "mouse"; }, true);
 document.addEventListener("keydown", () => { touching = false; }, true);
@@ -102,103 +103,6 @@ document.addEventListener("keydown", () => { touching = false; }, true);
 function focusField(target, surface) {
   const typed = target?.matches("textarea, input:not([type=checkbox], [type=radio], [type=file])");
   (touching && typed ? surface : target)?.focus();
-}
-
-/* Popovers: one at a time, under the element that opened it, or over it where it
-   does not fit under and more room is, never covering what it is about; left-aligned to it, pushed back
-   inside the viewport sideways, and capped at that room, since a search's hits
-   arrive after it is placed. An outside press and Escape close it; a press on the
-   element that opened it is left to that element, whose click opens or closes.
-   It hangs at the end of the page, where Tab out of it would land past
-   everything, so Tab goes round inside it (`cycle`) and Escape is the keyboard's way out. */
-function popover(anchor, content, wide = false) {
-  document.querySelector(".popover[data-shared]")?.dispatchEvent(new Event("close"));
-  const element = Object.assign(document.createElement("div"), { className: "popover" + (wide ? " is-wide" : "") });
-  element.dataset.shared = "";
-  element.tabIndex = -1;
-  element.setAttribute("role", "dialog");
-  element.append(...content);
-  document.body.append(element);
-  Object.assign(element.style, placement(anchor, element.getBoundingClientRect()));
-  const unfollow = following(anchor, element, (at) => Object.assign(element.style, at));
-  const locked = () => element.dataset.locked !== undefined;
-  const outside = (event) => element.contains(event.target) || anchor.contains(event.target) || locked() || close();
-  const escape = (event) => event.key === "Escape" && !locked() && (event.preventDefault(), close(), anchor.focus());
-  const close = () => {
-    element.remove();
-    unfollow();
-    document.removeEventListener("pointerdown", outside, true);
-    document.removeEventListener("keydown", escape, true);
-  };
-  element.addEventListener("close", close);
-  element.addEventListener("keydown", (event) => cycle(event, element));
-  document.addEventListener("pointerdown", outside, true);
-  document.addEventListener("keydown", escape, true);
-  return { element, close };
-}
-
-function cycle(event, element) {
-  if (event.key !== "Tab") return;
-  const stops = [...element.querySelectorAll("a[href], button, input, select, textarea, [tabindex='0']")]
-    .filter((each) => !each.disabled && each.type !== "hidden" && each.getClientRects().length > 0);
-  const first = stops[0];
-  const last = stops.at(-1);
-  const at = document.activeElement;
-  if (!first || (at !== element && at !== (event.shiftKey ? first : last))) return;
-  event.preventDefault();
-  (event.shiftKey ? last : first).focus();
-}
-
-/* In the page's coordinates and not the screen's, so the page scrolling leaves it
-   at its field. The room is what the visual viewport shows, since a phone's
-   keyboard covers the window's foot without shrinking it. Over the field it hangs
-   by its own bottom edge, so hits arriving later grow it away from the field. The
-   width is the document's, since the window's counts the scrollbar and a popover
-   pushed under it widens the page. */
-function placement(anchor, box = { width: 0, height: 0 }, below = null) {
-  const at = anchor.getBoundingClientRect();
-  const seen = window.visualViewport;
-  const under = seen.offsetTop + seen.height - at.bottom - 12;
-  const over = at.top - seen.offsetTop - 12;
-  below ??= box.height <= under || under >= over;
-  const left = Math.max(8, Math.min(at.left, document.documentElement.clientWidth - box.width - 8));
-  return { left: window.scrollX + left + "px",
-    top: window.scrollY + (below ? at.bottom + 4 : at.top - 4) + "px",
-    maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
-}
-
-/* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it: the
-   page's, as a popover is, or a dialog's, which is fixed and scrolls its own content. */
-function centred(anchor, element, holder) {
-  const at = anchor.getBoundingClientRect();
-  const box = element.getBoundingClientRect();
-  const left = Math.max(8, Math.min(at.left + (at.width - box.width) / 2,
-    document.documentElement.clientWidth - box.width - 8));
-  const frame = holder === document.body ? null : holder.getBoundingClientRect();
-  const [x, y] = frame === null ? [window.scrollX, window.scrollY]
-    : [holder.scrollLeft - frame.left - holder.clientLeft, holder.scrollTop - frame.top - holder.clientTop];
-  return { left: x + left + "px", top: y + at.top + (at.height - box.height) / 2 + "px" };
-}
-
-/* The paper scrolls under the page, not the page, so a popover goes along with its
-   anchor as any container scrolls, on the side it stands and as tall as it was
-   placed, since only its place changes. A keyboard coming up or going changes the
-   room, so it is placed anew, side and height, by all it holds. `apply` takes the
-   place, as the element's own style or as an island's binding. Returns what stops the following. */
-function following(anchor, element, apply) {
-  const move = () => {
-    const below = element.style.transform === "none";
-    const { left, top } = placement(anchor, element.getBoundingClientRect(), below);
-    apply({ left, top });
-  };
-  const resize = () => apply(placement(anchor, { width: element.offsetWidth,
-    height: Math.max(element.offsetHeight, element.scrollHeight) }));
-  document.addEventListener("scroll", move, true);
-  window.visualViewport.addEventListener("resize", resize);
-  return () => {
-    document.removeEventListener("scroll", move, true);
-    window.visualViewport.removeEventListener("resize", resize);
-  };
 }
 
 document.addEventListener("click", (event) => {
@@ -224,8 +128,7 @@ function openViewMenu(button) {
 /* The account menu and New language are a `<details>`, which only its own summary
    closes: an outside press and Escape close one as they close a popover. */
 function mountDisclosure(details) {
-  document.addEventListener("pointerdown", (event) => details.open && !details.contains(event.target)
-    && (details.open = false), true);
+  dismissing((node) => !details.open || details.contains(node), () => { details.open = false; });
   details.addEventListener("keydown", (event) => event.key === "Escape" && details.open
     && (event.preventDefault(), details.open = false, details.querySelector("summary").focus()));
 }

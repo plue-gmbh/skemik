@@ -65,12 +65,8 @@ const cellEditor = {
     this.place = this.placed();
     this.$nextTick(() => { this.unfollow = this.$refs.popover && following(this.editing.cell, this.$refs.popover,
       (at) => { this.place = { ...this.place, ...at }; }); });
-    this.outside = (event) => {
-      if (this.$refs.popover?.contains(event.target)) return;
-      this.finish(this.mode === "select" && !this.many ? undefined
-        : this.mode === "prose" ? this.result() : this.draft, null);
-    };
-    document.addEventListener("pointerdown", this.outside, true);
+    this.undismiss = dismissing((node) => this.$refs.popover?.contains(node), () => this.finish(this.mode === "select"
+      && !this.many ? undefined : this.mode === "prose" ? this.result() : this.draft, null));
     /* Two queries, since one selector list answers the first option in the document, pressed or not. */
     if (this.mode === "select") {
       this.$nextTick(() => (this.$refs.popover.querySelector("[aria-pressed=true]")
@@ -80,7 +76,7 @@ const cellEditor = {
   },
   unmounted() {
     this.unfollow?.();
-    document.removeEventListener("pointerdown", this.outside, true);
+    this.undismiss?.();
   },
   methods: {
     /* A picker that searches is placed by the height its hits grow it to, so a row near the foot opens it above. */
@@ -89,7 +85,7 @@ const cellEditor = {
       const searching = ["edge", "link", "refer"].includes(this.mode) && !this.editing.words;
       return placement(this.editing.cell, { width: box.width, height: box.height + (searching ? HITS_ROOM : 0) });
     },
-    /* An empty time offers now: Enter takes it, and passing through leaves the field empty. */
+    /* An empty time offers now: Enter or the button takes it, and passing through leaves the field empty. */
     result(taken = false) {
       const kind = this.editing.field.kind;
       if (!taken && this.offered !== null && this.draft === this.offered) return null;
@@ -103,6 +99,12 @@ const cellEditor = {
       const number = Number(this.draft);
       return kind === "number" && Number.isFinite(number) ? number
         : coded(this.editing.field, this.editing.terms, this.draft);
+    },
+    /* The clock read again, since the editor may have stood open a while. Pressing it keeps the input
+       focused, so the editor is not left before the click lands. */
+    takeNow() {
+      this.draft = nowIn(this.editing.zone);
+      this.finish(this.result(true), null);
     },
     finish(value, move) {
       if (this.finished) return;
@@ -168,16 +170,18 @@ function cellShown(field, value, terms, language, words) {
     span.append(document.createElement("i"));
     return span;
   }
-  if (Array.isArray(value) && value.length > 0) return listShown(field, value, terms, words);
+  if (Array.isArray(value) && value.length > 0) return listShown(field, value, terms, language, words);
   span.textContent = value === null || Array.isArray(value) ? "—"
-    : typeof value === "number" ? new Intl.NumberFormat(language, { maximumFractionDigits: 20,
-      useGrouping: Math.abs(value) >= 10000 }).format(value)
+    : typeof value === "number" ? numberShown(value, language)
     : field.kind === "select" ? terms[value] ?? value
     : field.kind === "duration" ? durationShown(String(value), words)
     : field.kind === "date_time" ? String(value).replace(/^(\d{4}-\d\d-\d\dT\d\d:\d\d):00$/, "$1").replace("T", " ")
     : String(value);
   return span;
 }
+
+const numberShown = (value, language) => new Intl.NumberFormat(language, { maximumFractionDigits: 20,
+  useGrouping: Math.abs(value) >= 10000 }).format(value);
 
 /* As `Admin\Cells` draws it, `2 Std.`: the stored `PT2H` reads as a code to most people. */
 function durationShown(value, words) {
@@ -186,11 +190,11 @@ function durationShown(value, words) {
     : [fill(words["duration." + unit], { n: parts[index + 1] })])).join(" ") : value;
 }
 
-function listShown(field, value, terms, words) {
+function listShown(field, value, terms, language, words) {
   const span = document.createElement("span");
   if (field.edge) {
     span.className = "chips";
-    value.forEach((item, index) => span.append(chipShown(item, field.many ? index + 1 : null, words)));
+    value.forEach((item, index) => span.append(chipShown(item, field.many ? index + 1 : null, language, words)));
     return span;
   }
   const word = (each) => (field.kind === "select" ? terms[each] ?? each : String(each));
@@ -207,7 +211,7 @@ function rowName(row, field, words) {
 }
 
 /* One target as `partials/cell` draws it: a list numbers its chips. */
-function chipShown(item, number, words) {
+function chipShown(item, number, language, words) {
   const chip = document.createElement("span");
   if (item.gone) {
     chip.className = "chip is-gone";
@@ -222,5 +226,25 @@ function chipShown(item, number, words) {
   if (item.preview) {
     mark.after(Object.assign(document.createElement("img"), { className: "chip-preview", src: item.preview, alt: "" }));
   }
+  const says = saysShown({ ...item.hints, ...item.qualifiers }, language);
+  if (says !== "") {
+    chip.append(Object.assign(document.createElement("span"), { className: "chip-says", textContent: says }));
+  }
   return chip;
+}
+
+/* What an edge says of its target as `Admin\Cells` draws it, „CTO · 2021–2024“, its description last;
+   another locale's words stand over the ones it was written with. */
+function saysShown(said, language) {
+  const spelt = (key) => {
+    const value = said[key];
+    if (typeof value === "number") return numberShown(value, language);
+    if (typeof value !== "string") return "";
+    const day = new Date(value + "T00:00:00Z");
+    return !key.endsWith("Date") || !/^\d{4}-\d\d-\d\d$/.test(value) || Number.isNaN(day.getTime()) ? value
+      : new Intl.DateTimeFormat(language, { dateStyle: "medium", timeZone: "UTC" }).format(day);
+  };
+  const span = spelt("startDate") + "–" + spelt("endDate");
+  return [spelt("roleName"), spelt("name"), span === "–" ? "" : span, spelt("membershipNumber"),
+    spelt("membershipPointsEarned"), spelt("description")].filter((part) => part !== "").join(" · ");
 }

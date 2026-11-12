@@ -2,9 +2,9 @@
    choice loads it; typing redraws the view in place so focus stays in the field,
    and the view switch's links and the feed panel's address, which carry the
    query — unless edits are pending, which only a deliberate Enter may leave,
-   through the save bar's leaving guard. An answer with no view to take, an
-   update's waiting page or a login, is loaded as the address, so it shows; a
-   connection lost leaves the view as it stood. Loaded before
+   through the save bar's leaving guard, and typing says so. An answer with no
+   view to take, an update's waiting page or a login, is loaded as the address, so
+   it shows; a connection lost leaves the view as it stood. Loaded before
    `view/scripts/app.js`, which mounts it and whose `chosen` and `mountIslands`
    it calls. */
 function mountQueryBar(form, mounted) {
@@ -18,7 +18,7 @@ function mountQueryBar(form, mounted) {
   const go = () => location.assign(address());
   let typing = 0;
   const redraw = async () => {
-    if (mounted.current?.sheet.count > 0) return;
+    if (mounted.current?.sheet.count > 0) return toast(mounted.current.sheet.words["sheet.search_held"], search);
     const url = address();
     const response = await fetch(url).catch(() => null);
     if (response === null || url !== address()) return;

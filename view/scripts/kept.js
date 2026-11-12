@@ -1,6 +1,6 @@
 /* What this tab keeps for the page it loads next, since the server draws every
    page from its top: the focus a select that loads an address had, so the page it
-   loads gives it back, and where the paper and the table were scrolled when a
+   loads gives it back, and where the page and the table were scrolled when a
    screen is redrawn at its own address, after a field moved or a save. Each is
    kept in the tab's session storage and read once, as `view/scripts/app.js` ends. */
 
@@ -35,12 +35,17 @@ function refocus() {
   if (kept) document.querySelector(kept)?.focus();
 }
 
-/* The paper scrolls on every screen size, and the table inside itself. */
-const scrollers = () => [document.querySelector(".paper"), document.querySelector(".sheet-scroll")];
+/* The paper scrolls on a wide screen and the window on a narrow one, where the paper does not clip.
+   The table scrolls inside itself. */
+function scrollers() {
+  const paper = document.querySelector(".paper");
+  const page = paper && getComputedStyle(paper).overflowY === "visible" ? document.scrollingElement : paper;
+  return [page, document.querySelector(".sheet-scroll")];
+}
 
 function keepScroll() {
-  const [paper, sheet] = scrollers();
-  const kept = { at: location.pathname, paper: paper?.scrollTop ?? 0, sheet: sheet?.scrollLeft ?? 0 };
+  const [page, sheet] = scrollers();
+  const kept = { at: location.pathname, page: page?.scrollTop ?? 0, sheet: sheet?.scrollLeft ?? 0 };
   try { sessionStorage.setItem("scroll", JSON.stringify(kept)); } catch { /* private window */ }
 }
 
@@ -51,7 +56,7 @@ function restoreScroll() {
     sessionStorage.removeItem("scroll");
   } catch { kept = null; }
   if (kept?.at !== location.pathname) return;
-  const [paper, sheet] = scrollers();
-  if (paper) paper.scrollTop = kept.paper;
+  const [page, sheet] = scrollers();
+  if (page) page.scrollTop = kept.page;
   if (sheet) sheet.scrollLeft = kept.sheet;
 }

@@ -27,9 +27,10 @@ use Support\Words;
    a language, a select's options, the library's files by kind, through a term
    field every term, and through any other reference its targets while they stay
    few, since a select of every customer is no select. Language leaves the
-   labelled things, since one answers on every locale route. Nothing says a group
-   was left out: the address still filters, and the search reaches a target's
-   name (`Storage\Search`). */
+   labelled things, since one answers on every locale route, and on works first
+   offers every record as its own row. Nothing says a group was left out: the
+   address still filters, and the search reaches a target's name
+   (`Storage\Search`). */
 final readonly class QueryChoices
 {
   private const FEW = 20;
@@ -56,11 +57,12 @@ final readonly class QueryChoices
     $outside = $this->authorizer->readsAsPublic($account, $collection->type);
     $held = $this->held($collection, $columns, $outside);
     $filters = $outside ? [] : $this->statuses($collection, $held['status'] ?? []);
-    $labelled = $this->profile->byType($collection->type)->locale === LocaleMode::Localise;
-    $locales = $labelled ? [] : $held['locale'] ?? [];
+    $mode = $this->profile->byType($collection->type)->locale;
+    $locales = $mode === LocaleMode::Localise ? [] : $held['locale'] ?? [];
     $group = $this->words->get('query.locale_group');
-    foreach (count($locales) > 1 ? $locales : [] as $tag) {
-      $filters[] = new Filter($group, 'locale', $tag, $tag);
+    foreach (count($locales) > 1 ? [...($mode->forks() ? [QueryBar::EACH] : []), ...$locales] : [] as $tag) {
+      $filters[] = new Filter($group, 'locale', $tag,
+        $tag === QueryBar::EACH ? $this->words->get('query.locale_each') : $tag);
     }
     $pointed = $this->pointed($account, $collection, $columns, $outside);
     foreach ($columns as $column) {

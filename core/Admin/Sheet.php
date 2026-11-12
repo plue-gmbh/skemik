@@ -35,8 +35,9 @@ use Support\Words;
 final readonly class Sheet
 {
   private const ISLAND_WORDS = ['sheet.pending', 'sheet.discard', 'sheet.save', 'sheet.save_short', 'sheet.saved',
-    'sheet.discarded', 'sheet.conflict', 'sheet.reload', 'sheet.overwrite', 'sheet.refused', 'sheet.failed',
-    'sheet.saving', 'sheet.empty_option', 'sheet.term_hint', 'sheet.date_shape', 'sheet.unit', 'sheet.amount',
+    'sheet.discarded', 'sheet.search_held', 'sheet.conflict', 'sheet.reload', 'sheet.overwrite', 'sheet.refused',
+    'sheet.failed', 'sheet.saving', 'sheet.empty_option', 'sheet.term_hint', 'sheet.date_shape', 'sheet.unit',
+    'sheet.amount', 'sheet.now',
     'cell.yes', 'cell.no', 'duration.unit.Y', 'duration.unit.M', 'duration.unit.W', 'duration.unit.D',
     'duration.unit.H', 'duration.unit.m', 'duration.unit.S', 'duration.years', 'duration.months', 'duration.weeks',
     'duration.days', 'duration.hours', 'duration.minutes', 'duration.seconds', 'record.link_insert',
@@ -104,7 +105,6 @@ final readonly class Sheet
       return $entity->props->string(self::READ) === null ? $this->words->get('status.unread') : null;
     }
     $key = array_find(self::OWN_STATUS, fn (string $key): bool => $entity->props->string($key) !== null);
-
     $field = $key === null ? null : $type->field($key);
 
     return $field === null ? null
@@ -189,7 +189,6 @@ final readonly class Sheet
     foreach ($field->targets as $type) {
       $lines[$type] = Qualifier::lines($predicate, $type);
     }
-
     return $lines;
   }
 
@@ -239,7 +238,6 @@ final readonly class Sheet
         default => $this->cells->editable($row->entity, $column->field),
       };
     }
-
     return ['id' => $row->entity->id->value, 'version' => $row->entity->version,
       'locale' => $row->entity->locale->tag, 'label' => $row->label, 'values' => (object) $values,
       ...($row->authored === null ? [] : ['hints' => $this->hints($row->authored, $editable)])];
@@ -254,7 +252,6 @@ final readonly class Sheet
     foreach ($editable as $column) {
       $hints[$column->field->key] = $this->cells->editable($authored, $column->field);
     }
-
     return (object) array_filter($hints,
       fn (string|int|float|bool|array|null $words): bool => !in_array($words, [null, '', []], true));
   }
@@ -270,7 +267,6 @@ final readonly class Sheet
       $entries[$index][$key] = ['row' => $index, 'label' => $chip->label, 'glyph' => $chip->glyph,
         'gone' => $chip->gone];
     }
-
     return $entries;
   }
 
@@ -286,7 +282,6 @@ final readonly class Sheet
         $words[$token] = $this->terms->word($column->field, $token, new Locale($tag));
       }
     }
-
     return $words;
   }
 

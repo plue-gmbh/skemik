@@ -17,7 +17,6 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/list-r
   'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
   'ticks' => $creates, 'firstLocale' => $firstLocale, 'glance' => $glance]);
 ?>
-<div data-ticked></div>
 <div class="sheet-card">
   <div data-sheet="list">
 <?php if ($creates && count($rows) > 1): ?>

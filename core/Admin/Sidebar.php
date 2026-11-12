@@ -66,17 +66,18 @@ final readonly class Sidebar
   }
 
   /** The organisation's own sites, which the header draws where it has room and the drawer
-      where it has not, and only while the feed lets their `url` out: everybody is
-      shown them, and a colleague reading `WebSite` as a stranger must not be shown
-      what a stranger is not.
+      where it has not, a site's and a page's only while the feed lets their type's `url`
+      out: everybody is shown them, and a colleague reading `WebSite` as a stranger must
+      not be shown what a stranger is not.
       @return array<string, string> a host by URL */
   public function sites(): array
   {
-    $site = array_find($this->collections->all(), fn (Collection $held): bool => $held->type === Sites::WEB_SITE);
-    $out = $site !== null && array_any($this->filter->fields($site),
-      fn (CollectionField $field): bool => $field->key === 'url');
+    $out = array_filter($this->collections->all(), fn (Collection $held): bool
+      => in_array($held->type, [Sites::WEB_SITE, Sites::WEB_PAGE], true)
+      && array_any($this->filter->fields($held), fn (CollectionField $field): bool => $field->key === 'url'));
 
-    return $out ? $this->sites->linked() : [];
+    return $out === [] ? [] : $this->sites->linked(array_values(array_map(
+      fn (Collection $held): string => $held->type, $out)));
   }
 
   private function entry(Account $account, Collection $collection, ?TypeCount $count): ?SidebarEntry

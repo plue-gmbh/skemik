@@ -97,9 +97,12 @@ function mountSheet(root) {
         const cell = cellOf(id, key);
         if (field.kind === "boolean") return cell.querySelector("[data-edit]").focus();
         const terms = data.terms[rows.get(id).locale] ?? {};
+        /* A view's popover names what it edits, since it may cover the row; a record's screen is that record. */
+        const record = table.matches("[data-record-edit]") ? null
+          : all ? fill(this.words["sheet.ticked"], { n: this.takers(key).length }) : rows.get(id).label;
         this.editing = { id, field, cell, terms, value: all ? null : this.current(id, key), collection: data.collection,
           locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone, words: wordsIn, all,
-          csrf: data.csrf, limit: data.limit };
+          csrf: data.csrf, limit: data.limit, record };
       },
       close() {
         const { id, field, cell, all } = this.editing;
@@ -122,7 +125,9 @@ function mountSheet(root) {
         const keys = data.fields.filter(on).map((field) => field.key);
         const next = [ids[ids.indexOf(id) + down], keys[keys.indexOf(key) + across]];
         const target = next[0] && next[1] ? cellOf(...next)?.querySelector(":scope:not([data-off]) [data-edit]") : null;
-        target ? this.edit(...next) : cellOf(id, key).querySelector("[data-edit]").focus();
+        /* Only an editor in the cell opens on the way: a popover would hold Tab, so Enter opens it. */
+        if (target && modeOf(fieldOf(next[1])) === "input") return this.edit(...next);
+        (target ?? cellOf(id, key).querySelector("[data-edit]")).focus();
       },
       change(id, key, value) {
         const values = { ...this.pending[id] };
@@ -168,10 +173,11 @@ function mountSheet(root) {
         Object.keys(values).some(isSpine) ? (chip.dataset.pending = "") : delete chip.dataset.pending;
         const slug = values["spine.slug"] ?? spineData.rows[id].slug;
         chip.querySelector("[data-spine-slug]").textContent = slugShown(slug);
-        const dot = chip.querySelector("[data-spine-locale]");
+        const markers = chip.nextElementSibling?.matches(".locale-links") ? chip.nextElementSibling : chip;
+        const dot = markers.querySelector("[data-spine-locale]");
         if (!dot) return;
         const locale = values["spine.locale"] ?? spineData.rows[id].locale;
-        dot.textContent = locale.split("-")[0];
+        dot.textContent = spineData.markers[locale];
         if (!table.closest("[data-record-screen]")) dot.classList.toggle("is-current", locale === spineData.locales[0]);
       },
       openSpine(chip) {

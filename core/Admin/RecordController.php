@@ -161,7 +161,7 @@ final readonly class RecordController
   /* A row answered to a save opens with no query: the page it lands on keeps its own. */
   private function items(Collection $collection): Items
   {
-    return new Items($collection, [], $this->dialog->multilingual($collection));
+    return new Items($collection, [], $this->dialog->markers($collection));
   }
 
   /* What a save answers, and the row the view it was made in draws in place of its own. */

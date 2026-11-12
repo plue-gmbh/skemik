@@ -21,7 +21,6 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/grid-t
   'ticks' => $creates, 'firstLocale' => $firstLocale, 'glance' => $glance, 'uses' => $uses]);
 $ending = $library ? $uploads : $creates;
 ?>
-<div data-ticked></div>
 <div data-sheet="grid">
 <?php if ($creates && count($rows) > 1): ?>
   <label class="item-tick-all"><input type="checkbox"

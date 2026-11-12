@@ -119,7 +119,7 @@ final readonly class SearchController
   private function found(Account $account, Request $request, ?array $targets): array
   {
     $collections = $this->collections->all();
-    $typed = (string) $request->query('q');
+    $typed = Search::bounded((string) $request->query('q'));
 
     return trim($typed) === '' && $targets !== null ? $this->newest($collections, $targets, $this->narrowed($request))
       : $this->search->search($typed, $this->readings($account, $collections, $targets));

@@ -27,7 +27,7 @@
 }
 
 :root {
-  --surface-ground: #FCFDFB;
+  --surface-ground: #F8F9F7;
   --surface: #FFFFFF;
   --surface-sunken: #F3F6F2;
   --surface-sunken-strong: #E9EDE7;
@@ -756,6 +756,7 @@ a.account-who {
 
 .admin-body {
   --paper-start: 250px;
+  --paper-top: 0px;
   display: grid;
   grid-template-columns: var(--paper-start) minmax(0, 1fr) auto;
   grid-template-rows: minmax(0, 1fr);
@@ -857,6 +858,7 @@ a.account-who {
   flex-direction: column;
   min-width: 0;
   overflow-y: auto;
+  scroll-padding-top: var(--sticking, 0px);
 }
 
 .footer {
@@ -1347,12 +1349,47 @@ h2#home-needs_look ~ .home-empty {
   cursor: not-allowed;
 }
 
+.record-page > .collection-head,
+.collection-bar {
+  position: sticky;
+  z-index: 4;
+  margin-top: -12px;
+  padding-block: 12px 8px;
+  background: var(--surface-ground);
+  box-shadow: 0 0 0 100vmax var(--surface-ground);
+  clip-path: inset(0 -100vmax);
+}
+
+.record-page > .collection-head {
+  top: calc(var(--paper-top) - 20px);
+  margin-bottom: 14px;
+}
+
+.collection-bar {
+  top: calc(var(--paper-top) - 3px);
+  margin-bottom: 4px;
+}
+
+.record-page > .collection-head.is-stuck .record-back {
+  visibility: hidden;
+}
+
+.record-page > .collection-head.is-stuck,
+.record-page .collection-tools.is-stuck,
+.collection-bar.is-stuck {
+  box-shadow: 0 0 0 100vmax var(--surface-ground), 0 1px 0 100vmax var(--border-strong);
+  clip-path: inset(0 -100vmax -1px);
+}
+
+.collection-bar .ticked-bar {
+  margin: 12px 0 0;
+}
+
 .query-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  margin-bottom: 12px;
 }
 
 .query-row > .view-switch {
@@ -1867,6 +1904,13 @@ button.cell:focus-visible {
   width: 72px;
 }
 
+.cell-now {
+  flex: none;
+  padding: 5px 9px;
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+}
+
 .duration-unit {
   width: auto;
 }
@@ -1884,6 +1928,14 @@ button.cell:focus-visible {
   border-radius: var(--radius-extra-large);
   background: var(--surface);
   box-shadow: var(--shadow-floating);
+}
+
+.popover-record {
+  margin: 0 0 4px;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .popover-label {
@@ -2160,6 +2212,7 @@ a.option {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  height: 18px;
   margin-bottom: 6px;
   color: var(--text-secondary);
   font-size: 12.5px;
@@ -2192,6 +2245,7 @@ a.option {
   font-family: var(--font-mono);
   font-size: 10px;
   line-height: 15px;
+  white-space: nowrap;
 }
 
 .locale-dot.is-missing {
@@ -2207,6 +2261,25 @@ a.option {
   border-color: var(--accent);
   background: var(--accent-tint);
   color: var(--text);
+}
+
+.locale-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.locale-links > .locale-dot {
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .locale-links > .locale-dot:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
 }
 
 .record-card {
@@ -3703,6 +3776,19 @@ a.cell {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-large);
+  font-size: 16px;
+}
+
+.collection-tools button.grant-badge:not(.is-live) {
+  border-style: solid;
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+@media (hover: hover) {
+  .collection-tools button.grant-badge:not(.is-live):hover {
+    color: var(--text);
+  }
 }
 
 .save-bar {
@@ -3781,9 +3867,18 @@ a.cell {
     min-height: 100dvh;
   }
 
+  html:has(.admin) {
+    scroll-padding-top: calc(58px + var(--sticking, 0px));
+  }
+
   .admin-body {
     --paper-start: 0px;
+    --paper-top: 58px;
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .paper {
+    overflow: visible;
   }
 
   .header {
@@ -3840,6 +3935,7 @@ a.cell {
   .header-search.is-open {
     flex: 1;
     min-width: 0;
+    margin-left: 12px;
   }
 
   .header-search.is-open input {
@@ -3928,8 +4024,20 @@ a.cell {
 }
 
 @container paper (max-width: 700px) {
+  .record-page > .collection-head {
+    display: contents;
+    top: auto;
+  }
+
   .record-page .collection-tools {
-    flex-basis: 100%;
+    position: sticky;
+    top: calc(var(--paper-top) - 4px);
+    z-index: 4;
+    margin-bottom: 14px;
+    padding-block: 12px 8px;
+    background: var(--surface-ground);
+    box-shadow: 0 0 0 100vmax var(--surface-ground);
+    clip-path: inset(0 -100vmax);
   }
 
   .record-page .collection-tools .view-switch {
@@ -4471,6 +4579,14 @@ button.spine-chip {
   margin: 0 0 10px;
   padding: 0;
   list-style: none;
+}
+
+.picker-items.is-scrolling {
+  max-height: min(204px, 30dvh);
+  margin: -4px -4px 6px;
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: none;
 }
 
 .picker-item {
@@ -5391,6 +5507,10 @@ button.spine-chip {
   max-height: 320px;
   overflow-y: auto;
   overscroll-behavior: none;
+}
+
+.picker .options.is-scrolling {
+  max-height: min(180px, 35dvh);
 }
 
 .option[hidden] {

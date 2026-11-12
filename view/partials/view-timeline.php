@@ -27,7 +27,6 @@ $reached = fn (?string $when): ?bool => $when === null ? null
   : ($descending ? $when <= $today : $when >= $today);
 $before = null;
 ?>
-<div data-ticked></div>
 <div class="sheet-card">
   <div data-sheet="timeline" data-dated="<?= $template->escape((string) $dated?->field->key) ?>">
 <?php if ($creates && count($rows) > 1): ?>

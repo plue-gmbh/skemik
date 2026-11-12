@@ -77,7 +77,16 @@ function sending(sheet) {
           shown ? (shown.innerHTML = html) : this.draw(id, key);
         });
         const chip = table.querySelector(`[data-spine="${id}"]`);
-        chip && !Object.keys(values).some(isSpine) ? (chip.outerHTML = body.chip) : this.drawSpine(id);
+        chip && !Object.keys(values).some(isSpine) ? this.swapChip(chip, body.chip) : this.drawSpine(id);
+      },
+      /* A save answers the chip with the record's own marker inside it; a row standing for
+         its work keeps every marker beside the chip as a link, so the answer's is dropped. */
+      swapChip(chip, html) {
+        const linked = chip.nextElementSibling?.matches(".locale-links");
+        chip.insertAdjacentHTML("beforebegin", html);
+        const drawn = chip.previousElementSibling;
+        chip.remove();
+        if (linked) drawn.querySelectorAll(".locale-dot").forEach((dot) => dot.remove());
       },
       /* What the server drew replaces what the island made, keeping its place; the cell
          last edited, if it was in there, is its cell in the drawing, or the focus a save

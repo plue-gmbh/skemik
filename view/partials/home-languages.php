@@ -17,6 +17,7 @@ if (!isset($template)) {
 }
 $said = fn (string $key, string $tag): string => $template->escape($words->get($key, ['tag' => $tag]));
 $trash = $template->render('partials/icon', ['name' => 'trash']);
+$markers = Domain\Locale::short(array_map(fn (Admin\LocaleRow $row): string => $row->tag, $rows));
 ?>
 <?php if ($refused !== '') { ?>
       <p class="page-note is-refused" role="alert"><?= $template->escape($refused) ?></p>
@@ -24,7 +25,7 @@ $trash = $template->render('partials/icon', ['name' => 'trash']);
       <ul class="changes">
 <?php foreach ($rows as $index => $row) {
   $id = 'locale-' . $template->escape($row->tag);
-  $short = mb_strtoupper(explode('-', $row->tag)[0]); ?>
+  $short = str_contains($markers[$row->tag], '-') ? $markers[$row->tag] : strtoupper($markers[$row->tag]); ?>
         <li class="locale-row">
 <?php if ($index === 0) { ?>
           <span class="locale-dot is-current" title="<?= $template->escape($words->get('locale.default')) ?>"><span

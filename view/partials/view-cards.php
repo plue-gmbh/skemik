@@ -18,7 +18,6 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/card',
   'collection' => $collection, 'columns' => $columns, 'row' => $row, 'items' => $items,
   'ticks' => $creates, 'firstLocale' => $firstLocale, 'glance' => $glance]);
 ?>
-<div data-ticked></div>
 <div data-sheet="cards">
 <?php if ($creates && count($rows) > 1): ?>
   <label class="item-tick-all"><input type="checkbox"

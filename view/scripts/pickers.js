@@ -3,7 +3,8 @@
    cell editor's popover; a reference's is `view/scripts/edge-picker.js` and a
    link's, with the library search the list and the rows mix in, `file-picker.js`.
    Each reports its draft as it changes, so a press outside keeps what was done,
-   and says `done` when a choice ends it. Every word is handed in. */
+   and says `done` when a choice ends it. Opened, each focuses its field even after
+   a touch, since the tap on the cell asked to type. Every word is handed in. */
 
 /* ↑ ↓ ✕ on a list, shared by the two below and a reference's (`edge-picker.js`). */
 const ordered = {
@@ -83,7 +84,7 @@ const listPicker = {
       this.$nextTick(() => this.focus(after + 1));
     },
     focus(index) {
-      focusField(this.$el.querySelectorAll(".picker-value")[index], this.$el.closest(".popover"));
+      this.$el.querySelectorAll(".picker-value")[index]?.focus();
     },
   },
 };
@@ -115,7 +116,7 @@ const objectsPicker = {
   },
   mounted() {
     if (this.items.length === 0) return this.add();
-    focusField(this.$el.querySelector(".picker-value"), this.$el.closest(".popover"));
+    this.$el.querySelector(".picker-value")?.focus();
   },
   methods: {
     shaped: (value) => value !== null && typeof value === "object",
@@ -172,8 +173,8 @@ const objectsPicker = {
     },
     add() {
       this.items.push({});
-      this.$nextTick(() => focusField([...this.$el.querySelectorAll(".picker-entry")].pop()
-        ?.querySelector(".picker-value"), this.$el.closest(".popover")));
+      this.$nextTick(() => [...this.$el.querySelectorAll(".picker-entry")].pop()
+        ?.querySelector(".picker-value")?.focus());
     },
   },
 };
@@ -190,7 +191,7 @@ const referPicker = {
     return { held, word: held === null ? String(this.value ?? "") : "", hits: [], timer: null };
   },
   mounted() {
-    focusField(this.$refs.word, this.$el.closest(".popover"));
+    this.$refs.word?.focus();
   },
   methods: {
     result() {

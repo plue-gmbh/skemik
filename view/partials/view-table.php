@@ -19,7 +19,6 @@ if (!isset($template)) {
 $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== null
   && $columns[$index]->field->valueObjectOf === ($columns[$index + 1] ?? null)?->field->valueObjectOf;
 ?>
-<div data-ticked></div>
 <div class="sheet-card">
   <div class="sheet-scroll">
     <table class="sheet" data-sheet>

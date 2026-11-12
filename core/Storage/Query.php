@@ -46,6 +46,7 @@ final readonly class Query
    * @param ?string $sort a field or spine key; null is best match first under a search, else newest first
    * @param list<string> $searchIn the field keys the reader reads, which alone a search is asked of
    * @param array<string, Query> $searchThrough by type, what the reader reads of each, as a search reaches edges
+   * @param list<string> $grouped the install's locales in order, for one row per translation group; none for each
    */
   public function __construct(
     public string $type,
@@ -60,6 +61,7 @@ final readonly class Query
     public array $searchIn = [],
     public array $searchThrough = [],
     public bool $trashed = false,
+    public array $grouped = [],
     private Json $json = new Json(),
   ) {
     /* A page past the last integer's offset would warn on the cast, which a host showing warnings prints. */
@@ -97,7 +99,16 @@ final readonly class Query
       $clauses[] = $this->filterClause($type, $key, $index);
     }
 
-    return implode(' and ', $clauses);
+    return $this->grouped === [] ? implode(' and ', $clauses) : $this->once(implode(' and ', $clauses));
+  }
+
+  /* A group's member that meets the rest in the earliest locale stands for it, so a filter only a translation
+     meets lists that translation, and a page counts works. A record of no group is its own. */
+  private function once(string $where): string
+  {
+    return $where . ' and e.id in (select id from (select e.id, row_number() over (partition by'
+      . ' coalesce(e.translation_of, e.id) order by (select key from json_each(:grouped) where value = e.locale),'
+      . ' e.id) as n from entity e where ' . $where . ') where n = 1)';
   }
 
   /* Under a search the word table leads, by `cross join`, which SQLite never reorders:
@@ -126,7 +137,8 @@ final readonly class Query
   public function bindings(TypeDefinition $type, SchemaOrg $schema, SortKeys $keys): array
   {
     $statuses = array_map(fn (Status $status): string => $status->value, $this->statuses);
-    $bindings = ['type' => $type->url(), 'statuses' => $this->json->encode($statuses)];
+    $bindings = ['type' => $type->url(), 'statuses' => $this->json->encode($statuses),
+      ...($this->grouped === [] ? [] : ['grouped' => $this->json->encode($this->grouped)])];
     foreach (array_keys($this->filters) as $index => $key) {
       if (in_array($key, self::COLUMNS, true)) {
         $bindings["f$index"] = $this->json->encode($this->filters[$key]);

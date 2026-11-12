@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-/* A value edited, by kind, one component for the table and the record screen.
-   A date is typed as text, since a year alone is a date and the browser's input
-   takes none; an empty date-time shows the install's now, which Enter takes and
-   passing through does not, or the browser's picker would open on a day the
-   field does not hold. A currency or a country edits as text suggesting names,
-   stored as codes, since three hundred buttons are no popover, and prose in a
-   textarea, so a row that requires it is made from the table. A link that takes
-   a file opens the library beneath the address. The keys are a spreadsheet's:
-   Enter commits, the arrows and Tab commit and move, Escape restores. Handed
-   nothing: the island fills it. */
+/* A value edited, by kind, one component for the table and the record screen. A date is typed as text, since a
+   year alone is a date and the browser's input takes none; an empty date-time shows the install's now, which Enter
+   or its button takes and passing through does not, or the browser's picker would open on a day the field does not
+   hold. The button is for a phone's picker, which has no Enter and reports nothing when closed unchanged. A
+   currency or a country edits as text suggesting names, stored as codes, since three hundred buttons are no
+   popover, and prose in a textarea, so a row that requires it is made from the table. A link that takes a file
+   opens the library beneath the address. The keys are a spreadsheet's: Enter commits, the arrows and Tab commit
+   and move, Escape restores. Handed nothing: the island fills it. */
 
 if (!isset($template)) {
   return;
@@ -34,6 +32,8 @@ if (!isset($template)) {
         v-model="draft" :aria-label="editing.field.label"
           :placeholder="editing.hint || (editing.field.kind === 'date' ? words['sheet.date_shape'] : null)"
         :list="editing.field.suggested.length > 0 ? 'cell-suggested' : null">
+      <button v-if="offered !== null" type="button" class="button-quiet cell-now" @mousedown.prevent
+        @click="takeNow">{{ words['sheet.now'] }}</button>
       <datalist v-if="editing.field.suggested.length > 0" id="cell-suggested">
         <option v-for="each in editing.field.suggested" :key="each"
           :value="editing.terms[each] || each"></option>
@@ -44,6 +44,7 @@ if (!isset($template)) {
     <div ref="popover" class="popover" tabindex="-1"
       :class="{ 'is-wide': mode !== 'select', 'is-prose': mode === 'prose' }" role="dialog"
       :aria-label="editing.field.label" :style="place" @keydown="choose">
+      <p v-if="editing.record" class="popover-record">{{ editing.record }}</p>
       <p class="popover-label">{{ editing.field.label }}<template
         v-if="editing.field.target"> → {{ editing.field.target }}</template><template
         v-if="editing.field.kind === 'markdown'"> · Markdown</template></p>

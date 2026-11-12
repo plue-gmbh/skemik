@@ -26,6 +26,19 @@ final readonly class Locale
     assert($this->canonical('SR-latn-rs') === 'sr-Latn-RS', 'a tag is not cased canonically');
   }
 
+  /** Each tag's marker among the tags beside it: its language where no other speaks it, else the whole tag,
+      so `en-US` and `en-GB` stay two and `de-DE` beside them is `de`.
+      @param list<string> $tags
+      @return array<string, string> */
+  public static function short(array $tags): array
+  {
+    $language = fn (string $tag): string => explode('-', $tag)[0];
+    $spoken = array_count_values(array_map($language, $tags));
+
+    return array_combine($tags, array_map(fn (string $tag): string
+      => $spoken[$language($tag)] > 1 ? $tag : $language($tag), $tags));
+  }
+
   /** @psalm-taint-escape input a tag by the pattern and the closed lists carries no line break, path, address
       or markup, and goes into a redirect, a file name of the export and a file opened to be read */
   private function canonical(string $tag): string

@@ -96,7 +96,7 @@ const linkPicker = {
     return { typed: String(this.value ?? "") };
   },
   mounted() {
-    focusField(this.$refs.address, this.$el.closest(".popover"));
+    this.$refs.address.focus();
     this.find(0, this.field.key, this.typed);
   },
   methods: {

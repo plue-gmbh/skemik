@@ -40,6 +40,7 @@ if (!isset($template)) {
 <script src="<?= $template->asset('scripts/sheet.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/library.js') ?>" defer></script>
 <?php endif ?>
+<script src="<?= $template->asset('scripts/popover.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/query-bar.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/kept.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/app.js') ?>" defer></script>
@@ -51,6 +52,7 @@ if (!isset($template)) {
 <script src="<?= $template->asset('scripts/accounts.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/fields.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/sidebar.js') ?>" defer></script>
+<script src="<?= $template->asset('scripts/sticks.js') ?>" defer></script>
 <script src="<?= $template->asset('scripts/feed-panel.js') ?>" defer></script>
 </head>
 <?= $body ?>

@@ -49,7 +49,7 @@ final readonly class FindController
 
   public function show(Account $account, Entity $person, Request $request): Response
   {
-    $asked = trim((string) $request->query('q'));
+    $asked = trim(Search::bounded((string) $request->query('q')));
     $found = $asked === '' ? [] : $this->found($account, $asked);
     $main = $this->template->render('pages/find', ['words' => $this->words, 'asked' => $asked,
       'groups' => $this->grouped($found, $asked, count($found) >= Search::LIMIT),

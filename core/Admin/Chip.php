@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Admin;
 
 use Domain\Locale;
+use Domain\LocalisedText;
 use Domain\Relation;
 use Profile\FieldKind;
 use Profile\Qualifier;
@@ -32,8 +33,8 @@ final readonly class Chip
       sends back to keep it (`FieldEdits`), and never by its target, since a chip
       drawn as gone must not name what it hides; its link is the cell's, which an
       edited cell does not draw. An edge's words come as its lines
-      take them, and in another locale that locale's own, the ones it was written
-      with as their placeholders.
+      take them, and in another locale that locale's own, with all it was written
+      with as their placeholders and for a pending cell to draw.
       @return array<string, mixed> */
   public function held(int $index, ?Locale $words = null): array
   {
@@ -45,10 +46,11 @@ final readonly class Chip
     $lines = $words === null ? Qualifier::lines($this->edge->predicate, $this->edge->objectType)
       : array_fill_keys(Qualifier::words(), FieldKind::Text);
     $said = array_intersect_key($this->edge->qualifiers->document(), $lines);
+    $authored = array_diff_key($this->edge->qualifiers->document(), [LocalisedText::KEY => true]);
 
     return [...$drawn, 'type' => $this->edge->objectType, 'lines' => (object) $lines,
       'qualifiers' => (object) ($words === null ? $said : $this->edge->wordsIn($words)),
-      ...($words === null ? [] : ['hints' => (object) $said])];
+      ...($words === null ? [] : ['hints' => (object) $authored])];
   }
 
   /* The edge beside its target, for the words it says of it. */
