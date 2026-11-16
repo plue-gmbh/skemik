@@ -101,6 +101,7 @@ function mountReissue(form) {
   const submit = dialog.querySelector(`[form="${form.id}"]`);
   const error = form.querySelector("[data-grant-error]");
   form.addEventListener("change", () => { submit.disabled = !form.querySelector("[name=rule]:checked"); });
+  mountUntick(form);
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     reissueKey(form, dialog, submit);
@@ -108,7 +109,22 @@ function mountReissue(form) {
   dialog.addEventListener("close", () => {
     form.reset();
     error.textContent = "";
-    submit.disabled = false;
+    form.dispatchEvent(new Event("change"));
+  });
+}
+
+/* Past five live rules: unticks every rule, and with none ticked ticks the live ones, its words saying which
+   it does. A stale rule is drawn unticked, so `defaultChecked` is the live ones. */
+function mountUntick(form) {
+  const untick = form.querySelector("[data-grant-untick]");
+  if (!untick) return;
+  const words = [untick.textContent, untick.dataset.grantUntick];
+  const none = () => !form.querySelector("[name=rule]:checked");
+  form.addEventListener("change", () => { untick.textContent = words[none() ? 1 : 0]; });
+  untick.addEventListener("click", () => {
+    const ticking = none();
+    form.querySelectorAll("[name=rule]").forEach((tick) => { tick.checked = ticking && tick.defaultChecked; });
+    form.dispatchEvent(new Event("change"));
   });
 }
 

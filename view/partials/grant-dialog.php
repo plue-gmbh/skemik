@@ -2,21 +2,22 @@
 
 declare(strict_types=1);
 
-/* One key's dialog on the Grants card (`view/scripts/grants.js`): who issued it,
-   until when, when it was last used, and each of its rules as the badge words
-   it. The name's newest key is re-issued here, its rules ticked as they stand
-   and a stale one not, so renewing a key is one press and a rule left out on
-   the way is the narrowing a live key cannot take. Its secret is shown once, as
-   the badge shows it, and the dialog then closes only by reloading the page.
-   Revoking asks once more, the confirm standing where the press was, since
-   nothing takes it back and only a new secret handed to the integration
-   replaces it; when the key was last used stands in the facts line.
-   Handed `$entry`, `$until`, `$csrf` and `$words`. */
+/* One key's dialog on the Grants card (`view/scripts/grants.js`): who issued it, until when, when it was last
+   used, and each of its rules as the badge words it after the key's name. The name's newest key is re-issued
+   here, its rules ticked as they stand and a stale one not, so renewing a key is one press and a rule left out
+   on the way is the narrowing a live key cannot take; past five live rules one press unticks them all, or
+   ticks the live ones where none is, so a key narrowed to a few is ticked anew and a stale rule only by hand.
+   The rules are named by the legend's words alone, since the legend holds that press too. Its secret is shown
+   once, as the badge shows it, and the dialog then closes only by reloading the page. Revoking asks once more,
+   the confirm standing where the press was, since nothing takes it back and only a new secret handed to the
+   integration replaces it; when the key was last used stands in the facts line. Handed `$entry`, `$until`,
+   `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
 }
 $id = 'grant-key-' . $entry->token->id;
+$live = count(array_diff_key($entry->rules, $entry->stale));
 $named = fn (string $sentence): string => str_replace($template->escape(Admin\Grants::NAME),
   '<b>' . $template->escape($entry->token->label) . '</b>', $template->escape($sentence));
 ?>
@@ -38,8 +39,12 @@ $named = fn (string $sentence): string => str_replace($template->escape(Admin\Gr
   <form class="grant-issue" id="<?= $template->escape($id) ?>-reissue"
     data-grant-reissue="<?= $template->escape($entry->token->id) ?>">
     <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-    <fieldset class="grant-offers">
-      <legend class="spine-label"><?= $template->escape($words->get('grant.reissue_rules')) ?></legend>
+    <fieldset class="grant-offers" aria-labelledby="<?= $template->escape($id) ?>-rules">
+      <legend class="spine-label"><span id="<?= $template->escape($id) ?>-rules"><?=
+        $template->escape($words->get('grant.reissue_rules')) ?></span><?php
+        if ($live > 5): ?><button type="button" class="grant-untick"
+        data-grant-untick="<?= $template->escape($words->get('grant.tick_all'))
+        ?>"><?= $template->escape($words->get('sheet.untick')) ?></button><?php endif ?></legend>
 <?php foreach ($entry->rules as $rule => $sentence): ?>
       <label class="grant-offer"><input type="checkbox" name="rule"
         value="<?= $template->escape($rule) ?>"<?= isset($entry->stale[$rule]) ? ''

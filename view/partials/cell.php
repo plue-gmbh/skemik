@@ -9,9 +9,11 @@ declare(strict_types=1);
    each target. A list shows and numbers every member, since one behind a count
    is one nobody checks; a gone one and one the reader may not see are both ⇢
    missing. What an edge says of its target stands inside its chip, so in a list
-   it reads as that member's. A Markdown field's links to records are counted here
-   and drawn as chips on the record screen (`Admin\Prose`). Handed `$kind`, `$value`, `$shown`, `$chips`,
-   `$empty` and `$words`, and `$locale`, `$many`, `$linked` and `$says`, which an empty cell leaves out. */
+   it reads as that member's; a long name ends in an ellipsis and the chip's title holds it whole. A Markdown
+   field's links to records are counted here and drawn as chips on the record screen (`Admin\Prose`). A link,
+   and a row's name where the row holds one, leads where it points, as a chip does. Handed `$kind`, `$value`,
+   `$shown`, `$chips`, `$empty` and `$words`, and `$locale`, `$many`, `$linked`, `$links` and `$says`, which an
+   empty cell leaves out. */
 
 use Profile\FieldKind;
 
@@ -19,6 +21,7 @@ if (!isset($template)) {
   return;
 }
 $linked ??= true;
+$links ??= [];
 $many ??= false;
 $says ??= [];
 $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, $words, $linked): string {
@@ -37,14 +40,19 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 
   $said = $said === '' ? '' : '<span class="chip-says">' . $template->escape($said) . '</span>';
 
-  return sprintf('<%s class="chip" title="%s">%s%s%s%s</%s>%s',
-    $tag, $template->escape($chip->title), $mark, $picture,
+  return sprintf('<%s class="chip" title="%s">%s%s<span class="chip-label">%s</span>%s</%s>%s',
+    $tag, $template->escape($chip->label . ' · ' . $chip->title), $mark, $picture,
     $template->escape($chip->label), $said, $link ? 'a' : 'span', $noAlt);
 };
 ?>
 <?php if ($empty): ?>
 <span class="cell-empty" aria-hidden="true">—</span><span
   class="visually-hidden"><?= $template->escape($words->get('cell.empty')) ?></span>
+<?php elseif ($links !== []): ?>
+<span><?php foreach ($links as $index => $each): ?><?= $index === 0 ? ''
+  : ', ' ?><?php if ($each->href === null): ?><?= $template->escape($each->word) ?><?php else: ?><a
+  href="<?= $template->escape($each->href) ?>"<?= $each->opensBeside() ? ' target="_blank" rel="noreferrer"' : ''
+  ?>><?= $template->escape($each->word) ?></a><?php endif ?><?php endforeach ?></span>
 <?php elseif ($kind === FieldKind::Boolean): ?>
 <span class="switch<?= $value === true ? ' is-on' : '' ?>" aria-hidden="true"><i></i></span><span
   class="visually-hidden"><?= $template->escape($words->get($value === true ? 'cell.yes' : 'cell.no')) ?></span>

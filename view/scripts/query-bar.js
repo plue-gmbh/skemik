@@ -54,7 +54,7 @@ function mountQueryBar(form, mounted) {
     go();
   });
   form.querySelector("[data-query-direction]")?.addEventListener("click", () => {
-    sortValue.value = sortValue.value.startsWith("-") ? sortValue.value.slice(1) : "";
+    sortValue.value = sortValue.value.startsWith("-") ? sortValue.value.slice(1) : "-" + sortValue.value;
     go();
   });
   search.addEventListener("input", () => {

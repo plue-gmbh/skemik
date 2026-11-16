@@ -144,9 +144,13 @@ final readonly class Grants
      name goes, so the issue form can write it as it is typed. */
   public function sentence(Grant $rule, string $name, Account $account): string
   {
-    $said = $this->words->get('grant.sentence', ['name' => $name, 'does' => $this->does($rule)]);
+    return $this->words->get('grant.sentence', ['name' => $name, 'does' => $this->rule($rule, $account)]);
+  }
 
-    return implode(' · ', [$said, ...$this->qualifiers($rule, $account)]);
+  /* The sentence after the name, for where the key is named once above its rules. */
+  public function rule(Grant $rule, Account $account): string
+  {
+    return implode(' · ', [$this->does($rule), ...$this->qualifiers($rule, $account)]);
   }
 
   /* An offer stands after its verb, so it names only what the verb reaches; a record's reaches the record alone. */

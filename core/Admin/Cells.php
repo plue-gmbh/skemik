@@ -41,14 +41,19 @@ final readonly class Cells
   {
     $value = $field->cardinality->isEdge() ? null : ($entity->props->document()[$field->key] ?? null);
     $empty = in_array($value, [null, '', []], true) && $chips === [];
+    $rows = is_array($value) && $field->kind === FieldKind::Objects ? $this->objects($field, $value, $chips) : [];
+    $links = $field->kind === FieldKind::Link ? $this->links($value) : $rows;
 
     return $this->template->render('partials/cell', ['words' => $this->words, 'locale' => $entity->locale->tag,
       'kind' => $field->kind, 'many' => $field->holdsMany(), 'value' => $value, 'chips' => $chips, 'empty' => $empty,
-      'linked' => $linked,
+      'linked' => $linked, 'links' => !$empty && $linked
+        && array_any($links, fn (CellLink $each): bool => $each->href !== null) ? $links : [],
       'says' => array_map(fn (Chip $chip): string => $this->says($chip, $entity->locale), $chips),
       'shown' => match (true) {
         $empty => '',
-        is_array($value) && $field->kind === FieldKind::Objects => $this->objects($field, $value, $chips),
+        is_array($value) && $field->kind === FieldKind::Objects => $rows === []
+          ? $this->words->get('cell.entries', ['n' => (string) count($value)])
+          : implode(', ', array_map(fn (CellLink $row): string => $row->word, $rows)),
         is_array($value) && $chips !== [] => '',
         default => $this->shown($entity, $field, $value),
       }]);
@@ -158,24 +163,57 @@ final readonly class Cells
     return implode(' ', $shown);
   }
 
-  /** Every row by its bearing key, so rows told apart by their names are told apart in the cell too;
-      only rows with no name are counted, since the names already say how many there are.
+  /** Every row by its bearing key, so rows told apart by their names are told apart in the cell too, each with
+      its address where it holds one; no rows when none has a name, since the names already say how many there are.
       @param array<array-key, mixed> $items
-      @param array<int, Chip> $chips the records its rows refer to, by row */
-  private function objects(FieldDefinition $field, array $items, array $chips): string
+      @param array<int, Chip> $chips the records its rows refer to, by row
+      @return list<CellLink> */
+  private function objects(FieldDefinition $field, array $items, array $chips): array
   {
-    $bearing = (string) ($this->profile->valueObject((string) $field->ref)?->bearing[0] ?? '');
-    $names = [];
+    $object = $this->profile->valueObject((string) $field->ref);
+    $bearing = (string) ($object?->bearing[0] ?? '');
+    $address = $this->addressKey($object?->kinds ?? []);
+    $named = [];
     foreach ($items as $index => $item) {
       $name = is_array($item) ? $item['name'] ?? $item[$bearing] ?? null : null;
       if (is_array($name) && isset($chips[$index])) {
         $name = $chips[$index]->gone ? $this->words->get('cell.gone') : $chips[$index]->label;
       }
+      $link = is_array($item) && $address !== null ? $item[$address] ?? null : null;
       if (is_scalar($name) && (string) $name !== '') {
-        $names[] = (string) $name;
+        $named[] = new CellLink((string) $name, is_string($link) ? $this->href($link) : null);
       }
     }
 
-    return $names === [] ? $this->words->get('cell.entries', ['n' => (string) count($items)]) : implode(', ', $names);
+    return $named;
+  }
+
+  /** @param string|int|float|bool|array<array-key, mixed>|null $value
+      @return list<CellLink> */
+  private function links(string|int|float|bool|array|null $value): array
+  {
+    $held = array_values(array_filter(is_array($value) ? $value : [$value], is_string(...)));
+
+    return array_map(fn (string $link): CellLink => new CellLink($link, $this->href($link)), $held);
+  }
+
+  /** The key a row leads to: its `url` where it has one, else its one link, a call to action's target.
+      @param array<string, FieldKind> $kinds */
+  private function addressKey(array $kinds): ?string
+  {
+    $links = array_keys(array_filter($kinds, fn (FieldKind $kind): bool => $kind === FieldKind::Link));
+
+    return in_array('url', $links, true) ? 'url' : (count($links) === 1 ? $links[0] : null);
+  }
+
+  /* A bare email address is written to, and a path is the install's own, as the feed spells it; `/\` is
+     none, since a browser reads it as `//`, another host. */
+  private function href(string $link): ?string
+  {
+    return match (true) {
+      preg_match('#^(https?://|/(?![/\\\\])|mailto:|tel:|sms:)#i', $link) === 1 => $link,
+      filter_var($link, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE) !== false => 'mailto:' . $link,
+      default => null,
+    };
   }
 }

@@ -28,6 +28,9 @@ $single = count($narrowing) === 1 && in_array($chosen, $offered, true);
 $named = $single ? [] : $named;
 $search = $words->get('query.search', ['name' => $collection->name]);
 $descending = str_starts_with($sort, '-');
+/* A timeline's newest first is its default, as no sort is every other view's; a field chosen sorts descending
+   first, so its direction stands out once turned. */
+$sorted = $sortField !== '' && !($fixed && $descending);
 $direction = $words->get($descending ? 'query.descending' : 'query.ascending');
 $dated = $fixed ? array_find($columns, fn (Admin\Column $column): bool => $column->parameter === $sortField) : null;
 $option = fn (string $value, string $word, bool $on): string => sprintf('<option value="%s"%s>%s</option>',
@@ -65,7 +68,7 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
     data-query-search>
   <span class="query-sort"<?= $fixed ? ' title="' . $template->escape($words->get('query.dated')) . '"' : '' ?>>
     <?= $template->render('partials/icon', ['name' => 'sort']) ?>
-    <select<?= $sortField === '' ? '' : ' class="is-on"' ?>
+    <select<?= $sorted ? ' class="is-on"' : '' ?>
       aria-label="<?= $template->escape($words->get('query.sort')) ?>"<?= $fixed
       && $dated === null ? ' disabled' : '' ?><?= $fixed ? ' data-whole' : '' ?> data-query-sort>
 <?php if ($dated !== null): ?>
@@ -81,7 +84,8 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
 <?php endforeach ?>
     </select>
 <?php if ($sortField !== '' && !$fixed): ?>
-    <button type="button" class="query-direction" aria-label="<?= $template->escape($direction) ?>"
+    <button type="button" class="query-direction<?= $descending ? '' : ' is-on' ?>"
+      aria-label="<?= $template->escape($direction) ?>"
       title="<?= $template->escape($direction) ?>" data-query-direction><?= $template->render('partials/icon',
       ['name' => $descending ? 'descending' : 'ascending']) ?></button>
 <?php endif ?>

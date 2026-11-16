@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-/* One collection (`Admin\CollectionController`), its controls placed by what they change: the header holds
-   what changes the collection, its name, grant badge, fields and + New record, and the row under it what
-   changes only what is seen. That row stays in sight as the view scrolls, with the bar for what is ticked,
-   since both act on what is in view. The shape line is no heading, since the schema.org address it leads with
-   leaves the site. What a delete just trashed is offered back over the view, where the delete lands. Handed
-   `$collection`, `$columns`, `$view`, `$glance`, `$timeline`, `$fixed`, `$rows`, `$page`, `$perPage`, `$items`,
-   `$parameters`, `$narrowing`, `$narrowed`, `$filters`, `$named`, `$total`, `$all`, `$data`, `$spine`,
-   `$creates`, `$public`, `$trashed`, `$trash`, the count or null, `$badges`, `$labels`, `$until`, `$back`,
-   `$firstLocale`, `$fields`, `$offers`, `$entries`, `$fielded`, `$csrf` and `$words`; the library's `$uses`,
-   `$limit`, `$uploads`, `$uploaded` and `$refused` may be left out. */
+/* One collection (`Admin\CollectionController`): its name and fields in the head, and under it the query bar,
+   which changes only what is seen, with the bar for what is ticked beneath it, since both act on what is in
+   view. The tools are one group, + New record, the grant badge and the views, and stay in sight as the view
+   scrolls, edged while they stick (`view/scripts/sticks.js`). They are the page's own child, since a part
+   sticks no further than what holds it, and stand after the query bar, so Tab goes as a wide paper reads; a
+   narrow one orders them up by the stylesheet. The shape line is no heading, since the schema.org address it
+   leads with leaves the site. What a delete just trashed is offered back over the view, where the delete
+   lands. Handed `$collection`, `$columns`, `$view`, `$glance`, `$timeline`, `$fixed`, `$rows`, `$page`,
+   `$perPage`, `$items`, `$parameters`, `$narrowing`, `$narrowed`, `$filters`, `$named`, `$total`, `$all`,
+   `$data`, `$spine`, `$creates`, `$public`, `$trashed`, `$trash`, the count or null, `$badges`, `$labels`,
+   `$until`, `$back`, `$firstLocale`, `$fields`, `$offers`, `$entries`, `$fielded`, `$csrf` and `$words`; the
+   library's `$uses`, `$limit`, `$uploads`, `$uploaded` and `$refused` may be left out. */
 
 if (!isset($template)) {
   return;
@@ -32,7 +34,7 @@ $switch = fn (bool $menu): string => $template->render('partials/view-switch', [
   'view' => $view, 'parameters' => $parameters, 'menu' => $menu]);
 $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . $view->value)]);
 ?>
-<div class="page">
+<div class="page collection-page">
   <header class="collection-head">
     <div class="collection-title">
       <h1>
@@ -47,24 +49,6 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
         ['type' => $type])) ?>">schema.org/<?= $template->escape($type) ?></a> · <button type="button"
         class="shape-fields" aria-haspopup="dialog" data-field-popover="fields"><?= $template->escape($shown) ?><span
         class="shape-public">, <?= $template->escape($letOut) ?></span></button></p>
-    </div>
-    <div class="collection-tools">
-      <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu
-        title="<?= $template->escape($current) ?>"><?= $template->render('partials/icon',
-        ['name' => $view->value]) ?><span class="visually-hidden"><?= $template->escape($current) ?></span></button>
-<?php if ($creates): ?>
-      <button type="button" class="tool-button" data-add-row
-        title="<?= $template->escape($add) ?>"><?= $template->render('partials/icon', ['name' => 'plus']) ?><span
-        class="visually-hidden"><?= $template->escape($add) ?></span></button>
-<?php endif ?>
-<?php if ($uploads): $upload = $words->get('media.upload_up_to', ['limit' => $limit]) ?>
-      <label class="tool-button upload-button"
-        title="<?= $template->escape($upload) ?>"><?= $template->render('partials/icon', ['name' => 'upload']) ?><span
-        class="visually-hidden"><?= $template->escape($upload) ?></span><input type="file" name="file" form="upload"
-        id="upload-file" class="visually-hidden" accept="<?= $template->escape(implode(',',
-        array_keys(Profile\Seed\Media::FORMATS))) ?>" multiple></label>
-<?php endif ?>
-      <?= $drawn ?>
     </div>
 <?= $switch(true) ?>
 <?= $template->render('partials/fields', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
@@ -113,15 +97,31 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
     <button type="submit" class="button-quiet"><?= $template->escape($words->get('record.restore')) ?></button>
   </form>
 <?php endif ?>
-  <div class="collection-bar" data-sticks>
-    <div class="query-row">
+  <div class="collection-bar">
 <?= $template->render('partials/query-bar', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
   'filters' => $filters, 'parameters' => $parameters, 'narrowed' => $narrowed, 'named' => $named,
   'total' => $total, 'all' => $all, 'narrowing' => $narrowing, 'fixed' => $fixed]) ?>
-<?= $switch(false) ?>
-    </div>
-    <div data-ticked></div>
   </div>
+  <div class="collection-tools" data-sticks>
+<?php if ($creates): ?>
+    <button type="button" class="tool-button" data-add-row
+      title="<?= $template->escape($add) ?>"><?= $template->render('partials/icon', ['name' => 'plus']) ?><span
+      class="visually-hidden"><?= $template->escape($add) ?></span></button>
+<?php endif ?>
+<?php if ($uploads): $upload = $words->get('media.upload_up_to', ['limit' => $limit]) ?>
+    <label class="tool-button upload-button"
+      title="<?= $template->escape($upload) ?>"><?= $template->render('partials/icon', ['name' => 'upload']) ?><span
+      class="visually-hidden"><?= $template->escape($upload) ?></span><input type="file" name="file" form="upload"
+      id="upload-file" class="visually-hidden" accept="<?= $template->escape(implode(',',
+      array_keys(Profile\Seed\Media::FORMATS))) ?>" multiple></label>
+<?php endif ?>
+    <?= $drawn ?>
+    <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu
+      title="<?= $template->escape($current) ?>"><?= $template->render('partials/icon',
+      ['name' => $view->value]) ?><span class="visually-hidden"><?= $template->escape($current) ?></span></button>
+<?= $switch(false) ?>
+  </div>
+  <div class="collection-ticked" data-ticked></div>
   <div data-view>
 <?= $template->render('partials/view-' . $view->value, ['words' => $words, 'collection' => $collection,
   'columns' => $columns, 'rows' => $rows, 'page' => $page, 'perPage' => $perPage, 'total' => $total,

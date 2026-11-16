@@ -222,7 +222,8 @@ function chipShown(item, number, language, words) {
   const mark = number ? Object.assign(document.createElement("span"), { className: "chip-mark is-count",
     textContent: number }) : glyphMark(item.glyph);
   if (number) mark.setAttribute("aria-hidden", "true");
-  chip.append(mark, document.createTextNode(item.label));
+  const label = Object.assign(document.createElement("span"), { className: "chip-label", textContent: item.label });
+  chip.append(mark, label);
   if (item.preview) {
     mark.after(Object.assign(document.createElement("img"), { className: "chip-preview", src: item.preview, alt: "" }));
   }

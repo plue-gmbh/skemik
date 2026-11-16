@@ -59,7 +59,7 @@ final readonly class Register
     $sentences = [];
     $stale = [];
     foreach ($rules as $rule) {
-      $sentences[$rule->id] = $this->reviews->sentence($rule, $token->label, $account);
+      $sentences[$rule->id] = $this->reviews->rule($rule, $account);
       $stale[$rule->id] = $this->reviews->stale($rule);
     }
 

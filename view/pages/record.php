@@ -6,13 +6,13 @@ declare(strict_types=1);
    edited alike, so a field stays put when editing starts and arranging the table arranges this. Nothing is
    arranged per record, no blocks, no canvas, no layout of one's own: that is the step at which a CMS starts
    becoming the thing this replaces. A field that is not prose opens the table's own editor
-   (`partials/cell-editor`), and its name is the label that opens it. The head but its way back stays in sight
-   as the record scrolls, on a narrow paper only its tools, since the whole head would take a third of a phone.
-   The words locale is `words` beside `in`, so a link and the reload after a save keep it. Handed `$row`,
-   `$edit`, `$blocks`, `$editing`, `$naming`, `$collection`, `$authored`, `$locale`, null for the record's own,
-   `$offered`, `$chips`, `$prose`, `$pointers`, `$pointing`, `$translations`, `$neighbours`, `$asset`,
-   `$copies`, `$limit`, `$writes`, `$held`, `$manages`, `$badge`, `$labels`, `$until`, `$back`, `$public`,
-   `$query`, `$data`, `$spine`, `$csrf` and `$words`. */
+   (`partials/cell-editor`), and its name is the label that opens it. The head's tools stay in sight as the
+   record scrolls, edged while they stick (`view/scripts/sticks.js`), as a collection's do. The words locale is
+   `words` beside `in`, so a link and the reload after a save keep it. Handed `$row`, `$edit`, `$blocks`,
+   `$editing`, `$naming`, `$collection`, `$authored`, `$locale`, null for the record's own, `$offered`, `$chips`,
+   `$prose`, `$pointers`, `$pointing`, `$translations`, `$neighbours`, `$asset`, `$copies`, `$limit`, `$writes`,
+   `$held`, `$manages`, `$badge`, `$labels`, `$until`, `$back`, `$public`, `$query`, `$data`, `$spine`, `$csrf`
+   and `$words`. */
 
 use Profile\FieldKind;
 
@@ -84,7 +84,7 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
 };
 ?>
 <div class="page record-page" data-record-screen>
-  <header class="collection-head" data-sticks>
+  <header class="collection-head">
     <div class="collection-title">
       <a class="record-back" href="<?= $template->escape($back) ?>"><?= $template->render('partials/icon',
         ['name' => 'back']) ?><?= $template->escape($collection->name) ?></a>

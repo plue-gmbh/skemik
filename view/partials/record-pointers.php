@@ -9,7 +9,8 @@ declare(strict_types=1);
    duty is no edge. A work's translations are one row with a link per language,
    and the count is of records, since each is one more a delete leaves pointing
    nowhere; a labelled thing's words in other languages are links drawn round, and
-   a row names its type in the singular, each being one record. Nothing pointing
+   a row names its type in the singular, each being one record, as its glyph's
+   title and in words a screen reader speaks. Nothing pointing
    draws no card. Handed `$pointers`, `$pointing`, their count, and `$words`. */
 
 if (!isset($template)) {
@@ -23,7 +24,7 @@ if ($pointers === []) {
     <h2 class="side-card-title" id="pointers-title"><?= $template->escape($words->get('record.pointers')) ?></h2>
     <p class="side-card-sub"><?= $template->escape($words->get('record.pointers_count',
       ['n' => $words->number($pointing)])) ?></p>
-    <ul class="record-rows">
+    <ul class="record-rows is-aligned">
 <?php foreach ($pointers as $pointer):
   $languages = '';
   foreach ($pointer->locales as $tag => $href) {
@@ -35,13 +36,14 @@ if ($pointers === []) {
   $named = sprintf($languages === '' ? '<span class="record-row-name">%2$s</span>'
     : '<a class="record-row-name" href="%s">%s</a>', $template->escape((string) $pointer->href),
     $template->escape($pointer->label));
-  $state = sprintf('<span class="state-dot state-%s"></span><span class="visually-hidden">%s</span>'
-    . '<span class="record-row-note">%s</span>', $template->escape($pointer->state),
-    $template->escape($words->get('status.' . $pointer->state)), $template->escape($pointer->collection));
-  $inner = sprintf('<span class="record-row-glyph">%s</span>%s%s<span class="record-row-mono">%s</span>',
-    $template->render('partials/glyph', ['name' => $pointer->glyph]), $named, $languages === '' ? $state
-    : '<span class="record-row-locales">' . $languages . '</span><span class="record-row-state">' . $state . '</span>',
-    $template->escape($pointer->field)) ?>
+  $status = $template->escape($words->get('status.' . $pointer->state));
+  $state = sprintf('<span class="state-dot state-%s" title="%s"></span><span class="visually-hidden">%s, %s</span>',
+    $template->escape($pointer->state), $status, $status, $template->escape($pointer->collection));
+  $inner = sprintf('<span class="record-row-glyph" title="%s">%s</span>%s<span class="record-row-meta"><span'
+    . ' class="record-row-mono">%s</span></span>%s<span class="record-row-state">%s</span>',
+    $template->escape($pointer->collection), $template->render('partials/glyph', ['name' => $pointer->glyph]),
+    $named, $template->escape($pointer->field), $languages === '' ? ''
+    : '<span class="record-row-acts"><span class="record-row-locales">' . $languages . '</span></span>', $state) ?>
 <?php if ($languages !== ''): ?>
       <li class="record-row is-linked"><?= $inner ?></li>
 <?php else: ?>
