@@ -12,8 +12,9 @@ namespace Admin;
    there, whether a release is installed by itself, which a copy ahead of the
    release declines, whether it is taken before the day a staged one is held
    back to, who a security report about this site goes to first, the organisation
-   or its agency, and the organisation's one line under the login form, where to turn
-   without an account, beside the contact since it changes as rarely. */
+   or its agency, the organisation's one line under the login form, where to turn
+   without an account, beside the contact since it changes as rarely, and the name
+   under the install's icon on a phone and at the end of its screens' titles. */
 final readonly class Premises
 {
   public function __construct(
@@ -25,5 +26,6 @@ final readonly class Premises
     public ?string $securityContact = null,
     public ?string $loginNote = null,
     public ?string $loginLink = null,
+    public ?string $appName = null,
   ) {}
 }

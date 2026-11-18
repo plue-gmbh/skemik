@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.0.19](https://img.shields.io/badge/version-1.0.19-1f6feb)
+![Version 1.0.20](https://img.shields.io/badge/version-1.0.20-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.18)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.20)
 
 The demo install's events, read with no key:
 
@@ -331,9 +331,9 @@ written as the browser's region writes them, *€ 1.234,50* in `de-AT`.
   answers with the web server's own error page, the rules are not read: either
   the override is off for the folder or the file was not copied. Another
   server needs the same rules. Every request goes to `index.php`, except for
-  the `.css`, `.js`, `.woff2`, `.ico`, `.png` and `.webmanifest` files under
-  `view/`, and no other `.php` file is served. One requested anyway does
-  nothing, since only `index.php` has side effects.
+  the `.css`, `.js`, `.woff2`, `.ico` and `.png` files under `view/`, and no
+  other `.php` file is served. One requested anyway does nothing, since only
+  `index.php` has side effects.
 
 - **Behind a proxy that speaks HTTPS for the host**, a CDN or a hosting
   provider's TLS front, the install sees plain HTTP from one address, since any
@@ -357,20 +357,22 @@ for a login code and a session, rightly gone.
 **The owner's general screen** opens from the first row of the home screen's
 Settings card. It saves two kinds of setting and says which is which. The
 timezone and the admin's language are kept in the database, and so in every
-snapshot. The relay, the security contact and the line under the login form
-are written into `config.php`, which belongs to the machine, so a restore on
-another host arrives without a relay. Every other key of `config.php` stays as
-it was. A comment written there does not survive. The install's address is
-shown on the screen and never changed there, since a slip would send every
-login mail to another domain. Whoever moves the domain changes it in
-`config.php`. Where PHP may not write the domain root, the screen shows what
-`config.php` holds and changes none of it, and the switches on the backups and
-update screens are disabled. Beside the settings the screen names what the host
-sets, which nothing on the screen changes: the largest upload the host takes,
-and each of the three settings *Requirements* names as costing time or giving
-something away. These are asked again on every visit, since a host changes them
-under a running install. While one of them costs time or gives something away,
-the Settings card's row for the screen is marked.
+snapshot. The relay, the security contact, the line under the login form and
+the public name are written into `config.php`, which belongs to the machine, so
+a restore on another host arrives without them. The public name stands under
+the icon when a colleague installs the admin as an app on a phone, so two
+installs on one phone are told apart. It ends the title of the login page and of
+every admin screen too, so two installs' tabs are told apart. When empty the app
+is called Skemik. The install's address is shown on the screen and never changed
+there, since a slip would send every login mail to another domain. Whoever moves
+the domain changes it in `config.php`. Where PHP may not write the domain root,
+the screen shows what `config.php` holds and changes none of it, and the switches
+on the backups and update screens are disabled. Beside the settings the screen
+names what the host sets, which nothing on the screen changes: the largest
+upload the host takes, and each of the three settings *Requirements* names as
+costing time or giving something away. These are asked again on every visit,
+since a host changes them under a running install. While one of them costs time
+or gives something away, the Settings card's row for the screen is marked.
 
 **One snapshot a day is taken automatically**, on the first request of the day
 in the install's timezone, with no daemon and no cron to set up. A snapshot is
@@ -431,16 +433,34 @@ and the dialog names that record.
 
 **Needs a look, a card on the home screen, finds what somebody should take up
 or mend.** Each line counts one kind of thing and opens where the work starts.
-The lines: a message a contact form wrote, until somebody marks it read, the
-oldest first; an order a till wrote and a reservation a booking service wrote,
-while they stand open by their own status, and never one that arrived delivered
-or confirmed; a record waiting in review, and one pointing at a record in the
-trash; a draft begun over a week ago of a type meant to be published, but never
-a person, since an organisation holds a person as a draft on purpose; and an
-image in review or published without alt text, which opens the library's
-pictures. For whoever issues keys it counts a key running out within 30 days,
-until a new one is issued under its name. A colleague is told only of what they
-read. Each line leaves once what it counts is taken up or mended.
+A line counting one record opens that record. One counting more opens their
+collection, narrowed to them where a filter names them, or the first of them
+where the collection cannot show which they are. The lines: a message a contact
+form wrote, until somebody marks it read; an order a till wrote and a reservation
+a booking service wrote, while they stand open by their own status, and never one
+that arrived delivered or confirmed; a record waiting in review, and one pointing
+at a record in the trash; a draft begun over a week ago of a type meant to be
+published, but never a person, since an organisation holds a person as a draft on
+purpose; and an image in review or published without alt text, which opens the
+library's pictures where it counts more than one. For whoever issues keys it
+counts a key running out within 30 days, until a new one is issued under its
+name. A colleague is told only of what they read. Each line leaves once what it
+counts is taken up or mended.
+
+**What would wait on the home screen is mailed as well**, so nobody has to open
+the home screen to learn of it. When a key posts a message, an order or a
+reservation that stands on one of its lines, the line is mailed to every
+colleague who reads its type: how many stand on it, and a link to their
+collection. One that arrives read, delivered or confirmed is mailed to nobody.
+A line is mailed once an hour at most, so a burst of orders is one mail. What
+arrives within that hour is mailed with the first request after it. A failure
+logged while answering a request is mailed to whoever reads the error log, once
+an hour at most, so a burst of failures is one mail. An update installed or
+refused is mailed to whoever runs updates, a refusal only the first time. A
+mail holds a count or a version and links a screen, never a record's value or
+its address, so what a message says stays in the install. It leaves through the
+relay or the host's `mail()`, as a login code does, and a mail that fails is a
+line of the error log, never a mail about it.
 
 **The release's files are compared with its `SHA256SUMS` once a day**, and at
 once after an update. A file changed, a file missing, or a file added where

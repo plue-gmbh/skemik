@@ -5,7 +5,7 @@ declare(strict_types=1);
 /* The login (`Admin\LoginController`): the chrome before the paper, one card,
    two steps. The sentence under the code field is the same whatever happened,
    and the organisation's own line, `config.php`'s, stands under the address step alone.
-   Handed `$step`, `$to`, null on the code step, `$sentence`, `$note`, `$link`, `$csrf` and `$words`. */
+   Handed `$step`, `$to`, null on the code step, `$sentence`, `$note`, `$link`, `$app`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -48,4 +48,4 @@ ob_start();
 </body>
 <?php
 echo $template->render('partials/document', ['words' => $words, 'title' => $words->get('login.title'),
-  'islands' => false, 'body' => (string) ob_get_clean()]);
+  'islands' => false, 'app' => $app, 'body' => (string) ob_get_clean()]);

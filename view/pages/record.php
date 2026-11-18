@@ -21,6 +21,7 @@ if (!isset($template)) {
 }
 $entity = $row->entity;
 $shownIn = ($locale ?? $entity->locale)->tag;
+$own = array_find($translations ?? [], fn (Admin\Translation $each): bool => $each->locale === $entity->locale->tag);
 $type = basename($collection->type);
 $prefix = $public ? '/feed/' . $entity->locale->tag . '/' . $collection->slug->value . '/'
   : $collection->slug->value . '/';
@@ -76,10 +77,10 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
   $drawn = $template->render('partials/icon', ['name' => $icon]);
 
   return $href === null
-    ? sprintf('<button type="button" class="tool-button" aria-disabled="true" title="%s" data-toast="%s">%s'
+    ? sprintf('<button type="button" aria-disabled="true" title="%s" data-toast="%s">%s'
       . '<span class="visually-hidden">%s</span></button>',
       $name, $template->escape($words->get($end)), $drawn, $name)
-    : sprintf('<a class="tool-button" href="%s" title="%s">%s<span class="visually-hidden">%s</span></a>',
+    : sprintf('<a href="%s" title="%s">%s<span class="visually-hidden">%s</span></a>',
       $template->escape($href), $name, $drawn, $name);
 };
 ?>
@@ -92,9 +93,8 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         <span><?= $template->escape($row->label) ?></span>
       </h1>
       <p class="record-spine"><?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row,
-        'prefix' => $prefix, 'opens' => $writes, 'translations' => $translations === null ? null : array_map(
-          fn (Admin\Translation $each): Admin\Translation => new Admin\Translation($each->locale, $each->record,
-            marker: $each->marker), $translations)]) ?><?php if (!$public): ?> <span
+        'prefix' => $prefix, 'opens' => $writes, 'translations' => $own === null ? null
+          : [new Admin\Translation($own->locale, $own->record, marker: $own->marker)]]) ?><?php if (!$public): ?> <span
         class="tag-never"><?= $template->escape($words->get('record.private')) ?></span><?php endif ?></p>
     </div>
     <div class="collection-tools" data-sticks>
@@ -134,8 +134,8 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
       <?= $template->render('partials/grant-badge', ['words' => $words, 'badge' => $badge, 'collection' => $collection,
         'csrf' => $csrf, 'back' => $back, 'until' => $until]) ?>
 <?php endif ?>
-      <?= $tool($before, 'previous', 'record.previous', 'record.first') ?>
-      <?= $tool($after, 'next', 'record.next', 'record.last') ?>
+      <span class="tool-pair"><?= $tool($before, 'previous', 'record.previous', 'record.first') ?><?= $tool($after,
+        'next', 'record.next', 'record.last') ?></span>
 <?php if ($writes): ?>
       <?= $template->render('partials/record-acts', ['words' => $words, 'collection' => $collection,
         'entity' => $entity, 'csrf' => $csrf, 'held' => $held, 'copies' => $copies]) ?>

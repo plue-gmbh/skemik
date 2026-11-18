@@ -12,9 +12,13 @@ namespace Update;
    wait for, so a release meets a few installs first; and where the archive and
    its signature are, on the manifest's own server: the manifest is not signed,
    so one changed on the way names no other server to pull from, and the
-   signature is checked only once the bytes lie in `staging/`. */
+   signature is checked only once the bytes lie in `staging/`. Its version is
+   mailed before then, so it is shaped like one or refused, loosely, since a
+   release named past the pattern is refused by every install. */
 final readonly class Manifest
 {
+  private const VERSION = '/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/D';
+
   public function __construct(
     public string $version,
     public bool $security,
@@ -30,6 +34,9 @@ final readonly class Manifest
       if (!is_string($decoded[$key] ?? null) || $decoded[$key] === '') {
         throw UpdateRefused::manifest('names no ' . $key);
       }
+    }
+    if (preg_match(self::VERSION, (string) $decoded['version']) !== 1) {
+      throw UpdateRefused::manifest('names no version');
     }
     $notBefore = $decoded['not_before'] ?? null;
     if ($notBefore !== null && (!is_string($notBefore) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $notBefore) !== 1)) {

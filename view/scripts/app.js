@@ -17,6 +17,31 @@ async function answered(sent) {
     : { ok: false, status: response?.status ?? 0, body: { error: document.body.dataset.unanswered } };
 }
 
+/* A search field is busy while its answer is out, drawn so by `view/style.css`, since a word naming
+   thousands of records takes a grown install seconds. Typing in it again, emptying it too, stops the ask
+   in the browser, as the next ask does, and an ask stopped answers nothing, so no caller draws it. */
+const stops = new WeakMap();
+
+function busy(field, ask) {
+  stops.has(field) || field.addEventListener("input", () => stops.get(field)?.abort());
+  stops.get(field)?.abort();
+  const stop = new AbortController();
+  stops.set(field, stop);
+  stop.signal.addEventListener("abort", () => field.removeAttribute("aria-busy"));
+  field.setAttribute("aria-busy", "true");
+  return new Promise((done) => ask(stop.signal).then((answer) => {
+    if (stop.signal.aborted) return;
+    field.removeAttribute("aria-busy");
+    done(answer);
+  }));
+}
+
+/* `/search` asked for the field typed in, or for none where a picker's key is no longer focused. */
+function sought(field, query) {
+  const ask = (signal) => answered(fetch("/search?" + query, { headers: { Accept: "application/json" }, signal }));
+  return field ? busy(field, ask) : ask();
+}
+
 /* Through the open modal dialog's region, since an open one makes the frame's inert (`partials/live-region`). */
 function announce(text) {
   const region = (document.querySelector("dialog:modal") ?? document.body).querySelector(":scope > [data-live-region]");

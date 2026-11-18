@@ -20,14 +20,16 @@ final readonly class Dispatch
   public function __construct(private Common $common) {}
 
   /* An answer carries one piece of work after it, so the first hook that is due takes it and the rest wait for a
-     later answer: the day's snapshot, then the release, then the release's files, each due once a day, and the
-     slice fills in behind them. */
+     later answer: the day's snapshot, then the release, then the release's files, each due once a day, then the
+     mail of a line whose hour is out, and the slice fills in behind them. */
   public function answer(Route $route): Response
   {
+    $upkeep = new Upkeep($this->common);
     $answer = $this->area($route);
     $answer = $this->daily()->after($answer);
-    $answer = $this->common->updater()->after($answer);
+    $answer = $upkeep->updater()->after($answer);
     $answer = $this->common->files()->after($answer);
+    $answer = $upkeep->notices()->later($answer);
 
     return $this->checkup()->after($answer);
   }
@@ -57,8 +59,8 @@ final readonly class Dispatch
         => (new Settings($this->common))->answer($route),
       Endpoint::FeedCatalog, Endpoint::FeedLocale, Endpoint::FeedProfile, Endpoint::FeedCollection,
         Endpoint::FeedRecord, Endpoint::IngestCreate, Endpoint::IngestPatch, Endpoint::IngestArrange,
-        Endpoint::FeedPreflight, Endpoint::Robots, Endpoint::SecurityText, Endpoint::PanelCatalog,
-        Endpoint::PanelLocale, Endpoint::PanelCollection, Endpoint::PanelRecord
+        Endpoint::FeedPreflight, Endpoint::Robots, Endpoint::SecurityText, Endpoint::WebManifest,
+        Endpoint::PanelCatalog, Endpoint::PanelLocale, Endpoint::PanelCollection, Endpoint::PanelRecord
         => (new Address($this->common))->answer($route),
     };
   }

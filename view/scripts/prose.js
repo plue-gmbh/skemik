@@ -142,9 +142,8 @@ function insertLink(button, words) {
   };
   const paint = async () => {
     const typed = search.value;
-    const address = "/search?" + new URLSearchParams({ q: typed, in: locale });
     const { body } = typed.trim() === "" ? { body: {} }
-      : await answered(fetch(address, { headers: { Accept: "application/json" } }));
+      : await sought(search, new URLSearchParams({ q: typed, in: locale }));
     const hits = body.hits ?? [];
     if (typed !== search.value) return;
     list.replaceChildren(...hits.map((hit) => {
@@ -160,7 +159,7 @@ function insertLink(button, words) {
     }
   };
   let typing = 0;
-  search.addEventListener("input", () => { window.clearTimeout(typing); typing = window.setTimeout(paint, 200); });
+  search.addEventListener("input", () => { window.clearTimeout(typing); typing = window.setTimeout(paint, 300); });
   search.addEventListener("keydown", (event) => {
     if (event.key === "Enter") list.querySelector("button")?.click();
   });

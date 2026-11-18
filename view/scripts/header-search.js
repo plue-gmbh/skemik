@@ -1,11 +1,14 @@
 /* The header's search (`view/partials/header.php`) opens into its field, in the row on every
    screen size, and closes once left empty or by its ×, which clears a question where a phone
    has no Escape; an empty field asks nothing. On its results, `/find`, the question stands in
-   the field, which the page does not repeat. */
+   the field, which the page does not repeat. The field is busy from the question sent until its
+   page stands, and typing in it or closing it stops the page from loading, or the answer would
+   arrive over what is typed next. */
 function mountHeaderSearch(form) {
   const button = form.querySelector("button");
   const field = form.querySelector("input");
-  const close = () => (field.value = "", open(false), button.focus());
+  const halt = () => field.hasAttribute("aria-busy") && (window.stop(), field.removeAttribute("aria-busy"));
+  const close = () => (halt(), field.value = "", open(false), button.focus());
   const open = (opened) => {
     form.classList.toggle("is-open", opened);
     button.setAttribute("aria-expanded", String(opened));
@@ -19,7 +22,10 @@ function mountHeaderSearch(form) {
     open(true);
     field.focus();
   });
-  form.addEventListener("submit", (event) => field.value.trim() === "" && event.preventDefault());
+  form.addEventListener("submit", (event) => (field.value.trim() === "" ? event.preventDefault()
+    : field.setAttribute("aria-busy", "true")));
+  field.addEventListener("input", halt);
+  window.addEventListener("pageshow", () => field.removeAttribute("aria-busy"));
   form.querySelector("[data-header-search-close]").addEventListener("click", close);
   field.addEventListener("keydown", (event) => event.key === "Escape" && (event.preventDefault(), close()));
   field.addEventListener("blur", (event) => !form.contains(event.relatedTarget) && field.value.trim() === ""

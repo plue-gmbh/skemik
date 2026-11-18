@@ -6,8 +6,9 @@ declare(strict_types=1);
    mend or take up, an order a till wrote and a reservation a booking service
    wrote among it, found by the card rather than by opening collection after
    collection or by an integration stopping on its date. Each line opens where
-   the mending starts, a filtered collection where a filter names the records and
-   the first record where none does; a daily snapshot that failed stands here,
+   the mending starts: the record where it counts one, else their collection,
+   filtered where a filter names them, and the first record where the collection
+   cannot show which they are; a daily snapshot that failed stands here,
    since one failing for three weeks must be a line and not an absence. None is
    drawn at nothing, and with none the card says so.
    Handed `$findings` and `$words`. */

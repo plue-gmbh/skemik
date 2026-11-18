@@ -6,6 +6,7 @@ namespace Wiring;
 
 use Admin\LoginController;
 use Auth\CodeDelivery;
+use Auth\Mailer;
 use Http\Endpoint;
 use Http\Response;
 use Http\Route;
@@ -31,7 +32,7 @@ final readonly class Login
     $common = $this->common;
     return new LoginController($common->session, $common->accounts, $common->entities,
       $common->codes(),
-      new CodeDelivery($common->premises->data . '/login', $common->relay),
+      new CodeDelivery($common->premises->data . '/login', new Mailer($common->relay)),
       $common->limit(10, 3600), $common->limit(5, 900), $common->limit(30, 900), $common->limit(20, 3600),
       $common->csrf, $common->template, $common->words, $common->premises);
   }

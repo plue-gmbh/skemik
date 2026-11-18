@@ -23,6 +23,7 @@ use Storage\EntityRepository;
 use Storage\Oversights;
 use Storage\RelationRepository;
 use Storage\SettingStore;
+use Storage\Tally;
 use Support\Clock;
 use Update\Backup;
 use Update\FileCheck;
@@ -49,7 +50,7 @@ final readonly class NeedsLook
      how it stands, `Promises::STANDING`, and not as a draft: a till writes an
      order already delivered. Open until delivered, cancelled or returned, and
      until confirmed or cancelled. */
-  private const OPEN = ['Order' => ['OrderPaymentDue', 'OrderProcessing', 'OrderInTransit'],
+  public const OPEN = ['Order' => ['OrderPaymentDue', 'OrderProcessing', 'OrderInTransit'],
     'Reservation' => ['ReservationPending', 'ReservationHold']];
   private const MONTH = 'P30D';
   /* A draft is old once its week is out, however lately it was edited: begun
@@ -84,7 +85,7 @@ final readonly class NeedsLook
     $media = $this->profile->byType('MediaObject')->url();
 
     return array_values(array_filter([
-      $this->opened(Overlooked::Unread, $this->unread($read), $collections),
+      $this->counted(Overlooked::Unread, $this->unread($read), $collections, ''),
       $this->counted(Overlooked::Orders, $this->standing('Order', $read), $collections,
         'orderStatus=' . implode(',', self::OPEN['Order'])),
       $this->counted(Overlooked::Reservations, $this->standing('Reservation', $read), $collections,
@@ -105,19 +106,21 @@ final readonly class NeedsLook
     ]));
   }
 
-  /**
-   * @param array<string, int> $byType most first
-   * @param list<Collection> $collections
-   */
+  /** One record opens itself, more their collection, narrowed by `$filter` where one names them.
+      @param array<string, Tally> $byType most first
+      @param list<Collection> $collections */
   private function counted(Overlooked $look, array $byType, array $collections, string $filter): ?Finding
   {
     if ($byType === []) {
       return null;
     }
-    $first = self::holder((string) array_key_first($byType), $collections);
+    $type = (string) array_key_first($byType);
+    $first = self::holder($type, $collections);
+    $count = array_sum(array_map(fn (Tally $tally): int => $tally->count, $byType));
+    $href = $count === 1 ? Rows::address($first, $this->entities->find($byType[$type]->first))
+      : '/c/' . $first->slug->value . ($filter === '' ? '' : '?' . $filter);
 
-    return new Finding($look, array_sum($byType), '/c/' . $first->slug->value . '?' . $filter,
-      SidebarEntry::glyphOf($first->type), $first->name, count($byType) - 1);
+    return new Finding($look, $count, $href, SidebarEntry::glyphOf($type), $first->name, count($byType) - 1);
   }
 
   /** No filter says which records these are, so it opens the first of them,
@@ -139,9 +142,9 @@ final readonly class NeedsLook
 
   /** What a contact form wrote lands as a draft and stays one, so a message is
       new until somebody sets the `dateRead` schema.org gives it, by hand or by
-      key, which no filter can name: the line opens the oldest instead.
+      key, which no filter can name: the collection marks each unread row instead.
       @param list<string> $read the type URLs counted
-      @return array<string, list<EntityId>> by type URL */
+      @return array<string, Tally> by type URL */
   private function unread(array $read): array
   {
     $message = $this->profile->byType('Message')->url();
@@ -151,7 +154,7 @@ final readonly class NeedsLook
 
   /**
    * @param list<string> $read the type URLs counted
-   * @return array<string, int> by type URL
+   * @return array<string, Tally> by type URL
    */
   private function standing(string $name, array $read): array
   {

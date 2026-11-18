@@ -123,7 +123,7 @@ function mountPerson(person) {
   search.addEventListener("focus", () => options.childElementCount === 0 && paintPeople(person, choose));
   search.addEventListener("input", () => {
     window.clearTimeout(typing);
-    typing = window.setTimeout(() => paintPeople(person, choose), 200);
+    typing = window.setTimeout(() => paintPeople(person, choose), 300);
   });
   search.addEventListener("keydown", (event) => event.key === "Enter"
     && (event.preventDefault(), options.querySelector("button")?.click()));
@@ -141,8 +141,7 @@ async function paintPeople(person, choose) {
   const search = person.querySelector("[data-person-search]");
   const options = person.querySelector("[data-person-options]");
   const typed = search.value;
-  const { body: answer } = await answered(fetch("/search?" + new URLSearchParams({ q: typed, type: "Person" }),
-    { headers: { Accept: "application/json" } }));
+  const { body: answer } = await sought(search, new URLSearchParams({ q: typed, type: "Person" }));
   if (typed !== search.value) return;
   const held = new Set(JSON.parse(person.dataset.held));
   const named = fill(person.dataset.newWord, { name: typed.trim() });

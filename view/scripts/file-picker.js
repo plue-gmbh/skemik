@@ -28,7 +28,7 @@ const fileSearch = {
       if (!this.searches(key)) return;
       this.noted = null;
       window.clearTimeout(this.timer);
-      this.timer = window.setTimeout(() => this.find(index, key, typed), 200);
+      this.timer = window.setTimeout(() => this.find(index, key, typed), 300);
     },
     leaving(index, key) {
       window.clearTimeout(this.timer);
@@ -43,7 +43,8 @@ const fileSearch = {
     async find(index, key, typed) {
       const query = new URLSearchParams({ q: typed, collection: this.collection, field: this.field.key,
         in: this.locale, ...(key === this.field.reference ? {} : { key }) });
-      const { body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
+      const typing = this.$el.contains(document.activeElement) ? document.activeElement : null;
+      const { body } = await sought(typing, query);
       if (typed !== this.typedAt(index, key)) return;
       this.hits = body.hits ?? [];
       this.asking = { index, key };

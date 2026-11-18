@@ -6,8 +6,9 @@ declare(strict_types=1);
    records found, best first, each a link to its screen with its slug and state,
    and a link on to the rest on the collection's own screen under the same `?q=`;
    then for whoever reads the log what it holds of the question. The question is
-   the header field's, so the page repeats it only in its count.
-   Handed `$asked`, `$groups`, `$lines`, `$total` and `$words`. */
+   the header field's, so the page repeats it only in its count, which says the
+   first where the search stopped at as many as it lists (`$capped`).
+   Handed `$asked`, `$groups`, `$lines`, `$total`, `$capped` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -26,6 +27,7 @@ $row = fn (Admin\Found $found): string => sprintf('<li><a class="record-row" hre
     <p class="page-shape" role="status"><?= $template->escape($words->get(match (true) {
       $asked === '' => 'find.explain',
       $total + count($lines) === 0 => 'find.none',
+      $capped => 'find.count_capped',
       default => 'find.count',
     }, ['q' => $asked, 'n' => $words->number($total)])) ?></p>
   </header>

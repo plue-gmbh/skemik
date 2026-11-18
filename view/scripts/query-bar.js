@@ -4,9 +4,10 @@
    query — unless edits are pending, which only a deliberate Enter may leave,
    through the save bar's leaving guard, and typing says so. An answer with no
    view to take, an update's waiting page or a login, is loaded as the address, so
-   it shows; a connection lost leaves the view as it stood. Loaded before
-   `view/scripts/app.js`, which mounts it and whose `chosen` and `mountIslands`
-   it calls. */
+   it shows; a connection lost leaves the view as it stood. The field is busy
+   while a redraw is out, and typing on stops it (`busy`). Loaded before
+   `view/scripts/app.js`, which mounts it and whose `chosen`, `busy` and
+   `mountIslands` it calls. */
 function mountQueryBar(form, mounted) {
   const search = form.querySelector("[data-query-search]");
   const sortValue = form.querySelector("[data-query-sort-value]");
@@ -20,9 +21,10 @@ function mountQueryBar(form, mounted) {
   const redraw = async () => {
     if (mounted.current?.sheet.count > 0) return toast(mounted.current.sheet.words["sheet.search_held"], search);
     const url = address();
-    const response = await fetch(url).catch(() => null);
-    if (response === null || url !== address()) return;
-    const page = new DOMParser().parseFromString(await response.text(), "text/html");
+    const text = await busy(search, (signal) => fetch(url, { signal }).then((response) => response.text())
+      .catch(() => null));
+    if (text === null || url !== address()) return;
+    const page = new DOMParser().parseFromString(text, "text/html");
     const view = page.querySelector("[data-view]");
     const count = page.querySelector("[data-query-count]");
     if (!view) return go();
@@ -59,7 +61,7 @@ function mountQueryBar(form, mounted) {
   });
   search.addEventListener("input", () => {
     window.clearTimeout(typing);
-    typing = window.setTimeout(redraw, 250);
+    typing = window.setTimeout(redraw, 300);
   });
   search.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || search.value === "") return;

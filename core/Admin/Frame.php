@@ -34,6 +34,7 @@ final readonly class Frame
     private Csrf $csrf,
     private Template $template,
     private Words $words,
+    private ?string $appName,
   ) {}
 
   public function around(Account $account, Entity $person, Screen $screen): Response
@@ -46,6 +47,7 @@ final readonly class Frame
       'sites' => $this->sidebar->sites(), 'csrf' => $this->csrf->token(),
       'entries' => $screen->entries ?? $this->sidebar->entries($account), 'open' => $screen->open,
       'locale' => $this->settings->locales()[0]->tag, 'main' => $screen->main,
-      'islands' => $screen->islands, 'feed' => $screen->feed]), $screen->notice === '' ? 200 : 404);
+      'islands' => $screen->islands, 'feed' => $screen->feed, 'app' => $this->appName]),
+      $screen->notice === '' ? 200 : 404);
   }
 }

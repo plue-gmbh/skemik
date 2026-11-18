@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ingest;
 
+use Admin\Notices;
 use Admin\Showing;
 use Auth\Authorizer;
 use Auth\GrantCapability;
@@ -71,6 +72,7 @@ final readonly class IngestController
     private Clock $clock,
     private \Closure $entitiesFor,
     private Filed $filed,
+    private Notices $notices,
     private Preconditions $preconditions = new Preconditions(),
     private Json $json = new Json(),
   ) {}
@@ -116,7 +118,8 @@ final readonly class IngestController
     $address = sprintf('%s/feed/%s/%s/%s', $request->origin(), $route->parameter('locale'),
       $route->parameter('collection'), $saved->slug->value);
 
-    return new Response(201, $answer->body, [...$answer->headers, 'Location' => $address]);
+    return $this->notices->after(new Response(201, $answer->body, [...$answer->headers, 'Location' => $address]),
+      $saved);
   }
 
   public function patch(Request $request, Route $route): Response

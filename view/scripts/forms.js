@@ -27,7 +27,8 @@ window.addEventListener("pageshow", (event) => {
 /* A settings form's save pill (`view/pages/general.php`) is the records' save bar
    without its island: closed until a field differs from what the page loaded,
    counted as the bar counts, and again once every field is back or Discard reset
-   them, while what the server said, saved or refused, keeps it open. Its
+   them, while what the server said, saved or refused, keeps it open, a save
+   with its sentence alone, as the bar shows no button with nothing pending. Its
    sentence is announced through the polite region once it changes, as the bar's
    is. Ctrl or ⌘ S saves while something is pending or was refused. */
 document.querySelectorAll("[data-save-bar]").forEach((bar) => {

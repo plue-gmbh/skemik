@@ -97,7 +97,7 @@ const edgePicker = {
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
         ...(this.held !== "" ? { record: this.record, held: this.held } : {}),
       });
-      const { ok, body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
+      const { ok, body } = await sought(this.$refs.search, query);
       if (typed !== this.typed) return;
       this.hits = body.hits ?? [];
       this.asked = ok;
@@ -113,7 +113,7 @@ const edgePicker = {
     },
     typing() {
       window.clearTimeout(this.timer);
-      this.timer = window.setTimeout(() => this.find(), 200);
+      this.timer = window.setTimeout(() => this.find(), 300);
     },
     take(item) {
       if (!this.field.many) return this.$emit("done", [item]);

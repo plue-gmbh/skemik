@@ -44,7 +44,7 @@ $address = '/c/' . $collection->slug->value . '/' . $entity->id->value;
 <?php else: ?>
       <li><div class="record-row is-missing"><span
         class="locale-dot is-missing"><?= $template->escape($each->locale) ?></span><span
-        class="record-row-name"><?= $template->escape($words->get('record.missing')) ?></span>
+        class="visually-hidden"><?= $template->escape($words->get('record.missing')) ?></span>
 <?php if ($writes): ?>
         <span class="record-row-acts">
 <?php if ($each->candidates !== []): ?>

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Update;
 
 use Admin\DataLayout;
+use Admin\Notices;
+use Http\ErrorHandler;
 use Http\Response;
 use Support\Clock;
 use Support\Fetch;
@@ -39,6 +41,7 @@ final readonly class Updater
     private Signature $signature,
     private Installer $installer,
     private Backup $backup,
+    private Notices $notices,
     private Fetch $fetch,
     private Clock $clock,
   ) {}
@@ -113,15 +116,35 @@ final readonly class Updater
   }
 
   /* A download that broke off and a snapshot without room are the machine's, as a refusal may be.
-     A refusal records over the report from before, the release recorded at the swap having gone back. */
+     A refusal records over the report from before, the release recorded at the swap having gone back,
+     and is mailed the first time only, since the machine's is tried again every hour. */
   private function attempted(Manifest $manifest): void
   {
     $before = $this->check->report();
+    $installed = $this->announced($manifest->version);
     try {
       $this->installed($manifest);
     } catch (UpdateRefused | FetchFailed | SnapshotFailed $failure) {
       $this->check->record($before->refusing($manifest->version, $failure->getMessage(),
         !$failure instanceof UpdateRefused || $failure->again));
+      $before->refused === $manifest->version || $this->notices->refused($manifest->version);
+
+      return;
+    }
+    $installed();
+  }
+
+  /** The mail that tells of the release, written before the swap and never in its way: a failure writing it is
+      thrown once the release is in, since an update a mail refused is one no later release could mend.
+      @return \Closure(): void */
+  private function announced(string $version): \Closure
+  {
+    try {
+      return $this->notices->installing($version);
+    } catch (\Throwable $failure) {
+      return static function () use ($failure): never {
+        throw $failure;
+      };
     }
   }
 
@@ -176,11 +199,13 @@ final readonly class Updater
     };
   }
 
-  /* The classes met after the swap are loaded before it, since one met later would load from the new tree.
+  /* The classes met after the swap are loaded before it, since one met later would load from the new tree, the
+     last of them the one that logs a mail failing once the release is in.
      A failed swap has put the tree back itself, and a failed snapshot moved nothing to put back. */
   private function swapped(Manifest $manifest): void
   {
-    array_map(class_exists(...), [SnapshotFailed::class, FetchFailed::class, Fetched::class, UpdateRefused::class]);
+    array_map(class_exists(...), [SnapshotFailed::class, FetchFailed::class, Fetched::class, UpdateRefused::class,
+      ErrorHandler::class]);
     $marker = fopen($this->data . '/' . Move::MARKER, 'c');
     if ($marker === false || !flock($marker, LOCK_EX | LOCK_NB)) {
       throw UpdateRefused::because('the holdings are being moved by another request');

@@ -161,6 +161,7 @@ final readonly class LoginController
   private function page(array $values, int $status): Response
   {
     return Response::html($this->template->render('pages/login', ['words' => $this->words,
-      'note' => $this->premises->loginNote, 'link' => $this->premises->loginLink, ...$values]), $status);
+      'note' => $this->premises->loginNote, 'link' => $this->premises->loginLink,
+      'app' => $this->premises->appName, ...$values]), $status);
   }
 }

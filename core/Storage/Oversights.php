@@ -12,7 +12,8 @@ use Support\Json;
    one grouped query a finding rather than a record loaded per row, since an organisation
    with three hundred drafts should not pay for them on every visit to the
    overview. Trashed rows are left out, and each answer is by type, most first,
-   the collection a finding opens being the one holding most of it. */
+   the collection a finding opens being the one holding most of it. A count
+   carries its oldest row, an id being a UUIDv7, for a line counting one to open. */
 final readonly class Oversights
 {
   private const LIVE = 'e.deleted_at is null';
@@ -22,12 +23,11 @@ final readonly class Oversights
   /**
    * @param list<string> $types the type URLs asked
    * @param ?string $before only rows made before this instant
-   * @return array<string, int> by type URL
+   * @return array<string, Tally> by type URL
    */
   public function inState(Status $status, array $types, ?string $before = null): array
   {
-    return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE
-      . ' and e.status = :status and e.type in (select value from json_each(:types))'
+    return $this->counted(' and e.status = :status and e.type in (select value from json_each(:types))'
       . ' and (:before is null or e.created_at < :before)',
       ['status' => $status->value, 'types' => $this->json->encode($types), 'before' => $before]);
   }
@@ -36,11 +36,11 @@ final readonly class Oversights
       public or on its way there: an upload is a draft, and asking of each its alt
       text at once would count every picture still being sorted, as it would every
       one put away.
-      @return array<string, int> by type URL */
+      @return array<string, Tally> by type URL */
   public function withoutAlt(string $type): array
   {
-    return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
-      . " and e.status in (:review, :published) and substr(json_extract(e.props, '$.encoding_format'), 1, 6) = 'image/'"
+    return $this->counted(' and e.type = :type and e.status in (:review, :published)'
+      . " and substr(json_extract(e.props, '$.encoding_format'), 1, 6) = 'image/'"
       . " and trim(coalesce(json_extract(e.props, '$.description'), '')) = ''",
       ['type' => $type, 'review' => Status::Review->value, 'published' => Status::Published->value]);
   }
@@ -67,26 +67,20 @@ final readonly class Oversights
     return $listed;
   }
 
-  /** A message nobody marked read, in any state, the oldest first, since an id
-      is a UUIDv7 and the one waiting longest is the one to open.
-      @return array<string, list<EntityId>> by type URL */
+  /** A message nobody marked read, in any state.
+      @return array<string, Tally> by type URL */
   public function unread(string $type): array
   {
-    $statement = $this->db->prepare('select e.id from entity e where ' . self::LIVE . ' and e.type = :type'
-      . " and json_extract(e.props, '$.date_read') is null order by e.id");
-    $statement->execute(['type' => $type]);
-    $ids = array_map(fn (string $id): EntityId => new EntityId($id), $statement->fetchAll(\PDO::FETCH_COLUMN));
-
-    return $ids === [] ? [] : [$type => $ids];
+    return $this->counted(" and e.type = :type and json_extract(e.props, '$.date_read') is null", ['type' => $type]);
   }
 
   /** What stands open by the field that says how it stands, in any state, since
       what a till writes is a draft and stays one.
       @param list<string> $values the states that count as open
-      @return array<string, int> by type URL */
+      @return array<string, Tally> by type URL */
   public function standing(string $type, string $field, array $values): array
   {
-    return $this->counted('select e.type, count(*) from entity e where ' . self::LIVE . ' and e.type = :type'
+    return $this->counted(' and e.type = :type'
       . ' and json_extract(e.props, :path) in (select value from json_each(:values))',
       ['type' => $type, 'path' => '$.' . $field, 'values' => $this->json->encode($values)]);
   }
@@ -114,13 +108,18 @@ final readonly class Oversights
 
   /**
    * @param array<string, string|null> $bindings
-   * @return array<string, int>
+   * @return array<string, Tally>
    */
-  private function counted(string $select, array $bindings): array
+  private function counted(string $where, array $bindings): array
   {
-    $statement = $this->db->prepare($select . ' group by e.type order by count(*) desc, e.type');
+    $statement = $this->db->prepare('select e.type, count(*), min(e.id) from entity e where ' . self::LIVE
+      . $where . ' group by e.type order by count(*) desc, e.type');
     $statement->execute([...$bindings]);
+    $tallies = [];
+    foreach ($statement->fetchAll(\PDO::FETCH_NUM) as [$type, $count, $first]) {
+      $tallies[(string) $type] = new Tally((int) $count, new EntityId((string) $first));
+    }
 
-    return array_map(intval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
+    return $tallies;
   }
 }

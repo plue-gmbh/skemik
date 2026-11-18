@@ -10,11 +10,14 @@ declare(strict_types=1);
    The referrer policy is said here a second time, as `Http\SecurityHeaders`
    says it, because a host's front can replace the header with a looser one and
    a browser reads the document's own last.
-   Handed `$title`, `$body`, `$islands` and `$words`. */
+   Handed `$title`, `$body`, `$islands`, `$words` and `$app`, the public name ending the title, null or left out
+   for none. */
 
 if (!isset($template)) {
   return;
 }
+$app ??= null;
+$named = ($title === '' ? '' : $title . ' · ') . 'Skemik' . ($app === null ? '' : ' · ' . $app);
 ?>
 <!doctype html>
 <html lang="<?= $template->escape($words->language) ?>">
@@ -22,10 +25,10 @@ if (!isset($template)) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="same-origin">
-<title><?= $template->escape($title === '' ? 'Skemik' : $title . ' · Skemik') ?></title>
+<title><?= $template->escape($named) ?></title>
 <link rel="icon" href="<?= $template->asset('icons/favicon.ico') ?>" sizes="32x32">
 <link rel="apple-touch-icon" href="<?= $template->asset('icons/apple-touch-icon.png') ?>">
-<link rel="manifest" href="<?= $template->asset('manifest.webmanifest') ?>">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/view/vendor/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= $template->asset('style.css') ?>">
 <?php if ($islands): ?>

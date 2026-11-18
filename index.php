@@ -35,7 +35,7 @@ ini_set('serialize_precision', '-1');
 ini_set('precision', '-1');
 $request = Http\Request::from($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 if (PHP_SAPI === 'cli-server'
-  && preg_match('#^/view/[\w/.-]+\.(css|js|woff2|ico|png|webmanifest)$#', $request->path) === 1) {
+  && preg_match('#^/view/[\w/.-]+\.(css|js|woff2|ico|png)$#', $request->path) === 1) {
   return false;
 }
 $template = new Support\Template(__DIR__ . '/view');
@@ -111,7 +111,7 @@ $logger = new Http\Logger($data . '/log', $utc);
 $named = fn (string $key): ?string => (string) ($config[$key] ?? '') !== '' ? (string) $config[$key] : null;
 $premises = new Admin\Premises($data, $address, (bool) ($config['daily_backups'] ?? true),
   (bool) ($config['updates'] ?? true), ($config['updates'] ?? true) === 'early',
-  $named('security_contact'), $named('login_note'), $named('login_link'));
+  $named('security_contact'), $named('login_note'), $named('login_link'), $named('app_name'));
 $halt = (new Admin\Probes($data,
   new Admin\DataLayout(__DIR__, new Admin\Proofs(new Support\Fetch(), $words), $words),
   new Support\Fetch(), $utc, $words, new Update\UpdateCheck($data, new Support\Fetch(), $utc)))
@@ -143,7 +143,7 @@ try {
   $session = new Auth\Session($data . '/sessions', $request->https, $utc);
   $sessioned = !$route->endpoint->isMachine();
   $sessioned && $session->resume($request->cookie('session'));
-  if ($sessioned && $route->endpoint->isFile()) {
+  if ($sessioned && $route->endpoint->onlyReadsSession()) {
     session_write_close();
     $sessioned = false;
   }
@@ -152,6 +152,10 @@ try {
 } catch (Throwable $failure) {
   $response = (new Http\ErrorHandler($logger, $template, $common?->words ?? $words))
     ->handle($failure, $request, $common?->account?->id);
+  /* A logged failure is mailed once the answer has left, built only then, since the holdings may be what failed;
+     one after the answer is not, so a mail that fails is never mailed about. */
+  $response = $common === null || $response->status < 500 ? $response
+    : $response->after(fn () => (new Wiring\Upkeep($common))->notices()->failed());
 }
 
 /* After the answer: a cookie that named no live session is cleared and none set unless the answer

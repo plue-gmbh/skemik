@@ -8,6 +8,7 @@ use Auth\Account;
 use Auth\AccountRepository;
 use Auth\Capability;
 use Domain\Entity;
+use Domain\EntityId;
 use Domain\TranslationGroup;
 use Http\Request;
 use Http\Response;
@@ -50,24 +51,28 @@ final readonly class FindController
   public function show(Account $account, Entity $person, Request $request): Response
   {
     $asked = trim(Search::bounded((string) $request->query('q')));
-    $found = $asked === '' ? [] : $this->found($account, $asked);
+    $ids = $asked === '' ? [] : $this->search->search($asked,
+      $this->rows->readings($account, $this->collections->all()));
+    $found = $this->found($account, $ids);
+    /* Asked of the search's own answer: a work found in three languages is one hit of the three it took. */
+    $capped = count($ids) >= Search::LIMIT;
     $main = $this->template->render('pages/find', ['words' => $this->words, 'asked' => $asked,
-      'groups' => $this->grouped($found, $asked, count($found) >= Search::LIMIT),
+      'groups' => $this->grouped($found, $asked, $capped),
       'lines' => $account->can(Capability::ReadLog) ? $this->logged($found, $asked) : [],
-      'total' => count($found)]);
+      'total' => count($found), 'capped' => $capped]);
 
     return $this->frame->around($account, $person,
       new Screen($this->words->get('find.title'), $main, FeedPanel::at($request, '/feed')));
   }
 
   /** The hits the reader may open, a work's group once, by its best member.
+      @param list<EntityId> $ids
       @return list<Entity> */
-  private function found(Account $account, string $asked): array
+  private function found(Account $account, array $ids): array
   {
     $found = [];
     $seen = [];
-    $collections = $this->collections->all();
-    foreach ($this->search->search($asked, $this->rows->readings($account, $collections)) as $id) {
+    foreach ($ids as $id) {
       $entity = $this->entities->find($id);
       $root = TranslationGroup::rootOf($entity)->value;
       if (!isset($seen[$root]) && $this->rows->readable($account, $entity)) {

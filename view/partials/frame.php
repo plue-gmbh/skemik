@@ -9,7 +9,7 @@ declare(strict_types=1);
    data folder runs short (`Admin\Probes`), and at its foot the copyright line,
    pushed to the bottom where a screen is short.
    Handed `$title`, `$main`, `$notice`, null for none, `$space`, `$account`, `$menu`, `$own`, `$entries`,
-   `$open`, `$locale`, `$sites`, `$feed`, `$islands`, `$csrf` and `$words`. */
+   `$open`, `$locale`, `$sites`, `$feed`, `$islands`, `$csrf`, `$app`, null for none, and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -35,4 +35,4 @@ ob_start();
 </body>
 <?php
 echo $template->render('partials/document', ['words' => $words, 'title' => $title, 'islands' => $islands,
-  'body' => (string) ob_get_clean()]);
+  'app' => $app, 'body' => (string) ob_get_clean()]);

@@ -76,6 +76,7 @@ enum Endpoint
   case FeedPreflight;
   case Robots;
   case SecurityText;
+  case WebManifest;
   case PanelCatalog;
   case PanelLocale;
   case PanelCollection;
@@ -88,15 +89,16 @@ enum Endpoint
   {
     return in_array($this, [self::FeedCatalog, self::FeedLocale, self::FeedProfile, self::FeedCollection,
       self::FeedRecord, self::IngestCreate, self::IngestPatch, self::IngestArrange, self::FeedPreflight,
-      self::Robots, self::SecurityText], true);
+      self::Robots, self::SecurityText, self::WebManifest], true);
   }
 
-  /* A file's answer reads who asks and writes nothing: the session it resumed
-     is let go before the file is read, since a screen's thumbnails would otherwise
-     queue on its lock one by one, each holding a worker meanwhile. */
-  public function isFile(): bool
+  /* A file's answer and a search's read who asks and write nothing: the session
+     resumed is let go before either is answered, since a screen's thumbnails would
+     otherwise queue on its lock one by one, each holding a worker meanwhile, and a
+     search that takes long would hold every other screen of its colleague. */
+  public function onlyReadsSession(): bool
   {
-    return $this === self::MediaFile || $this === self::MediaThumb;
+    return in_array($this, [self::MediaFile, self::MediaThumb, self::Search], true);
   }
 
   /* The first run starts its own session once it has settled the data folder,

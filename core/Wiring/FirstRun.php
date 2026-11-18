@@ -11,6 +11,7 @@ use Admin\Premises;
 use Admin\Proofs;
 use Auth\AccountRepository;
 use Auth\CodeDelivery;
+use Auth\Mailer;
 use Auth\LoginCode;
 use Auth\Session;
 use Http\Request;
@@ -90,7 +91,7 @@ final readonly class FirstRun
       $accounts, new CollectionStore($db, $profile, $uuid, $this->words),
       new SettingStore($db, $utc, $profile), new Validator($profile, new EdgeValidator($schema)), $profile,
       new Session($premises->data . '/sessions', $this->request->https, $utc),
-      new LoginCode($db, $accounts, $uuid, $utc), new CodeDelivery($premises->data . '/login', null),
+      new LoginCode($db, $accounts, $uuid, $utc), new CodeDelivery($premises->data . '/login', new Mailer(null)),
       $uuid, $utc);
   }
 }

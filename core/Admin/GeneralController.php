@@ -121,6 +121,6 @@ final readonly class GeneralController
       'language' => $this->settings->chromeLocale()?->tag ?? '', 'host' => $relay['host'],
       'port' => (string) $relay['port'], 'user' => $relay['user'], 'sender' => $relay['sender'],
       'contact' => (string) ($config['security_contact'] ?? ''), 'note' => (string) ($config['login_note'] ?? ''),
-      'link' => (string) ($config['login_link'] ?? '')];
+      'link' => (string) ($config['login_link'] ?? ''), 'app' => (string) ($config['app_name'] ?? '')];
   }
 }

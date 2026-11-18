@@ -10,15 +10,17 @@ use Support\Words;
 
 /* The general screen's one form, read into what each store gets: the timezone
    and the admin's language for `setting`, and for `config.php` the relay, the
-   security contact and the line under the login form, left out where PHP cannot
-   write the file. A relay's password is kept where none is typed, but only at the
-   same host under the same user, or a host typed in would be sent the password
-   the screen never shows. The contact and the link end up in `security.txt` and
-   an `href`, so a line break or another scheme is refused, and the line is one
-   line, since the login form draws it as one. */
+   security contact, the line under the login form and the app name, left out
+   where PHP cannot write the file. A relay's password is kept where none is
+   typed, but only at the same host under the same user, or a host typed in would
+   be sent the password the screen never shows. The contact and the link end up
+   in `security.txt` and an `href`, so a line break or another scheme is refused,
+   and the line is one line, since the login form draws it as one. The app name
+   is short, since a home screen shows a dozen characters of it. */
 final readonly class GeneralForm
 {
   private const LINE = 200;
+  private const APP_NAME = 30;
   private const NO_RELAY = ['host' => '', 'port' => 587, 'user' => '', 'password' => '', 'sender' => ''];
 
   /** @param ?array<string, string|null|array<string, string|int>> $config the keys `config.php` gets, as written
@@ -48,7 +50,8 @@ final readonly class GeneralForm
 
     return new self(new \DateTimeZone($zone), new Locale($language), ['relay' => $relay,
       'security_contact' => self::contact(trim((string) $request->form('contact')), $refused),
-      ...self::line($request, $refused)], $relay['host'] !== '' && $relay !== self::heldRelay($held));
+      ...self::line($request, $refused), 'app_name' => self::appName($request, $refused)],
+      $relay['host'] !== '' && $relay !== self::heldRelay($held));
   }
 
   /** @param array<string, mixed> $held
@@ -118,5 +121,17 @@ final readonly class GeneralForm
     };
 
     return ['login_note' => $note === '' ? null : $note, 'login_link' => $link === '' ? null : $link];
+  }
+
+  /** @param \Closure(string): SettingRefused $refused */
+  private static function appName(Request $request, \Closure $refused): ?string
+  {
+    $typed = trim((string) $request->form('app'));
+
+    return match (true) {
+      $typed === '' => null,
+      mb_strlen($typed) > self::APP_NAME || preg_match('/\p{Cc}/u', $typed) === 1 => throw $refused('app'),
+      default => $typed,
+    };
   }
 }

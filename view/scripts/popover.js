@@ -4,7 +4,8 @@
    these as they mount. */
 
 /* Popovers: one at a time, under the element that opened it, or over it where it
-   does not fit under and more room is, never covering what it is about; left-aligned to it, pushed back
+   does not fit under and more room is, covering what it is about only where that leaves it less room
+   than it takes itself (`placement`); left-aligned to it, pushed back
    inside the viewport sideways, and capped at that room, since a search's hits
    arrive after it is placed. An outside press (`dismissing`) and Escape close it; a press on the
    element that opened it is left to that element, whose click opens or closes.
@@ -69,19 +70,26 @@ function dismissing(inside, close) {
 /* In the page's coordinates and not the screen's, so the page scrolling leaves it
    at its field. The room is what the visual viewport shows, since a phone's
    keyboard covers the window's foot without shrinking it. Over the field it hangs
-   by its own bottom edge, so hits arriving later grow it away from the field. The
-   width is the document's, since the window's counts the scrollbar and a popover
-   pushed under it widens the page. */
-function placement(anchor, box = { width: 0, height: 0 }, below = null) {
+   by its own bottom edge, so hits arriving later grow it away from the field. A
+   field taller than the room on either side of it, a cell of thirty chips, would
+   hold it in a strip: there it stands in the middle of what is seen, over the
+   field. The width is the document's, since the window's counts the scrollbar
+   and a popover pushed under it widens the page. */
+const SIDES = { under: "none", over: "translateY(-100%)", middle: "translateY(-50%)" };
+
+function placement(anchor, box = { width: 0, height: 0 }, side = null) {
   const at = anchor.getBoundingClientRect();
   const seen = window.visualViewport;
   const under = seen.offsetTop + seen.height - at.bottom - 12;
   const over = at.top - seen.offsetTop - 12;
-  below ??= box.height <= under || under >= over;
+  const most = Math.max(under, over);
+  side ??= box.height > most && at.height > most ? "middle"
+    : box.height <= under || under >= over ? "under" : "over";
   const left = Math.max(8, Math.min(at.left, document.documentElement.clientWidth - box.width - 8));
-  return { left: window.scrollX + left + "px",
-    top: window.scrollY + (below ? at.bottom + 4 : at.top - 4) + "px",
-    maxHeight: (below ? under : over) + "px", transform: below ? "none" : "translateY(-100%)" };
+  const top = { under: at.bottom + 4, over: at.top - 4, middle: seen.offsetTop + seen.height / 2 }[side];
+  const room = { under, over, middle: seen.height - 16 }[side];
+  return { left: window.scrollX + left + "px", top: window.scrollY + top + "px",
+    maxHeight: room + "px", transform: SIDES[side] };
 }
 
 /* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it: the
@@ -113,8 +121,8 @@ function following(anchor, element, apply) {
   };
   const move = () => {
     if (window.visualViewport.height !== room) return resize();
-    const below = element.style.transform === "none";
-    const { left, top } = placement(anchor, element.getBoundingClientRect(), below);
+    const side = Object.keys(SIDES).find((each) => SIDES[each] === element.style.transform);
+    const { left, top } = placement(anchor, element.getBoundingClientRect(), side);
     apply({ left, top });
   };
   document.addEventListener("scroll", move, true);

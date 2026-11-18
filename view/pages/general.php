@@ -7,11 +7,12 @@ declare(strict_types=1);
    what a restore elsewhere brings. What is edited fills the first two; the third
    holds what nothing here changes, the address, the host's box, the largest upload
    and each cost `/install` named. Where PHP cannot write `config.php` its boxes are
-   disabled under one note saying so, and a kept password shows only as dots. It
-   saves from the records' save pill (`view/scripts/forms.js`), which announces a
-   refusal, since it arrives after a post. Handed `$values`, `$kept`, `$address`,
-   `$writable`, `$timezones`, `$languages`, `$upload`, `$costs`, `$notice` and
-   `$refusal`, each a sentence or null, `$csrf` and `$words`. */
+   disabled under one note saying so, a kept password shows only as dots and an
+   empty name as Skemik, what the app is then called. It saves from the records'
+   save pill (`view/scripts/forms.js`), which announces a refusal, since it arrives
+   after a post. Handed `$values`, `$kept`, `$address`, `$writable`, `$timezones`,
+   `$languages`, `$upload`, `$costs`, `$notice` and `$refusal`, each a sentence or
+   null, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -63,10 +64,13 @@ $said = $notice ?? $refusal;
             $words->get('general.language_hint')) ?></p></div>
         </fieldset>
         <fieldset<?= $machine ?>>
-          <?= $legend($words->get('home.login_note'), 'config.php') ?>
+          <?= $legend($words->get('general.naming'), 'config.php') ?>
+          <div><label class="spine-label" for="general-app"><?= $template->escape($words->get('general.app'))
+            ?></label>
+          <input class="popover-input" id="general-app" name="app" type="text" value="<?= $template->escape(
+            $values['app'] ?? '') ?>" placeholder="Skemik" spellcheck="false" autocomplete="off"></div>
           <?= $field('note', $words->get('general.note')) ?>
-          <?= $field('link', $words->get('general.link'), 'url', 'general-link-hint') ?>
-          <p class="popover-hint" id="general-link-hint"><?= $template->escape($words->get('general.link_hint')) ?></p>
+          <?= $field('link', $words->get('general.link'), 'url') ?>
         </fieldset>
       </div>
       <div class="settings-column">
@@ -93,7 +97,7 @@ $said = $notice ?? $refusal;
         </fieldset>
       </div>
       <div class="settings-column">
-        <fieldset>
+        <fieldset<?= $machine ?>>
           <?= $legend($words->get('general.address'), 'config.php') ?>
           <p class="spine-label"><?= $template->escape($words->get('general.address_label')) ?></p>
           <p class="settings-fixed"><?= $template->escape($address) ?></p>

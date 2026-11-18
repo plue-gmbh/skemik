@@ -64,7 +64,7 @@ final readonly class Register
     }
 
     return new RegisterEntry($token, implode('; ', $this->reviews->lines($rules, $account)),
-      $this->facts->expiry($token) . ' · ' . $this->facts->used($token), $this->facts->issued($token),
+      $this->facts->expiry($token), $this->facts->used($token), $this->facts->issued($token),
       $sentences, array_filter($stale), $newer === null ? null : $this->facts->replaced($token, $newer));
   }
 }

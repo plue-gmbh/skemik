@@ -26,7 +26,7 @@ $named = fn (string $sentence): string => str_replace($template->escape(Admin\Gr
   <?= $template->render('partials/live-region') ?>
   <h2 id="<?= $template->escape($id) ?>-title"><?= $template->escape($words->get('grant.label',
     ['anchor' => $entry->token->label])) ?></h2>
-  <p class="grant-facts"><?= $template->escape($entry->issued . ' · ' . $entry->facts) ?></p>
+  <p class="grant-facts"><?= $template->escape(implode(' · ', [$entry->issued, $entry->expires, $entry->used])) ?></p>
 <?php if ($entry->replaced !== null): ?>
   <p class="grant-note"><?= $template->escape($entry->replaced) ?></p>
   <ul class="grant-others">

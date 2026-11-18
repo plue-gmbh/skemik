@@ -11,6 +11,7 @@ use Http\Endpoint;
 use Http\Response;
 use Http\Route;
 use Http\SecurityText;
+use Http\WebManifest;
 use Ingest\ArrangeController;
 use Ingest\Arrangement;
 use Ingest\Edges;
@@ -52,6 +53,7 @@ final readonly class Address
         ['Content-Type' => 'text/plain']),
       Endpoint::SecurityText => (new SecurityText($this->common->root,
         $this->common->premises->securityContact, Version::RELEASED))->answer(),
+      Endpoint::WebManifest => (new WebManifest($this->common->premises->appName))->answer(),
     };
   }
 
@@ -86,7 +88,7 @@ final readonly class Address
       $common->validator, $common->showing(), $common->profile, $common->schema, $common->limit(600, 60),
       $common->limit(600, 60),
       $common->uuid, $common->clock, $common->entitiesFor(...),
-      new Filed($common->intake(), $common->schema));
+      new Filed($common->intake(), $common->schema), (new Upkeep($common))->notices());
   }
 
   /* An arrangement counts in the same minute as a record write. */

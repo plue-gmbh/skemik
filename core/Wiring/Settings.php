@@ -71,7 +71,7 @@ final readonly class Settings
   private function updateController(): UpdateController
   {
     $common = $this->common;
-    return new UpdateController($common->authorizer, $common->updates(), $common->updater(),
+    return new UpdateController($common->authorizer, $common->updates(), (new Upkeep($common))->updater(),
       new Signature(Release::KEY), $common->premises->updates, $common->premises->early,
       new ConfigFile($common->root), $common->frame(), $common->csrf, $common->moments, $common->template,
       $common->words);

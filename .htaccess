@@ -23,7 +23,7 @@
   RewriteBase /
   RewriteCond %{HTTP:Authorization} .
   RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-  RewriteRule ^view/[\w/.-]+\.(css|js|woff2|ico|png|webmanifest)$ - [L]
+  RewriteRule ^view/[\w/.-]+\.(css|js|woff2|ico|png)$ - [L]
   RewriteRule ^(?!index\.php$) index.php [L]
 </IfModule>
 # END Skemik

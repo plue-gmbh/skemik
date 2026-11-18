@@ -10,7 +10,8 @@ declare(strict_types=1);
    For whoever writes the record it opens the spine dialog. Where the row stands
    for its work, the dots stand beside the chip as links, since a link cannot sit
    in a button: each opens its member, the count the record's Languages card,
-   and a missing one that card for whoever may make it.
+   and a missing one that card for whoever may make it. The record screen hands
+   its own language alone, since its Languages card lists the others.
    Handed `$row`, `$prefix`, `$translations`, null in an install of one language, `$opens` and `$words`;
    `$current`, the install's first locale, may be left out. */
 

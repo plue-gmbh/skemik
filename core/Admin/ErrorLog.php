@@ -14,11 +14,14 @@ use Support\JsonFailed;
    off, is passed over rather than hiding the ones before it. Opening the log
    touches `seen` beside it, so a failure is news until the owner read it and
    not until rotation drops it; a file and no setting, since a snapshot carries
-   the holdings and never the log. */
+   the holdings and never the log. `mailed` beside it holds when the owner was
+   last mailed a failure, so a burst of them is one mail an hour. */
 final readonly class ErrorLog
 {
   private const CHUNK = 65_536;
   private const SEEN = 'seen';
+  private const MAILED = 'mailed';
+  private const HOUR = 3600;
 
   public function __construct(private string $directory, private Json $json = new Json()) {}
 
@@ -51,6 +54,29 @@ final readonly class ErrorLog
   public function see(): void
   {
     is_dir($this->directory) && is_writable($this->directory) && touch($this->directory . '/' . self::SEEN);
+  }
+
+  /* Whether a failure may be mailed now, the hour taken where it may: under a
+     lock, since the failures of one burst arrive together. */
+  public function mailing(): bool
+  {
+    $handle = is_dir($this->directory) && is_writable($this->directory)
+      ? fopen($this->directory . '/' . self::MAILED, 'c+') : false;
+    if ($handle === false) {
+      return false;
+    }
+    try {
+      $due = flock($handle, LOCK_EX) && time() - (int) stream_get_contents($handle) >= self::HOUR;
+      if ($due) {
+        ftruncate($handle, 0);
+        rewind($handle);
+        fwrite($handle, (string) time());
+      }
+
+      return $due;
+    } finally {
+      fclose($handle);
+    }
   }
 
   private function entry(string $line): ?ErrorEntry

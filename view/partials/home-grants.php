@@ -33,7 +33,9 @@ if ($entries === []) { ?>
           ?></span><span class="change-line"><span class="change-what"
           title="<?= $template->escape($entry->line) ?>"><?= $template->escape($entry->line) ?></span></span><span
           class="change-line is-quiet"><span
-          class="change-what"><?= $template->escape($entry->facts) ?></span></span></button>
+          class="change-what"><?= $template->escape($entry->expires) ?></span></span><span
+          class="change-line is-quiet"><span
+          class="change-what"><?= $template->escape($entry->used) ?></span></span></button>
 <?= $template->render('partials/grant-dialog', ['words' => $words, 'entry' => $entry, 'until' => $until,
   'csrf' => $csrf]) ?>
         </li>

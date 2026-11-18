@@ -113,7 +113,7 @@ final readonly class DataLayout
       'relay' => ['host' => '', 'port' => 587, 'user' => '', 'password' => '', 'sender' => ''],
       'daily_backups' => $premises->dailyBackups, 'updates' => $premises->updates,
       'security_contact' => $premises->securityContact,
-      'login_note' => $premises->loginNote, 'login_link' => $premises->loginLink]);
+      'login_note' => $premises->loginNote, 'login_link' => $premises->loginLink, 'app_name' => $premises->appName]);
     $this->proveHidden($premises->address . '/config.php', $sentinel, $premises->data);
   }
 

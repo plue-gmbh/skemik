@@ -200,14 +200,14 @@ const referPicker = {
     typing() {
       this.$emit("draft", this.result());
       window.clearTimeout(this.timer);
-      this.timer = window.setTimeout(() => this.find(this.word), 200);
+      this.timer = window.setTimeout(() => this.find(this.word), 300);
     },
     async find(typed) {
       if (typed.trim() === "") return (this.hits = []);
       const query = new URLSearchParams({
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
       });
-      const { body } = await answered(fetch("/search?" + query, { headers: { Accept: "application/json" } }));
+      const { body } = await sought(this.$refs.word, query);
       if (typed === this.word) this.hits = body.hits ?? [];
     },
     refer(hit) {
