@@ -24,7 +24,7 @@ final readonly class Collection
     'Invoice' => 'invoices', 'MemberProgram' => 'membership-programs', 'Brand' => 'brands',
     'Event' => 'events', 'Reservation' => 'reservations', 'ItemList' => 'item-lists',
     'DefinedTerm' => 'defined-terms', 'JobPosting' => 'job-postings', 'SoftwareApplication' => 'software',
-    'Question' => 'questions', 'Action' => 'actions',
+    'Question' => 'questions', 'Action' => 'actions', 'Observation' => 'observations',
   ];
 
   public Slug $slug;

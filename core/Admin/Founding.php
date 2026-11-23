@@ -30,7 +30,7 @@ use Support\Uuid;
 /* The install a first run makes, in one transaction so a failure leaves no
    half-made owner: the settings, its language among them before any record is
    written in one, the `Person`, the one `owner` account beside it and all
-   thirty collections — the product, not a choice. Nothing else is
+   thirty-one collections — the product, not a choice. Nothing else is
    seeded, since an example record is the first day spent tidying up. The owner
    is a draft like any new record: a name is not published by being typed here.
    The account check sits inside the write lock, so two first runs posted at once

@@ -54,6 +54,7 @@ $ending = $library ? $uploads : $creates;
 <template data-new-row><?= $drawn(null) ?></template>
 <?php endif ?>
 <?= $template->render('partials/sheet-pages', ['words' => $words, 'page' => $page, 'perPage' => $perPage,
-  'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
+  'total' => $total, 'shown' => count($rows), 'parameters' => $parameters,
+  'all' => $narrowed ? $all : null]) ?>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
 <?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

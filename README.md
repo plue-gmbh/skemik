@@ -1,16 +1,16 @@
 # Skemik
 
-![Version 1.0.20](https://img.shields.io/badge/version-1.0.20-1f6feb)
+![Version 1.1.0](https://img.shields.io/badge/version-1.1.0-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
-Skemik is the database that ships its own data model. It holds 30 curated
+Skemik is the database that ships its own data model. It holds 31 curated
 schema.org types, the same in every install, with their fields named and typed
 before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.0.20)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.0)
 
 The demo install's events, read with no key:
 
@@ -132,15 +132,15 @@ WordPress, with its members, courses, orders or bookings in spreadsheets beside
 it. That is a company, a shop, a club or a school, and the agency that builds
 their sites.
 
-- **The model.** Thirty schema.org types. Each is a collection with its own
-  address, statuses from draft to archived and its own permissions, and its
-  fields are named and typed. The thirty limit the collections, not what can be
-  said. A document uses far more than thirty `@type`s: value objects such as a
-  postal address or opening hours held inside a record, a record's kind, and a
-  media file's format. What seems to need a thirty-first type is nearly always
-  a kind, an additional property, a list or a term. A thing none of the thirty
-  carries, one that needs its own address, statuses and permissions, is added
-  as a type by a release, the same in every install.
+- **The model.** Thirty-one schema.org types. Each is a collection with its
+  own address, statuses from draft to archived and its own permissions, and its
+  fields are named and typed. The thirty-one limit the collections, not what
+  can be said. A document uses far more than thirty-one `@type`s: value objects
+  such as a postal address or opening hours held inside a record, a record's
+  kind, and a media file's format. What seems to need a thirty-second type is
+  nearly always a kind, an additional property, a list or a term. A thing none
+  of the thirty-one carries, one that needs its own address, statuses and
+  permissions, is added as a type by a release, the same in every install.
 
 - **The linking.** Records point at each other under schema.org's own property
   names. An edge can carry words of its own, such as *CTO from 2021 to 2024*. A
@@ -447,6 +447,19 @@ counts a key running out within 30 days, until a new one is issued under its
 name. A colleague is told only of what they read. Each line leaves once what it
 counts is taken up or mended.
 
+**Saved questions, a card on the home screen, hold the organisation's own
+figures.** Each line is a collection as its query bar narrowed it, with one
+figure over every record it narrows to: how many there are, a number field
+summed, or that field on the latest record by the collection's first date. Its
+title says the collection, the narrowing and the figure in the reader's
+language. A line opens its collection narrowed the same way. Whoever arranges a
+collection's fields saves a line on the collection's screen once it is
+narrowed, and deletes it there, narrowed the same way. In the admin's address a
+date may be relative, `today`, `today-1` or `month`, so a question keeps its day
+or its month. The feed refuses a relative date: a frontend computes its own. A
+colleague sees a line only where they read what it asks and every record it
+names. It is counted as they read it, drafts among it.
+
 **What would wait on the home screen is mailed as well**, so nobody has to open
 the home screen to learn of it. When a key posts a message, an order or a
 reservation that stands on one of its lines, the line is mailed to every
@@ -544,17 +557,18 @@ installing. Either way, the first request on the new version moves the holdings
 to it before anything reads them. Where a migration script is pending, the
 database is copied, the scripts above its number run, and every record's sort
 keys and search words are written again by the new code. Then the data folder
-is stamped with the version and its last script's number in `version.txt`. A
-request meanwhile is answered *being updated*. The holdings check behind Needs
-a look starts over, since the fields a release asks for are its own. Where a
-script fails, or the database afterwards lacks the shape the release declares,
-the database goes back to the copy and every address answers a page saying so.
-That lasts until the release that ran before is copied back, or until
-`updating.txt` in the data folder is removed once the cause is mended. The
-reason stands in that file and not on the page every stranger reads, since its
-words can name a path. A release is not undone by copying the older files back.
-The database stays at its number and the older code refuses it, so the way back
-is the snapshot.
+is stamped in `version.txt` with the version, its last script's number and a
+fingerprint of the files the types are declared in, so a copy whose types
+differ under the same version is moved too. A request meanwhile is answered
+*being updated*. The holdings check behind Needs a look starts over, since the
+fields a release asks for are its own. Where a script fails, or the database
+afterwards lacks the shape the release declares, the database goes back to the
+copy and every address answers a page saying so. That lasts until the release
+that ran before is copied back, or until `updating.txt` in the data folder is
+removed once the cause is mended. The reason stands in that file and not on the
+page every stranger reads, since its words can name a path. A release is not
+undone by copying the older files back. The database stays at its number and
+the older code refuses it, so the way back is the snapshot.
 
 ## Security
 
@@ -594,7 +608,7 @@ the browser's preflight is answered.
 |---|---|---|
 | `GET` | `/feed` | the locales the install holds, and `dateModified`, when anything a reading shows last changed |
 | `GET` | `/feed/{locale}` | the catalogue: the collections this reader reads, the names of their fields in that language and the words for every value a field takes from a fixed list, such as `EventScheduled` |
-| `GET` | `/feed/{locale}/profile` | every field of the thirty types, whatever this install carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
+| `GET` | `/feed/{locale}/profile` | every field of the thirty-one types, whatever this install carries, with the words of every fixed list, a row's keys' among them, and what a write must send, may repeat and cannot set |
 | `GET` | `/feed/{locale}/{collection}` | a page of its records |
 | `GET` | `/feed/{locale}/{collection}/{slug}` | one record |
 | `POST` | `/feed/{locale}/{collection}` | a new record, a draft, `201` with its address in `Location` |
@@ -629,7 +643,7 @@ other, as *Reading the feed* says in full:
 
 ## Collections
 
-The collections are the same thirty in every install, one per type. Each type
+The collections are the same thirty-one in every install, one per type. Each type
 is the schema.org class it is named after, and every field has the name
 schema.org gives it. An organisation chooses which of a type's fields its
 collection carries, the ones its admin edits, and which of those it publishes,
@@ -643,7 +657,7 @@ dataset is **either**: a record per language where the file differs, and
 otherwise one record with words per language. A language's words stand on one
 of its records. A translation made takes its language's words along. A record
 linked into a group gives up its words in the languages the other members are
-written in, and they give up theirs in its language. Four types are **never**
+written in, and they give up theirs in its language. Five types are **never**
 public and answer a key alone.
 
 | Type | Collection | Languages | Public |
@@ -678,6 +692,7 @@ public and answer a key alone.
 | [SoftwareApplication](https://schema.org/SoftwareApplication) | `software` | words per language | can be |
 | [Question](https://schema.org/Question) | `questions` | a record per language | can be |
 | [Action](https://schema.org/Action) | `actions` | no translation | can be |
+| [Observation](https://schema.org/Observation) | `observations` | no translation | never |
 
 ## Reading the feed
 
@@ -832,7 +847,7 @@ typed into a term field in the admin becomes a term of that field's set, made
 as it is typed, and the same word typed again is that term.
 
 A record's kind is its `additionalType`, beside an `@type` that stays one of
-the thirty. A product group is a `Product` whose `additionalType` is
+the thirty-one. A product group is a `Product` whose `additionalType` is
 `ProductGroup`, holding `variesBy` and its variants under `hasVariant` in their
 order. A page that marks it up for a search engine lifts the kind into `@type`
 itself.
@@ -853,9 +868,15 @@ An event's parts are `events?superEvent=…`, an article's comments
 `comments?about=…`, a product's reviews `reviews?itemReviewed=…`, and a site's
 pages `web-pages?isPartOf=…`, each where the organisation publishes that field.
 What a whole does state is what is computed over its parts: the price range,
-and a rating over the reviews that name it. The rating stands on a product, a
+a rating over the reviews that name it, and a counter of `CommentAction` over
+the comments `about` it, never over an article or a message about it. Both
+count only what the reader may fetch. The rating stands on a product, a
 service, a brand, an event, a place, an organisation, and a work other than a
 review, a comment, a message or a question.
+
+A rating counted elsewhere, a marketplace's, is typed on the record. It stands
+where no review the reader may fetch names the record, and gives way to the
+computed one where one does.
 
 ### Asking a list
 
@@ -872,6 +893,16 @@ Berlin. A comma asks for any of its values, `?keywords=vegan,organic`, fifty
 at most, and is the one way to ask for several. A parameter given twice is
 refused, as is one the address does not know. So a campaign's `?utm_source=`
 stays on the page's own address.
+
+A number the document computes is filtered and sorted by the number it
+states, though no row holds it. `?remainingAttendeeCapacity=1..` asks for the
+events with places left. A rating is the exception: `?ratingValue=` asks the
+number typed.
+
+An amount answers to the property it arrives on, `?inventoryLevel=5` for an
+offer's stock. Its other keys add their own name, so `?widthUnitCode=CMT` asks
+for a product whose width is given in centimetres. Any other value object's
+key answers to its own, `?addressLocality=`.
 
 A text matches from its start, `?name=mar` finding *Maria*, in the words the
 route shows. The English route finds a person by her English name and never by
@@ -929,7 +960,7 @@ draft is seen in the admin.
 ### The profile
 
 `/feed/{locale}/profile` is what every collection can hold, the same to every
-reader and in every install: the thirty types, the four never public among
+reader and in every install: the thirty-one types, the five never public among
 them, each with every field of its type. The catalogue, by contrast, says what
 its reader reads of what this install carries. A type is the `Class` it is
 `about`. A field is the catalogue's entry, named and worded alike, and typed a
@@ -1075,10 +1106,13 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   install holds no term for what the world closes.
 
 - **A new record lands as a draft**, with a slug made from its name, `till`,
-  then `till-2`. A slug is lowercase letters and digits joined by single
-  hyphens, whatever the name holds, so `Über_Uns v2.0` lands as
-  `ueber-uns-v2-0`, and a frontend may rest on that shape. Status, slug and version never travel in a document, and no
-  key publishes or trashes. What a script wrote, the organisation sees before
+  then `till-2`. A record without a name, a day's page views, takes its type
+  and the day it was made, `observation-2026-11-19`, then
+  `observation-2026-11-19-2`. A slug is lowercase letters and digits joined by
+  single hyphens, whatever the name holds, so `Über_Uns v2.0` lands as
+  `ueber-uns-v2-0`, and a frontend may rest on that shape. Status, slug and
+  version never travel in a document, and no key publishes or trashes. What a
+  script wrote, the organisation sees before
   the world does, and a stray record leaves as a draft nobody saw. A run that
   leaves eighty drafts across ten collections is not eighty visits. Each
   collection, filtered to *draft* in whichever view, is ticked as a page and
@@ -1099,6 +1133,28 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   `ExerciseAction`, with the member as `agent` and the workout as `object`. It
   reads a member's workouts back with `?agent=`, and corrects a wrong entry
   with a `PATCH`.
+
+- **What a frontend counted is a record too.** A site counts its own page
+  views, since the feed sees its refetches and never its visitors. Once a day
+  has closed, it posts one `Observation` per page to `observations`, with the
+  page as `observationAbout`, the day as `observationDate`, `pageViews` as
+  `variableMeasured` and the count as `value`. The page states the sum as its
+  `interactionStatistic`, an `InteractionCounter` of `ViewAction`, computed
+  when the document is written. Every observation counts, a draft too, since
+  none is ever public. Downloads, video plays, audio plays, likes and shares
+  are posted the same way, as `downloads`, `videoPlays`, `audioPlays`, `likes`
+  and `shares`. Each is summed into a counter of its own, of `DownloadAction`,
+  `WatchAction`, `ListenAction`, `LikeAction` and `ShareAction`. A like taken
+  back is a minus in its day. A record with two counters states them as a
+  list, and the address sorts by one under its class, `?sort=-DownloadAction`.
+  A work states every counter where the collection publishes it. An
+  organisation and a person state their views, likes, shares and comments.
+  Members, and visitors at the door or to a site's `WebSite`, are posted as
+  `members` and `visitors` and never summed.
+  A reading taken at a moment, a fridge's in the morning and in the evening,
+  gives `observationDate` a date and time, `2026-11-18T07:15:00Z`, where a
+  day's count gives the day. `?observationDate=2026-11-18` finds both: the day,
+  and every moment of that day in the install's timezone.
 
 - **A field of rows is written inline**, on any record, and its rows are no
   records. A button is a label and a link, so `potentialAction` is rows of
@@ -1247,6 +1303,16 @@ what it spends.
   document is written. What must not leave the install went through one filter
   at every depth. No `expand` parameter was wanted.
 
+- **Page views are counted by the frontend, and the install counts nothing.**
+  The feed sees a frontend's refetches and never its visitors, so the site
+  decides what it counts and posts a day's count per page through a key. The
+  thirty-first type holds it, since a number about a record on a date is no
+  other type, and the type came from that case and not from the paper. A hit
+  counted by the install would be a write per visit, where a frontend's day is
+  one write per page. What it spends: a hundred pages read are some thirty-six
+  thousand rows a year, which nothing prunes, in the backup and the dump too.
+  The count is the frontend's word.
+
 ### The stack
 
 - **The toolchain is the maintenance cost, not the language.** Anything that
@@ -1336,7 +1402,7 @@ what it spends.
   viewer reads. Only an owner issues keys, manages accounts, purges the trash,
   reads the log, updates and backs up. Every role takes a dump of what it
   reads. An account may be narrowed to the types it writes and the types it
-  reads internally: two sets of thirty checkboxes and no capability matrix,
+  reads internally: two sets of thirty-one checkboxes and no capability matrix,
   since the list of things to tick is fixed by the release. A read scope
   cannot reach below the public. For a type outside the scope the account sees
   what a stranger sees, through the same filter the feed uses and never a
@@ -1483,7 +1549,7 @@ what it spends.
 
 - **A field's name is ours, in every language.** The fields are named before
   you start, and that holds for their words too. A file per language says what
-  the thirty types' fields are called. The admin shows them in the editor's
+  the thirty-one types' fields are called. The admin shows them in the editor's
   language, and the feed's catalogue in the language of the content. An
   organisation cannot rename one. A renamed field would say *Monthly fee* on
   the screen and `price` at the address, one word for every content language,

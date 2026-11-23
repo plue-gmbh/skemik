@@ -14,7 +14,7 @@ use Profile\TypeDefinition;
 use Profile\ValueObject;
 use Storage\Collection;
 
-/* The profile at `/feed/{locale}/profile`: every field of the thirty types,
+/* The profile at `/feed/{locale}/profile`: every field of the thirty-one types,
    built from the release and never from the install, so it is the same in every
    install and a machine learns a type without probing a catalogue that shows
    only its own reading. A field is the catalogue's entry typed a `Property` too,

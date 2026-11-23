@@ -23,9 +23,12 @@ use Support\Json;
 final readonly class SortKeys
 {
   private const GERMAN = ['ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss'];
+  /* Built once, since ICU compiles its rules on every `create`: per key, that was most of a move's rewrite. */
+  private ?\Transliterator $latin;
 
   public function __construct(private Json $json = new Json())
   {
+    $this->latin = \Transliterator::create('Latin-ASCII');
     assert($this->key('Ärztin') < $this->key('Zimmermann'), 'an umlaut sorts after z');
     assert($this->key('Łódź ØRSTED đak Straße') === 'lodz orsted dak strasse', 'a letter is not folded');
   }
@@ -91,7 +94,7 @@ final readonly class SortKeys
   public function key(string $text): string
   {
     $folded = strtr(mb_convert_case($text, MB_CASE_LOWER, 'UTF-8'), self::GERMAN);
-    $latin = \Transliterator::create('Latin-ASCII')?->transliterate($folded);
+    $latin = $this->latin?->transliterate($folded);
 
     return mb_convert_case($latin === false || $latin === null ? $folded : $latin, MB_CASE_FOLD, 'UTF-8');
   }

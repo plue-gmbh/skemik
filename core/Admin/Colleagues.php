@@ -17,7 +17,7 @@ use Storage\EntityRepository;
 use Support\Words;
 
 /* What the Accounts card reads: a row per account, owners first since an organisation
-   asks first who can still hand out the keys, and the thirty types its scope
+   asks first who can still hand out the keys, and the thirty-one types its scope
    editors tick. Without `manageAccounts` a disabled account is left out, being
    nobody to ask. A scope is said by the types it names, and where the rest is
    read, because a type left out is read as the public reads it; which types have

@@ -74,10 +74,11 @@ enum Qualifier: string
     };
   }
 
-  /* What it holds as schema.org names it: its buttons are rows of `Action`. */
-  public function datatype(): string
+  /** What it holds as schema.org names it: its buttons are rows of `Action`.
+      @return list<string> */
+  public function datatypes(): array
   {
-    return $this === self::PotentialAction ? 'Action' : $this->kind()->datatype();
+    return $this === self::PotentialAction ? ['Action'] : $this->kind()->datatypes();
   }
 
   /** What a screen writes on such an edge, each a line of its own read as its

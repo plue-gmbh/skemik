@@ -7,9 +7,8 @@ namespace Profile;
 /* One property of one type, as the seed declares it. The key is snake_case; the
    schema.org spelling is SchemaOrg's business, not this class's.
    Readonly: the marks are applied by building a new instance, never by setting.
-   An option's word is `Seed\Terms`'s, per content language and never by the
-   admin's: an organisation publishing `de-DE` with an English-only admin still gets its
-   German status words. */
+   An option's word is `Seed\Terms`'s, in the content's language at the address and
+   in the reader's in the admin, as a field's name is. */
 final readonly class FieldDefinition
 {
   /**
@@ -18,6 +17,7 @@ final readonly class FieldDefinition
    *   which is not a type and is never resolved as one
    * @param list<string> $targets what an edge points at: every type the seed names
    *   for it, or a class above some of them (CreativeWork), ['DefinedTerm'] on a term, or ['*'] for any
+   * @param array<string, string> $fixed the keys of its value object no use types, each naming its one class
    */
   public function __construct(
     public string $key,
@@ -46,6 +46,7 @@ final readonly class FieldDefinition
     public ?string $block = null,       /* the heading a flattened field stands under with its kin */
     public bool $whole = false,         /* a count — see whole() */
     public array $keys = [],            /* Objects only: the keys of a row this field carries — see keys() */
+    public array $fixed = [],
   ) {
     /* Self-tests on the profile's own declarations. Each group is called inside
        `assert()`, so production neither checks nor calls it. */
@@ -98,6 +99,13 @@ final readonly class FieldDefinition
   public function carried(ValueObject $object): array
   {
     return $this->keys === [] ? $object->keys : $this->keys;
+  }
+
+  /* A key no use types: a counter of downloads counts `DownloadAction`s, and
+     its kin under one property count the other classes, each its own object. */
+  public function fixed(string $key, string $class): self
+  {
+    return $this->with(fixed: [...$this->fixed, $key => $class]);
   }
 
   public function unique(?string $perEdge = null): self
@@ -268,6 +276,9 @@ final readonly class FieldDefinition
       'a field is flattened or it says why it is not, never both');
     assert(($this->valueObjectOf === null) === ($this->block === null),
       'a field carried by a property stands under a heading, and only such a field');
+    /* `Ingest\PayloadMapper` reads a list of counters without telling them apart, since it stores none. */
+    assert($this->fixed === [] || ($this->valueObjectOf !== null && $this->writtenBy === WrittenBy::Derived),
+      'only a computed key carried by a property names a class');
 
     return true;
   }

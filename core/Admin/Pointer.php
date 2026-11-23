@@ -9,7 +9,8 @@ namespace Admin;
    whose translations point with the same field is one row, named by one of them,
    with every language a link, since three rows the same to the letter say less.
    A labelled thing holding words in more than one language links each of them
-   the same way, marked as words, being one record. */
+   the same way, marked as words, being one record. A row with `more` stands for
+   that many records not drawn, opening their collection filtered to the record. */
 final readonly class Pointer
 {
   /** @param array<string, string> $locales each translation's or each language's words' address by its locale */
@@ -22,11 +23,12 @@ final readonly class Pointer
     public ?string $href,
     public array $locales = [],
     public bool $worded = false,
+    public int $more = 0,
   ) {}
 
   /* What the row stands for in a count, which counts records and not rows. */
   public function records(): int
   {
-    return $this->worded ? 1 : max(1, count($this->locales));
+    return $this->more > 0 ? $this->more : ($this->worded ? 1 : max(1, count($this->locales)));
   }
 }

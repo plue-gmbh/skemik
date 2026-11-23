@@ -115,9 +115,13 @@ final readonly class Markup
 
   public static function anchor(string $text, string $address): string
   {
-    $allowed = preg_match('#^(https?://|mailto:|tel:|sms:|/(?!/)|\.\.?/)#i', $address) === 1;
+    if (preg_match('#^(https?://|mailto:|tel:|sms:|/(?!/)|\.\.?/)#i', $address) !== 1) {
+      return $text;
+    }
+    /** @psalm-taint-escape url_scheme */
+    $linked = $address; /* a web, mail, phone or text address, or a path, by the pattern above */
 
-    return $allowed ? sprintf('<a href="%s">%s</a>', self::escape($address), $text) : $text;
+    return sprintf('<a href="%s">%s</a>', self::escape($linked), $text);
   }
 
   public static function escape(string $text): string

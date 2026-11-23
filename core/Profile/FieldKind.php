@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace Profile;
 
-/* What a value is — never who may write it (that is WrittenBy).
-   Fifteen kinds and no sixteenth without a discussion: a new kind is a new
-   editor, a new validator, a new serialiser and a new cell renderer.
-   The fifteenth had it: a time of day, because an opening hour
-   that reads *eight* is a broken fact in every consumer, and a check beside the
-   kinds would have been a kind nobody could declare on a field. The fourteenth
-   had that discussion too. A kind meaning "an object" would
-   have been one editor per value object behind one enum value; Objects is
-   one, because it renders no value object in particular — it reads the key set
-   from `Seed\ValueObjects` and draws a line-item list whose columns are the
-   other kinds. A single-valued value object needs no kind at all: it
-   resolves into fields of those. */
+/* What a value is — never who may write it (that is WrittenBy). No new kind
+   without a discussion: it is a new editor, validator, serialiser and cell
+   renderer. A day or a moment had it, since a day's count and a reading's time
+   are one property; a time of day had it, since an opening hour that reads
+   *eight* is a broken fact in every consumer. Objects is one kind and not one
+   per value object, since it draws any key set (`Seed\ValueObjects`) as rows
+   whose columns are the other kinds. A single-valued value object needs no
+   kind at all: it resolves into fields of those. */
 enum FieldKind: string
 {
   case Text = 'text';
@@ -23,6 +19,7 @@ enum FieldKind: string
   case Markdown = 'markdown';
   case Date = 'date';              /* YYYY-MM-DD, YYYY-MM or YYYY, no zone */
   case DateTime = 'date_time';     /* 2026-08-19T14:03:00Z, UTC only */
+  case DateOrTime = 'date_or_time';  /* either of the two above, as the value is spelt */
   case Duration = 'duration';      /* ISO 8601, PT4H / P1M */
   case Time = 'time';              /* 08:00 or 08:00:00, of the place and never of a zone */
   case Number = 'number';
@@ -41,20 +38,22 @@ enum FieldKind: string
     return $this === self::Ref || $this === self::Refs || $this === self::Image;
   }
 
-  /* The schema.org data type a value of the kind is, which `SchemaOrg::holds`
-     narrows for a count and a fixed list: a Markdown field leaves as its text and
-     a select as its token, so both are text. */
-  public function datatype(): string
+  /** The schema.org data types a value of the kind is, which `SchemaOrg::holds`
+      narrows for a count and a fixed list: a Markdown field leaves as its text and
+      a select as its token, so both are text.
+      @return list<string> */
+  public function datatypes(): array
   {
     return match ($this) {
-      self::Date => 'Date',
-      self::DateTime => 'DateTime',
-      self::Duration => 'Duration',
-      self::Time => 'Time',
-      self::Number => 'Number',
-      self::Boolean => 'Boolean',
-      self::Link => 'URL',
-      default => 'Text',
+      self::Date => ['Date'],
+      self::DateTime => ['DateTime'],
+      self::DateOrTime => ['Date', 'DateTime'],
+      self::Duration => ['Duration'],
+      self::Time => ['Time'],
+      self::Number => ['Number'],
+      self::Boolean => ['Boolean'],
+      self::Link => ['URL'],
+      default => ['Text'],
     };
   }
 

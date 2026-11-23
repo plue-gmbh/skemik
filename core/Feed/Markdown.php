@@ -32,7 +32,9 @@ final readonly class Markdown
     return $this->page($this->document->recordDocument($entity, $collection));
   }
 
-  /** @param list<Entity> $members */
+  /** @param list<Entity> $members
+      @psalm-taint-escape html sent as `text/markdown` with `nosniff`, as a record is
+      @psalm-taint-escape has_quotes */
   public function listing(array $members, Collection $collection, int $total, string $address): string
   {
     $list = $this->document->listDocument($members, $collection, $total, $address);
@@ -89,8 +91,9 @@ final readonly class Markdown
       return $this->link($object);
     }
     unset($object['@type'], $object['position']);
+    $values = array_map($this->value(...), $object);
 
-    return implode(' ', array_map($this->value(...), $object));
+    return implode(' ', array_filter($values, fn (string $value): bool => $value !== ''));
   }
 
   /** @param array<string, mixed> $record */

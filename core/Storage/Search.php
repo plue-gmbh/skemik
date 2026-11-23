@@ -20,9 +20,10 @@ use Support\Clock;
 use Support\Json;
 
 /* A word table of our own, `entity_word`, and not FTS5, which a webspace's
-   SQLite may be built without. A search is asked of the fields its reader reads,
-   as a filter is, so a `?q=` cannot find a record by a word the reading
-   withholds. The words are derived from `props`, each translation's too, and
+   SQLite may be built without; a record and a field are numbers there, read
+   back through `word_record`, which carries the type, and `word_field`. A
+   search is asked of the fields its reader reads, as a filter is, so a `?q=`
+   cannot find a record by a word the reading withholds. The words are derived from `props`, each translation's too, and
    the slug, which every reading's address shows. What a record points at is
    matched through its edge when asked and never copied, since a renamed target
    would leave every copy stale: a tag by its code where the term is public, the
@@ -38,11 +39,6 @@ final readonly class Search
      cost a stranger's one question more than a page of 200 does. */
   private const WORDS = 20;
   private const GERMAN = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'];
-  /* The words a search across types finds, read once and each with its record's type: read per type,
-     thirty types each grouped the 49 000 words *bestellung* finds on the volume install. */
-  private const FOUND = 'with found as materialized (select w.entity_id, w.field, t.key as term, e.type'
-    . ' from json_each(:terms) t cross join entity_word w on w.word >= t.value and w.word < t.value || char(1114111)'
-    . ' cross join entity e on e.id = w.entity_id and e.deleted_at is null) ';
 
   public function __construct(private \PDO $db, private Profile $profile,
     private SchemaOrg $schema, private Clock $clock, private Json $json = new Json()) {}
@@ -51,26 +47,35 @@ final readonly class Search
      answers and `:now` the clock: every term as a prefix in any of the reader's
      fields, its tags or the names of what it points at, all of them met, the
      most matching words first. `named` counts the terms its own name holds, for
-     `search()`. The upper bound is the prefix followed by the last code point,
-     below which every longer word with it sorts. The terms lead by `cross join`,
+     `search()`. The terms lead by `cross join`,
      which SQLite never reorders: led by the word table, it scans every word of
      the install per search. `$type` is the placeholder of the one type asked
      where `search()` has read the words into `found`, so a type groups its own. */
   public static function hits(string $placeholder = ':match', ?string $type = null): string
   {
-    [$words, $term] = $type === null ? ["json_each($placeholder, '\$.terms') t cross join entity_word w"
-      . ' on w.word >= t.value and w.word < t.value || char(1114111)', 't.key'] : ['found w', 'w.term'];
+    $words = $type === null ? '(' . self::found("json_each($placeholder, '\$.terms')") . ') w' : 'found w';
     $own = $type === null ? '' : "w.type = $type and ";
 
-    return 'select entity_id, count(*) as hits, count(distinct case when named then term end) as named from ('
-      . "select w.entity_id, $term as term, w.field = json_extract($placeholder, '\$.name') as named from $words"
-      . " where {$own}w.field in (select value from json_each($placeholder, '\$.fields'))"
-      . " union all select r.subject_id, $term, 0 from $words"
+    return 'select entity_id, sum(times) as hits, count(distinct case when named then term end) as named from ('
+      . "select w.entity_id, w.term, w.times, w.field = json_extract($placeholder, '\$.name') as named"
+      . " from $words where {$own}w.field in (select value from json_each($placeholder, '\$.fields'))"
+      . " union all select r.subject_id, w.term, w.times, 0 from $words"
       . " cross join relation r on r.object_id = w.entity_id and w.field = 'term_code'"
       . " where r.predicate in (select value from json_each($placeholder, '\$.tags'))"
       . ' and exists (select 1 from entity e where e.id = w.entity_id and e.deleted_at is null and '
-      . Query::PUBLIC . ')' . self::pointed($placeholder, $words, $term) . ') group by entity_id'
+      . Query::PUBLIC . ')' . self::pointed($placeholder, $words) . ') group by entity_id'
       . " having count(distinct term) = json_array_length($placeholder, '\$.terms')";
+  }
+
+  /* Each word a term begins, with its record, type and field by name. The upper bound is the prefix
+     followed by the last code point, below which every longer word with it sorts. `search()` reads them
+     once for every type: read per type, thirty types each grouped the 49 000 words *bestellung* finds on
+     the volume install. */
+  private static function found(string $terms): string
+  {
+    return "select r.entity_id, n.name as field, t.key as term, r.type, x.times from $terms t"
+      . ' cross join entity_word x on x.word >= t.value and x.word < t.value || char(1114111)'
+      . ' cross join word_record r on r.number = x.record cross join word_field n on n.number = x.field';
   }
 
   /* A word of a target's name reaches each record pointing at it under a predicate
@@ -81,11 +86,11 @@ final readonly class Search
      type on the volume install. The edge leads the relation, which is then one
      indexed step by target and predicate: led by the relation, a name every order
      points at read its 30 000 edges once per edge asked, 1.8 s there. */
-  private static function pointed(string $placeholder, string $words, string $term): string
+  private static function pointed(string $placeholder, string $words): string
   {
     $named = "(select json_extract(n.value, '\$.named') from json_each($placeholder, '\$.edges') n)";
 
-    return " union all select r.subject_id, $term, 0 from $words"
+    return " union all select r.subject_id, w.term, w.times, 0 from $words"
       . ' cross join entity e on e.id = w.entity_id and e.deleted_at is null'
       . ' and exists (select 1 from relation p where p.object_id = w.entity_id)'
       . " cross join json_each($placeholder, '\$.edges') g on e.type = json_extract(g.value, '\$.type')"
@@ -135,18 +140,19 @@ final readonly class Search
     if ($arms === []) {
       return [];
     }
-    $statement = $this->db->prepare(self::FOUND . 'select id from (' . implode(' union all ', $arms)
+    $statement = $this->db->prepare('with found as materialized (' . self::found('json_each(:terms)')
+      . ') select id from (' . implode(' union all ', $arms)
       . ') order by named desc, size, hits desc limit ' . self::LIMIT);
     $statement->execute([...$bindings, 'terms' => $this->json->encode(self::tokens($typed))]);
 
     return array_map(fn (string $id): EntityId => new EntityId($id), $statement->fetchAll(\PDO::FETCH_COLUMN));
   }
 
-  /* One type's hits, each with the size of its name where the name holds a term: its words in the word table. */
+  /* One type's hits, each with the size of its name where the name holds a term: its words, as `words` holds them. */
   private static function arm(int $index): string
   {
-    return sprintf('select e.id, s.hits, s.named, case when s.named > 0 then (select count(*) from entity_word n'
-      . " where n.entity_id = e.id and n.field = json_extract(:match%2\$d, '$.name')) else 0 end as size"
+    return sprintf('select e.id, s.hits, s.named, case when s.named > 0 then json_array_length(e.words,'
+      . " '$.' || json_extract(:match%2\$d, '$.name')) else 0 end as size"
       . ' from (%1$s) s join entity e on e.id = s.entity_id where e.type = :type%2$d and e.deleted_at is null',
       self::hits(":match$index", ":type$index"), $index);
   }

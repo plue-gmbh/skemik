@@ -8,6 +8,7 @@ use Domain\Entity;
 use Profile\FieldDefinition;
 use Profile\FieldKind;
 use Profile\TypeDefinition;
+use Storage\Figures;
 
 /* One field of a collection as a view draws it for one account, and the name
    the address filters and sorts it by. `editable` is whether this account has an
@@ -60,6 +61,12 @@ final readonly class Column
   public function sorts(): bool
   {
     return $this->field->kind !== FieldKind::Objects;
+  }
+
+  /* A number a saved question may sum or read the latest of. */
+  public function sums(): bool
+  {
+    return Figures::reads($this->field);
   }
 
   /* A list of long texts is entries, each short enough for the list's own editor. */

@@ -28,6 +28,7 @@ final readonly class TokenRepository
     $statement->execute(['now' => $now->format(Clock::STORED),
       'hash' => hash('sha256', $secret)]);
     $row = $statement->fetch(\PDO::FETCH_ASSOC);
+    $statement->closeCursor();   /* an open read turning write skips the busy timeout: "database is locked" */
     if ($row === false) {
       return null;
     }

@@ -102,7 +102,7 @@ final readonly class Arrangement
     $entry = [];
     foreach ($named as $spelt => $sent) {
       $key = array_find($keys, fn (FieldDefinition $field): bool
-        => $this->schema->propertyName($field->key) === (string) $spelt);
+        => $this->schema->keyName($field->key) === (string) $spelt);
       $entry = [...$entry, ...($key === null ? [Violation::stated($name . '.' . $spelt, 'is no key of ' . $name)]
         : $this->field($type, $key, (array) $sent, $name . '.' . $spelt))];
     }

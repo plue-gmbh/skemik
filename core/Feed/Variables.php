@@ -39,7 +39,7 @@ final readonly class Variables
         'propertyID' => $field->valueObjectOf, 'name' => $field->block ?? $field->label,
         ...$more($field, true), 'valueReference' => []];
       $entries['@' . $field->valueObjectOf]['valueReference'][] = [...$variable,
-        'propertyID' => (string) $this->schema->propertyName($field->key)];
+        'propertyID' => (string) $this->schema->keyName($field->key)];
     }
 
     return array_values($entries);

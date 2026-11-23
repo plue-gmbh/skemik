@@ -20,7 +20,7 @@ use Support\Words;
 /* The collection list on every admin screen. Empty collections sort below the
    filled ones, each group by name, so a new install's three working collections are
    not pushed out of view by the empty ones. A mark that does not apply is absent
-   rather than drawn grey, so a list of thirty is read by what stands out. The
+   rather than drawn grey, so a list of thirty-one is read by what stands out. The
    serving mark is read from the clock, so a collection whose only record goes live
    next week has none until then; the grant mark names who writes, the thing a
    reader can act on, and only a live grant marks. Outside the read scope the count

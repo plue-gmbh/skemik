@@ -33,6 +33,12 @@ function ticked(table, data, spineData) {
       locale() {
         return this.held("spine.locale");
       },
+      /* The trash dialog's question and sentence: one record by its name, as its own delete asks. */
+      trashing() {
+        const one = this.ticked.length === 1 ? data.rows.find((row) => row.id === this.ticked[0]) : undefined;
+        return one ? [fill(this.words["delete.question"], { label: one.label }), this.words["delete.one"]]
+          : [fill(this.words["delete.question_many"], { n: this.ticked.length }), this.words["delete.many"]];
+      },
     },
     mounted() {
       table.addEventListener("change", (event) => this.tick(event.target));
@@ -42,6 +48,8 @@ function ticked(table, data, spineData) {
       tick(box) {
         if (box.matches("[data-tick-all]")) boxes().forEach((each) => { each.checked = box.checked; });
         else if (!box.matches("[data-tick]")) return;
+        /* The tick for all hides once none is ticked (`view/style.css`), so focus leaves it. */
+        if (box.matches("[data-tick-all]") && !box.checked) boxes()[0].focus();
         this.ticked = boxes().filter((each) => each.checked)
           .map((each) => each.closest("[data-record]").dataset.record);
         const all = table.querySelector("[data-tick-all]");
@@ -55,13 +63,11 @@ function ticked(table, data, spineData) {
         return this.ticked.filter((id) => table.querySelector(
           `[data-record="${id}"] [data-field="${key}"]:not([data-off]) [data-edit]`));
       },
-      /* A page of one record draws no tick for all, so focus returns to its own. */
+      /* Focus returns to the first record's tick, since the tick for all hides once none is ticked. */
       untick() {
-        const back = table.querySelector("[data-tick-all]") ?? boxes()[0];
         boxes().forEach((each) => { each.checked = false; });
-        back.checked = false;
-        this.tick(back);
-        back.focus();
+        this.tick(boxes()[0]);
+        boxes()[0].focus();
       },
       held(key) {
         const held = new Set(this.ticked.map((id) => this.current(id, key)));

@@ -21,7 +21,8 @@ use Support\Clock;
    the hour and no answer waits on a pass; the day counts from the pass's last
    slice. A mended record leaves at the next slice. A report another version
    wrote is started over at once, since the fields a release asks for ship with
-   it, and Needs a look would otherwise count a field it took away for a day. */
+   it, and Needs a look would otherwise count a field it took away for a day;
+   every record lacking a field it made required is asked then, not a slice at a time. */
 final readonly class Checkup
 {
   private const PASS_SECONDS = 86400;
@@ -63,12 +64,13 @@ final readonly class Checkup
   {
     $began = $this->clock->now();
     $last = $this->settings->holdingsReport();
-    if ($last?->version !== Version::APP) {
+    $fresh = $last?->version !== Version::APP;
+    if ($fresh) {
       $this->settings->setHoldingsCursor(null);
     }
     $from = $this->settings->holdingsCursor();
-    $found = $this->holdings->run(self::ROWS);
-    $kept = $last?->version === Version::APP ? $this->kept($last, $from, $this->settings->holdingsCursor()) : [];
+    $found = [...$this->holdings->run(self::ROWS), ...($fresh ? $this->holdings->required() : [])];
+    $kept = $fresh || $last === null ? [] : $this->kept($last, $from, $this->settings->holdingsCursor());
     $unique = [];
     foreach ([...$kept, ...$found] as $violation) {
       $unique[implode("\n", [$violation->field, $violation->said(), $violation->record?->value])] = $violation;

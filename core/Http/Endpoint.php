@@ -49,6 +49,8 @@ enum Endpoint
   case LocaleAdd;
   case LocaleOrder;
   case LocaleRemove;
+  case QuestionSave;
+  case QuestionRemove;
   case Activity;
   case ActivityRedact;
   case General;

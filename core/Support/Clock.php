@@ -36,6 +36,12 @@ final readonly class Clock
     return new \DateTimeImmutable('now', $this->utc);
   }
 
+  /* The install's day, `Y-m-d`. */
+  public function today(): string
+  {
+    return $this->now()->setTimezone($this->zone)->format(self::DATE);
+  }
+
   public function render(string $stored): string
   {
     if (strlen($stored) === strlen('YYYY-MM-DD')) {

@@ -8,22 +8,16 @@ use Auth\Account;
 use Auth\AccountRepository;
 use Auth\Capability;
 use Domain\Entity;
-use Domain\EntityId;
-use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Locale;
-use Domain\LocalisedText;
 use Domain\Slug;
 use Domain\Status;
 use Domain\TranslationGroup;
 use Http\Csrf;
 use Http\Request;
 use Http\Upload;
-use Profile\FieldDefinition;
 use Profile\FieldKind;
 use Profile\Profile;
-use Profile\SchemaOrg;
-use Profile\TypeDefinition;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
@@ -40,24 +34,22 @@ final readonly class RecordPage
 {
   public function __construct(
     private EntityRepository $entities,
-    private Showing $showing,
+    private Pointers $pointers,
     private CollectionStore $collections,
     private SettingStore $settings,
     private QueryBar $bar,
-    private Sheet $sheet,
+    private SheetData $sheetData,
     private Rows $rows,
     private Prose $prose,
     private SpineDialog $dialog,
     private RecordWords $recordWords,
     private AccountRepository $accounts,
     private Profile $profile,
-    private SchemaOrg $schema,
     private Csrf $csrf,
     private Template $template,
     private Words $words,
     private Grants $grants,
     private LiveKeys $keys,
-    private Label $label = new Label(),
   ) {}
 
   /** @param list<Column> $columns */
@@ -68,7 +60,7 @@ final readonly class RecordPage
     $query = http_build_query(array_diff_key($request->query, ['in' => true, 'words' => true]));
     $locale = $this->recordWords->locale($request, $entity);
     [$row, $edit, $editing] = $this->recordWords->rows($account, $columns, $entity, $locale);
-    $pointers = $this->pointers($account, $entity, $locale ?? $entity->locale);
+    $pointers = $this->pointers->of($account, $entity, $locale ?? $entity->locale);
 
     return $this->template->render('pages/record', ['words' => $this->words, 'collection' => $collection,
       'row' => $row, 'edit' => $edit, 'blocks' => FieldBlock::of($columns), 'editing' => FieldBlock::of($editing),
@@ -88,7 +80,7 @@ final readonly class RecordPage
       'labels' => $this->keys->labels(), 'until' => $this->keys->until(),
       'back' => $request->path . ($request->query === [] ? '' : '?' . http_build_query($request->query)),
       'public' => in_array(Status::Published, Status::heldBy($type), true),
-      'data' => $this->sheet->data($collection, $editing, [$edit], $this->csrf->token()),
+      'data' => $this->sheetData->data($collection, $editing, [$edit], $this->csrf->token()),
       'spine' => $this->dialog->data($collection, [$edit])]);
   }
 
@@ -146,26 +138,6 @@ final readonly class RecordPage
     return null;
   }
 
-  /** A work's translations pointing with one field are one row, named by the one
-      in the locale the screen reads, else by the one the others translate.
-      @return list<Pointer> each named in the words of the locale the screen reads */
-  public function pointers(Account $account, Entity $entity, Locale $in): array
-  {
-    $members = [];
-    $predicates = [];
-    foreach ($this->showing->edges($entity) as $edge) {
-      $subject = $this->readable($account, $edge->subject);
-      if ($subject !== null) {
-        $group = TranslationGroup::rootOf($subject)->value . ' ' . $edge->predicate;
-        $members[$group][$subject->id->value] = $subject;
-        $predicates[$group] = $edge->predicate;
-      }
-    }
-
-    return array_values(array_map(fn (string $group): Pointer => $this->pointer(array_values($members[$group]),
-      $predicates[$group], $in), array_keys($members)));
-  }
-
   /** The records before and after this one in the query it was opened from, on
       its page or across the page's edge; null at either end. Where the query lists
       a work once, a translation stands where its work's row does.
@@ -220,75 +192,5 @@ final readonly class RecordPage
   private function last(array $ids): ?array
   {
     return $ids === [] ? null : array_values($ids)[count($ids) - 1];
-  }
-
-  private function readable(Account $account, EntityId $id): ?Entity
-  {
-    try {
-      $entity = $this->entities->find($id);
-    } catch (EntityNotFound) {
-      return null;
-    }
-
-    return $entity->deletedAt === null && $this->rows->readable($account, $entity) ? $entity : null;
-  }
-
-  /** @param list<Entity> $members one record, or the translations of one work */
-  private function pointer(array $members, string $predicate, Locale $in): Pointer
-  {
-    $subject = array_find($members, fn (Entity $member): bool => $member->locale->tag === $in->tag)
-      ?? array_find($members, fn (Entity $member): bool => $member->translationOf === null) ?? $members[0];
-    $holder = array_find($this->collections->all(),
-      fn (Collection $collection): bool => $collection->type === $subject->type);
-    $type = $this->profile->byType($subject->type);
-    $field = array_find($type->edges(),
-      fn (FieldDefinition $edge): bool => $this->schema->propertyName($edge->key) === $predicate);
-    $named = (new LocalisedText($type))->shown($subject, $in);
-
-    $records = $this->locales($members, $holder);
-    $words = $records === [] && $type->locale->localises() ? $this->worded($subject, $holder, $type) : [];
-
-    return new Pointer(SidebarEntry::glyphOf($subject->type), $this->label->of($named, $type),
-      $this->sheet->state($subject), $this->words->get('type_one.' . $type->name), $field?->label ?? $predicate,
-      $holder === null ? null : Rows::address($holder, $subject), $records ?: $words, $words !== []);
-  }
-
-  /** A labelled thing's languages, the authored one and each holding words of its own, every one opening
-      the record on its words, since what points here reads it in each of them.
-      @return array<string, string> */
-  private function worded(Entity $subject, ?Collection $holder, TypeDefinition $type): array
-  {
-    $held = (new LocalisedText($type))->locales($subject);
-    if ($holder === null || $held === []) {
-      return [];
-    }
-    $locales = [];
-    foreach ($this->settings->locales() as $locale) {
-      $own = $locale->tag === $subject->locale->tag;
-      if ($own || in_array($locale->tag, $held, true)) {
-        $locales[$locale->tag] = Rows::address($holder, $subject, $own ? '' : 'words=' . $locale->tag);
-      }
-    }
-
-    return $locales;
-  }
-
-  /** Each translation's address in the install's order of its locales.
-      @param list<Entity> $members
-      @return array<string, string> */
-  private function locales(array $members, ?Collection $holder): array
-  {
-    if (count($members) < 2 || $holder === null) {
-      return [];
-    }
-    $order = array_map(fn (Locale $locale): string => $locale->tag, $this->settings->locales());
-    usort($members, fn (Entity $one, Entity $other): int => array_search($one->locale->tag, $order, true)
-      <=> array_search($other->locale->tag, $order, true));
-    $locales = [];
-    foreach ($members as $member) {
-      $locales[$member->locale->tag] = Rows::address($holder, $member);
-    }
-
-    return $locales;
   }
 }

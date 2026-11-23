@@ -123,7 +123,7 @@ final readonly class Claims
 
   /** Every kind a type declares fields for is a class the vocabulary publishes
       and a descendant of that type — a specialisation is how the ceiling holds at
-      thirty, so a token nobody can resolve turns *specialise instead of adding a
+      thirty-one, so a token nobody can resolve turns *specialise instead of adding a
       table* into a string somebody typed.
       @return list<Violation> */
   private function checkSpecialisations(): array

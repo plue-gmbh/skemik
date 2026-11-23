@@ -169,10 +169,10 @@ final readonly class FeedController
   private function format(Request $request, Route $route, PublicFilter $filter,
     Locale $locale): JsonLd|Html|Csv|Markdown
   {
-    $addresses = new Addresses($this->profile, $this->entities, $filter, $locale,
-      $request->origin(), $this->collections->all());
+    $held = $this->collections->all();
+    $addresses = new Addresses($this->profile, $this->entities, $filter, $locale, $request->origin(), $held);
     $derived = new Derivations($this->profile, $this->schema, $this->entities, $this->relations,
-      $addresses, $this->clock);
+      fn (Entity $row): bool => $addresses->collectionOf($row) !== null, $filter->readings($held), $this->clock);
     $markup = new Markup(words: $this->words->in($locale->tag));
     $document = new JsonLd($this->profile->worded($this->words->fields($locale->tag)), $this->schema,
       $this->entities, $this->relations, $filter, $locale, $request->origin(), $addresses, $derived,

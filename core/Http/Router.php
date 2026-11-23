@@ -55,6 +55,8 @@ final readonly class Router
     'POST /settings/tokens' => Endpoint::TokenIssue,
     'POST /settings/tokens/{id}/rules/{rule}/remove' => Endpoint::TokenRuleRemove,
     'POST /settings/tokens/{id}/revoke' => Endpoint::TokenRevoke,
+    'POST /questions' => Endpoint::QuestionSave,
+    'POST /questions/{id}/remove' => Endpoint::QuestionRemove,
     'POST /settings/locales' => Endpoint::LocaleAdd,
     'POST /settings/locales/order' => Endpoint::LocaleOrder,
     'POST /settings/locales/{tag}/remove' => Endpoint::LocaleRemove,

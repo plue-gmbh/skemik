@@ -6,12 +6,12 @@ namespace Admin;
 
 use Domain\Entity;
 use Domain\Locale;
-use Profile\Reach;
 
 /* One record as the table draws it: its label, its state as a reader meets it now
    — `scheduled` while a published row's start is ahead, `ended` once its end has passed — the
-   type's own status word where the type has no public state (Paid, not
-   Draft), each column's cell already rendered, and its edges as chips, which a
+   type's own status word where the type has no public state (Paid), which the spine
+   dialog says beside its states, whether it is a message nobody has read yet, each
+   column's cell already rendered, and its edges as chips, which a
    picker starts from. Where another locale's words are edited, that locale and
    the authored record ride along for the editors' placeholders (`RecordWords`). `changed` is
    the day of its last change worded for the reader (`Moments`), which the spine chip's title says. */
@@ -25,13 +25,13 @@ final readonly class SheetRow
     public Entity $entity,
     public string $label,
     public string $state,
-    public Reach $reach,
     public array $cells,
     public ?string $own = null,
     public array $chips = [],
     public ?Entity $authored = null,
     public string $changed = '',
     public ?Locale $words = null,
+    public bool $unread = false,
   ) {}
 
   public function withEntity(Entity $entity): self

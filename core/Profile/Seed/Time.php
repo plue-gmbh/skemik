@@ -13,9 +13,12 @@ use Profile\LocaleMode;
 use Profile\Reach;
 use Profile\TypeDefinition;
 
-/* The two types with a clock. They sit one edge apart on every bookable
-   date: the reservations are the root fact, the Event's free places follow
-   from them, and the Offer's availability follows from nobody. */
+/* The three types with a clock. An event and its reservations sit one edge
+   apart on every bookable date: the reservations are the root fact, the Event's
+   free places follow from them, and the Offer's availability follows from
+   nobody. An observation is a number about a record on a day or at a moment,
+   posted by whoever counted it, since the install counts nothing and sees no
+   visitor. */
 final readonly class Time
 {
   public function __construct(
@@ -32,6 +35,8 @@ final readonly class Time
         $this->event(), $this->base->thing()),
       new TypeDefinition('Reservation', Erasure::Hold, LocaleMode::None, Reach::Internal,
         $this->reservation(), $this->base->thing(), nameParts: ['reservation_id']),
+      new TypeDefinition('Observation', Erasure::Purge, LocaleMode::None, Reach::Internal,
+        $this->observation(), $this->base->thing()),
     ];
   }
 
@@ -117,6 +122,28 @@ final readonly class Time
          program. */
       $f->ref('program_membership_used', 'Membership used', 'MemberProgram'),
       ...$vo->flatten('Ticket', 'reservedTicket', 'Ticket', $f),
+    ];
+  }
+
+  /** @return list<FieldDefinition> */
+  private function observation(): array
+  {
+    $f = $this->f;
+
+    return [
+      $f->text('name', 'Name')->words(),               /* a count is not titled */
+      $f->ref('observation_about', 'About', '*')->required(),
+      /* A day where a count covers one, and a moment where a reading was taken at one. */
+      $f->dateOrTime('observation_date', 'Date')->required(),
+      /* A select and not a term: a record's `interactionStatistic` sums each
+         counter's token alone, which a code the organisation could change would not hold. */
+      $f->select('variable_measured', 'Variable measured', [...$this->base->posted(), 'visitors', 'members'])
+        ->starter(),
+      $f->number('value', 'Value')->required(),
+      $f->text('unit_code', 'Unit'),
+      $f->text('observation_period', 'Period'),
+      $f->text('measurement_technique', 'Measurement technique'),
+      $this->base->description(),
     ];
   }
 }

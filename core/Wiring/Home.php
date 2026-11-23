@@ -12,19 +12,24 @@ use Admin\FindController;
 use Admin\HomeController;
 use Admin\InstallChanges;
 use Admin\NeedsLook;
+use Admin\QuestionController;
 use Admin\Register;
 use Auth\Account;
+use Feed\DumpFiles;
+use Feed\DumpManifest;
 use Feed\Export;
 use Feed\PublicFilter;
 use Http\Endpoint;
 use Http\Response;
 use Http\Route;
+use Storage\Figures;
 use Storage\Oversights;
 use Support\Zip;
 
 /* The home screen, whose cards show the accounts, keys and languages `Settings`
-   writes, the whole log its Last changed opens, the search the header opens and
-   the export the sidebar's foot opens on every screen. */
+   writes, the saved questions a query bar writes, the whole log its Last changed
+   opens, the search the header opens and the export the sidebar's foot opens on
+   every screen. */
 final readonly class Home
 {
   public function __construct(private Common $common) {}
@@ -40,6 +45,8 @@ final readonly class Home
       Endpoint::Find => $this->find()->show($account(), $common->requirePerson(), $common->request),
       Endpoint::Export => $this->export($account())->show($account(), $common->requirePerson(), $common->request),
       Endpoint::ExportTake => $this->export($account())->take($common->requirePerson(), $common->request),
+      Endpoint::QuestionSave => $this->questions()->save($common->request),
+      Endpoint::QuestionRemove => $this->questions()->remove($common->request, $route->parameter('id')),
     };
   }
 
@@ -58,11 +65,12 @@ final readonly class Home
   private function dump(Account $account, Zip $box): Export
   {
     $common = $this->common;
+    $filter = new PublicFilter($common->profile, $common->clock, null, $account->read);
+    $media = new DumpFiles($common->entities, $filter, $common->premises->data . '/holdings/media');
     return new Export($common->profile, $common->schema, $common->entities, $common->relations,
-      $common->collections, $common->settings, new PublicFilter($common->profile, $common->clock, null, $account->read),
-      $common->authorizer, $account, $common->request->origin(), $common->premises->data . '/holdings/media',
-      (string) $common->requirePerson()->props->string('name'), $box, $common->clock, $common->terms,
-      $common->words);
+      $common->collections, $common->settings, $filter, $common->authorizer, $account, $common->request->origin(),
+      $media, new DumpManifest($media, $account, (string) $common->requirePerson()->props->string('name'),
+      $common->clock), $box, $common->clock, $common->terms, $common->words);
   }
 
   private function find(): FindController
@@ -89,7 +97,15 @@ final readonly class Home
         $common->collections, $common->moments, $common->words),
       new Register($common->reviews(), $common->keys(), $common->grants, $common->collections, $common->facts()),
       $common->locales(), $common->backup(),
-      $common->files(), $common->errors(), $common->relay, $common->probes());
+      $common->files(), $common->errors(), $common->relay, $common->probes(), $this->questions());
+  }
+
+  private function questions(): QuestionController
+  {
+    $common = $this->common;
+    return new QuestionController($common->settings, $common->collections, $common->authorizer, $common->bar(),
+      $common->entities, new Figures($common->db, $common->profile, $common->entities), $common->rows,
+      $common->named, $common->session, $common->csrf, $common->uuid, $common->words);
   }
 
   private function needsLook(): NeedsLook

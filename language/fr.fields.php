@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* What the thirty types' fields are called in French, keyed as
+/* What the thirty-one types' fields are called in French, keyed as
    `de.fields.php` is. These words reach a reader, the feed's catalogue naming a
    field in the language of its content. A flattened field is `Bloc : champ`,
    the colon spaced as French spaces it, and its block's heading the key it
@@ -465,4 +465,17 @@ return [
   'target_encoding_type' => 'Point d’entrée : encodage',
   'target_content_type' => 'Point d’entrée : type de contenu',
   'target_http_method' => 'Point d’entrée : méthode HTTP',
+  'observation_about' => 'Concerne',
+  'observation_date' => 'Date',
+  'value' => 'Valeur',
+  'unit_code' => 'Unité',
+  'observation_period' => 'Période',
+  'interaction_statistic:' => 'Interactions',
+  'interaction_statistic_views' => 'Interactions : pages vues',
+  'interaction_statistic_downloads' => 'Interactions : téléchargements',
+  'interaction_statistic_video_plays' => 'Interactions : lectures vidéo',
+  'interaction_statistic_audio_plays' => 'Interactions : écoutes audio',
+  'interaction_statistic_likes' => 'Interactions : j’aime',
+  'interaction_statistic_shares' => 'Interactions : partages',
+  'interaction_statistic_comments' => 'Interactions : commentaires',
 ];

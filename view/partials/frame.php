@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* Every admin screen: first, shown only to a keyboard, the way past the thirty
+/* Every admin screen: first, shown only to a keyboard, the way past the thirty-one
    collections to the paper; the chrome's L of header and sidebar, the paper
    beside it and the feed panel to its right (`partials/feed-panel`), above the
    paper's content the sentence a screen may open with and the warning that the

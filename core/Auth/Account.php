@@ -6,6 +6,7 @@ namespace Auth;
 
 use Domain\EntityId;
 use Domain\Exceptions\MalformedValue;
+use Support\Uuid;
 
 /* What this install knows about its relationship to a `Person`: the login
    address, the role, the scopes. The name is the person's, so this has none, and
@@ -18,10 +19,11 @@ use Domain\Exceptions\MalformedValue;
    because an address at `bäckerei-müller.de` is otherwise refused as none. */
 final readonly class Account
 {
+  public string $id;
   public string $email;
 
   public function __construct(
-    public string $id,
+    string $id,
     public EntityId $person,
     string $email,
     public Role $role,
@@ -31,6 +33,11 @@ final readonly class Account
     public ?string $lastLoginAt = null,
     public ?string $disabledAt = null,
   ) {
+    if (preg_match(Uuid::SHAPE, $id) !== 1) {
+      throw MalformedValue::named('account id', $id);
+    }
+    /** @psalm-taint-escape input */
+    $this->id = $id; /* hex digits and dashes, which name the login code's file */
     /** @psalm-taint-escape header */
     $this->email = self::address($email); /* refused two lines down unless `filter_var` reads it as an address */
     if (filter_var($this->email, FILTER_VALIDATE_EMAIL) === false) {

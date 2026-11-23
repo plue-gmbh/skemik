@@ -11,14 +11,14 @@ use Profile\Profile;
    authoritative. `create` refuses a database that is not empty, since `create
    table if not exists` is a no-op against a table of another shape and the
    mismatch would surface on a customer's data. The slug index across locales
-   reads the profile, so a release changing a type's `LocaleMode` needs a
-   migration; `sort_keys` and `words` need none, every update writing them anew.
+   reads the profile, so a release adding a type or changing one's `LocaleMode`
+   needs a migration; `sort_keys` and `words` need none, every update writing them anew.
    `props` and `words` come last in `entity`: a filter reading `status` past
    kilobytes of text follows overflow pages first. */
 final readonly class Schema
 {
-  private const TABLES = [
-    <<<'SQL'
+  /* `%s` is the generated columns (`Columns`), after `words`, since a virtual one takes no room in a row. */
+  private const ENTITY = <<<'SQL'
     create table entity (
       id             text primary key,
       type           text not null,
@@ -36,15 +36,33 @@ final readonly class Schema
       sort_keys      text not null check (json_valid(sort_keys)),
       props          text not null check (json_valid(props)),
       words          text not null check (json_valid(words)),
+      %s,
       unique (type, locale, slug)
+    ) strict
+    SQL;
+
+  private const TABLES = [
+    <<<'SQL'
+    create table word_record (
+      number    integer primary key,
+      entity_id text not null unique,
+      type      text not null
+    ) strict
+    SQL,
+    <<<'SQL'
+    create table word_field (
+      number integer primary key,
+      name   text not null unique
     ) strict
     SQL,
     <<<'SQL'
     create table entity_word (
-      entity_id text not null references entity(id) on delete cascade,
-      field     text not null,
-      word      text not null
-    ) strict
+      word   text not null,
+      field  integer not null,
+      record integer not null,
+      times  integer not null,
+      primary key (word, field, record)
+    ) strict, without rowid
     SQL,
     <<<'SQL'
     create table relation (
@@ -149,10 +167,14 @@ final readonly class Schema
     'create index entity_type on entity (type)',
     'create index entity_slug on entity (type, slug)',
     'create index entity_translation on entity (translation_of)',
-    'create index entity_word_prefix on entity_word (word, field, entity_id)',
-    'create index entity_word_entity on entity_word (entity_id)',
+    'create index entity_newest on entity (type, created_at, id)',
+    'create index entity_trashed on entity (type) where deleted_at is not null',
+    'create index entity_publish_from on entity (publish_from) where publish_from is not null',
+    'create index entity_publish_to on entity (publish_to) where publish_to is not null',
     'create index relation_object on relation (object_id, predicate)',
     'create index activity_time on activity (start_time, id)',
+    'create index activity_target on activity (target_id, start_time)',
+    'create index activity_actor on activity (actor_id, start_time)',
   ];
 
   public function __construct(private Profile $profile, private Shape $shape = new Shape()) {}
@@ -205,20 +227,33 @@ final readonly class Schema
   /** @return list<string> */
   private function statements(): array
   {
-    return [...self::TABLES, ...self::INDEXES, $this->slugAcrossLocales(), ...$this->search()];
+    return [sprintf(self::ENTITY, implode(",\n  ", Columns::declared())), ...self::TABLES, ...self::INDEXES,
+      ...Columns::indexes(), $this->slugAcrossLocales(), ...$this->search()];
   }
 
-  /** The word table follows `words` by triggers, one row per word per field, so
-      a save writes the JSON once and never the rows; a purge takes them by key.
+  /** The word table follows `words` by triggers, one row per word per field and
+      record with the times it stands there, so a save writes the JSON once and never
+      the rows. A record and a field are numbers there, kept by the triggers too,
+      and a row is stored once, in its key: with no index by record, a save and a
+      purge take the rows the old `words` names by that key, and no foreign key
+      would find them.
       @return list<string> */
   private function search(): array
   {
-    $insert = 'insert into entity_word (entity_id, field, word) select new.id, f.key, w.value'
-      . ' from json_each(new.words) f, json_each(f.value) w';
+    $record = fn (string $row): string => "(select number from word_record where entity_id = $row.id)";
+    $fields = 'insert or ignore into word_field (name) select key from json_each(new.words)';
+    $insert = 'insert into entity_word (word, field, record, times) select w.value, n.number, '
+      . $record('new') . ', count(*) from json_each(new.words) f cross join json_each(f.value) w'
+      . ' cross join word_field n on n.name = f.key group by w.value, n.number';
+    $delete = 'delete from entity_word where record = ' . $record('old') . ' and (word, field) in'
+      . ' (select w.value, n.number from json_each(old.words) f cross join json_each(f.value) w'
+      . ' cross join word_field n on n.name = f.key)';
 
-    return ["create trigger entity_word_insert after insert on entity begin $insert; end",
-      "create trigger entity_word_update after update of words on entity begin"
-      . " delete from entity_word where entity_id = new.id; $insert; end"];
+    return ['create trigger entity_word_insert after insert on entity begin'
+      . " insert into word_record (entity_id, type) values (new.id, new.type); $fields; $insert; end",
+      "create trigger entity_word_update after update of words on entity begin $delete; $fields; $insert; end",
+      "create trigger entity_word_delete after delete on entity begin $delete;"
+      . ' delete from word_record where entity_id = old.id; end'];
   }
 
   private function slugAcrossLocales(): string

@@ -40,7 +40,8 @@ final readonly class Dispatch
       Endpoint::LoginForm, Endpoint::LoginAsk, Endpoint::LoginRedeem, Endpoint::Logout
         => (new Login($this->common))->answer($route),
       Endpoint::Home, Endpoint::Find, Endpoint::Activity, Endpoint::ActivityRedact, Endpoint::Export,
-        Endpoint::ExportTake => (new Home($this->common))->answer($route),
+        Endpoint::ExportTake, Endpoint::QuestionSave, Endpoint::QuestionRemove
+        => (new Home($this->common))->answer($route),
       Endpoint::Collection, Endpoint::Search, Endpoint::Record, Endpoint::RecordCreate,
         Endpoint::RecordPatch, Endpoint::RecordTranslation, Endpoint::RecordDuplicate, Endpoint::RecordLink,
         Endpoint::RecordUnlink => (new Records($this->common))->records($route),
@@ -75,6 +76,6 @@ final readonly class Dispatch
     $common = $this->common;
     return new Checkup(new HoldingsCheck($common->db, $common->profile, new Schema($common->profile),
       $common->validator, $common->entities, $common->relations, $common->collisions, $common->settings,
-      $common->search), $common->settings, $common->clock, $common->backup());
+      $common->search, $common->schema), $common->settings, $common->clock, $common->backup());
   }
 }

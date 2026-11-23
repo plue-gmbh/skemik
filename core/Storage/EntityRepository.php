@@ -142,33 +142,6 @@ final readonly class EntityRepository
     return (int) $statement->fetchColumn();
   }
 
-  /** Which of a type's fields some record outside the trash holds, so a view
-      leaves out what nobody fills; each `exists` stops at the first it finds.
-      @param list<FieldDefinition> $fields
-      @return list<string> their keys */
-  public function held(string $type, array $fields): array
-  {
-    if ($fields === []) {
-      return [];
-    }
-    $fields = array_values($fields);
-    $asked = ['type' => $type];
-    $clauses = ['0'];
-    foreach ($fields as $index => $field) {
-      $edge = $field->cardinality->isEdge();
-      $asked["k$index"] = $edge ? (string) $this->schema->propertyName($field->key) : '$.' . $field->key;
-      $clauses[] = 'exists (select 1 from entity e' . ($edge
-        ? " join relation r on r.subject_id = e.id and r.predicate = :k$index where"
-        : " where nullif(nullif(json_extract(e.props, :k$index), ''), '[]') is not null and")
-        . ' e.type = :type and e.deleted_at is null)';
-    }
-    $statement = $this->db->prepare('select ' . implode(', ', $clauses));
-    $statement->execute($asked);
-    $found = array_filter(array_slice((array) $statement->fetch(\PDO::FETCH_NUM), 1));
-
-    return array_map(fn (int $index): string => $fields[$index]->key, array_keys($found));
-  }
-
   /** @param list<Relation> $edges every outbound edge, as it will stand */
   public function save(Entity $entity, array $edges, ?int $expectedVersion = null): Entity
   {
@@ -245,7 +218,7 @@ final readonly class EntityRepository
   }
 
   /** @return array<string, string|null> */
-  private function bindings(Query $query, TypeDefinition $type): array
+  public function bindings(Query $query, TypeDefinition $type): array
   {
     return [...$query->bindings($type, $this->schema, $this->sortKeys), 'locale' => null, 'across' => '[]',
       ...($query->locale === null ? [] : $this->collisions->localeScope($type->name, $query->locale)),

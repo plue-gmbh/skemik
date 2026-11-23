@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* One collection (`Admin\CollectionController`): its name and fields in the head, and under it the query bar,
    which changes only what is seen, with the bar for what is ticked beneath it, since both act on what is in
-   view. The tools are one group, + New record, the grant badge and the views, and stay in sight as the view
+   view. The tools are one group, + New record, the grant badge, the mark that saves the narrowing as a question of
+   the home screen or deletes the one it is, and the views, and stay in sight as the view
    scrolls, edged while they stick (`view/scripts/sticks.js`). They are the page's own child, since a part
    sticks no further than what holds it, and stand after the query bar, so Tab goes as a wide paper reads; a
    narrow one orders them up by the stylesheet. The shape line is no heading, since the schema.org address it
@@ -12,7 +13,8 @@ declare(strict_types=1);
    lands. Handed `$collection`, `$columns`, `$view`, `$glance`, `$timeline`, `$fixed`, `$rows`, `$page`,
    `$perPage`, `$items`, `$parameters`, `$narrowing`, `$narrowed`, `$filters`, `$named`, `$total`, `$all`,
    `$data`, `$spine`, `$creates`, `$public`, `$trashed`, `$trash`, the count or null, `$badges`, `$labels`,
-   `$until`, `$back`, `$firstLocale`, `$fields`, `$offers`, `$entries`, `$fielded`, `$csrf` and `$words`; the
+   `$until`, `$back`, `$firstLocale`, `$fields`, `$offers`, `$entries`, `$fielded`, `$question`, the saved
+   one this address is or null, `$csrf` and `$words`; the
    library's `$uses`, `$limit`, `$uploads`, `$uploaded` and `$refused` may be left out. */
 
 if (!isset($template)) {
@@ -40,15 +42,17 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
       <h1>
         <span><?= $template->escape($collection->name) ?></span>
 <?php if (!$public): ?>
-        <span class="tag-never" title="<?= $template->escape($words->get('collection.never_reason',
-          ['type' => $type])) ?>"><?= $template->escape($words->get('collection.never')) ?></span>
+        <span class="tag-never" title="<?= $template->escape($words->get('collection.never') . ': '
+          . $words->get('collection.never_reason', ['type' => $type])) ?>"><?= $template->render('partials/icon',
+          ['name' => 'locked']) ?><span class="visually-hidden"><?= $template->escape($words->get('collection.never'))
+          ?></span></span>
 <?php endif ?>
       </h1>
       <p class="page-shape"><a href="https://schema.org/<?= $template->escape($type) ?>" target="_blank"
         rel="noreferrer" title="<?= $template->escape($words->get('collection.proof',
-        ['type' => $type])) ?>">schema.org/<?= $template->escape($type) ?></a> · <button type="button"
-        class="shape-fields" aria-haspopup="dialog" data-field-popover="fields"><?= $template->escape($shown) ?><span
-        class="shape-public">, <?= $template->escape($letOut) ?></span></button></p>
+        ['type' => $type])) ?>"><span class="shape-host">schema.org/</span><?= $template->escape($type) ?></a> · <button
+        type="button" class="shape-fields" aria-haspopup="dialog" data-field-popover="fields"><?= $template->escape(
+        $shown) ?><span class="shape-public">, <?= $template->escape($letOut) ?></span></button></p>
     </div>
 <?= $switch(true) ?>
 <?= $template->render('partials/fields', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
@@ -102,6 +106,10 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
   'filters' => $filters, 'parameters' => $parameters, 'narrowed' => $narrowed, 'named' => $named,
   'total' => $total, 'all' => $all, 'narrowing' => $narrowing, 'fixed' => $fixed]) ?>
   </div>
+<?php if ($fields && $narrowed && $question === null): ?>
+<?= $template->render('partials/question-dialog', ['words' => $words, 'collection' => $collection,
+  'columns' => $columns, 'parameters' => $parameters, 'csrf' => $csrf]) ?>
+<?php endif ?>
   <div class="collection-tools" data-sticks>
 <?php if ($creates): ?>
     <button type="button" class="tool-button" data-add-row
@@ -116,6 +124,18 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
       array_keys(Profile\Seed\Media::FORMATS))) ?>" multiple></label>
 <?php endif ?>
     <?= $drawn ?>
+<?php if ($fields && $question !== null): $unkeep = $words->get('question.remove') ?>
+    <form method="post" action="/questions/<?= $template->escape(rawurlencode($question->id)) ?>/remove">
+      <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+      <button type="submit" class="tool-button is-kept"
+        title="<?= $template->escape($unkeep) ?>"><?= $template->render('partials/icon', ['name' => 'kept']) ?><span
+        class="visually-hidden"><?= $template->escape($unkeep) ?></span></button>
+    </form>
+<?php elseif ($fields && $narrowed): $keep = $words->get('question.save') ?>
+    <button type="button" class="tool-button" data-dialog="question-save" aria-haspopup="dialog"
+      title="<?= $template->escape($keep) ?>"><?= $template->render('partials/icon', ['name' => 'keep']) ?><span
+      class="visually-hidden"><?= $template->escape($keep) ?></span></button>
+<?php endif ?>
     <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu
       title="<?= $template->escape($current) ?>"><?= $template->render('partials/icon',
       ['name' => $view->value]) ?><span class="visually-hidden"><?= $template->escape($current) ?></span></button>
@@ -124,7 +144,7 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
   <div class="collection-ticked" data-ticked></div>
   <div data-view>
 <?= $template->render('partials/view-' . $view->value, ['words' => $words, 'collection' => $collection,
-  'columns' => $columns, 'rows' => $rows, 'page' => $page, 'perPage' => $perPage, 'total' => $total,
+  'columns' => $columns, 'rows' => $rows, 'page' => $page, 'perPage' => $perPage, 'total' => $total, 'all' => $all,
   'narrowed' => $narrowed, 'parameters' => $parameters, 'creates' => $creates, 'badges' => $badges, 'data' => $data,
   'spine' => $spine, 'items' => $items, 'add' => $add, 'firstLocale' => $firstLocale, 'glance' => $glance,
   'timeline' => $timeline, 'uses' => $uses, 'uploads' => $uploads, 'limit' => $limit]) ?>

@@ -5,37 +5,34 @@ declare(strict_types=1);
 /* Every record carries it beside its label: the state dot, the slug and, for a
    work, its translations' dots up to four. In the table each row shows its own
    locale, strong only where it is the install's first, so the other languages read
-   as the exception. A row with no word for its standing has no dot, since a dot
-   with nothing behind it says nothing. Its title is the whole spine in one line.
+   as the exception. A type that never publishes shows its state too, draft, in
+   review or archived, since an organisation keeps them among itself, and a message
+   nobody has read yet its slug in the accent colour and strong, since a colour
+   alone marks nothing for whoever cannot tell it apart. Its title is the whole spine in one line.
    For whoever writes the record it opens the spine dialog. Where the row stands
    for its work, the dots stand beside the chip as links, since a link cannot sit
    in a button: each opens its member, the count the record's Languages card,
    and a missing one that card for whoever may make it. The record screen hands
-   its own language alone, since its Languages card lists the others.
-   Handed `$row`, `$prefix`, `$translations`, null in an install of one language, `$opens` and `$words`;
-   `$current`, the install's first locale, may be left out. */
+   its own language alone, since its Languages card lists the others, and `$locked` where its type never
+   publishes, a lock beside the chip. Handed `$row`, `$prefix`, `$translations`, null in an install of one
+   language, `$opens` and `$words`; `$current`, the install's first locale, and `$locked` may be left out. */
 
 if (!isset($template)) {
   return;
 }
 $entity = $row->entity;
-$public = $row->reach === Profile\Reach::Public;
-$word = match (true) {
-  $public => $words->get('status.' . $row->state),
-  $row->own !== null => $row->own,
-  default => '',
-};
-$title = implode(' · ', array_filter([$word, '/' . $entity->slug->value, $entity->locale->tag,
-  'v' . $entity->version, $words->get('spine.changed', ['date' => $row->changed])]));
+$unread = $row->unread ? $words->get('status.unread') : '';
+$title = implode(' · ', array_filter([$words->get('status.' . $row->state), $unread, '/' . $entity->slug->value,
+  $entity->locale->tag, 'v' . $entity->version, $words->get('spine.changed', ['date' => $row->changed])]));
 $dots = $translations ?? [];
 $counted = count($dots) > 4;
 $shown = $counted ? array_filter($dots,
   fn (Admin\Translation $each): bool => $each->locale === $entity->locale->tag) : $dots;
 $strong = $current ?? $entity->locale->tag;
+$locked ??= false;
 $element = $opens ? 'button' : 'span';
 $opening = $element === 'button'
   ? ' type="button" data-spine="' . $template->escape($entity->id->value) . '" aria-haspopup="dialog"' : '';
-$dot = $public ? 'state-' . $template->escape($row->state) : 'state-own';
 $spoken = ($element === 'button' ? $template->escape($words->get('spine.open')) . ' – ' : '')
   . $template->escape($title);
 $present = count(array_filter($dots, fn (Admin\Translation $each): bool => $each->record !== null));
@@ -58,9 +55,14 @@ $markers .= $counted ? $marker(' is-count', $present . '/' . count($dots),
   $words->get('record.languages') . ' ' . $present . '/' . count($dots)) : '';
 ?>
 <<?= $element ?> class="spine-chip<?= $prefix === '' ? '' : ' is-full' ?>"<?= $opening ?>
-  title="<?= $template->escape($title) ?>"><?php if ($public || $row->own !== null): ?><span
-  class="state-dot <?= $dot ?>"></span><?php endif ?><span class="visually-hidden"><?= $spoken ?></span><span
+  title="<?= $template->escape($title) ?>"><span
+  class="state-dot state-<?= $template->escape($row->state) ?>"></span><span
+  class="visually-hidden"><?= $spoken ?></span><span
   class="spine-address" aria-hidden="true"><?php if ($prefix !== ''): ?><span
   class="spine-prefix"><?= $template->escape($prefix) ?></span><?php endif ?><span
-  data-spine-slug><?= $template->escape($entity->slug->value) ?></span></span><?= $linked ? '' : $markers
-  ?></<?= $element ?>><?= $linked ? '<span class="locale-links">' . $markers . '</span>' : '' ?>
+  data-spine-slug<?= $row->unread ? ' class="spine-unread"' : '' ?>><?= $template->escape($entity->slug->value)
+  ?></span></span><?= $linked ? '' : $markers
+  ?></<?= $element ?>><?= $linked ? '<span class="locale-links">' . $markers . '</span>' : '' ?><?php if ($locked):
+  ?> <span class="tag-never" title="<?= $template->escape($words->get('record.private')) ?>"><?= $template->render(
+  'partials/icon', ['name' => 'locked']) ?><span class="visually-hidden"><?= $template->escape(
+  $words->get('record.private')) ?></span></span><?php endif ?>

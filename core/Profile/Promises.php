@@ -81,7 +81,7 @@ final readonly class Promises
     return $violations;
   }
 
-  /** Address, state and language sit in one place on all thirty only while no
+  /** Address, state and language sit in one place on all thirty-one only while no
       type declares a field under a spine column's name. @return list<Violation> */
   private function checkSpine(): array
   {

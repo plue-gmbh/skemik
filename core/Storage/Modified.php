@@ -25,12 +25,18 @@ final readonly class Modified
   {
     $now = $this->clock->now()->format(Clock::STORED);
     $logged = $this->db->query('select max(start_time) from activity')->fetchColumn();
-    $window = $this->db->prepare('select max(case when publish_from <= :now then publish_from end),'
-      . ' max(case when publish_to <= :now then publish_to end) from entity');
-    $window->execute(['now' => $now]);
 
     return max([gmdate(Clock::STORED, (int) filemtime($this->stamp)), (string) $logged,
-      ...array_map('strval', (array) $window->fetch(\PDO::FETCH_NUM)), $this->lapsed($now)]);
+      $this->passed('publish_from', $now), $this->passed('publish_to', $now), $this->lapsed($now)]);
+  }
+
+  /* The newest edge of a window passed, one step down the edge's own index, which holds the records carrying one. */
+  private function passed(string $edge, string $now): string
+  {
+    $statement = $this->db->prepare("select max($edge) from entity where $edge <= :now");
+    $statement->execute(['now' => $now]);
+
+    return (string) $statement->fetchColumn();
   }
 
   /* A valid-through date is a day, a month or a year, and lapses as the install's next one begins. */

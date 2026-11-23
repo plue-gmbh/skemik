@@ -5,16 +5,29 @@ declare(strict_types=1);
 namespace Profile\Seed;
 
 use Profile\Derivation;
+use Profile\Derived;
 use Profile\FieldDefinition;
+use Profile\FieldKind;
 use Profile\LocaleMode;
 
-/* The Thing block, carried by all thirty, and the CreativeWork block, drawn
+/* The Thing block, carried by all thirty-one, and the CreativeWork block, drawn
    on by the types whose own table says so.
    No FieldKind is an object: a single-valued value object resolves into
    fields of the other kinds, each declaring which key of which object it carries,
    and a repeatable one is the `objects` kind. */
 final readonly class Base
 {
+  /* Each counter's key, label and the token its days are posted under; comments are rows here and posted by nobody. */
+  private const COUNTED = [
+    'ViewAction' => ['interaction_statistic_views', 'Page views', 'pageViews'],
+    'DownloadAction' => ['interaction_statistic_downloads', 'Downloads', 'downloads'],
+    'WatchAction' => ['interaction_statistic_video_plays', 'Video plays', 'videoPlays'],
+    'ListenAction' => ['interaction_statistic_audio_plays', 'Audio plays', 'audioPlays'],
+    'LikeAction' => ['interaction_statistic_likes', 'Likes', 'likes'],
+    'ShareAction' => ['interaction_statistic_shares', 'Shares', 'shares'],
+    'CommentAction' => ['interaction_statistic_comments', 'Comments', null],
+  ];
+
   public function __construct(
     private Fields $f = new Fields(),
     private ValueObjects $vo = new ValueObjects(),
@@ -103,6 +116,36 @@ final readonly class Base
       /* ∂ where the reviews are rows here, typed where they live at a platform
          this install cannot read: the holdings decide per record. */
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
+      ...$this->counters(...array_keys(self::COUNTED)),
     ];
+  }
+
+  /** The tokens a frontend posts a day's count under, each summed into its counter.
+      @return list<string> */
+  public function posted(): array
+  {
+    return array_values(array_filter(array_column(self::COUNTED, 2)));
+  }
+
+  /** ∂ — one counter per class, as the vocabulary gives them to a work, an
+      organisation and a person, never the hundred-odd actions it admits: a
+      counter nobody posts is a field nobody fills.
+      @return list<FieldDefinition> */
+  public function counters(string ...$classes): array
+  {
+    return array_map($this->counter(...), $classes);
+  }
+
+  /* What a frontend counted is summed over its observations of that token, the
+     visitors and members beside them being no counter; comments are rows here,
+     counted as the reviews under a rating are. */
+  private function counter(string $class): FieldDefinition
+  {
+    [$key, $label, $token] = self::COUNTED[$class];
+    $how = $token === null ? Derivation::over(Derived::Count, 'about')->inbound()->from('Comment')
+      : Derivation::over(Derived::Sum, 'observation_about', 'value')->inbound()->onlyAt('variable_measured', $token);
+
+    return $this->f->valueOf('InteractionCounter', 'userInteractionCount', $key, 'Interactions: ' . $label,
+      FieldKind::Number, 'interactionStatistic')->whole()->derived($how)->fixed('interactionType', $class);
   }
 }

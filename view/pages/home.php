@@ -6,11 +6,12 @@ declare(strict_types=1);
    the address it answers on, so a colleague with two installs open knows which
    this is, and its totals, and the cards in the order their contract argues,
    read across three columns that each stack their own, so a short card leaves
-   no hole under it beside a long one; focus and a screen reader go down a
+   no hole under it beside a long one, Saved questions second in the first, under
+   Needs a look, and the six others where they stood before it came; focus and a screen reader go down a
    column as the eye does. Too narrow for three, the cards flow down two
    balanced columns and then one in that same order, since a grid's rows would
    leave the hole again. The frame is the card's title and subtitle,
-   the same for all six; what stands under them is the card's own partial.
+   the same for all seven; what stands under them is the card's own partial.
    Handed `$address`, `$collections`, `$records`, `$cards` and `$words`. */
 
 if (!isset($template)) {
@@ -18,9 +19,11 @@ if (!isset($template)) {
 }
 $counted = fn (string $noun, int $n): string => $words->count('home', $noun, $n);
 $columns = [];
-foreach (array_keys($cards) as $index => $card) {
+foreach (array_keys(array_diff_key($cards, ['questions' => true])) as $index => $card) {
   $columns[$index % 3][$card] = $cards[$card];
 }
+$columns[0] = [...array_slice($columns[0], 0, 1), ...array_intersect_key($cards, ['questions' => true]),
+  ...array_slice($columns[0], 1)];
 ?>
 <div class="page">
   <header class="page-head">

@@ -35,8 +35,8 @@ final readonly class Arrival
 
   public function move(): Move
   {
-    return new Move($this->premises->data, $this->root . '/migrations', new Connection(), $this->migrator(...),
-      $this->collections(...), $this->rewrite(...), $this->words);
+    return new Move($this->premises->data, $this->root . '/migrations', $this->root . '/core/Profile/Seed',
+      new Connection(), $this->migrator(...), $this->collections(...), $this->rewrite(...), $this->words);
   }
 
   private function migrator(): Migrator

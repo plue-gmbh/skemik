@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* What the thirty types' fields are called in Dutch, keyed as
+/* What the thirty-one types' fields are called in Dutch, keyed as
    `de.fields.php` is. These words reach a reader, the feed's catalogue naming a
    field in the language of its content. A flattened field is `Blok: veld`, and
    its block's heading the key it arrived on and a colon, `address:`, which the
@@ -465,4 +465,17 @@ return [
   'target_encoding_type' => 'Ingang: Codering',
   'target_content_type' => 'Ingang: Inhoudstype',
   'target_http_method' => 'Ingang: HTTP-methode',
+  'observation_about' => 'Betreft',
+  'observation_date' => 'Datum',
+  'value' => 'Waarde',
+  'unit_code' => 'Eenheid',
+  'observation_period' => 'Periode',
+  'interaction_statistic:' => 'Interacties',
+  'interaction_statistic_views' => 'Interacties: paginaweergaven',
+  'interaction_statistic_downloads' => 'Interacties: downloads',
+  'interaction_statistic_video_plays' => 'Interacties: videoweergaven',
+  'interaction_statistic_audio_plays' => 'Interacties: audioweergaven',
+  'interaction_statistic_likes' => 'Interacties: likes',
+  'interaction_statistic_shares' => 'Interacties: keer gedeeld',
+  'interaction_statistic_comments' => 'Interacties: reacties',
 ];

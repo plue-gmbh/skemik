@@ -11,7 +11,7 @@ declare(strict_types=1);
    it. Where the page holds rows on both sides of the install's day, a line says
    Today between them, so a calendar shows what comes next without a filter.
    Handed `$rows`, `$columns`, `$collection`, `$items`, `$glance`, `$firstLocale`, `$timeline`, `$creates`,
-   `$add`, `$total`, `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
+   `$add`, `$total`, `$narrowed`, `$all`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -65,7 +65,8 @@ $before = null;
     ['name' => 'plus']) ?><?= $template->escape($add) ?></button>
 <?php endif ?>
   <?= $template->render('partials/sheet-pages', ['words' => $words, 'page' => $page, 'perPage' => $perPage,
-    'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
+    'total' => $total, 'shown' => count($rows), 'parameters' => $parameters,
+    'all' => $narrowed ? $all : null]) ?>
 </div>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
 <?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

@@ -74,6 +74,7 @@ final readonly class Agents
       $f->refs('brand', 'Brands', 'Brand'),
       $f->refs('owns', 'Owns', 'Product', 'Offer'),
       $f->refs('seeks', 'Seeks', 'Product', 'Offer'),
+      ...$this->base->counters('ViewAction', 'LikeAction', 'ShareAction', 'CommentAction'),
     ];
   }
 
@@ -123,6 +124,7 @@ final readonly class Agents
       $f->refs('brand', 'Brands', 'Brand'),
       $f->ref('has_offer_catalog', 'Offer catalogue', 'ItemList'),
       ...$vo->flatten('AggregateRating', 'aggregateRating', 'Rating', $f, computed: true),
+      ...$this->base->counters('ViewAction', 'LikeAction', 'ShareAction', 'CommentAction'),
       /* Off-domain on purpose: the escape rung the profile's
          most common type had none of. The proof link is absent by design. */
       $f->objects('additional_property', 'Additional property', 'PropertyValue')->words(),

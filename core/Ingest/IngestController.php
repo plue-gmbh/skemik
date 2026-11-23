@@ -100,15 +100,16 @@ final readonly class IngestController
   /** The language of a photograph's or a dataset's bytes is read alike on every
       route (`Profile\LocaleMode`), so a new one is written as on the route of the
       language its document states, where the install holds it: posted back from
-      another tree it is the record it was read as.
+      another tree it is the record it was read as. The route takes the install's
+      own tag, so nothing the caller wrote becomes a path segment.
       @param array<string, mixed> $document */
   private function spoken(Collection $collection, Route $route, array $document): Route
   {
     $stated = $document['inLanguage'] ?? null;
-    $held = array_any($this->settings->locales(), fn (Locale $locale): bool => $locale->tag === $stated);
+    $held = array_find($this->settings->locales(), fn (Locale $locale): bool => $locale->tag === $stated);
     $both = $this->profile->byType($collection->type)->locale === LocaleMode::Both;
 
-    return $both && $held ? new Route($route->endpoint, [...$route->parameters, 'locale' => (string) $stated])
+    return $both && $held !== null ? new Route($route->endpoint, [...$route->parameters, 'locale' => $held->tag])
       : $route;
   }
 
@@ -254,7 +255,7 @@ final readonly class IngestController
     $now = $this->clock->now()->format(Clock::STORED);
 
     return new Entity(new EntityId($this->uuid->generate()), $type->url(), $locale,
-      Slug::from($type->name, 'record'), new Props([]), $now, $now);
+      Slug::unnamed($type->name, $now), new Props([]), $now, $now);
   }
 
   /** Each field once, as the caller wrote it and never as it is stored: what the

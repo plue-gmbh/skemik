@@ -93,11 +93,20 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
         <span><?= $template->escape($row->label) ?></span>
       </h1>
       <p class="record-spine"><?= $template->render('partials/spine-chip', ['words' => $words, 'row' => $row,
-        'prefix' => $prefix, 'opens' => $writes, 'translations' => $own === null ? null
-          : [new Admin\Translation($own->locale, $own->record, marker: $own->marker)]]) ?><?php if (!$public): ?> <span
-        class="tag-never"><?= $template->escape($words->get('record.private')) ?></span><?php endif ?></p>
+        'prefix' => $prefix, 'opens' => $writes, 'locked' => !$public, 'translations' => $own === null ? null
+          : [new Admin\Translation($own->locale, $own->record, marker: $own->marker)]]) ?></p>
     </div>
     <div class="collection-tools" data-sticks>
+<?php if ($writes): ?>
+      <div class="view-switch is-wide" role="group" aria-label="<?= $template->escape($words->get('record.mode')) ?>">
+        <button type="button" aria-pressed="true" data-record-mode="read"><?= $template->render('partials/icon',
+          ['name' => 'read']) ?><span
+          class="view-switch-word"><?= $template->escape($words->get('record.read')) ?></span></button>
+        <button type="button" aria-pressed="false" data-record-mode="edit"><?= $template->render('partials/icon',
+          ['name' => 'edit']) ?><span
+          class="view-switch-word"><?= $template->escape($words->get('record.edit')) ?></span></button>
+      </div>
+<?php endif ?>
 <?php if (count($offered) > 1):
   /* An option says Words, since on a forking type the Languages card offers whole records in the same locales. */
   $markers = Domain\Locale::short(array_map(fn (Domain\Locale $each): string => $each->tag, $offered));
@@ -112,16 +121,6 @@ $tool = function (?string $href, string $icon, string $word, string $end) use ($
           '&'))) ?>"<?= $current ? ' selected' : '' ?>><?= $template->escape($named($each->tag)) ?></option>
 <?php endforeach ?>
       </select>
-<?php endif ?>
-<?php if ($writes): ?>
-      <div class="view-switch is-wide" role="group" aria-label="<?= $template->escape($words->get('record.mode')) ?>">
-        <button type="button" aria-pressed="true" data-record-mode="read"><?= $template->render('partials/icon',
-          ['name' => 'read']) ?><span
-          class="view-switch-word"><?= $template->escape($words->get('record.read')) ?></span></button>
-        <button type="button" aria-pressed="false" data-record-mode="edit"><?= $template->render('partials/icon',
-          ['name' => 'edit']) ?><span
-          class="view-switch-word"><?= $template->escape($words->get('record.edit')) ?></span></button>
-      </div>
 <?php endif ?>
 <?php if ($writes && $asset): $replace = $words->get('media.replace', ['limit' => $limit]) ?>
       <label class="tool-button upload-button"

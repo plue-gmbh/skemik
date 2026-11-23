@@ -96,13 +96,12 @@ function mountSheet(root) {
         const field = fieldOf(key);
         const cell = cellOf(id, key);
         if (field.kind === "boolean") return cell.querySelector("[data-edit]").focus();
-        const terms = data.terms[rows.get(id).locale] ?? {};
         /* A view's popover names what it edits, since it may cover the row; a record's screen is that record. */
         const record = table.matches("[data-record-edit]") ? null
           : all ? fill(this.words["sheet.ticked"], { n: this.takers(key).length }) : rows.get(id).label;
-        this.editing = { id, field, cell, terms, value: all ? null : this.current(id, key), collection: data.collection,
-          locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone, words: wordsIn, all,
-          csrf: data.csrf, limit: data.limit, record };
+        this.editing = { id, field, cell, terms: data.terms, value: all ? null : this.current(id, key),
+          collection: data.collection, locale: rows.get(id).locale, hint: rows.get(id).hints?.[key], zone: data.zone,
+          words: wordsIn, all, csrf: data.csrf, limit: data.limit, record };
       },
       close() {
         const { id, field, cell, all } = this.editing;
@@ -110,14 +109,14 @@ function mountSheet(root) {
         sheet.last = cell;
         return { id, key: field.key, cell, all };
       },
-      commit(value, move) {
+      commit(value, move, pressed = false) {
         const { id, key, cell, all } = this.close();
         (all ? this.takers(key) : [id]).forEach((each) => this.change(each, key, value));
-        if (all) return this.$refs.setter?.focus();
-        move ? this.move(id, key, move) : cell.querySelector("[data-edit]").focus();
+        if (all) return this.$refs.setter?.focus({ preventScroll: pressed });
+        move ? this.move(id, key, move) : cell.querySelector("[data-edit]").focus({ preventScroll: pressed });
       },
-      cancel() {
-        this.close().cell.querySelector("[data-edit]").focus();
+      cancel(pressed = false) {
+        this.close().cell.querySelector("[data-edit]").focus({ preventScroll: pressed });
       },
       move(id, key, [down, across]) {
         const ids = [...table.querySelectorAll("[data-record]")].map((row) => row.dataset.record);
@@ -161,7 +160,7 @@ function mountSheet(root) {
           return delete cell.dataset.pending;
         }
         cell.dataset.pending = "";
-        shown.replaceChildren(cellShown(fieldOf(key), this.pending[id][key], data.terms[rows.get(id).locale] ?? {},
+        shown.replaceChildren(cellShown(fieldOf(key), this.pending[id][key], data.terms,
           this.language, this.words));
       },
       /* The chip marks a pending spine edit and shows a pending slug and language. A

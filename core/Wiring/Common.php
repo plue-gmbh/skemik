@@ -17,6 +17,7 @@ use Admin\Moments;
 use Admin\Premises;
 use Admin\Probes;
 use Admin\Proofs;
+use Admin\QueryBar;
 use Admin\Rows;
 use Admin\Sheet;
 use Admin\Showing;
@@ -186,8 +187,8 @@ final readonly class Common
   public function sheet(): Sheet
   {
     return new Sheet($this->rows, new Cells($this->template, $this->words, $this->terms, $this->clock,
-      $this->moments, $this->profile), $this->collections, $this->terms, $this->profile, $this->schema,
-      $this->settings, $this->clock, $this->moments, $this->words);
+      $this->moments, $this->profile), $this->collections, $this->terms, $this->profile, $this->clock,
+      $this->moments, $this->words);
   }
 
   public function reviews(): Grants
@@ -221,6 +222,13 @@ final readonly class Common
   {
     return new LocaleController($this->authorizer, $this->settings, $this->session, $this->csrf,
       $this->words, $this->log);
+  }
+
+  public function bar(): QueryBar
+  {
+    return new QueryBar($this->parameters, $this->filter, $this->authorizer, $this->entities, $this->collections,
+      $this->settings, $this->rows, $this->named, $this->terms, $this->targets, $this->words, $this->schema,
+      $this->clock);
   }
 
   private function model(): void
@@ -263,7 +271,7 @@ final readonly class Common
     $this->log = new ActivityLog($db, $this->person, $this->uuid, $this->clock);
     $this->entities = $this->entitiesFor($this->person);
     $this->collections = new CollectionStore($db, $this->profile, $this->uuid, $this->words);
-    $this->counts = new Counts($db, $this->clock);
+    $this->counts = new Counts($db, $this->schema, $this->clock);
   }
 
   private function screens(): void

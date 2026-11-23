@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 /* What a select's options are called in English, by the token the holdings
    store and emit, `EventCancelled`. Apart from `en.php` because these words
-   reach a reader: they are chosen by the record's language, never the admin's,
-   so an install publishing `de-DE` with an English admin still reads the German
-   word. schema.org publishes no translations of its enumerations, so these
-   files are the only place those words can come from. Every shipped language
-   names every option; one with no file reads English, never a bare token. */
+   reach a reader: the feed chooses them by the record's language, so an install
+   publishing `de-DE` with an English admin still reads the German word there,
+   while the admin shows them in its own. schema.org publishes no translations
+   of its enumerations, so these files are the only place those words can come
+   from. Every shipped language names every option; one with no file reads
+   English, never a bare token. */
 return [
   'Hardcover' => 'Hardcover',
   'Paperback' => 'Paperback',
@@ -113,4 +114,12 @@ return [
   'UsedCondition' => 'Used',
   'RefurbishedCondition' => 'Refurbished',
   'DamagedCondition' => 'Damaged',
+  'pageViews' => 'Page views',
+  'downloads' => 'Downloads',
+  'videoPlays' => 'Video plays',
+  'audioPlays' => 'Audio plays',
+  'likes' => 'Likes',
+  'shares' => 'Shares',
+  'visitors' => 'Visitors',
+  'members' => 'Members',
 ];

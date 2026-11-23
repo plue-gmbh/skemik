@@ -993,6 +993,25 @@ a.account-who {
   flex: none;
 }
 
+.home-cards .record-row-name:has(+ .question-figure) {
+  flex: 1;
+}
+
+.question-figure {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.collection-tools > form {
+  display: contents;
+}
+
+.tool-button.is-kept {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .changes {
   margin: 0 calc(-1 * var(--card-inset));
   padding: 0;
@@ -1334,15 +1353,13 @@ h2#home-needs_look ~ .home-empty {
 }
 
 .tag-never {
-  padding: 3px 10px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-large);
+  display: inline-flex;
   color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: normal;
+}
+
+.tag-never .icon {
+  width: 15px;
+  height: 15px;
 }
 
 .view-switch {
@@ -1694,6 +1711,10 @@ h2#home-needs_look ~ .home-empty {
   white-space: nowrap;
 }
 
+.sheet-spine .spine-chip {
+  max-width: 276px;
+}
+
 .spine-chip {
   display: inline-flex;
   align-items: center;
@@ -1749,11 +1770,11 @@ h2#home-needs_look ~ .home-empty {
   white-space: nowrap;
 }
 
-.cell:has(.chips) {
+.cell:has(.chips, .pairs) {
   max-width: 520px;
 }
 
-.sheet .cell:has(.chips) {
+.sheet .cell:has(.chips, .pairs) {
   width: max-content;
   min-width: 100%;
 }
@@ -1865,6 +1886,50 @@ button.cell:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   gap: 5px;
+}
+
+.pairs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.pair {
+  display: inline-flex;
+  gap: 6px;
+  max-width: 100%;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  font-size: 11.5px;
+}
+
+.pair-name {
+  padding: 1px 0;
+  color: var(--text-secondary);
+}
+
+.pair-value {
+  padding: 1px 0 1px 6px;
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.pair {
+  color: var(--text);
+}
+
+.cell a.pair:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  a.pair:hover {
+    border-color: var(--border-strong);
+  }
 }
 
 .chip {
@@ -2015,6 +2080,7 @@ button.cell:focus-visible {
 .option:focus-visible {
   border-color: var(--border);
   background: var(--surface-sunken);
+  outline-offset: -2px;
 }
 
 @media (hover: hover) {
@@ -2104,6 +2170,10 @@ a.option {
   font-family: var(--font-mono);
 }
 
+.sheet-pages-all {
+  display: none;
+}
+
 .button-danger {
   padding: 7px 15px;
   border-radius: var(--radius-large);
@@ -2162,7 +2232,7 @@ a.option {
   margin-top: 20px;
 }
 
-.page > .item-tick-all + .record-rows {
+.page:has([data-tick]:checked) > .item-tick-all + .record-rows {
   margin-top: 0;
 }
 
@@ -2325,8 +2395,9 @@ a.option {
   color: var(--text-tertiary);
 }
 
-.state-own {
-  background: var(--text-secondary);
+.spine-unread {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .locale-dot {
@@ -2524,7 +2595,8 @@ a.chip {
   color: var(--text);
 }
 
-.cell a.chip:focus-visible {
+.cell a.chip:focus-visible,
+.picker-item a.chip:focus-visible {
   outline-offset: -2px;
 }
 
@@ -2937,6 +3009,11 @@ a.chip {
   white-space: nowrap;
 }
 
+.record-rows.is-aligned .record-row-name.is-more {
+  grid-column: 2 / -1;
+  font-weight: 400;
+}
+
 .record-rows.is-aligned .record-row-state {
   grid-column: 5;
   justify-self: end;
@@ -3189,7 +3266,7 @@ a.chip {
 
 .sheet .sheet-open {
   width: 36px;
-  padding: 0 0 0 8px;
+  padding: 0 0 0 4px;
   text-align: center;
 }
 
@@ -3198,15 +3275,32 @@ a.chip {
 }
 
 .sheet .sheet-tick {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   width: 30px;
-  padding: 0 0 0 10px;
+  padding: 0 4px 0 10px;
   text-align: center;
+}
+
+.sheet td.sheet-tick {
+  background: var(--surface);
+}
+
+@media (hover: hover) {
+  .sheet tbody tr:hover td.sheet-tick {
+    background: var(--surface-wash-opaque);
+  }
 }
 
 .sheet .sheet-tick input {
   display: block;
   margin: 0 auto;
   accent-color: var(--accent);
+}
+
+.sheet:not(:has([data-tick]:checked)) [data-tick-all] {
+  visibility: hidden;
 }
 
 .sheet:not(:has(tbody tr)) .sheet-tick,
@@ -3743,6 +3837,10 @@ a.cell {
   transition: width var(--transition-resize);
 }
 
+.header-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
 .header-search.is-open {
   border-color: transparent;
   background: linear-gradient(var(--accent-tint), var(--accent-tint)) var(--surface);
@@ -4264,13 +4362,17 @@ textarea[aria-busy="true"] {
     flex-grow: 0;
   }
 
-  .record-page .collection-tools > .view-switch,
-  .record-page .collection-tools > .words-select:not(:has(+ .view-switch)) {
+  .record-page .collection-tools > .view-switch:not(:has(+ .words-select)),
+  .record-page .collection-tools > .words-select {
     margin-right: auto;
   }
 }
 
 @container paper (max-width: 480px) {
+  .shape-host {
+    display: none;
+  }
+
   .record-page .collection-tools:has(.words-select) .view-switch button[data-record-mode] {
     width: 31px;
     padding: 0;
@@ -4380,11 +4482,17 @@ textarea[aria-busy="true"] {
   }
 
   .query-count {
-    flex-basis: 100%;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
-  .query-count:empty {
-    display: none;
+  .sheet-pages-all {
+    display: inline;
   }
 
   .collection-title h1 span,
@@ -4495,6 +4603,14 @@ textarea[aria-busy="true"] {
     grid-column: 3 / -1;
   }
 
+  .record-rows.is-aligned .record-row:has(> .is-more)::after {
+    grid-row: 2;
+    grid-column: 2;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    content: "\a0";
+  }
+
   .record-rows.is-aligned > li > .record-row.is-missing {
     display: flex;
   }
@@ -4515,7 +4631,11 @@ textarea[aria-busy="true"] {
     max-width: 220px;
   }
 
-  .cell:has(.chips) {
+  .sheet-spine .spine-chip {
+    max-width: 196px;
+  }
+
+  .cell:has(.chips, .pairs) {
     max-width: 300px;
   }
 
@@ -5081,6 +5201,10 @@ button.spine-chip {
   margin: 0;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
+}
+
+:not(:has([data-tick]:checked)) > .item-tick-all {
+  display: none;
 }
 
 .item-tick-all input,

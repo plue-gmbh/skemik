@@ -10,7 +10,6 @@ use Domain\Entity;
 use Domain\Locale;
 use Profile\Profile;
 use Profile\SchemaOrg;
-use Profile\Seed\Media;
 use Profile\Seed\Terms;
 use Storage\Collection;
 use Storage\CollectionStore;
@@ -31,14 +30,15 @@ use Support\Zip;
    screen, nor lack one they could; the role is not consulted, since a `viewer`
    reading everything dumps everything. The catalogue shows what the taker may
    arrange as a key that arranges it reads it, since which fields leave the
-   install is the one thing a dump posted back could not restore otherwise. The
-   manifest's record keys are this app's own: custody has no home in the
-   vocabulary, which is why it travels beside the documents. */
+   install is the one thing a dump posted back could not restore otherwise. */
 final readonly class Export
 {
   public const FORMATS = ['jsonld', 'html', 'csv', 'md'];
   public const FILES = 'media/';
-  private const AUTHORITATIVE = 'jsonld';
+  public const AUTHORITATIVE = 'jsonld';
+  /* The records a collection is weighed on before the run, per language: few
+     enough that the screen opens at once, and the first page as the feed lists it. */
+  private const SAMPLE = 10;
 
   public function __construct(
     private Profile $profile,
@@ -51,8 +51,8 @@ final readonly class Export
     private Authorizer $authorizer,
     private Account $taker,
     private string $origin,
-    private string $media,
-    private string $actor,
+    private DumpFiles $media,
+    private DumpManifest $manifest,
     private Zip $box,
     private Clock $clock,
     private Terms $terms,
@@ -60,20 +60,55 @@ final readonly class Export
     private Json $json = new Json(),
   ) {}
 
-  /* Said before the run, since the box is as large as the files it holds. */
+  /* Said before the run, since the box is as large as its files and documents.
+     The documents are weighed on a sample written in memory, never into the box,
+     so the figure follows what the serialisers write and no guess per record. */
   public function measure(): DumpSize
   {
     $records = 0;
+    $bytes = 0;
     foreach ($this->settings->locales() as $locale) {
+      $bytes += $this->weight($this->index($locale));
       foreach ($this->readable() as $held) {
         $query = $this->filter->query(new Query($held->type, locale: $locale), $held);
-        $records += $query === null ? 0 : $this->entities->count($query);
+        $count = $query === null ? 0 : $this->entities->count($query);
+        $records += $count;
+        $bytes += $this->weighed($held, $locale, $count);
       }
     }
     $files = $this->files();
+    foreach ($files as $path => $file) {
+      $bytes += Zip::weight($path, (int) filesize($file));
+    }
 
-    return new DumpSize($records, count($files),
-      array_sum(array_map(fn (string $file): int => (int) filesize($file), $files)));
+    return new DumpSize($records, count($files), $bytes);
+  }
+
+  /* A collection in one language, scaled from its sample: the records, their
+     manifest entries and their listing, since the pages of 200 hold what the
+     sample's listing holds for ten. An empty one still writes its listing. */
+  private function weighed(Collection $held, Locale $locale, int $count): int
+  {
+    $query = $this->filter->query(new Query($held->type, locale: $locale, perPage: self::SAMPLE), $held);
+    if ($query === null) {
+      return 0;
+    }
+    $members = $this->entities->list($query);
+    $formats = $this->serialisers($locale);
+    $bytes = $this->weight($this->listed($members, $held, $formats, $query)[0]);
+    foreach ($members as $member) {
+      $documents = $this->documents($member, $held, $formats, $locale->tag . '/' . $held->slug->value);
+      $bytes += $this->weight($documents) + strlen($this->json->encode($this->manifest->entry($member, $documents)));
+    }
+
+    return $members === [] ? $bytes : intdiv($bytes * $count, count($members));
+  }
+
+  /** @param array<string, string> $documents */
+  private function weight(array $documents): int
+  {
+    return array_sum(array_map(fn (string $path, string $body): int => Zip::weight($path, strlen($body)),
+      array_keys($documents), $documents));
   }
 
   /** @return int the records written, over every locale the install holds */
@@ -81,8 +116,7 @@ final readonly class Export
   {
     $entries = [];
     foreach ($this->settings->locales() as $locale) {
-      $this->put(self::AUTHORITATIVE . '/' . $locale->tag . '/index.jsonld', $this->json->encode(
-        $this->catalog($locale)->collections($this->collections->all(), $locale)));
+      $this->put($this->index($locale));
       foreach ($this->readable() as $held) {
         $entries = [...$entries, ...$this->collection($held, $locale)];
       }
@@ -90,7 +124,7 @@ final readonly class Export
     foreach ($this->files() as $path => $file) {
       $this->box->addFile($path, $file);
     }
-    $this->put('manifest.jsonld', $this->json->encode($this->manifest($entries)));
+    $this->put(['manifest.jsonld' => $this->json->encode($this->manifest->of($entries))]);
     $this->box->close();
 
     return count($entries);
@@ -121,26 +155,35 @@ final readonly class Export
       foreach ($members as $member) {
         $entries[] = $this->record($member, $held, $formats, $folder);
       }
-      if (!$this->listing($members, $held, $formats, $query)) {
+      [$listing, $more] = $this->listed($members, $held, $formats, $query);
+      $this->put($listing);
+      if (!$more) {
         return $entries;
       }
     }
   }
 
   /** @param array<string, JsonLd|Html|Csv|Markdown> $formats
-      @return array<string, mixed> the record's manifest entry, an asset's naming its file */
+      @return array<string, mixed> the record's manifest entry */
   private function record(Entity $entity, Collection $held, array $formats, string $folder): array
   {
-    $files = [];
-    foreach ($formats as $format => $serialiser) {
-      $files[$format] = $format . '/' . $folder . '/' . $entity->slug->value . '.' . $format;
-      $this->put($files[$format], $serialiser->record($entity, $held));
-    }
-    $filed = $this->filed($entity);
+    $documents = $this->documents($entity, $held, $formats, $folder);
+    $this->put($documents);
 
-    return ['slug' => $entity->slug->value, 'locale' => $entity->locale->tag,
-      'status' => $entity->status->value, 'type' => $entity->typeName(),
-      'version' => $entity->version, 'files' => $files, ...($filed === null ? [] : ['file' => $filed[0]])];
+    return $this->manifest->entry($entity, $documents);
+  }
+
+  /** @param array<string, JsonLd|Html|Csv|Markdown> $formats
+      @return array<string, string> each format's document by its path in the box */
+  private function documents(Entity $entity, Collection $held, array $formats, string $folder): array
+  {
+    $documents = [];
+    foreach ($formats as $format => $serialiser) {
+      $documents[$format . '/' . $folder . '/' . $entity->slug->value . '.' . $format] =
+        $serialiser->record($entity, $held);
+    }
+
+    return $documents;
   }
 
   /** Each page carries the address it is served at, pages of 200 said in it, and
@@ -148,81 +191,41 @@ final readonly class Export
       prefix swapped and a reader holding one file knows how many records there were.
       @param list<Entity> $members
       @param array<string, JsonLd|Html|Csv|Markdown> $formats
-      @return bool whether a page follows, so no empty one is written past the last */
-  private function listing(array $members, Collection $held, array $formats, Query $query): bool
+      @return array{array<string, string>, bool} the page by its path in the box, and whether one
+        follows, so no empty one is written past the last */
+  private function listed(array $members, Collection $held, array $formats, Query $query): array
   {
     $locale = $query->locale ?? $this->settings->locales()[0];
     $first = $query->page === 1;
     $asked = ['per_page' => $query->perPage, ...($first ? [] : ['page' => $query->page])];
     $address = $this->prefix($locale) . $held->slug->value . '?' . http_build_query($asked);
-    $file = $locale->tag . '/' . $held->slug->value . '/'
-      . ($first ? 'index' : 'page-' . $query->page);
+    $file = $locale->tag . '/' . $held->slug->value . '/' . ($first ? 'index' : 'page-' . $query->page);
     $total = $this->entities->count($query);
+    $documents = [];
     foreach ($formats as $format => $serialiser) {
-      $this->put($format . '/' . $file . '.' . $format,
-        $serialiser->listing($members, $held, $total, $address));
+      $documents[$format . '/' . $file . '.' . $format] = $serialiser->listing($members, $held, $total, $address);
     }
 
-    return $query->page * $query->perPage < $total;
+    return [$documents, $query->page * $query->perPage < $total];
   }
 
-  /** Each file once, however many locales hold the asset.
-      @return array<string, string> the path in the box to the file on disk */
+  /** @return array<string, string> the path in the box to the file on disk */
   private function files(): array
   {
     $library = $this->profile->byType('MediaObject')->url();
-    $files = [];
-    foreach ($this->settings->locales() as $locale) {
-      foreach ($this->readable() as $held) {
-        foreach ($held->type === $library ? $this->assets($held, $locale) : [] as $asset) {
-          $filed = $this->filed($asset);
-          $filed === null || $files[$filed[0]] = $filed[1];
-        }
-      }
-    }
+    $held = array_find($this->readable(), fn (Collection $each): bool => $each->type === $library);
 
-    return $files;
-  }
-
-  /** @return \Generator<int, Entity> */
-  private function assets(Collection $held, Locale $locale): \Generator
-  {
-    for ($page = 1; ; $page++) {
-      $query = $this->filter->query(new Query($held->type, locale: $locale, page: $page,
-        perPage: Query::MAX_PER_PAGE), $held);
-      $members = $query === null ? [] : $this->entities->list($query);
-      yield from $members;
-      if (count($members) < Query::MAX_PER_PAGE) {
-        return;
-      }
-    }
-  }
-
-  /** A row whose file is gone is the asset nobody has, as the address answers it.
-      @return ?array{string, string} the path in the box and the file on disk */
-  private function filed(Entity $entity): ?array
-  {
-    $extension = Media::FORMATS[(string) $entity->props->string('encoding_format')] ?? null;
-    if ($entity->typeName() !== 'MediaObject' || $extension === null) {
-      return null;
-    }
-    /** @psalm-taint-escape file
-        @psalm-taint-escape ssrf
-        @psalm-taint-escape url_component
-        @psalm-taint-escape url_path */
-    $name = basename((string) $entity->props->string('content_url')) . '.' . $extension; /* kept in the folder */
-    $file = $this->media . '/' . $name;
-
-    return is_file($file) ? [self::FILES . $name, $file] : null;
+    return $held === null ? [] : $this->media->of($held, $this->settings->locales());
   }
 
   /** @return array<string, JsonLd|Html|Csv|Markdown> */
   private function serialisers(Locale $locale): array
   {
-    $addresses = new Addresses($this->profile, $this->entities, $this->filter, $locale,
-      $this->origin, $this->collections->all());
+    $held = $this->collections->all();
+    $addresses = new Addresses($this->profile, $this->entities, $this->filter, $locale, $this->origin, $held);
     $derived = new Derivations($this->profile, $this->schema, $this->entities, $this->relations,
-      $addresses, $this->clock);
+      fn (Entity $row): bool => $addresses->collectionOf($row) !== null, $this->filter->readings($held),
+      $this->clock);
     $document = new JsonLd($this->worded($locale), $this->schema, $this->entities, $this->relations,
       $this->filter, $locale, $this->origin, $addresses, $derived, built: new \ArrayObject());
     $address = fn (string $format): Address =>
@@ -249,6 +252,13 @@ final readonly class Export
       $this->origin, array_values(array_map(fn (Collection $held): string => $held->slug->value, $arranged)));
   }
 
+  /** @return array<string, string> the fields' names in one language, by its path in the box */
+  private function index(Locale $locale): array
+  {
+    return [self::AUTHORITATIVE . '/' . $locale->tag . '/index.jsonld' => $this->json->encode(
+      $this->catalog($locale)->collections($this->collections->all(), $locale))];
+  }
+
   private function worded(Locale $locale): Profile
   {
     return $this->profile->worded($this->words->fields($locale->tag));
@@ -259,23 +269,16 @@ final readonly class Export
     return $this->origin . '/feed/' . $locale->tag . '/';
   }
 
-  /** @param list<array<string, mixed>> $entries */
-  private function manifest(array $entries): array
+  /** @param array<string, string> $documents by their paths in the box */
+  private function put(array $documents): void
   {
-    return ['@context' => 'https://schema.org', '@type' => 'Dataset',
-      'name' => 'Skemik export', 'dateCreated' => $this->clock->now()->format(Clock::STORED),
-      'creator' => ['@type' => 'Person', 'name' => $this->actor],
-      'scope' => $this->taker->read->stored() ?? 'every type',
-      'authoritative' => self::AUTHORITATIVE, 'records' => $entries];
-  }
-
-  private function put(string $path, string $body): void
-  {
-    /* `Address` writes one `../` into every link in the box, which is right only
-       while every document sits at `<format>/<locale>/<collection>/`; a catalog
-       and the manifest link to no file. */
-    assert(substr_count($path, '/') === 3 || str_ends_with($path, '/index.jsonld')
-      || $path === 'manifest.jsonld', 'a document of the dump sits two folders under its format tree');
-    $this->box->add($path, $body);
+    foreach ($documents as $path => $body) {
+      /* `Address` writes one `../` into every link in the box, which is right only
+         while every document sits at `<format>/<locale>/<collection>/`; a catalog
+         and the manifest link to no file. */
+      assert(substr_count($path, '/') === 3 || str_ends_with($path, '/index.jsonld')
+        || $path === 'manifest.jsonld', 'a document of the dump sits two folders under its format tree');
+      $this->box->add($path, $body);
+    }
   }
 }

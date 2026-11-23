@@ -7,8 +7,10 @@ namespace Admin;
 use Auth\Account;
 use Auth\Authorizer;
 use Domain\Entity;
+use Domain\Locale;
 use Domain\Status;
 use Domain\TranslationGroup;
+use Http\Request;
 use Profile\Cardinality;
 use Profile\FieldKind;
 use Profile\LocaleMode;
@@ -19,22 +21,25 @@ use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\Counts;
 use Storage\EntityRepository;
+use Storage\Range;
 use Storage\SettingStore;
 use Support\Words;
 
 /* The choices the query bar offers, each spelled as the address takes it (`QueryBar`).
-   Only what the rows hold is offered, so no choice shows an empty view: a status,
-   a language, a select's options, the library's files by kind, through a term
-   field every term, and through any other reference its targets while they stay
-   few, since a select of every customer is no select. Language leaves the
-   labelled things, since one answers on every locale route, and on works first
-   offers every record as its own row. Nothing says a group was left out: the
-   address still filters, and the search reaches a target's name
-   (`Storage\Search`). */
+   Only what the rows hold is offered, so no choice shows an empty view: a status, a language, a
+   select's options, the countries, currencies or languages most held, the library's files by kind,
+   through a term field every term, and through any other reference its targets while they stay few,
+   since a select of every customer is no select. Language leaves the labelled things, since one
+   answers on every locale route, and on works first offers every record as its own row. Nothing says
+   a group was left out: the address still filters, and the search reaches a target's name
+   (`Storage\Search`). A date offers the days around today that rows hold, each a count of its own. */
 final readonly class QueryChoices
 {
   private const FEW = 20;
+  private const MOST = 10;
   private const FORMAT = 'encoding_format';
+  /* Every day a choice of `QueryBar::DAYS` reaches. */
+  private const AROUND = 'today-29..';
 
   public function __construct(
     private Authorizer $authorizer,
@@ -46,6 +51,7 @@ final readonly class QueryChoices
     private Profile $profile,
     private Terms $terms,
     private Words $words,
+    private QueryBar $bar,
   ) {}
 
   /**
@@ -67,10 +73,13 @@ final readonly class QueryChoices
     $pointed = $this->pointed($account, $collection, $columns, $outside);
     foreach ($columns as $column) {
       $filters = [...$filters, ...match (true) {
+        $column->field->list !== null => $this->listed($collection, $column, $held[$column->field->key] ?? [],
+          $outside),
         $column->field->kind === FieldKind::Select => $this->options($collection, $column,
           $held[$column->field->key] ?? []),
         isset($pointed[$column->parameter]) => $this->targets($collection, $column, $pointed[$column->parameter]),
         $column->field->key === self::FORMAT => $this->kinds($column, $held[self::FORMAT] ?? []),
+        in_array($column->field->kind, Range::DATES, true) => $this->days($account, $collection, $column),
         default => [],
       }];
     }
@@ -163,18 +172,54 @@ final readonly class QueryChoices
       $this->words->get('status.' . $status->value)), $statuses));
   }
 
-  /** The profile's options that rows hold, in the profile's order, and none of the world's
-      list: a bar offering every country is no bar, and `?addressCountry=DE` filters as well.
+  /** The profile's options that rows hold, in the profile's order.
       @param list<string> $held
       @return list<Filter> */
   private function options(Collection $collection, Column $column, array $held): array
   {
     $group = $this->group($collection, $column);
-    $locale = $this->settings->locales()[0];
     $options = array_intersect($column->field->options, $held);
 
     return array_values(array_map(fn (string $token): Filter => new Filter($group, $column->parameter, $token,
-      $this->terms->word($column->field, $token, $locale)), $options));
+      $this->terms->word($column->field, $token, new Locale($this->words->language))), $options));
+  }
+
+  /** A country, currency or language the rows hold, named as a cell names it and ordered by that name.
+      Past `MOST` only the most held are offered, since forty countries are no select and
+      `?addressCountry=DE` filters as well; counting is asked only then, the held tokens being read anyway.
+      @param list<string> $held
+      @return list<Filter> */
+  private function listed(Collection $collection, Column $column, array $held, bool $outside): array
+  {
+    $field = $column->field;
+    $tokens = count($held) > self::MOST ? $this->counts->most($collection->type, $field->key, $outside, self::MOST)
+      : $held;
+    $group = $this->group($collection, $column);
+    $locale = new Locale($this->words->language);
+    $filters = array_map(fn (string $token): Filter => new Filter($group, $column->parameter, $token,
+      $this->terms->word($field, $token, $locale)), array_values(array_intersect($tokens, $field->choices())));
+    $collator = new \Collator($locale->tag);
+    usort($filters, fn (Filter $one, Filter $other): int => (int) $collator->compare($one->word, $other->word));
+
+    return $filters;
+  }
+
+  /** A date's days and weeks around today that this reader's rows hold, spelled relative (`Storage\Range`),
+      so the address keeps meaning the day it is read on and a question saved from it moves with the days.
+      The whole span is asked first, so a date nothing recent or coming holds costs one count and not six.
+      @return list<Filter> */
+  private function days(Account $account, Collection $collection, Column $column): array
+  {
+    $holds = function (string $asked) use ($account, $collection, $column): bool {
+      $query = $this->bar->query($account, new Request('GET', '', [$column->parameter => $asked]), $collection);
+
+      return $query !== null && $this->entities->count($query) > 0;
+    };
+    $group = $this->group($collection, $column);
+    $held = $holds(self::AROUND) ? array_filter(QueryBar::DAYS, $holds, ARRAY_FILTER_USE_KEY) : [];
+
+    return array_map(fn (string $asked, string $word): Filter => new Filter($group, $column->parameter, $asked,
+      $this->words->get($word)), array_keys($held), $held);
   }
 
   /** Each kind of the library's files its rows hold, as an organisation asks for its images and never its

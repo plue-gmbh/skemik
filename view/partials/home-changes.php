@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* Last changed (`Admin\Changes`), for everybody: the latest seven actions, read
+/* Last changed (`Admin\Changes`), for everybody: the latest five actions, read
    from the log and not from `updated_at`, with who took them, since what changed
    without who is half the answer. A day's run of saves or arrangements of one
    thing by one hand is one line, so a draft saved six times fills no card. A

@@ -6,12 +6,12 @@ namespace Profile;
 
 use Domain\Exceptions\UnknownType;
 
-/* The thirty types, held once. Immutable after construction.
+/* The thirty-one types, held once. Immutable after construction.
    Built from `Seed`, compiled into the release — never read back from the
    database. */
 final readonly class Profile
 {
-  public const CEILING = 30;
+  public const CEILING = 31;
 
   /** @var array<string, TypeDefinition> keyed by short name */
   private array $byName;
@@ -50,7 +50,7 @@ final readonly class Profile
     return array_values($this->byName);
   }
 
-  /** The same thirty under another language's field names (`Support\Words::fields`).
+  /** The same thirty-one under another language's field names (`Support\Words::fields`).
       A field's name is ours in every language and no organisation's to change: a renamed
       field said one word on the screen and another at the address.
       @param array<string, string> $names */
@@ -106,7 +106,7 @@ final readonly class Profile
   }
 
   /* A type URL or a short name — entity.type stores the first, a table reads
-     the second, and both mean one of the thirty. */
+     the second, and both mean one of the thirty-one. */
   private function shortName(string $type): string
   {
     return str_starts_with($type, 'https://schema.org/')
@@ -195,6 +195,9 @@ final readonly class Profile
     $edge = $how->path[0] ?? '';
     if (!$how->inbound) {
       return $type->field($edge)?->targets ?? [];
+    }
+    if ($how->from !== null) {
+      return [$how->from];
     }
 
     return array_keys(array_filter($this->byName, fn (TypeDefinition $theirs): bool

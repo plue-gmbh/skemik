@@ -4,7 +4,8 @@
    query — unless edits are pending, which only a deliberate Enter may leave,
    through the save bar's leaving guard, and typing says so. An answer with no
    view to take, an update's waiting page or a login, is loaded as the address, so
-   it shows; a connection lost leaves the view as it stood. The field is busy
+   it shows; a question saved takes the address as it then stands; a connection
+   lost leaves the view as it stood. The field is busy
    while a redraw is out, and typing on stops it (`busy`). Loaded before
    `view/scripts/app.js`, which mounts it and whose `chosen`, `busy` and
    `mountIslands` it calls. */
@@ -59,6 +60,8 @@ function mountQueryBar(form, mounted) {
     sortValue.value = sortValue.value.startsWith("-") ? sortValue.value.slice(1) : "-" + sortValue.value;
     go();
   });
+  const saved = document.querySelector("[data-question-query]");
+  saved?.form.addEventListener("submit", () => { saved.value = address().split("?")[1] ?? ""; });
   search.addEventListener("input", () => {
     window.clearTimeout(typing);
     typing = window.setTimeout(redraw, 300);

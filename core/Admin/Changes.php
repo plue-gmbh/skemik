@@ -22,7 +22,7 @@ use Support\Words;
 /* The home screen's Last changed, whose contract is the header of
    `view/partials/home-changes.php`, and the lines of the log screen's
    (`view/pages/activity.php`). The log is read newest first and only as far
-   as seven lines the reader may open, so a colleague scoped to one type walks
+   as five lines the reader may open, so a colleague scoped to one type walks
    further back than the owner and never learns from a gap what stood there. A
    record in the trash is listed for whoever may take it back out, opening that
    trash, since the record screen does not open it; a purged one is gone, and
@@ -30,7 +30,7 @@ use Support\Words;
    or a language is `Admin\InstallChanges`'s. */
 final readonly class Changes
 {
-  private const SHOWN = 7;
+  private const SHOWN = 5;
 
   /* What a row keeps that is no former value: the trash's way, a redaction's note, what a save changed. */
   private const NOTES = ['deleted_at' => true, 'redacted' => true, 'activity' => true, 'type' => true,

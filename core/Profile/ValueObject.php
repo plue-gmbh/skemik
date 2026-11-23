@@ -29,6 +29,8 @@ final readonly class ValueObject
    * @param array<string, list<string>> $options the keys that take a closed list,
    *   each with its tokens, as a select's options are
    * @param list<string> $whole the number keys that count, as `FieldDefinition::whole`
+   * @param list<list<string>> $said the keys a cell reads beside a row's name, the first group the row
+   *   holds any of, its keys read as a range: an opening-hours row says `07:00–18:00`
    */
   public function __construct(
     public string $name,
@@ -41,6 +43,7 @@ final readonly class ValueObject
     public array $kinds = [],
     public array $options = [],
     public array $whole = [],
+    public array $said = [],
   ) {
     assert($keys !== [], 'a value object has keys');
     assert(array_diff($bearing, $keys) === [], 'a bearing key is a key of this value object');
@@ -50,6 +53,7 @@ final readonly class ValueObject
     assert(array_all($whole, fn (string $key): bool => ($kinds[$key] ?? null) === FieldKind::Number),
       'a whole key is a number');
     assert($reference === null || in_array($reference, $keys, true), 'the reference is a key');
+    assert(array_diff(array_merge(...$said), $keys) === [], 'a said key is a key of this value object');
     assert(($reference === null) === ($targets === []), 'a reference names its targets, and only one does');
   }
 

@@ -8,8 +8,8 @@ use Domain\Exceptions\MalformedValue;
 
 /* One class used twice, for `account.write_scope` and `account.read_scope`: the
    fact differs, the shape does not, and a second class would be where the two
-   drift apart. Keys are type names, since the scope is the thirty types and the
-   thirty checkboxes are those.
+   drift apart. Keys are type names, since the scope is the thirty-one types and the
+   thirty-one checkboxes are those.
    An empty scope is refused: an editor who may write nothing is a `viewer`, and
    an account that reads nothing as staff should be a token or a visitor. */
 final readonly class TypeScope

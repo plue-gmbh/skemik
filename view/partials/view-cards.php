@@ -9,7 +9,7 @@ declare(strict_types=1);
    column to click, so the query bar's select orders it. Its last card is + New
    record, which adds a pending card as the table adds a row.
    Handed `$rows`, `$columns`, `$collection`, `$items`, `$glance`, `$firstLocale`, `$creates`, `$add`, `$total`,
-   `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
+   `$narrowed`, `$all`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -47,6 +47,7 @@ $drawn = fn (?Admin\SheetRow $row): string => $template->render('partials/card',
 <template data-new-row><?= $drawn(null) ?></template>
 <?php endif ?>
 <?= $template->render('partials/sheet-pages', ['words' => $words, 'page' => $page, 'perPage' => $perPage,
-  'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
+  'total' => $total, 'shown' => count($rows), 'parameters' => $parameters,
+  'all' => $narrowed ? $all : null]) ?>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
 <?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

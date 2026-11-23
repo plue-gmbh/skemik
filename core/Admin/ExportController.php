@@ -43,9 +43,6 @@ use Support\ZipFailed;
    them, and the manifest keeps the second from being mistaken for the first. */
 final readonly class ExportController
 {
-  /* What four documents of a record weigh, generously, beside the files whose
-     bytes are counted: the box of an install without uploads is still not nothing. */
-  private const PER_RECORD = 16_000;
   private const STALE_SECONDS = 3600;
   private const LOCK = 'export.lock';
 
@@ -73,7 +70,7 @@ final readonly class ExportController
     $size = $this->export->measure();
     $entries = $this->sidebar->entries($account);
     $main = $this->template->render('pages/export', ['words' => $this->words, 'size' => $size,
-      'about' => Intake::size($this->weight($size)), 'complete' => $this->names($account, $entries, false),
+      'about' => Intake::size($size->bytes), 'complete' => $this->names($account, $entries, false),
       'public' => $this->names($account, $entries, true), 'unfit' => $this->unfit($size),
       'notice' => $this->session->take('export'), 'csrf' => $this->csrf->token()]);
 
@@ -171,17 +168,12 @@ final readonly class ExportController
   private function unfit(DumpSize $size): ?string
   {
     $free = DataLayout::free($this->data);
-    if ($free === null || $free - DataLayout::FREE_BYTES >= $this->weight($size)) {
+    if ($free === null || $free - DataLayout::FREE_BYTES >= $size->bytes) {
       return null;
     }
 
-    return $this->words->get('export.unfit', ['size' => Intake::size($this->weight($size)),
+    return $this->words->get('export.unfit', ['size' => Intake::size($size->bytes),
       'free' => $this->words->number(intdiv($free, 1_000_000))]);
-  }
-
-  private function weight(DumpSize $size): int
-  {
-    return $size->bytes + $size->records * self::PER_RECORD;
   }
 
   /* A run PHP stopped half-way left its box behind, and the next would be told

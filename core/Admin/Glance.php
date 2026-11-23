@@ -26,7 +26,7 @@ final readonly class Glance
 
   /**
    * @param list<Column> $columns as this account reads them
-   * @param list<string> $held the keys some record of the type holds (`Storage\EntityRepository::held`)
+   * @param list<string> $held the keys some record of the type holds (`Storage\Counts::filled`)
    */
   public function __construct(
     private array $columns,
@@ -55,7 +55,7 @@ final readonly class Glance
   public function date(): ?Column
   {
     return array_find($this->columns, fn (Column $column): bool
-      => in_array($column->field->kind, [FieldKind::Date, FieldKind::DateTime], true));
+      => in_array($column->field->kind, [FieldKind::Date, FieldKind::DateTime, FieldKind::DateOrTime], true));
   }
 
   /* A card's lines under its label; an asset's description is already its one field. */

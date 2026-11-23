@@ -37,7 +37,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
               :disabled="index === items.length - 1" @click="move(index, 1)"><?= $icon('down') ?></button>
             <button type="button" class="picker-tool" :title="words['picker.remove']"
-              :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('close') ?></button>
+              :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('trash') ?></button>
           </span>
         </div>
         <p v-if="item.draft" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
@@ -131,7 +131,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
             <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
               :disabled="index === items.length - 1" @click="move(index, 1)"><?= $icon('down') ?></button>
             <button type="button" class="picker-tool" :title="words['picker.remove']"
-              :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('close') ?></button>
+              :aria-label="words['picker.remove']" @click="remove(index)"><?= $icon('trash') ?></button>
           </span>
         </div>
         <p v-if="noted?.index === index" class="popover-hint is-warning">{{ words['picker.draft'] }}</p>
@@ -200,7 +200,7 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
           <button type="button" class="picker-tool" :title="words['picker.down']" :aria-label="words['picker.down']"
             :disabled="index === items.length - 1" @click="move(index, 1)"><?= $icon('down') ?></button>
           <button type="button" class="picker-tool" :title="words['picker.remove']" :aria-label="words['picker.remove']"
-            @click="remove(index)"><?= $icon('close') ?></button>
+            @click="remove(index)"><?= $icon('trash') ?></button>
         </span>
       </legend>
       <template v-for="key in field.keys" :key="key">

@@ -16,7 +16,7 @@ use Storage\CollectionStore;
    rule of the name, and a re-issue of an older one would leave the name's
    newest key the narrower. Beneath them the set-up key is issued: one key
    arranging every collection, since a script setting a fresh install up needs
-   every one and thirty badges are the clicking it replaces. */
+   every one and thirty-one badges are the clicking it replaces. */
 final readonly class Register
 {
   public function __construct(

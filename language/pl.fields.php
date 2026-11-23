@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* What the thirty types' fields are called in Polish, keyed as
+/* What the thirty-one types' fields are called in Polish, keyed as
    `de.fields.php` is. These words reach a reader, the feed's catalogue naming a
    field in the language of its content. A flattened field is `Blok: pole`, and
    its block's heading the key it arrived on and a colon, `address:`, which the
@@ -465,4 +465,17 @@ return [
   'target_encoding_type' => 'Punkt dostępu: kodowanie',
   'target_content_type' => 'Punkt dostępu: typ treści',
   'target_http_method' => 'Punkt dostępu: metoda HTTP',
+  'observation_about' => 'Dotyczy',
+  'observation_date' => 'Data',
+  'value' => 'Wartość',
+  'unit_code' => 'Jednostka',
+  'observation_period' => 'Okres',
+  'interaction_statistic:' => 'Interakcje',
+  'interaction_statistic_views' => 'Interakcje: wyświetlenia strony',
+  'interaction_statistic_downloads' => 'Interakcje: pobrania',
+  'interaction_statistic_video_plays' => 'Interakcje: odtworzenia wideo',
+  'interaction_statistic_audio_plays' => 'Interakcje: odsłuchania audio',
+  'interaction_statistic_likes' => 'Interakcje: polubienia',
+  'interaction_statistic_shares' => 'Interakcje: udostępnienia',
+  'interaction_statistic_comments' => 'Interakcje: komentarze',
 ];

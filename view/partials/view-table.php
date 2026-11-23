@@ -11,7 +11,7 @@ declare(strict_types=1);
    by a `POST` when saved, so a record the type would refuse is corrected before it
    exists rather than after.
    Handed `$rows`, `$columns`, `$collection`, `$items`, `$badges`, `$firstLocale`, `$creates`, `$add`, `$total`,
-   `$narrowed`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
+   `$narrowed`, `$all`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -62,7 +62,8 @@ $joins = fn (int $index): bool => $columns[$index]->field->valueObjectOf !== nul
     ['name' => 'plus']) ?><?= $template->escape($add) ?></button>
 <?php endif ?>
   <?= $template->render('partials/sheet-pages', ['words' => $words, 'page' => $page, 'perPage' => $perPage,
-    'total' => $total, 'shown' => count($rows), 'parameters' => $parameters]) ?>
+    'total' => $total, 'shown' => count($rows), 'parameters' => $parameters,
+    'all' => $narrowed ? $all : null]) ?>
 </div>
 <p id="sheet-hint" class="visually-hidden"><?= $template->escape($words->get('sheet.hint')) ?></p>
 <?= $template->render('partials/save-bar', ['data' => $data, 'spine' => $spine]) ?>

@@ -16,6 +16,7 @@ use Profile\SchemaOrg;
 use Storage\Collection;
 use Storage\CollectionField;
 use Storage\Query;
+use Storage\Range;
 use Support\Clock;
 
 /* The query string as a `Storage\Query`. One sort key, since a page orders the
@@ -111,10 +112,22 @@ final readonly class FeedRequest
     if (count($values) > self::VALUES) {
       throw AskedTooMuch::values($name, self::VALUES);
     }
-    $instants = $field?->kind === FieldKind::DateTime;
 
-    return array_map(fn (string $one): string => $instants ? $this->instants($one)
-      : (string) Spelling::held($field, $one, $request->origin()), $values);
+    return array_map(fn (string $one): string => match ($field?->kind) {
+      FieldKind::DateTime => $this->instants($one),
+      FieldKind::DateOrTime => $this->days($one) . Range::BOTH . $this->instants($one),
+      default => (string) Spelling::held($field, $one, $request->origin()),
+    }, $values);
+  }
+
+  /* The days a held day is asked by, a wall time's own day where one was asked, so a
+     day's count stands among the readings of that day. */
+  private function days(string $value): string
+  {
+    $ends = str_contains($value, '..') ? explode('..', $value, 2) : [$value, $value];
+
+    return implode('..', array_map(fn (string $end): string
+      => preg_match('/^\d{4}-\d{2}-\d{2}T/', $end) === 1 ? substr($end, 0, strlen('YYYY-MM-DD')) : $end, $ends));
   }
 
   /* A period's first and last second in the install's zone, the last being the one

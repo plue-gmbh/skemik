@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* What the thirty types' fields are called in Italian, keyed as
+/* What the thirty-one types' fields are called in Italian, keyed as
    `de.fields.php` is. These words reach a reader, the feed's catalogue naming a
    field in the language of its content. A flattened field is `Blocco: campo`,
    and its block's heading the key it arrived on and a colon, `address:`, which
@@ -465,4 +465,17 @@ return [
   'target_encoding_type' => 'Punto di accesso: codifica',
   'target_content_type' => 'Punto di accesso: tipo di contenuto',
   'target_http_method' => 'Punto di accesso: metodo HTTP',
+  'observation_about' => 'Riguarda',
+  'observation_date' => 'Data',
+  'value' => 'Valore',
+  'unit_code' => 'Unità',
+  'observation_period' => 'Periodo',
+  'interaction_statistic:' => 'Interazioni',
+  'interaction_statistic_views' => 'Interazioni: visualizzazioni di pagina',
+  'interaction_statistic_downloads' => 'Interazioni: download',
+  'interaction_statistic_video_plays' => 'Interazioni: riproduzioni video',
+  'interaction_statistic_audio_plays' => 'Interazioni: ascolti audio',
+  'interaction_statistic_likes' => 'Interazioni: mi piace',
+  'interaction_statistic_shares' => 'Interazioni: condivisioni',
+  'interaction_statistic_comments' => 'Interazioni: commenti',
 ];

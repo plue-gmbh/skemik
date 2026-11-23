@@ -38,6 +38,11 @@ final readonly class Fields
     return $this->scalar($key, $label, FieldKind::DateTime);
   }
 
+  public function dateOrTime(string $key, string $label): FieldDefinition
+  {
+    return $this->scalar($key, $label, FieldKind::DateOrTime);
+  }
+
   public function duration(string $key, string $label): FieldDefinition
   {
     return $this->scalar($key, $label, FieldKind::Duration);

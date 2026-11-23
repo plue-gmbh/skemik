@@ -72,8 +72,8 @@ if (!isset($template)) {
         <input type="hidden" name="_csrf" :value="csrf">
         <input type="hidden" name="ids" :value="ticked.join(',')">
         <input type="hidden" name="back" :value="back()">
-        <h2 id="ticked-trash-title">{{ fill(words['delete.question_many'], { n: ticked.length }) }}</h2>
-        <p>{{ words['delete.many'] }}</p>
+        <h2 id="ticked-trash-title">{{ trashing[0] }}</h2>
+        <p>{{ trashing[1] }}</p>
         <div class="dialog-actions">
           <button type="button" class="button-quiet" @click="$refs.trash.close()">{{ words['dialog.cancel'] }}</button>
           <button type="submit" class="button-danger">{{ words['delete.confirm'] }}</button>

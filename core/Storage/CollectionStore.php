@@ -16,7 +16,7 @@ use Support\Words;
 
 /* The seam between the profile and an organisation: the profile says what an `Article`
    is, a collection says which of its fields this install carries and lets out.
-   Every install holds one collection per type (`provide`), so the thirty are on
+   Every install holds one collection per type (`provide`), so the thirty-one are on
    every sidebar and a release that adds a type gives every standing install its
    collection: the seed, `/install` and an update all call the same method.
    What would leave a collection unable to hold its type is refused here, not

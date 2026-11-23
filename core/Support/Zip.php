@@ -49,6 +49,13 @@ final class Zip
     });
   }
 
+  /* What an entry takes in the box: its bytes and the name in its two headers. A ZIP64 extra past 4 GB is a few
+     bytes more and left out, as is the directory's end. */
+  public static function weight(string $name, int $size): int
+  {
+    return 76 + 2 * strlen($name) + $size;
+  }
+
   public function close(): void
   {
     if ($this->handle === null) {

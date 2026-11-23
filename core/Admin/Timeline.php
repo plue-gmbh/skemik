@@ -33,9 +33,7 @@ final readonly class Timeline
   /* The install's day, where the timeline draws its line between what has been and what comes. */
   public function today(): string
   {
-    $now = $this->clock->now()->format(Clock::STORED);
-
-    return substr($this->clock->render($now), 0, strlen(self::DAY));
+    return $this->clock->today();
   }
 
   public function day(string $when): ?\DateTimeImmutable

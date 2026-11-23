@@ -12,13 +12,16 @@ use Domain\Exceptions\EntityNotFound;
 use Domain\Locale;
 use Domain\LocalisedText;
 use Domain\Relation;
+use Feed\Derivations;
 use Feed\PublicFilter;
 use Profile\Cardinality;
+use Profile\Derived;
 use Profile\FieldKind;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Storage\Collection;
 use Storage\CollectionField;
+use Storage\Computed;
 use Storage\EntityRepository;
 use Storage\Query;
 use Storage\RelationRepository;
@@ -151,6 +154,30 @@ final readonly class Rows
     return $poster === null ? null : self::preview($poster);
   }
 
+  /** A record as its cells draw it, each derived column holding what the feed states under this colleague's
+      reading, and never saved. A rating stays as typed (`Storage\Computed::holds`). Built once for a page's
+      records, since what the colleague reads of each collection is the same for all of them.
+      @param list<Column> $columns
+      @param list<Collection> $collections the install's
+      @return \Closure(Entity): Entity */
+  public function stating(Account $account, array $columns, array $collections): \Closure
+  {
+    $derived = new Derivations($this->profile, $this->schema, $this->entities, $this->relations,
+      fn (Entity $row): bool => $this->readable($account, $row), $this->readings($account, $collections),
+      $this->clock);
+    $computed = array_filter($columns, fn (Column $column): bool => Computed::holds($column->field));
+
+    return function (Entity $entity) use ($derived, $computed): Entity {
+      $props = $entity->props;
+      foreach ($computed as $column) {
+        $props = $props->with($column->field->key, $column->field->derivation?->function === Derived::Range
+          ? $derived->offerRanges($entity, $column->field) : $derived->value($entity, $column->field));
+      }
+
+      return $entity->withProps($props);
+    };
+  }
+
   /* What a target is called in that locale's words, as its chip says it. */
   public function named(Entity $target, Locale $in): string
   {
@@ -254,8 +281,13 @@ final readonly class Rows
 
   public function readable(Account $account, Entity $target): bool
   {
-    return !$this->authorizer->readsAsPublic($account, $target->type)
-      || ($this->filter->passesType($target->type)
-        && $target->status->isPublicAt($this->clock->now(), $target->publishFrom, $target->publishTo));
+    return $this->readableAs($account, $target->type,
+      $target->status->isPublicAt($this->clock->now(), $target->publishFrom, $target->publishTo));
+  }
+
+  /* The same of a record read without its fields, whether it is public now standing for its status and window. */
+  public function readableAs(Account $account, string $type, bool $public): bool
+  {
+    return !$this->authorizer->readsAsPublic($account, $type) || ($this->filter->passesType($type) && $public);
   }
 }

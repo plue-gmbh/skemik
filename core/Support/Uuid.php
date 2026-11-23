@@ -13,7 +13,7 @@ namespace Support;
    which harms nothing, and its random tail keeps a draft's address unguessable. */
 final readonly class Uuid
 {
-  public const SHAPE = '/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/';
+  public const SHAPE = '/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/D';
   private const TIME_PREFIX = 18;
 
   public function __construct(private Clock $clock)

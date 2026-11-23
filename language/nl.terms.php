@@ -107,4 +107,12 @@ return [
   'UsedCondition' => 'Gebruikt',
   'RefurbishedCondition' => 'Gereviseerd',
   'DamagedCondition' => 'Beschadigd',
+  'pageViews' => 'Paginaweergaven',
+  'downloads' => 'Downloads',
+  'videoPlays' => 'Videoweergaven',
+  'audioPlays' => 'Audioweergaven',
+  'likes' => 'Likes',
+  'shares' => 'Keer gedeeld',
+  'visitors' => 'Bezoekers',
+  'members' => 'Leden',
 ];

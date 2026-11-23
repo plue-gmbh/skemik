@@ -13,25 +13,33 @@ use Profile\FieldDefinition;
 use Profile\Profile;
 use Profile\SchemaOrg;
 use Profile\WrittenBy;
+use Storage\Computed;
 use Storage\EntityRepository;
+use Storage\Query;
 use Storage\RelationRepository;
 use Support\Clock;
 
 /* The profile's `∂`, computed at emit and stored nowhere. It is `Feed`'s and not
-   the profile's because it needs the request: the reading the caller is
-   answering under. Nothing here decides what is computed, `Profile\Derivation`
-   does, so a derived field added to a type needs no line here and a line here
-   could not invent one. An aggregate runs over rows the caller may already
-   fetch, so a consumer walking the edge arrives at the same number, but for the
-   one lifecycle gate the declaration names. */
+   the profile's because it needs the reading the caller is answered under, a
+   stranger's, a key's or a colleague's on the admin's cells. Nothing here
+   decides what is computed, `Profile\Derivation` does, so a derived field added
+   to a type needs no line here and a line here could not invent one. An
+   aggregate runs over rows the caller may already fetch, so a consumer walking
+   the edge arrives at the same number, but for the gate the declaration names
+   over a type that is never public. A number is asked of the database in one
+   statement, the one a filter on it reads: summed here row by row, a page of
+   fifty observations about one article took 14 s at 1 800 of them. */
 final readonly class Derivations
 {
+  /** @param \Closure(Entity): bool $reads whether the caller may fetch a row
+      @param array<string, Query> $readings by type, what the caller reads of each, the same answer as a query */
   public function __construct(
     private Profile $profile,
     private SchemaOrg $schema,
     private EntityRepository $entities,
     private RelationRepository $relations,
-    private Addresses $addresses,
+    private \Closure $reads,
+    private array $readings,
     private Clock $clock,
   ) {}
 
@@ -56,10 +64,13 @@ final readonly class Derivations
       return null;
     }
 
-    return match ($how->function) {
+    return match (true) {
       /* The spine emits `inLanguage` for every record of a forking type, so the
          declaration is the type's table and not a second emitter. */
-      Derived::Locale, Derived::Range => null,
+      in_array($how->function, [Derived::Locale, Derived::Range], true) => null,
+      Computed::holds($field) => $this->relations->computed($entity->id, $field,
+        Computed::spec($field, $this->schema, $this->readings), $this->clock->now()->format(Clock::STORED)),
+      /* A rating, whose writer the holdings decide and `Computed` does not hold. */
       default => $this->aggregate($entity, $how),
     };
   }
@@ -193,11 +204,14 @@ final readonly class Derivations
 
   private function admits(Entity $target, Derivation $how): bool
   {
-    if ($how->lapsedField !== null) {
-      return ($target->props->document()[$how->lapsedField] ?? null) !== $how->lapsedValue;
+    if ($how->from !== null && $target->type !== $this->profile->byType($how->from)->url()) {
+      return false;
+    }
+    if ($how->gateField !== null) {
+      return (($target->props->document()[$how->gateField] ?? null) === $how->gateValue) === $how->gateAdmits;
     }
 
-    return $this->addresses->collectionOf($target) !== null;
+    return ($this->reads)($target);
   }
 
   private function rowOf(EntityId $id): ?Entity

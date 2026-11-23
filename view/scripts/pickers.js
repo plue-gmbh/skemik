@@ -6,7 +6,7 @@
    and says `done` when a choice ends it. Opened, each focuses its field even after
    a touch, since the tap on the cell asked to type. Every word is handed in. */
 
-/* ↑ ↓ ✕ on a list, shared by the two below and a reference's (`edge-picker.js`). */
+/* ↑, ↓ and remove on a list, shared by the two below and a reference's (`edge-picker.js`). */
 const ordered = {
   methods: {
     move(index, step) {

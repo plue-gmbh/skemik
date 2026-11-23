@@ -9,7 +9,7 @@ namespace Profile;
 enum WrittenBy: string
 {
   case Authored = 'authored';   /* a person typed it — the default, and nearly every field */
-  case Derived = 'derived';     /* computed by Feed\JsonLd at emit, never stored */
+  case Derived = 'derived';     /* computed when read or asked, never stored */
 
   public function hasEditor(): bool
   {

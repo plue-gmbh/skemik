@@ -20,7 +20,7 @@ use Support\Json;
    an arbitrary key grows a settings screen nobody can reason about.
    Which store a switch lives in is the spine's copy test moved up a level: what
    travels with the holdings is a row here (the timezone, the default chrome
-   language, the locale list); what changes with the machine is `config.php`'s.
+   language, the locale list, the saved questions); what changes with the machine is `config.php`'s.
    An unset key answers the default an install starts from. A locale that still
    holds rows or words is refused here and not only greyed out on the screen,
    because removing it would leave records no route reaches and words no route
@@ -33,6 +33,7 @@ final readonly class SettingStore
   private const LOCALES = 'locales';
   private const HOLDINGS_CURSOR = 'holdings_cursor';
   private const HOLDINGS_REPORT = 'holdings_report';
+  private const QUESTIONS = 'questions';
 
   public function __construct(
     private \PDO $db,
@@ -166,6 +167,25 @@ final readonly class SettingStore
       $report->violations);
     $this->write(self::HOLDINGS_REPORT, $this->json->encode(['violations' => $violations,
       'at' => $report->at->format(Clock::STORED), 'version' => $report->version]));
+  }
+
+  /** @return list<Question> the home screen's saved questions, in the order they were saved */
+  public function questions(): array
+  {
+    $stored = $this->read(self::QUESTIONS);
+    $list = $stored === null ? [] : $this->json->decode('{"all":' . $stored . '}')['all'];
+
+    return array_map(fn (array $one): Question => new Question((string) $one['id'],
+      (string) $one['collection'], (string) $one['query'], Figure::from((string) $one['figure']),
+      isset($one['field']) ? (string) $one['field'] : null), $list);
+  }
+
+  /** @param list<Question> $questions */
+  public function setQuestions(array $questions): void
+  {
+    $this->write(self::QUESTIONS, $this->json->encode(array_map(fn (Question $one): array => ['id' => $one->id,
+      'collection' => $one->collection, 'query' => $one->query,
+      'figure' => $one->figure->value, 'field' => $one->field], $questions)));
   }
 
   /** A report an older version wrote holds each reason spelt out, read back as stated until the

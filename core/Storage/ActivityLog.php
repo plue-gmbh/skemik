@@ -208,6 +208,7 @@ final readonly class ActivityLog
     $statement = $this->db->prepare('select target_id from activity where id = :id');
     $statement->execute(['id' => $activityId]);
     $row = $statement->fetch(\PDO::FETCH_ASSOC);
+    $statement->closeCursor();   /* an open read turning write skips the busy timeout: "database is locked" */
     if ($row === false) {
       throw EntityNotFound::withId($activityId);
     }

@@ -25,8 +25,10 @@ use Storage\Collection;
 use Storage\CollectionField;
 use Storage\CollectionStore;
 use Storage\CollectionView;
+use Storage\Counts;
 use Storage\EntityRepository;
 use Storage\Query;
+use Storage\Question;
 use Storage\SettingStore;
 use Support\Clock;
 use Support\Template;
@@ -49,6 +51,7 @@ final readonly class CollectionController
     private Profile $profile,
     private SchemaOrg $schema,
     private Sheet $sheet,
+    private SheetData $sheetData,
     private SpineDialog $dialog,
     private QueryBar $bar,
     private QueryChoices $choices,
@@ -64,6 +67,7 @@ final readonly class CollectionController
     private Template $template,
     private Words $words,
     private Rows $rows,
+    private Counts $counts,
   ) {}
 
   /* A notice is a sentence the screen opens with, like an unknown record's. */
@@ -81,6 +85,8 @@ final readonly class CollectionController
       'badges' => $this->grants->badges($account, $collection, $columns, $account->can(Capability::ManageTokens)),
       'labels' => $this->keys->labels(), 'until' => $this->keys->until(), 'back' => $this->back($request),
       'firstLocale' => $this->settings->locales()[0]->tag,
+      'question' => array_find($this->settings->questions(), fn (Question $each): bool
+        => $each->asks($collection->slug->value, $request->query)),
       ...$this->fields->screen($account, $collection),
       'csrf' => $this->csrf->token()]);
 
@@ -93,7 +99,7 @@ final readonly class CollectionController
     $asked = $request->query('locale');
     $locale = array_find($this->settings->locales(), fn (Locale $each): bool => $each->tag === $asked)
       ?? $this->settings->locales()[0];
-    $query = array_filter($request->without(...QueryBar::OWN)->query,
+    $query = array_filter($this->bar->dated($request, $collection)->without(...QueryBar::OWN)->query,
       fn (string $name): bool => $this->strangerAsks($name, $request, $collection), ARRAY_FILTER_USE_KEY);
 
     return FeedPanel::at($request, sprintf('/feed/%s/%s%s', $locale->tag, $collection->slug->value,
@@ -142,7 +148,7 @@ final readonly class CollectionController
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
       'filters' => $this->choices->filters($account, $collection, $columns),
       'named' => $this->bar->narrowed($request, $columns),
-      'data' => $this->sheet->data($collection, $columns, $rows, $this->csrf->token()),
+      'data' => $this->sheetData->data($collection, $columns, $rows, $this->csrf->token()),
       'spine' => $this->dialog->data($collection, $rows)];
   }
 
@@ -205,7 +211,7 @@ final readonly class CollectionController
       }
       $type = $this->profile->byType($entity->type);
       if ($entity->deletedAt !== null) {
-        $rows[] = new SheetRow($entity, (new Label())->of($entity, $type), 'trashed', $type->reach, []);
+        $rows[] = new SheetRow($entity, (new Label())->of($entity, $type), 'trashed', []);
       }
     }
 
@@ -241,7 +247,7 @@ final readonly class CollectionController
   public function glance(Collection $collection, array $columns): Glance
   {
     return new Glance($columns, $this->profile->byType($collection->type), $this->profile,
-      $this->entities->held($collection->type, array_map(fn (Column $column): FieldDefinition => $column->field,
+      $this->counts->filled($collection->type, array_map(fn (Column $column): FieldDefinition => $column->field,
         $columns)));
   }
 

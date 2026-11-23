@@ -8,7 +8,7 @@ const DURATION = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(
 const UNITS = ["Y", "M", "W", "D", "H", "m", "S"];
 const UNIT_WORDS = ["years", "months", "weeks", "days", "hours", "minutes", "seconds"];
 const INPUTS = { text: "text", link: "url", number: "number", date: "text",
-  date_time: "datetime-local", time: "time", select: "text" };
+  date_time: "datetime-local", date_or_time: "text", time: "time", select: "text" };
 const MOVES = { Enter: null, ArrowDown: [1, 0], ArrowUp: [-1, 0], Tab: [0, 1] };
 /* The eight hits `Admin\SearchController` answers, as `.option` draws them, which arrive after placing. */
 const HITS_ROOM = 330;
@@ -39,7 +39,8 @@ const cellEditor = {
     const mode = modeOf(this.editing.field);
     const offered = mode === "input" && this.editing.field.kind === "date_time" && !this.editing.value
       ? nowIn(this.editing.zone) : null;
-    const shown = named(this.editing.field, this.editing.terms, this.editing.value);
+    const shown = this.editing.field.kind === "date_or_time" && this.editing.value ? wallShown(this.editing.value)
+      : named(this.editing.field, this.editing.terms, this.editing.value);
     const draft = mode === "select" && this.editing.field.many ? [...(this.editing.value ?? [])]
       : ["input", "prose"].includes(mode) ? offered ?? shown ?? ""
       : mode === "select" ? this.editing.value ?? null : undefined;
@@ -65,8 +66,9 @@ const cellEditor = {
     this.place = this.placed();
     this.$nextTick(() => { this.unfollow = this.$refs.popover && following(this.editing.cell, this.$refs.popover,
       (at) => { this.place = { ...this.place, ...at }; }); });
+    /* Left by a press elsewhere, the cell takes the focus back where it stands: the press is about another place. */
     this.undismiss = dismissing((node) => this.$refs.popover?.contains(node), () => this.finish(this.mode === "select"
-      && !this.many ? undefined : this.mode === "prose" ? this.result() : this.draft, null));
+      && !this.many ? undefined : this.mode === "prose" ? this.result() : this.draft, null, true));
     /* Two queries, since one selector list answers the first option in the document, pressed or not. */
     if (this.mode === "select") {
       this.$nextTick(() => (this.$refs.popover.querySelector("[aria-pressed=true]")
@@ -106,10 +108,10 @@ const cellEditor = {
       this.draft = nowIn(this.editing.zone);
       this.finish(this.result(true), null);
     },
-    finish(value, move) {
+    finish(value, move, pressed = false) {
       if (this.finished) return;
       this.finished = true;
-      value === undefined ? this.$emit("cancel") : this.$emit("commit", value, move);
+      value === undefined ? this.$emit("cancel", pressed) : this.$emit("commit", value, move, pressed);
     },
     key(event) {
       if (event.key === "Escape") {
@@ -175,10 +177,13 @@ function cellShown(field, value, terms, language, words) {
     : typeof value === "number" ? numberShown(value, language)
     : field.kind === "select" ? terms[value] ?? value
     : field.kind === "duration" ? durationShown(String(value), words)
-    : field.kind === "date_time" ? String(value).replace(/^(\d{4}-\d\d-\d\dT\d\d:\d\d):00$/, "$1").replace("T", " ")
+    : ["date_time", "date_or_time"].includes(field.kind) ? wallShown(value)
     : String(value);
   return span;
 }
+
+/* A wall time as a person writes one, a space after the day and no seconds where they are none. */
+const wallShown = (value) => String(value).replace(/^(\d{4}-\d\d-\d\dT\d\d:\d\d):00$/, "$1").replace("T", " ");
 
 const numberShown = (value, language) => new Intl.NumberFormat(language, { maximumFractionDigits: 20,
   useGrouping: Math.abs(value) >= 10000 }).format(value);
@@ -198,15 +203,58 @@ function listShown(field, value, terms, language, words) {
     return span;
   }
   const word = (each) => (field.kind === "select" ? terms[each] ?? each : String(each));
-  const names = field.kind === "objects" ? value.map((row) => rowName(row, field, words)).filter((name) => name) : [];
+  const read = rowReader(field, terms, language);
+  const name = (row) => rowName(row, field, words, read);
+  const names = field.kind === "objects" ? value.map(name).filter((each) => each) : [];
+  if (field.kind === "objects" && value.some((row) => name(row) && read.said(row) !== null)) {
+    return pairsShown(value.filter(name).map((row) => [name(row), read.said(row)]));
+  }
   span.textContent = field.kind !== "objects" ? value.map(word).join(", ")
     : names.join(", ") || fill(words["cell.entries"], { n: value.length });
   return span;
 }
 
-function rowName(row, field, words) {
-  const name = row?.name ?? row?.[field.bearing[0]];
-  if (["string", "number"].includes(typeof name)) return String(name);
+/* Rows holding a value beside their name, as `partials/cell` draws them, both said to a screen reader. */
+function pairsShown(pairs) {
+  const span = Object.assign(document.createElement("span"), { className: "pairs" });
+  pairs.forEach(([name, value], index) => {
+    const hidden = (text) => Object.assign(document.createElement("span"), { className: "visually-hidden",
+      textContent: text });
+    const pair = Object.assign(document.createElement("span"), { className: "pair" });
+    pair.append(Object.assign(document.createElement("span"), { className: "pair-name", textContent: name }));
+    if (value !== null) {
+      pair.append(hidden(": "), Object.assign(document.createElement("span"), { className: "pair-value",
+        textContent: value }));
+    }
+    span.append(...(index === 0 ? [] : [hidden(", ")]), pair);
+  });
+  return span;
+}
+
+/* How `Admin\Cells` reads a row: a key as its word, a number in the chrome's spelling and a time to the minute,
+   and beside its name the first group of its `said` keys it holds any of, as a range with its unit after it. */
+function rowReader(field, terms, language) {
+  const key = (row, name) => {
+    const held = row?.[name];
+    if (typeof held === "number") return numberShown(held, language);
+    if (typeof held !== "string" || held === "") return null;
+    return field.choices[name] ? terms[held] ?? held
+      : field.kinds[name] === "time" ? held.replace(/^(\d\d:\d\d):00$/, "$1") : held;
+  };
+  const said = (row) => {
+    const group = field.said.find((keys) => keys.some((each) => key(row, each) !== null));
+    if (group === undefined) return null;
+    const unit = key(row, "unitCode");
+    return [...new Set(group.map((each) => key(row, each)).filter((part) => part !== null))].join("–")
+      + (unit === null ? "" : " " + unit);
+  };
+  return { key, said };
+}
+
+function rowName(row, field, words, read) {
+  const key = (row?.name ?? null) === null ? field.bearing[0] : "name";
+  const name = row?.[key];
+  if (["string", "number"].includes(typeof name)) return read.key(row, key) ?? "";
   return name?.label !== undefined ? (name.gone ? words["cell.gone"] : name.label) : "";
 }
 

@@ -57,7 +57,7 @@ final readonly class Html
     }
     $next = Address::next($address, $total);
     $onward = $next === null ? ''
-      : sprintf('<a rel="next" href="%s">→</a>', $this->escape($this->address->of($next)));
+      : sprintf('<a rel="next" href="%s">→</a>', $this->escape($this->own($next)));
     $listed = $rows === [] ? '<ul></ul>' : "<ul>\n" . implode("\n", $rows) . "\n</ul>";
     $body = implode("\n", array_filter([sprintf('<h1>%s</h1>', $this->escape((string) $list['name'])),
       sprintf('<p>%d/%d</p>', count($rows), $total), $listed, $onward]));
@@ -147,9 +147,16 @@ final readonly class Html
   /** @param array<string, mixed> $record */
   private function link(array $record): string
   {
-    $target = $this->address->of((string) ($record['@id'] ?? ''));
+    $target = $this->own((string) ($record['@id'] ?? ''));
 
     return sprintf('<a href="%s">%s</a>', $this->escape($target), $this->escape($this->heading($record)));
+  }
+
+  /** @psalm-taint-escape url_scheme an `@id` the document wrote, under the install's address or schema.org's, or a
+      record's id, and a listing's next page under its own, so none names a scheme a stranger chose */
+  private function own(string $address): string
+  {
+    return $this->address->of($address);
   }
 
   /** @param array<string, mixed> $document */

@@ -18,8 +18,8 @@ use Domain\Violation;
 final readonly class Ranges
 {
   private const NO_WORK = 'an ItemList is no work, so a work holds its lists here and its parts name it by isPartOf';
-  private const KIND = 'the target stays one of the thirty and says its kind in additionalType, which a page lifts'
-    . ' into @type';
+  private const KIND = 'the target stays one of the thirty-one and says its kind in additionalType, which a page'
+    . ' lifts into @type';
   private const OWN_TERMS = 'the organisation\'s own terms, where the vocabulary lists members nobody here has'
     . ' words for';
   private const REGION = 'a region is a term or a code a reader knows, where the vocabulary wants a record per area';
@@ -119,6 +119,9 @@ final readonly class Ranges
     if ($field->valueObjectOf !== null) {
       $held[($field->ofKind ?? $type->name) . '.' . $field->valueObjectOf] = [(string) $field->valueObject];
     }
+    foreach ($field->fixed as $key => $class) {
+      $held[$field->valueObject . '.' . $key] = [$class];
+    }
 
     return $held;
   }
@@ -214,7 +217,7 @@ final readonly class Ranges
       foreach (Qualifier::cases() as $qualifier) {
         $on = in_array($qualifier->value, Qualifier::ROLE, true) ? 'Role' : $wrapper;
         $held += $qualifier->heldOn($predicate, $target)
-          ? [$on . '.' . $qualifier->value => [$qualifier->datatype()]] : [];
+          ? [$on . '.' . $qualifier->value => $qualifier->datatypes()] : [];
       }
     }
 

@@ -38,7 +38,7 @@ final readonly class Entity
     public ?string $publishTo = null,
     public ?string $deletedAt = null,
   ) {
-    if (preg_match('/^[A-Z][A-Za-z]+$/', $this->typeName()) !== 1) {
+    if (preg_match('/^[A-Z][A-Za-z]+$/D', $this->typeName()) !== 1) {
       throw UnknownType::named($type);
     }
     if ($version < 1) {
@@ -48,6 +48,7 @@ final readonly class Entity
     $this->checkWindow();
   }
 
+  /** @psalm-taint-escape input letters alone, or none, by the pattern the constructor holds the type to */
   public function typeName(): string
   {
     if (!str_starts_with($this->type, self::SCHEMA_ORG)) {

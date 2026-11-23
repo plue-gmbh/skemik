@@ -9,6 +9,7 @@ use Domain\Exceptions\EntityNotFound;
 use Domain\Exceptions\MalformedValue;
 use Domain\Props;
 use Domain\Relation;
+use Profile\FieldDefinition;
 use Profile\Predicate;
 use Support\Json;
 use Support\Uuid;
@@ -59,6 +60,22 @@ final readonly class RelationRepository
   public function inbound(EntityId $object): array
   {
     return $this->select(' and r.object_id = :id order by r.subject_id, r.predicate', $object);
+  }
+
+  /** The live records among the subjects, newest first, read without their fields, since a record
+      every reservation points at would otherwise load each of them. Public means public at `$now`.
+      @param list<string> $subjects ids
+      @return list<PointingRecord> */
+  public function pointing(array $subjects, string $now): array
+  {
+    $statement = $this->db->prepare('select e.id, e.type, coalesce(e.translation_of, e.id) as root, '
+      . Query::PUBLIC . ' as public from entity e where e.id in (select value from json_each(:ids))'
+      . ' and e.deleted_at is null order by e.created_at desc, e.id desc');
+    $statement->execute(['ids' => $this->json->encode($subjects), 'now' => $now]);
+
+    return array_map(fn (array $row): PointingRecord => new PointingRecord(new EntityId((string) $row['id']),
+      (string) $row['type'], (string) $row['root'], (int) $row['public'] === 1),
+      $statement->fetchAll(\PDO::FETCH_ASSOC));
   }
 
   /** To any member of a translation group, a trashed one too, whose link still serves the others.
@@ -176,6 +193,21 @@ final readonly class RelationRepository
     if ($statement->fetchColumn() === false) {
       throw EntityNotFound::withId($id->value);
     }
+  }
+
+  /** What a derived field computes for one record, by the statement a filter and a sort on it read
+      (`Computed`), so no row is loaded to be counted and a document states the number its list is asked by.
+      @param string $spec `Computed::spec`, the reading among it */
+  public function computed(EntityId $record, FieldDefinition $field, string $spec, string $now): int|float|null
+  {
+    $value = Computed::value($field, ':spec');
+    $statement = $this->db->prepare("select $value from entity e where e.id = :id");
+    /* The clock is named only where the reader's gate asks a row's status. */
+    $statement->execute(['id' => $record->value, 'spec' => $spec,
+      ...(str_contains($value, ':now') ? ['now' => $now] : [])]);
+    $computed = $statement->fetchColumn();
+
+    return is_int($computed) || is_float($computed) ? $computed : null;
   }
 
   /** @return list<Relation> */

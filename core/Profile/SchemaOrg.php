@@ -41,7 +41,7 @@ final readonly class SchemaOrg
     $this->fields = $fields;
     $this->amounts = array_map(fn (ValueObject $object): string => $object->name,
       array_filter($profile->valueObjects(), fn (ValueObject $object): bool => $object->amount));
-    assert($this->amountsApart($profile), 'two amounts of one type answer to one name at the address');
+    assert($this->amountsApart($profile), 'two amounts or counters of one type answer to one name at the address');
     assert($this->targetsAreHeld($profile), 'an edge points at a class none of the types is');
   }
 
@@ -93,7 +93,16 @@ final readonly class SchemaOrg
       return $fieldKey;
     }
 
-    return $field->valueObjectOf === null ? $name : $field->valueObjectOf . '.' . $name;
+    return $field->valueObjectOf === null ? $name : $field->valueObjectOf . '.' . $this->keyName($fieldKey);
+  }
+
+  /* A value object's key as it stands beside its kin: its spelling, but for a
+     key that counts one class, since every counter's number is `userInteractionCount`. */
+  public function keyName(string $fieldKey): ?string
+  {
+    $field = $this->fields[$fieldKey] ?? null;
+
+    return array_first($field->fixed ?? []) ?? $this->propertyName($fieldKey);
   }
 
   /* The code of the set a term field draws on: the property's name, so every
@@ -103,28 +112,31 @@ final readonly class SchemaOrg
     return $field->set ?? (string) $this->propertyName($field->key);
   }
 
-  /* What the address calls a field: its spelling, but for an amount's number,
-     which answers to the property the amount arrives on. That is the name the
-     document shows, where `value` would name five fields of an offer at once. */
+  /* What the address calls a field: its key's name, but for an amount, which answers to the property it
+     arrives on. Its number takes that name, the one the document shows, where `value` would name five
+     fields of an offer at once, and each other key that name and its own, `widthUnitCode`. */
   public function parameterName(string $fieldKey): ?string
   {
     $field = $this->fields[$fieldKey] ?? null;
+    if ($field === null || !$this->isAmount($field)) {
+      return $this->keyName($fieldKey);
+    }
 
-    return $field !== null && $this->isAmountNumber($field) ? $field->valueObjectOf
-      : $this->propertyName($fieldKey);
+    return $field->kind === FieldKind::Number ? $field->valueObjectOf
+      : $field->valueObjectOf . ucfirst((string) $this->keyName($fieldKey));
   }
 
-  private function isAmountNumber(FieldDefinition $field): bool
+  private function isAmount(FieldDefinition $field): bool
   {
-    return $field->valueObjectOf !== null && $field->kind === FieldKind::Number
-      && in_array($field->valueObject, $this->amounts, true);
+    return $field->valueObjectOf !== null && in_array($field->valueObject, $this->amounts, true);
   }
 
   private function amountsApart(Profile $profile): bool
   {
     foreach ($profile->types() as $type) {
-      $names = array_map(fn (FieldDefinition $field): ?string => $field->valueObjectOf,
-        array_filter($type->fields(), $this->isAmountNumber(...)));
+      $names = array_map(fn (FieldDefinition $field): ?string => $this->parameterName($field->key),
+        array_filter($type->fields(), fn (FieldDefinition $field): bool
+          => $this->isAmount($field) || $field->fixed !== []));
       if (count($names) !== count(array_unique($names))) {
         return false;
       }
@@ -134,7 +146,7 @@ final readonly class SchemaOrg
   }
 
   /* A target is one of the types or a class above some of them: `citation` means
-     a CreativeWork, which is none of the thirty and what an article and a photo are. */
+     a CreativeWork, which is none of the thirty-one and what an article and a photo are. */
   private function targetsAreHeld(Profile $profile): bool
   {
     $names = array_map(fn (TypeDefinition $type): string => $type->name, $profile->types());
@@ -157,7 +169,7 @@ final readonly class SchemaOrg
   public function holds(FieldKind $kind, array $options = [], bool $whole = false): array
   {
     if ($options === []) {
-      return [$whole ? 'Integer' : $kind->datatype()];
+      return $whole ? ['Integer'] : $kind->datatypes();
     }
 
     return array_values(array_unique(array_map(fn (string $option): string

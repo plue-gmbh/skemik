@@ -30,6 +30,8 @@ final readonly class Kinds
       FieldKind::Boolean => is_bool($value),
       FieldKind::Date => is_string($value) && $this->isDate($value),
       FieldKind::DateTime => is_string($value) && $this->isStoredTime(Clock::STORED, $value),
+      FieldKind::DateOrTime => is_string($value)
+        && ($this->isDate($value) || $this->isStoredTime(Clock::STORED, $value)),
       FieldKind::Duration => is_string($value) && preg_match(self::ISO_8601_DURATION, $value) === 1,
       FieldKind::Time => is_string($value) && preg_match(self::TIME_OF_DAY, $value) === 1,
       FieldKind::Objects => is_array($value),

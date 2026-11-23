@@ -11,9 +11,10 @@ declare(strict_types=1);
    missing. What an edge says of its target stands inside its chip, so in a list
    it reads as that member's; a long name ends in an ellipsis and the chip's title holds it whole. A Markdown
    field's links to records are counted here and drawn as chips on the record screen (`Admin\Prose`). A link,
-   and a row's name where the row holds one, leads where it points, as a chip does. Handed `$kind`, `$value`,
-   `$shown`, `$chips`, `$empty` and `$words`, and `$locale`, `$many`, `$linked`, `$links` and `$says`, which an
-   empty cell leaves out. */
+   and a row's name where the row holds one or names a record, leads where it points, as a chip does. Rows holding
+   a value beside their name show both, framed lighter than a chip, since a row is no record. Handed `$kind`, `$value`,
+   `$shown`, `$chips`, `$empty` and `$words`, and `$locale`, `$many`, `$linked`, `$links`, `$pairs` and `$says`,
+   which an empty cell leaves out. */
 
 use Profile\FieldKind;
 
@@ -22,6 +23,7 @@ if (!isset($template)) {
 }
 $linked ??= true;
 $links ??= [];
+$pairs ??= [];
 $many ??= false;
 $says ??= [];
 $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, $words, $linked): string {
@@ -48,6 +50,16 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 <?php if ($empty): ?>
 <span class="cell-empty" aria-hidden="true">—</span><span
   class="visually-hidden"><?= $template->escape($words->get('cell.empty')) ?></span>
+<?php elseif ($pairs !== []): ?>
+<span class="pairs"><?php foreach ($pairs as $index => $each):
+  $leads = $linked && $each->href !== null;
+  $tag = $leads ? 'a href="' . $template->escape((string) $each->href) . '"'
+    . ($each->opensBeside() ? ' target="_blank" rel="noreferrer"' : '') : 'span';
+  ?><?= $index === 0 ? '' : '<span class="visually-hidden">, </span>' ?><<?= $tag ?> class="pair"><span
+  class="pair-name"<?= $each->lang === null ? '' : ' lang="' . $template->escape($each->lang) . '"'
+  ?>><?= $template->escape($each->word) ?></span><?php if ($each->value !== null): ?><span
+  class="visually-hidden">: </span><span class="pair-value"><?= $template->escape($each->value) ?></span><?php
+  endif ?></<?= $leads ? 'a' : 'span' ?>><?php endforeach ?></span>
 <?php elseif ($links !== []): ?>
 <span><?php foreach ($links as $index => $each): ?><?= $index === 0 ? ''
   : ', ' ?><?php if ($each->href === null): ?><?= $template->escape($each->word) ?><?php else: ?><a
@@ -57,7 +69,7 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 <span class="switch<?= $value === true ? ' is-on' : '' ?>" aria-hidden="true"><i></i></span><span
   class="visually-hidden"><?= $template->escape($words->get($value === true ? 'cell.yes' : 'cell.no')) ?></span>
 <?php elseif ($kind === FieldKind::Select): ?>
-<span class="pill" lang="<?= $template->escape($locale) ?>"<?= $shown !== $value ? ' title="'
+<span class="pill"<?= $shown !== $value ? ' title="'
   . $template->escape($words->get('cell.term', ['term' => (string) $value]))
   . '"' : '' ?>><?= $template->escape($shown) ?></span>
 <?php elseif (($kind->isReference() || $chips !== []) && !$many): ?>
@@ -72,7 +84,8 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 <span class="cell-markdown"><span lang="<?= $template->escape($locale) ?>"><?= $template->escape(mb_strimwidth($plain,
   0, 60, '…')) ?></span><?php if ($links > 0): ?> <span
   class="cell-note">⇢ <?= $links ?></span><?php endif ?></span>
-<?php elseif (in_array($kind, [FieldKind::Date, FieldKind::DateTime, FieldKind::Duration], true)): ?>
+<?php elseif (in_array($kind, [FieldKind::Date, FieldKind::DateTime, FieldKind::DateOrTime, FieldKind::Duration],
+  true)): ?>
 <span title="<?= $template->escape((string) $value) ?>"><?= $template->escape($shown) ?></span>
 <?php elseif (in_array($kind, [FieldKind::Text, FieldKind::LongText], true)): ?>
 <span lang="<?= $template->escape($locale) ?>"><?= $template->escape($shown) ?></span>

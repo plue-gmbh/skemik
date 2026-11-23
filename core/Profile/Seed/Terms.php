@@ -10,10 +10,9 @@ use Profile\FieldKind;
 use Profile\Profile;
 use Profile\ValueObject;
 
-/* The words for a select's tokens and a row key's, per content language: what a
-   person reads where the holdings store and emit `EventCancelled`, from
-   `language/`'s `{language}.terms.php`, whose header says why they are files of
-   their own. */
+/* The words for a select's tokens and a row key's, per language: what a person
+   reads where the holdings store and emit `EventCancelled`, from `language/`'s
+   `{language}.terms.php`, whose header says why they are files of their own. */
 final readonly class Terms
 {
   private const SOURCE = 'en';

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Profile;
 
-/* One of the thirty types as data: what it is called, what it may hold, whether
+/* One of the thirty-one types as data: what it is called, what it may hold, whether
    a purge of it warns first, how it carries a second language, and whether it
    is ever public. Immutable.
    The three marks are all a type declares about itself — closed enums,
@@ -100,6 +100,13 @@ final readonly class TypeDefinition
     }
 
     return null;
+  }
+
+  /* The currency an amount is read with, the one its value object holds beside it; null for any other number. */
+  public function currencyOf(FieldDefinition $amount): ?FieldDefinition
+  {
+    return $amount->valueObject === null ? null : array_find($this->fields(), fn (FieldDefinition $each): bool
+      => $each->list === ClosedList::Currency && $each->valueObject === $amount->valueObject);
   }
 
   /** @return list<string> the † keys — what the Validator refuses to save without */

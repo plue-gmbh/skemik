@@ -223,7 +223,7 @@ final readonly class AccountController
   }
 
   /* The types ticked, or every type where none were narrowed; a name that is
-     not one of the thirty is a request made past the dialog. */
+     not one of the thirty-one is a request made past the dialog. */
   private function scope(?string $ticked): TypeScope
   {
     if ($ticked === null) {

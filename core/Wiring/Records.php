@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Wiring;
 
+use Admin\Cells;
 use Admin\CollectionController;
 use Admin\EdgeEdits;
 use Admin\FieldController;
 use Admin\FieldEdits;
 use Admin\HeldTargets;
 use Admin\MediaController;
+use Admin\Pointers;
 use Admin\Prose;
-use Admin\QueryBar;
 use Admin\QueryChoices;
 use Admin\RecordController;
 use Admin\RecordPage;
 use Admin\RecordWords;
 use Admin\SearchController;
+use Admin\SheetData;
 use Admin\SpineDialog;
 use Admin\SpineEdits;
 use Admin\TermMaker;
@@ -115,10 +117,10 @@ final readonly class Records
   {
     $common = $this->common;
     return new CollectionController($common->collections, $common->entities, $common->authorizer,
-      $common->filter, $common->named, $common->schema, $common->sheet(), $this->dialog(), $this->bar(),
-      $this->choices(), $this->mediaController(), $this->fieldController(), $common->settings, $common->frame(),
-      $common->session, $common->reviews(), $common->keys(), $common->clock, $common->csrf,
-      $common->template, $common->words, $common->rows);
+      $common->filter, $common->named, $common->schema, $common->sheet(), $this->sheetData(), $this->dialog(),
+      $common->bar(), $this->choices(), $this->mediaController(), $this->fieldController(), $common->settings,
+      $common->frame(), $common->session, $common->reviews(), $common->keys(), $common->clock, $common->csrf,
+      $common->template, $common->words, $common->rows, $common->counts);
   }
 
   private function recordController(): RecordController
@@ -127,7 +129,7 @@ final readonly class Records
     return new RecordController($this->collectionController(), $common->frame(), $this->recordPage(),
       $common->entities,
       $common->relations, $common->validator, $common->showing(), $common->authorizer, $common->log,
-      $common->sheet(),
+      $common->sheet(), $this->sheetData(),
       new FieldEdits(new EdgeEdits($common->entities, $common->rows, $common->predicates, $common->schema,
         $this->terming(), $common->targets), $common->schema, $common->profile, $common->settings, $common->clock,
         $common->request->origin()),
@@ -153,10 +155,26 @@ final readonly class Records
   private function recordPage(): RecordPage
   {
     $common = $this->common;
-    return new RecordPage($common->entities, $common->showing(), $common->collections, $common->settings,
-      $this->bar(), $common->sheet(), $common->rows, $this->prose(), $this->dialog(),
-      $this->recordWords(), $common->accounts, $common->named, $common->schema, $common->csrf,
+    return new RecordPage($common->entities, $this->pointers(), $common->collections, $common->settings,
+      $common->bar(), $this->sheetData(), $common->rows, $this->prose(), $this->dialog(),
+      $this->recordWords(), $common->accounts, $common->named, $common->csrf,
       $common->template, $common->words, $common->reviews(), $common->keys());
+  }
+
+  private function sheetData(): SheetData
+  {
+    $common = $this->common;
+    return new SheetData(new Cells($common->template, $common->words, $common->terms, $common->clock,
+      $common->moments, $common->profile), $common->collections, $common->terms, $common->profile,
+      $common->schema, $common->settings, $common->clock, $common->words);
+  }
+
+  private function pointers(): Pointers
+  {
+    $common = $this->common;
+    return new Pointers($common->showing(), $common->relations, $common->entities, $common->collections,
+      $common->settings, $common->sheet(), $common->rows, $common->named, $common->schema, $common->clock,
+      $common->words);
   }
 
   private function prose(): Prose
@@ -199,19 +217,11 @@ final readonly class Records
       $common->named, $common->log, $common->clock, $common->moments, $common->words);
   }
 
-  private function bar(): QueryBar
-  {
-    $common = $this->common;
-    return new QueryBar($common->parameters, $common->filter, $common->authorizer, $common->entities,
-      $common->collections, $common->settings, $common->rows, $common->named, $common->terms, $common->targets,
-      $common->words);
-  }
-
   private function choices(): QueryChoices
   {
     $common = $this->common;
     return new QueryChoices($common->authorizer, $common->entities, $common->collections, $common->counts,
-      $common->settings, $common->rows, $common->named, $common->terms, $common->words);
+      $common->settings, $common->rows, $common->named, $common->terms, $common->words, $common->bar());
   }
 
   private function recordWords(): RecordWords

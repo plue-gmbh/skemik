@@ -17,13 +17,14 @@ use Support\Json;
 /* A filter, sort and page request, built by `Feed\FeedRequest` and the admin alike
    so the editor's filter is the reader's address. A key is checked against the
    type before any SQL is written, so a bad one is a 400 naming it and never an
-   injection, and every key compiles to a `json_extract` or an edge, so no field
-   waits for an index. Text compares through `sort_keys` in the words the route
-   shows, so an English route never finds a person by a word it does not show; a
-   link compares without case, since `Max@` and `max@` are one mailbox. The zone
-   is not read here, so an install's day is the caller's to name. Newest created
-   first unless asked, since an edit is not news, and the empty last either way,
-   since a sort is asked of the values. */
+   injection, and every key compiles to a `json_extract`, an edge or what a
+   derived field computes (`Computed`), so no field waits for an index. Text
+   compares through `sort_keys` in the words the route shows, so an English
+   route never finds a person by a word it does not show; a link compares
+   without case, since `Max@` and `max@` are one mailbox. The zone is not read
+   here, so an install's day is the caller's to name. Newest created first
+   unless asked, since an edit is not news, and the empty last either way, since
+   a sort is asked of the values. */
 final readonly class Query
 {
   public const PER_PAGE = 50;
@@ -86,6 +87,12 @@ final readonly class Query
   public function through(array $readings): self
   {
     return clone($this, ['searchThrough' => $readings]);
+  }
+
+  /* The one record a date names last, for a figure read off it. */
+  public function newestBy(string $key): self
+  {
+    return clone($this, ['sort' => $key, 'descending' => true, 'page' => 1, 'perPage' => 1]);
   }
 
   public function where(TypeDefinition $type): string
@@ -177,16 +184,17 @@ final readonly class Query
       return "e.$key in $values";
     }
     $field = $this->field($type, $key);
+    [$near, $far] = Computed::ends($field);
 
     return match (true) {
-      $field->cardinality->isEdge() => 'exists (select 1 from relation r'
-        . " where r.subject_id = e.id and r.predicate = :k$index"
-        . " and r.object_id in $values)",
+      $field->cardinality->isEdge() => "exists (select 1 from relation r where $near = e.id"
+        . " and r.predicate = :k$index and $far in $values)",
       SortKeys::keys($field) => "exists (select 1 from json_each(:f$index) v"
         . " where substr({$this->keyed(":k$index")}, 1, length(v.value)) = v.value)",
       SortKeys::listed($field) => "exists (select 1 from json_each({$this->keyed(":k$index")}) x,"
         . " json_each(:f$index) v where substr(x.value, 1, length(v.value)) = v.value)",
-      in_array($field->kind, Range::KINDS, true) => Range::clause($field, $index),
+      in_array($field->kind, Range::KINDS, true) => Range::clause($field, $index,
+        Computed::holds($field) ? Computed::value($field, ":k$index") : null),
       $field->repeatable => "exists (select 1 from json_each(e.props, :k$index) x where "
         . $this->cased($field, 'x.value') . " in $values)",
       default => $this->cased($field, "json_extract(e.props, :k$index)") . " in $values",
@@ -214,12 +222,12 @@ final readonly class Query
       return 'e.' . $key;
     }
     $field = $this->field($type, $key);
+    [$near, $far] = Computed::ends($field);
 
     return match (true) {
-      $field->cardinality->isEdge() => '(select t.slug from relation r'
-        . ' join entity t on t.id = r.object_id'
-        . ' where r.subject_id = e.id and r.predicate = :sort'
-        . ' order by r.position, r.id limit 1)',
+      $field->cardinality->isEdge() => "(select t.slug from relation r join entity t on t.id = $far"
+        . " where $near = e.id and r.predicate = :sort order by r.position, r.id limit 1)",
+      Computed::holds($field) => Computed::value($field, ':sort'),
       SortKeys::keys($field) => $this->keyed(':sort'),
       SortKeys::listed($field) => "json_extract({$this->keyed(':sort')}, '$[0]')",
       $field->repeatable => "json_extract(e.props, :sort || '[0]')",
@@ -234,9 +242,11 @@ final readonly class Query
 
   private function address(FieldDefinition $field, SchemaOrg $schema): string
   {
-    return $field->cardinality->isEdge()
-      ? (string) $schema->propertyName($field->key)
-      : '$.' . $field->key;
+    return match (true) {
+      $field->cardinality->isEdge() => Computed::predicate($field, $schema),
+      Computed::holds($field) => Computed::spec($field, $schema, $this->searchThrough),
+      default => '$.' . $field->key,
+    };
   }
 
   /* The refusal names the field as the address spells it, which is how the caller wrote it. */

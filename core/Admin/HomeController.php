@@ -20,15 +20,17 @@ use Update\FileCheck;
 use Update\Version;
 
 /* The overview, decided rather than accumulated: the title, one line of totals,
-   six cards and the feed panel. The totals are counted past `Feed\PublicFilter`
+   seven cards and the feed panel. The totals are counted past `Feed\PublicFilter`
    under the read scope, or a scoped colleague learns from a sum what the records
    would not have told them, and a number stands only where somebody is expected to
    move it. The cards' order is the argument, what has to be done first: Needs a
    look, Grants, Languages, Last changed, Accounts, Settings, so each column holds
-   one question. A card is drawn only for an account holding its capability, and
-   Accounts for every account in a shape that follows it; none is hidden for being
-   empty, since a card that comes and goes moves every card after it. Each card's
-   contract is its partial's header (`home-*.php`). */
+   one question; Saved questions stands under Needs a look, which the page places
+   (`view/pages/home.php`). A card is drawn only for an account holding its
+   capability, and Accounts for every account in a shape that follows it; none
+   of the six is hidden for being empty, since a card that comes and goes moves
+   every card after it, and Saved questions is drawn only once one is saved.
+   Each card's contract is its partial's header (`home-*.php`). */
 final readonly class HomeController
 {
   public function __construct(
@@ -50,6 +52,7 @@ final readonly class HomeController
     private ErrorLog $errors,
     private ?Smtp $relay,
     private Probes $probes,
+    private QuestionController $questions,
   ) {}
 
   public function show(Account $account, Entity $person, Request $request): Response
@@ -66,8 +69,8 @@ final readonly class HomeController
   }
 
   /** @return array<string, array<string, list<Finding>|list<Change>|list<Colleague>|list<RegisterEntry>
-      |list<LocaleRow>|list<string>|array<string, string>|string|bool|Health|null>> each card drawn for the
-      account, in order, with the values its partial reads */
+      |list<LocaleRow>|list<QuestionLine>|list<string>|array<string, string>|string|bool|Health|null>> each card
+      drawn for the account, in order, with the values its partial reads */
   private function cards(Account $account): array
   {
     $manages = $account->can(Capability::ManageInstall);
@@ -83,9 +86,18 @@ final readonly class HomeController
       'accounts' => ['colleagues' => $this->colleagues->all($account), 'manage' => $manage,
         ...$manage ? ['types' => $this->colleagues->types(), 'unreadable' => $this->colleagues->unreadable(),
         'csrf' => $this->csrf->token()] : []],
-      'settings' => $manages ? $this->settingsCard($account) : null];
+      'settings' => $manages ? $this->settingsCard($account) : null,
+      'questions' => $this->questionsCard($account)];
 
     return array_filter($cards, fn (?array $card): bool => $card !== null);
+  }
+
+  /** @return ?array<string, list<QuestionLine>> null where the reader is shown no question */
+  private function questionsCard(Account $account): ?array
+  {
+    $lines = $this->questions->lines($account);
+
+    return $lines === [] ? null : ['lines' => $lines];
   }
 
   /** @return array<string, string|bool|Health|null> the Settings card's rows, each status row with its health */

@@ -62,6 +62,7 @@ final readonly class RecordController
     private Authorizer $authorizer,
     private ActivityLog $log,
     private Sheet $sheet,
+    private SheetData $sheetData,
     private FieldEdits $fields,
     private SpineEdits $spine,
     private SpineDialog $dialog,
@@ -142,9 +143,9 @@ final readonly class RecordController
       $this->fields->sent($request));
     SaveRefused::unless($this->validator->check($type, $props->document(), $edges));
     $now = $this->clock->now()->format(Clock::STORED);
-    $named = (string) ($props->string($type->namedBy()) ?? $type->name);
+    $slug = Slug::from((string) $props->string($type->namedBy()), Slug::unnamed($type->name, $now)->value);
     $draft = (new Entity($id, $type->url(), $this->installLocale($request->query('locale')),
-      Slug::from($named, 'record'), new Props([]), $now, $now))->withProps($props);
+      $slug, new Props([]), $now, $now))->withProps($props);
 
     return $this->entities->save($draft, $edges);
   }
@@ -175,8 +176,9 @@ final readonly class RecordController
       'items' => $this->items($collection), 'firstLocale' => $this->settings->locales()[0]->tag,
       'glance' => isset($drawn[$view]) ? $this->collections->glance($collection, $columns) : null]);
 
-    return Response::json($this->json->encode([...$this->sheet->saved($row, $columns), 'id' => $saved->id->value,
-      'label' => $row->label, 'html' => $html, 'spine' => $this->dialog->row($collection, $row)]), 201)
+    return Response::json($this->json->encode([...$this->sheetData->saved($row, $columns),
+      'id' => $saved->id->value, 'label' => $row->label, 'html' => $html,
+      'spine' => $this->dialog->row($collection, $row)]), 201)
       ->with(['ETag' => $this->preconditions->etag($saved->version)]);
   }
 
@@ -257,7 +259,7 @@ final readonly class RecordController
       'prefix' => '', 'translations' => $this->items($collection)->own($row), 'opens' => true,
       'current' => $this->settings->locales()[0]->tag]);
 
-    return Response::json($this->json->encode([...$this->sheet->saved($row, $editing), 'chip' => $chip,
+    return Response::json($this->json->encode([...$this->sheetData->saved($row, $editing), 'chip' => $chip,
       'spine' => $this->dialog->row($collection, $row)]))
       ->with(['ETag' => $this->preconditions->etag($entity->version)]);
   }

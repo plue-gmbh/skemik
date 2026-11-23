@@ -95,11 +95,17 @@ final readonly class Csv
     if (isset($object['@id'])) {
       return $this->address->of((string) $object['@id']);
     }
+    /* A key holding a class alone tells counters apart in their one column: `ViewAction 200 LikeAction 4`. */
+    if (array_keys($object) === ['@type']) {
+      return (string) $object['@type'];
+    }
     $wrapped = in_array($object['@type'] ?? '', self::WRAPPERS, true);
     unset($object['@type']);
     $values = $wrapped ? array_filter($object, is_array(...)) : $object;
 
-    return implode(' ', array_map($this->cell(...), $values === [] ? $object : $values));
+    $cells = array_map($this->cell(...), $values === [] ? $object : $values);
+
+    return implode(' ', array_filter($cells, fn (string $cell): bool => $cell !== ''));
   }
 
   /** @param list<string> $cells */

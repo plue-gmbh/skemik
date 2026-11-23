@@ -35,7 +35,7 @@ final readonly class Properties
   public function of(TypeDefinition $type, array $values): array
   {
     $properties = [];
-    $objects = [];
+    $carried = [];
     foreach ($values as $key => $value) {
       $field = $type->field($key);
       if ($field === null || in_array($value, [null, []], true)) {
@@ -48,12 +48,11 @@ final readonly class Properties
         $properties[$name] = $value;
       }
       if ($field->valueObject !== null) {
-        $objects[(string) $field->valueObjectOf][$field->valueObject]
-          [(string) $field->valueObjectKey] = $value;
+        $carried[] = [$field, $value];
       }
     }
 
-    return $this->joined($properties, $this->nested($objects));
+    return $this->joined($properties, $this->nested($carried));
   }
 
   /** An object assembled under a property an edge holds too stands beside its
@@ -94,17 +93,27 @@ final readonly class Properties
     return $labels;
   }
 
-  /** @param array<string, array<string, array<string, mixed>>> $objects property, object, key
+  /** One object per use of a value object, told apart by the classes its keys
+      fix, and a list where a property holds more than one: a work's page views
+      and its downloads are two `InteractionCounter`s.
+      @param list<array{FieldDefinition, mixed}> $carried
       @return array<string, mixed> */
-  private function nested(array $objects): array
+  private function nested(array $carried): array
   {
+    $objects = [];
+    foreach ($carried as [$field, $value]) {
+      $use = $field->valueObject . implode(' ', $field->fixed);
+      $objects[(string) $field->valueObjectOf][$use] ??= ['@type' => $field->valueObject,
+        ...array_map(fn (string $class): array => ['@type' => $class], $field->fixed)];
+      $objects[(string) $field->valueObjectOf][$use][(string) $field->valueObjectKey] = $value;
+    }
     $shared = $objects[''] ?? [];
     unset($objects['']);
     $nested = [];
-    foreach ($objects as $property => $keys) {
-      foreach ($keys as $object => $filled) {
-        $nested[$property] = ['@type' => $object, ...$filled, ...($shared[$object] ?? [])];
-      }
+    foreach ($objects as $property => $uses) {
+      $filled = array_map(fn (array $one, string $use): array => [...$one, ...($shared[$use] ?? [])],
+        array_values($uses), array_keys($uses));
+      $nested[$property] = count($filled) === 1 ? $filled[0] : $filled;
     }
 
     return $nested;

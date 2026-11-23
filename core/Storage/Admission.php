@@ -47,23 +47,19 @@ final readonly class Admission
   private function person(\PDO $db, string $owner): void
   {
     $person = '(select person_id from live.account where id = :owner)';
-    $copied = $this->copied($db, 'entity', 'id = ' . $person . ' and id not in (select id from main.entity)',
+    /* Its words follow by the trigger, as any record's do. */
+    $this->copied($db, 'entity', 'id = ' . $person . ' and id not in (select id from main.entity)',
       ['owner' => $owner]);
-    if ($copied > 0) {
-      $this->copied($db, 'entity_word', 'entity_id = ' . $person, ['owner' => $owner]);
-    }
     $db->prepare('update main.entity set deleted_at = null where id = ' . $person)->execute(['owner' => $owner]);
   }
 
   /** @param array<string, string> $values */
-  private function copied(\PDO $db, string $table, string $where, array $values): int
+  private function copied(\PDO $db, string $table, string $where, array $values): void
   {
     $columns = implode(', ', array_column($db->query("pragma main.table_info('" . $table . "')")->fetchAll(),
       'name'));
     $statement = $db->prepare(sprintf('insert into main.%1$s (%2$s) select %2$s from live.%1$s where %3$s',
       $table, $columns, $where));
     $statement->execute($values);
-
-    return $statement->rowCount();
   }
 }

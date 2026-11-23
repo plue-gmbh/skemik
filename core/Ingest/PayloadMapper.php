@@ -214,19 +214,23 @@ final readonly class PayloadMapper
       return array_fill_keys(array_values(array_intersect(array_column($carried, 'key'),
         array_column($collection->fields, 'key'))), null);
     }
-    $type = $this->profile->byType($collection->type);
+    /* Counters stand as a list, one per class, and each is computed, so none needs telling apart. */
+    if (is_array($value) && array_is_list($value) && $carried[0]->fixed !== []) {
+      return array_merge(...array_map(fn (mixed $one): array => $this->flattened($collection, $carried, $one), $value));
+    }
     $object = (string) $carried[0]->valueObject;
     if (!is_array($value) || array_is_list($value)) {
       throw MalformedValue::notA('a ' . $object, (string) $carried[0]->valueObjectOf);
     }
-    $shared = array_filter($type->fields(), fn (FieldDefinition $field): bool =>
+    $shared = array_filter($this->profile->byType($collection->type)->fields(), fn (FieldDefinition $field): bool =>
       $field->valueObject === $object && $field->valueObjectOf === null);
+    /* A fixed key reads as every document states it, a counter's `ViewAction`, and a count as nothing sent. */
     $fields = [];
-    foreach (array_diff_key($value, ['@type' => true]) as $key => $inner) {
+    foreach (array_diff_key($value, ['@type' => true, ...$carried[0]->fixed]) as $key => $inner) {
       $field = array_find([...$carried, ...$shared],
         fn (FieldDefinition $field): bool => $field->valueObjectKey === $key)
         ?? throw MalformedValue::named('key of ' . $object, (string) $key);
-      $fields[$field->key] = $inner;
+      $fields += $field->writtenBy->isStored() ? [$field->key => $inner] : [];
     }
 
     return $fields;
@@ -253,7 +257,7 @@ final readonly class PayloadMapper
       $raw === '' || $raw === null => null,
       $single => [Spelling::held($field, $this->rows->held($field, $raw), $this->origin)],
       $field->kind === FieldKind::Objects && is_array($raw) => $this->rows->stored($field, $raw),
-      $field->kind === FieldKind::DateTime && is_string($raw) => $this->utc($raw),
+      $this->instant($field, $raw) => $this->utc((string) $raw),
       $field->kind === FieldKind::Markdown && is_string($raw) => $this->linked($raw),
       default => Spelling::held($field, $this->rows->held($field, $raw), $this->origin),
     };
@@ -269,6 +273,13 @@ final readonly class PayloadMapper
 
       return $record !== null && ($this->reads)($record) ? Markup::RECORD . $record->id->value : $address;
     });
+  }
+
+  /* A day is kept as the day it is, where the field takes one. */
+  private function instant(FieldDefinition $field, mixed $raw): bool
+  {
+    return is_string($raw) && ($field->kind === FieldKind::DateTime
+      || ($field->kind === FieldKind::DateOrTime && str_contains($raw, 'T')));
   }
 
   /* A fraction of a second is dropped, since an instant is held to the second

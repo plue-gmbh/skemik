@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* The drawn glyphs of the thirty types, of a file's kind, of a record gone, of
+/* The drawn glyphs of the thirty-one types, of a file's kind, of a record gone, of
    one still to make, of a key, of a finding and of an action, in the tool icons' hand
    (`partials/icon`): a 16 grid, a 1.5 stroke. Drawn and not typed, since a
    character comes from whatever symbol font a device has and sits at another
@@ -15,6 +15,9 @@ if (!isset($template)) {
   return;
 }
 $frame = '<rect x="2.25" y="2.75" width="11.5" height="10.5" rx="1.75"/>';
+$dated = '<path d="M13.75 7.25v-2.25a1.75 1.75 0 0 0-1.75-1.75H4A1.75 1.75 0 0 0 2.25 5v7A1.75 1.75'
+  . ' 0 0 0 4 13.75h3.25M2.25 6.75h5.5M5.5 1.75v3M10.5 1.75v2"/><circle cx="11.5" cy="11.5" r="3"/><path'
+  . ' d="M11.5 10.25v1.25l.85.6"/>';
 $picture = $frame . '<circle cx="5.75" cy="6.25" r="1.1"/><path d="M2.75 11.75 6.25 8.5l2.5 2.25 1.75-1.5 3 2.75"/>';
 $shapes = [
   'Action' => '<path d="M9 1.75 3.75 9h4l-1 5.25L12.25 7h-4L9 1.75Z"/>',
@@ -42,6 +45,7 @@ $shapes = [
   'MemberProgram' => '<rect x="1.75" y="3.5" width="12.5" height="9" rx="1.75"/><circle cx="5.5" cy="7.25" r="1.25"/>'
     . '<path d="M3.75 10.5c.4-1 1-1.5 1.75-1.5s1.35.5 1.75 1.5M9 6.75h3M9 9.25h2"/>',
   'Message' => '<rect x="2" y="3.5" width="12" height="9" rx="1.75"/><path d="M2.5 4.5 8 8.75l5.5-4.25"/>',
+  'Observation' => '<path d="M2.25 2.25v11.5h11.5M4.75 10.5l2.5-3 2.25 2 3.75-4.75"/>',
   'Offer' => '<path d="M2.75 2.75h5l5.5 5.5-5 5-5.5-5.5v-5ZM5.5 5.5h.01"/>',
   'Order' => '<path d="M3.5 5.5h9l-.75 8h-7.5l-.75-8ZM6 5.5v-1a2 2 0 0 1 4 0v1"/>',
   'Organization' => '<rect x="3" y="2.5" width="10" height="11" rx="1.5"/><path d="M6 5.75h.01M10 5.75h.01M6'
@@ -75,9 +79,8 @@ $shapes = [
   'kind-boolean' => '<rect x="1.75" y="4.5" width="12.5" height="7" rx="3.5"/><circle cx="10.75" cy="8" r="1.75"/>',
   'kind-date' => '<rect x="2.25" y="3.25" width="11.5" height="10.5" rx="1.75"/><path d="M2.25 6.75h11.5M5.5'
     . ' 1.75v3M10.5 1.75v3"/>',
-  'kind-date_time' => '<path d="M13.75 7.25v-2.25a1.75 1.75 0 0 0-1.75-1.75H4A1.75 1.75 0 0 0 2.25 5v7A1.75 1.75'
-    . ' 0 0 0 4 13.75h3.25M2.25 6.75h5.5M5.5 1.75v3M10.5 1.75v2"/><circle cx="11.5" cy="11.5" r="3"/><path'
-    . ' d="M11.5 10.25v1.25l.85.6"/>',
+  'kind-date_time' => $dated,
+  'kind-date_or_time' => $dated,
   'kind-time' => '<circle cx="8" cy="8" r="5.75"/><path d="M8 4.75V8l2.25 1.5"/>',
   'kind-duration' => '<path d="M4 2.5h8M4 13.5h8M5.25 2.5c0 3 5.5 3.6 5.5 5.5s-5.5 2.5-5.5 5.5M10.75 2.5c0 3-5.5'
     . ' 3.6-5.5 5.5s5.5 2.5 5.5 5.5"/>',

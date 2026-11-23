@@ -8,7 +8,8 @@ namespace Storage;
    never from the stored SQL text, which `alter table` rewrites: a migration that
    reaches the declared shape by another spelling still reaches it. Triggers and
    views have no pragma, so their text is compared with whitespace folded.
-   What it cannot see is a `check` clause, which no pragma reports. */
+   What it cannot see is a `check` clause or a generated column's expression,
+   which no pragma reports. */
 final readonly class Shape
 {
   /** @return array<string, string> one line per table, column, key, index and trigger */
@@ -17,7 +18,7 @@ final readonly class Shape
     $shape = [];
     foreach ($db->query("pragma table_list")->fetchAll(\PDO::FETCH_ASSOC) as $table) {
       if ($table['schema'] === 'main' && !str_starts_with($table['name'], 'sqlite_')) {
-        $shape = [...$shape, ...$this->tableShape($db, $table['name'], $table['type'], $table['strict'])];
+        $shape = [...$shape, ...$this->tableShape($db, $table)];
       }
     }
     $sql = "select type, name, sql from sqlite_master where type in ('trigger', 'view')";
@@ -28,10 +29,13 @@ final readonly class Shape
     return $shape;
   }
 
-  /** @return array<string, string> */
-  private function tableShape(\PDO $db, string $table, string $type, int $strict): array
+  /** @param array<string, string|int> $listed the table's row of `table_list`
+      @return array<string, string> */
+  private function tableShape(\PDO $db, array $listed): array
   {
-    $shape = ["table $table" => $type . ($strict === 1 ? ' strict' : '')];
+    $table = (string) $listed['name'];
+    $shape = ["table $table" => $listed['type'] . ($listed['strict'] === 1 ? ' strict' : '')
+      . ($listed['wr'] === 1 ? ' without rowid' : '')];
     foreach ($this->pragma($db, 'table_xinfo', $table) as $column) {
       $shape["table $table column {$column['name']}"] = $this->describe($column, ['cid', 'name']);
     }
@@ -74,8 +78,8 @@ final readonly class Shape
   {
     $statement = $db->prepare("select sql from sqlite_master where type = 'index' and name = ?");
     $statement->execute([$index]);
-    $where = (string) stristr((string) $statement->fetchColumn(), ' where ');
+    $folded = (string) preg_replace('/\s+/', ' ', (string) $statement->fetchColumn());
 
-    return (string) preg_replace('/\s+/', ' ', $where);
+    return (string) stristr($folded, ' where ');
   }
 }

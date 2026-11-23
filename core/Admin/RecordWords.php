@@ -97,7 +97,7 @@ final readonly class RecordWords
         : $hint . $read->cells[$key] . '</span>';
     }
 
-    return new SheetRow($own->entity, $read->label, $own->state, $own->reach, $cells, $own->own, $own->chips, $authored,
-      $own->changed, $locale);
+    return new SheetRow($own->entity, $read->label, $own->state, $cells, $own->own, $own->chips, $authored,
+      $own->changed, $locale, $own->unread);
   }
 }

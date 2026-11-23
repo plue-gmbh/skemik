@@ -8,8 +8,8 @@ use Domain\Locale;
 
 /* What the world closes and no organisation owns: a code from a list a standards body
    keeps, stored and emitted as that code, which is what schema.org asks of
-   `priceCurrency` and `addressCountry`, and named by `intl` in the language of
-   the content, as `Seed\Terms` names an enumeration. A field on one is a select
+   `priceCurrency` and `addressCountry`, and named by `intl` in the language
+   `Seed\Terms` names an enumeration in. A field on one is a select
    whose choices are the list's and whose options table is empty.
    The codes are committed and never read from the host's ICU, so two installs
    refuse the same code; a name the host's data lacks reads as the English one,

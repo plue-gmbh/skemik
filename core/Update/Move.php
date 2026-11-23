@@ -11,10 +11,10 @@ use Storage\Rewrite;
 use Support\Halt;
 use Support\Words;
 
-/* The half of an update that stays on the machine: the first request on a version
-   or a last script the data folder is not stamped with moves the holdings to the
-   running code, so an operator updates by copying a release, and a copy between
-   releases that brought a script moves too. The stamp is a file and not a row,
+/* The half of an update that stays on the machine: the first request on a version,
+   a last script or types the data folder is not stamped with moves the holdings to
+   the running code, so an operator updates by copying a release, and a copy between
+   releases that brought a script or changed a type moves too. The stamp is a file and not a row,
    read beside a listing of `migrations/` on every request. The marker is the lock, so a request meeting a
    move answers *being updated* and one after a crash resumes it, the scripts done
    being skipped and the rewrite idempotent. A failed move goes back to the copy
@@ -35,6 +35,7 @@ final readonly class Move
   public function __construct(
     private string $data,
     private string $scripts,
+    private string $seed,
     private Connection $connection,
     private \Closure $migrator,
     private \Closure $collections,
@@ -90,9 +91,29 @@ final readonly class Move
       return $this->failed();
     }
     is_file($copy) && unlink($copy);
+    /* Stamped first: a vacuum the host's time limit cuts off leaves a finished move and not one begun anew. */
     $this->stamp();
+    $this->compact();
 
     return $this->done();
+  }
+
+  /* A script that rebuilds a table leaves its old pages free, and SQLite never hands them back to the host's quota.
+     Only past a quarter free, since a vacuum of a large install is seconds every address waits. A vacuum writes the
+     database out twice, to a temporary file and through the WAL, so one the quota or a reader refuses leaves the
+     pages free and the move stands: the holdings are whole either way. */
+  private function compact(): void
+  {
+    $db = $this->connection->open($this->data . '/holdings/data.sqlite');
+    $pages = (int) $db->query('pragma page_count')->fetchColumn();
+    if ((int) $db->query('pragma freelist_count')->fetchColumn() * 4 < $pages) {
+      return;
+    }
+    try {
+      $db->exec('vacuum');
+    } catch (\PDOException) {
+      /* The free pages stay until new records fill them. */
+    }
   }
 
   private function failed(): Halt
@@ -153,7 +174,17 @@ final readonly class Move
 
   private function stamping(): string
   {
-    return Version::APP . "\n" . Migrator::last($this->scripts) . "\n";
+    return Version::APP . "\n" . Migrator::last($this->scripts) . "\n" . self::typed($this->seed) . "\n";
+  }
+
+  /* The text of the files the types are declared in, `Profile\Seed` and its folder, so a type added under the same
+     version gets its collection and a changed field its sort keys and words. The text and not the profile, which
+     costs some 4 ms to build where this costs a quarter of one; a comment changed there moves the holdings too. */
+  public static function typed(string $seed): string
+  {
+    $files = [$seed . '.php', ...glob($seed . '/*.php') ?: []];
+
+    return md5(implode("\n", array_map(fn (string $file): string => (string) md5_file($file), $files)));
   }
 
   /* The reason a move of a version left, or null: another version's is history. */

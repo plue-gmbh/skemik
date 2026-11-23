@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/* What the thirty types' fields are called in German, by the seed's key, and by
+/* What the thirty-one types' fields are called in German, by the seed's key, and by
    `Type.key` where one type calls a field something else. English is the seed's
    own label and has no file. Apart from `de.php` because these words do reach a
    reader: the feed's catalogue names a field in the language of its content. A
@@ -467,4 +467,17 @@ return [
   'target_encoding_type' => 'Einstiegspunkt: Kodierung',
   'target_content_type' => 'Einstiegspunkt: Inhaltstyp',
   'target_http_method' => 'Einstiegspunkt: HTTP-Methode',
+  'observation_about' => 'Bezieht sich auf',
+  'observation_date' => 'Datum',
+  'value' => 'Wert',
+  'unit_code' => 'Einheit',
+  'observation_period' => 'Zeitraum',
+  'interaction_statistic:' => 'Interaktionen',
+  'interaction_statistic_views' => 'Interaktionen: Seitenaufrufe',
+  'interaction_statistic_downloads' => 'Interaktionen: Downloads',
+  'interaction_statistic_video_plays' => 'Interaktionen: Videowiedergaben',
+  'interaction_statistic_audio_plays' => 'Interaktionen: Audiowiedergaben',
+  'interaction_statistic_likes' => 'Interaktionen: Likes',
+  'interaction_statistic_shares' => 'Interaktionen: Geteilt',
+  'interaction_statistic_comments' => 'Interaktionen: Kommentare',
 ];

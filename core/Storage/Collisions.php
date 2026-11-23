@@ -184,7 +184,8 @@ final readonly class Collisions
     }
   }
 
-  /** @param list<Relation> $edges */
+  /** A `!` value is asked down its column's index (`Columns`), never of every record.
+      @param list<Relation> $edges */
   private function heldBy(Entity $entity, FieldDefinition $field, array $edges): ?string
   {
     $value = $entity->props->document()[$field->key] ?? null;
@@ -194,14 +195,14 @@ final readonly class Collisions
       return null;
     }
     $statement = $this->db->prepare('select e.id from entity e where e.type = :type'
-      . " and e.id <> :id and json_extract(e.props, :path) = json_extract(:value, '$')"
+      . ' and e.id <> :id and ' . Columns::read($entity->type, $field->key) . " = json_extract(:value, '$')"
       . ' and (:predicate is null'
       . ' or (:target is null and not exists (select 1 from relation r'
       . ' where r.subject_id = e.id and r.predicate = :predicate))'
       . ' or exists (select 1 from relation r where r.subject_id = e.id'
       . ' and r.predicate = :predicate and r.object_id = :target)) limit 1');
     $statement->execute(['type' => $entity->type,
-      'id' => $entity->id->value, 'path' => '$.' . $field->key, 'value' => $this->json->encode($value),
+      'id' => $entity->id->value, 'value' => $this->json->encode($value),
       'predicate' => $scope['predicate'] ?? null, 'target' => $scope['target'] ?? null]);
     $holder = $statement->fetchColumn();
 

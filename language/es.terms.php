@@ -107,4 +107,12 @@ return [
   'UsedCondition' => 'Usado',
   'RefurbishedCondition' => 'Reacondicionado',
   'DamagedCondition' => 'Dañado',
+  'pageViews' => 'Visitas a la página',
+  'downloads' => 'Descargas',
+  'videoPlays' => 'Reproducciones de vídeo',
+  'audioPlays' => 'Reproducciones de audio',
+  'likes' => 'Me gusta',
+  'shares' => 'Veces compartido',
+  'visitors' => 'Visitantes',
+  'members' => 'Miembros',
 ];

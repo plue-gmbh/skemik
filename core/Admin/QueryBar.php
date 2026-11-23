@@ -14,14 +14,19 @@ use Feed\FeedRequest;
 use Feed\PublicFilter;
 use Feed\Targets;
 use Http\Request;
+use Profile\Cardinality;
+use Profile\FieldDefinition;
 use Profile\Profile;
+use Profile\SchemaOrg;
 use Profile\Seed\Terms;
 use Storage\Collection;
 use Storage\CollectionStore;
 use Storage\EntityRepository;
 use Storage\Query;
+use Storage\Range;
 use Storage\Search;
 use Storage\SettingStore;
+use Support\Clock;
 use Support\Words;
 
 /* The collection's address read as a query, and what narrows it in words; the
@@ -39,6 +44,14 @@ final readonly class QueryBar
   public const OWN = ['status', 'locale', 'in', 'words', 'view'];
   public const EACH = 'each';
   private const FEED = ['sort', 'q', 'page', 'per_page'];
+  /* The days a date's filter offers, as the address spells them, each to its word. The days past count today, as
+     what happened this morning did; the next days start tomorrow, today having its own choice. What is upcoming
+     has no end, as a house plans its events months ahead, and counts today, whose evening is still to come. */
+  public const DAYS = ['today' => 'query.today', 'today-1' => 'query.yesterday',
+    'today-6..today' => 'query.last_7', 'today-29..today' => 'query.last_30', 'today+1' => 'query.tomorrow',
+    'today+1..today+7' => 'query.next_7', 'today..' => 'query.upcoming'];
+  /* The relative dates said in words, the month among them, which is typed into the address and offered nowhere. */
+  private const SAID = [...self::DAYS, 'month' => 'query.month'];
 
   public function __construct(
     private FeedRequest $parameters,
@@ -52,12 +65,15 @@ final readonly class QueryBar
     private Terms $terms,
     private Targets $addresses,
     private Words $words,
+    private SchemaOrg $schema,
+    private Clock $clock,
   ) {}
 
   /* Null where nothing asked for could pass the reader's filter. */
   public function query(Account $account, Request $request, Collection $collection): ?Query
   {
     $public = $this->authorizer->readsAsPublic($account, $collection->type);
+    $request = $this->dated($request, $collection);
     $locale = $this->locale($request->query('locale'));
     $parsed = $this->parameters->query($request->without(...self::OWN),
       $collection->carrying($this->rows->fields($account, $collection)), $locale);
@@ -73,6 +89,21 @@ final readonly class QueryBar
       ->through($this->rows->readings($account, $this->collections->all()));
 
     return $public ? $this->filter->query($query, $collection) : $query;
+  }
+
+  /* The address with each relative date as the day or month it names today, which is how the feed spells it. */
+  public function dated(Request $request, Collection $collection): Request
+  {
+    $today = new \DateTimeImmutable($this->clock->today());
+    foreach ($this->profile->byType($collection->type)->fields() as $field) {
+      $name = (string) $this->schema->parameterName($field->key);
+      $asked = $request->query($name);
+      if ($asked !== null && in_array($field->kind, Range::DATES, true)) {
+        $request = $request->with($name, Range::dated($asked, $today));
+      }
+    }
+
+    return $request;
   }
 
   /** The whole reading, which a filtered count is said against, as the page groups it.
@@ -103,7 +134,7 @@ final readonly class QueryBar
     $narrowed = [];
     foreach ($this->narrowing($request) as $parameter => $value) {
       $column = array_find($columns, fn (Column $column): bool => $column->parameter === $parameter);
-      $values = array_map(fn (string $each): string => $this->valued($column, $parameter, $each),
+      $values = array_map(fn (string $each): string => $this->valued($column?->field, $parameter, $each),
         explode(',', $value));
       $without = http_build_query(array_diff_key($request->query, [$parameter => true, 'page' => true]));
       $narrowed[] = new Narrowed($this->words->get('query.narrowed', ['field' => match ($parameter) {
@@ -116,15 +147,70 @@ final readonly class QueryBar
     return $narrowed;
   }
 
-  private function valued(?Column $column, string $parameter, string $value): string
+  /** The narrowing as a saved question's title says it, each part in the reader's words: a value alone
+      where it says what it is, a status, a closed set's word, a day or a record's name, and behind its
+      field's name where it does not, a number or a text. A search stands as typed.
+      @return ?list<string> null where it names a record this reader does not read, since a slug is a name */
+  public function titled(Account $account, Request $request, Collection $collection): ?array
+  {
+    $fields = $this->profile->byType($collection->type)->fields();
+    $parts = [];
+    foreach ($this->narrowing($request) as $parameter => $asked) {
+      $field = $this->meant($fields, $parameter);
+      $values = array_map(fn (string $each): ?string => $field?->cardinality->isEdge() === true
+        ? $this->recorded($account, $field, $each) : $this->valued($field, $parameter, $each), explode(',', $asked));
+      if (in_array(null, $values, true)) {
+        return null;
+      }
+      $parts[] = $field === null || $values !== explode(',', $asked) ? implode(' · ', $values)
+        : $this->words->get('query.narrowed', ['field' => $field->label, 'values' => implode(' · ', $values)]);
+    }
+
+    return [...$parts, ...array_filter([(string) $request->query('q')])];
+  }
+
+  /** The type's own field before a value object's key of the same name, as the feed reads it: an event's
+      `url` is the event's, not its virtual location's.
+      @param list<FieldDefinition> $fields */
+  private function meant(array $fields, string $parameter): ?FieldDefinition
+  {
+    $named = array_filter($fields, fn (FieldDefinition $each): bool
+      => $this->schema->parameterName($each->key) === $parameter);
+
+    return array_find($named, fn (FieldDefinition $each): bool => $each->valueObject === null) ?? array_first($named);
+  }
+
+  /* A record the address names, a term by its code, by what its chip calls it; null where this reader may
+     not read it. One that no longer stands is said as the address spells it, so a question on it is seen and
+     deleted, and only to whoever reads the type its collection names, a slug being a name. */
+  private function recorded(Account $account, FieldDefinition $field, string $value): ?string
+  {
+    $locales = $this->settings->locales();
+    $record = $field->cardinality === Cardinality::T ? $this->addresses->coded($value)[0] ?? null
+      : array_find(array_map(fn (Locale $locale): ?Entity => $this->addresses->at($value, $locale), $locales),
+        fn (?Entity $found): bool => $found !== null);
+    if ($record === null) {
+      preg_match('#([a-z0-9-]+)/[^/]+$#', $value, $at);
+      $type = $field->cardinality === Cardinality::T ? 'DefinedTerm'
+        : array_search($at[1] ?? '', Collection::SLUGS, true);
+
+      return $type === false || $this->authorizer->readsAsPublic($account, $type) ? null : $value;
+    }
+
+    return $this->rows->readable($account, $record) ? $this->rows->named($record, $locales[0]) : null;
+  }
+
+  private function valued(?FieldDefinition $field, string $parameter, string $value): string
   {
     $status = $parameter === 'status' ? Status::tryFrom($value) : null;
 
     return match (true) {
       $status !== null => $this->words->get('status.' . $status->value),
       $parameter === 'locale' && $value === self::EACH => $this->words->get('query.locale_each'),
-      $column !== null && $column->field->options !== [] => $this->terms->word($column->field, $value,
-        $this->settings->locales()[0]),
+      $field !== null && $field->options !== [] => $this->terms->word($field, $value,
+        new Locale($this->words->language)),
+      $field !== null && in_array($field->kind, Range::DATES, true) && isset(self::SAID[$value])
+        => $this->words->get(self::SAID[$value]),
       default => $value,
     };
   }

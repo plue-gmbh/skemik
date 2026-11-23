@@ -47,6 +47,7 @@ $held = $rows !== [] && $rows[0]->held;
     </form>
 <?php if ($purges): ?>
     <button type="button" class="tool-button is-danger" aria-haspopup="dialog" data-dialog="purge-ticked"
+      data-purge-ticked
       title="<?= $template->escape($words->get('purge.confirm')) ?>"><?= $template->render('partials/icon',
       ['name' => 'trash']) ?><span
       class="visually-hidden"><?= $template->escape($words->get('purge.confirm')) ?></span></button>

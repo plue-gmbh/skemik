@@ -221,10 +221,20 @@ final readonly class FieldEdits
     if ($blank($value)) {
       return null;
     }
-    if ($field->kind === FieldKind::DateTime && is_string($value) && !str_ends_with($value, 'Z')) {
-      return $this->clock->parse($value);
+    if (is_string($value) && $this->wall($field, $value)) {
+      return $this->clock->parse(str_replace(' ', 'T', trim($value)));
     }
 
     return Spelling::held($field, $value, $this->origin);
+  }
+
+  /* A time typed in the install's zone, with a space as a person writes one after a day. A field taking a
+     day or a moment holds a day as it is, and a day is ten characters at most. */
+  private function wall(FieldDefinition $field, string $typed): bool
+  {
+    $moment = $field->kind === FieldKind::DateTime
+      || ($field->kind === FieldKind::DateOrTime && strlen(trim($typed)) > strlen('YYYY-MM-DD'));
+
+    return $moment && !str_ends_with($typed, 'Z');
   }
 }

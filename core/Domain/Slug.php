@@ -15,7 +15,7 @@ use Domain\Exceptions\MalformedValue;
    for a name nothing transliterates, never a reason to refuse the record. */
 final readonly class Slug
 {
-  private const SHAPE = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
+  private const SHAPE = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/D';
   private const GERMAN = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
     'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ẞ' => 'SS'];
 
@@ -37,6 +37,13 @@ final readonly class Slug
     $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower((string) $latin)), '-');
 
     return new self($slug === '' ? $fallback : $slug);
+  }
+
+  /* A record nothing names, an observation or a comment, by its type and the day it was made, `stored` being
+     its `created_at`: the day keeps the numbering, and what `Storage\Collisions` reads to count it, short. */
+  public static function unnamed(string $type, string $stored): self
+  {
+    return self::from($type . ' ' . substr($stored, 0, strlen('YYYY-MM-DD')), 'record');
   }
 
   /* The second record named `Till` becomes `till-2`; `Storage\Collisions` counts. */

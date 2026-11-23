@@ -14,7 +14,7 @@ use Profile\Seed\Time;
 use Profile\Seed\Trade;
 use Profile\Seed\ValueObjects;
 
-/* The thirty types as data.
+/* The thirty-one types as data.
    The only copy: the types are the app's data and travel with the code,
    so a release that changes a type changes it here and nothing is written to a
    database.
@@ -47,14 +47,15 @@ final readonly class Seed
       ...$this->structure->types(),
     ];
 
-    /* The ceiling is 30 and all thirty slots are spent. A thirty-first
+    /* The ceiling is 31 and every slot is spent. A thirty-second
        is a decision about the product, and it does not arrive by accident: a
        new requirement tries `additionalType`, then `additionalProperty`, then an
        `ItemList`, then a `DefinedTerm` set, and only a thing that needs its own
        address, lifecycle and permissions has an argument at all. A value object
        and an edge qualifier are no rungs of that ladder but how the profile
-       ordinarily talks. */
-    assert(count($types) === Profile::CEILING, 'the profile is not thirty types');
+       ordinarily talks. The thirty-first, Observation, was a measured value
+       about a record on a date, which no type and no rung could hold. */
+    assert(count($types) === Profile::CEILING, 'the profile is not thirty-one types');
 
     return new Profile($types, $this->valueObjects->all());
   }
