@@ -14,6 +14,7 @@ final readonly class Badge
    * @param list<GrantReview> $reviews
    * @param list<GrantOffer> $offers none where the reader may not issue
    * @param ?string $subject the record's id where the anchor is one record
+   * @param list<string> $fielded on a collection's badge, the keys holding a rule on one of its fields, by name
    */
   public function __construct(
     public ?string $field,
@@ -21,12 +22,14 @@ final readonly class Badge
     public array $reviews,
     public array $offers,
     public ?string $subject = null,
+    public array $fielded = [],
   ) {}
 
-  /* The keys holding a grant here, each once however many rules it holds. */
+  /* The keys holding a grant here, each once however many rules it holds: a collection's badge names a
+     field's key too, since a key setting one field writes here, and said none of it before. */
   public function names(): string
   {
-    return implode(', ', array_unique(array_map(fn (GrantReview $review): string => $review->token->label,
-      $this->reviews)));
+    return implode(', ', array_unique([...array_map(fn (GrantReview $review): string => $review->token->label,
+      $this->reviews), ...$this->fielded]));
   }
 }

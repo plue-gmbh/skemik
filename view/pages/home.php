@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* The overview (`Admin\HomeController`): the title, one line naming the organisation by
    the address it answers on, so a colleague with two installs open knows which
-   this is, and its totals, and the cards in the order their contract argues,
+   this is, and its totals, the totals alone on a phone's width, where they would
+   wrap; and the cards in the order their contract argues,
    read across three columns that each stack their own, so a short card leaves
    no hole under it beside a long one, Saved questions second in the first, under
    Needs a look, and the six others where they stood before it came; focus and a screen reader go down a
@@ -28,8 +29,8 @@ $columns[0] = [...array_slice($columns[0], 0, 1), ...array_intersect_key($cards,
 <div class="page">
   <header class="page-head">
     <h1><?= $template->escape($words->get('home.title')) ?></h1>
-    <p class="page-shape"><a
-      href="/"><?= $template->escape($address) ?></a> · <?= $template->escape($words->get('home.totals',
+    <p class="page-shape"><span class="shape-host"><a
+      href="/"><?= $template->escape($address) ?></a> · </span><?= $template->escape($words->get('home.totals',
       ['records' => $counted('records', $records), 'collections' => $counted('collections', $collections)])) ?></p>
   </header>
   <div class="home-cards">

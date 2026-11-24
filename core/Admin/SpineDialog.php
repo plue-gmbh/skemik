@@ -28,7 +28,7 @@ use Support\Words;
    translations from here, each passing the reader's scope first. */
 final readonly class SpineDialog
 {
-  private const WORDS = ['spine.open', 'spine.slug', 'spine.moved', 'spine.status',
+  private const WORDS = ['spine.open', 'spine.slug', 'spine.moved', 'spine.status', 'spine.plan',
     'spine.publish_from', 'spine.publish_to', 'spine.window_order', 'spine.locale', 'spine.worded'];
 
   public function __construct(

@@ -29,10 +29,10 @@ if (!isset($template)) {
       href="/c/<?= $template->escape($entry->slug) ?>"<?= $entry->slug === $open ? ' aria-current="page"' : '' ?>>
       <span class="sidebar-glyph"><?= $template->render('partials/glyph', ['name' => $entry->glyph]) ?></span>
       <span class="sidebar-name"><?= $template->escape($entry->name) ?></span>
-<?php if ($entry->writers !== []): $writes = $words->get('sidebar.writes', ['names' => implode(', ',
-  $entry->writers)]) ?>
-      <span class="sidebar-grant" title="<?= $template->escape($writes) ?>"><?= $template->render('partials/glyph',
-        ['name' => 'key']) ?><span class="visually-hidden"><?= $template->escape($writes) ?></span></span>
+<?php if ($entry->holders !== []): $held = $words->get('grant.here', ['names' => implode(', ',
+  $entry->holders)]) ?>
+      <span class="sidebar-grant" title="<?= $template->escape($held) ?>"><?= $template->render('partials/glyph',
+        ['name' => 'key']) ?><span class="visually-hidden"><?= $template->escape($held) ?></span></span>
 <?php endif ?>
 <?php if ($entry->served): ?>
       <span class="sidebar-served" title="<?= $template->escape($words->get('sidebar.served',

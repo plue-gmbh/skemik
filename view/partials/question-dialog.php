@@ -5,8 +5,8 @@ declare(strict_types=1);
 /* What a narrowed collection saves to the home screen (`Admin\QuestionController`): one figure, the count, a
    stored number summed, or that number on the record the collection's first date names last. The query
    goes as the address spells it, which the script reads again when it is sent, since typing a search moves
-   the address without drawing this anew. Handed `$collection`, `$columns`, `$parameters`, `$csrf` and
-   `$words`. */
+   the address a moment before this is drawn anew (`view/scripts/query-bar.js`). Handed `$collection`,
+   `$columns`, `$parameters`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

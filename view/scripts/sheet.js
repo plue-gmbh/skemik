@@ -57,8 +57,16 @@ function mountSheet(root) {
     },
     watch: { sentence(text) { if (text) announce(text); } },
     mounted() {
+      /* A save that read its screen afresh is said here, on the page it loaded. */
+      if (takeSaved()) {
+        this.done = true;
+        window.setTimeout(() => { this.done = false; }, 1800);
+      }
       table.addEventListener("click", (event) => this.clicked(event));
-      this.adding = (event) => event.target.closest("[data-add-row]") && this.add();
+      this.adding = (event) => {
+        const button = event.target.closest("[data-add-row]");
+        button && this.add(button);
+      };
       document.addEventListener("click", this.adding);
       table.querySelectorAll("[data-prose]").forEach((area) => {
         const id = area.closest("[data-record]").dataset.record;
@@ -133,6 +141,7 @@ function mountSheet(root) {
         same(original(id, key), value) ? delete values[key] : (values[key] = value);
         Object.keys(values).length > 0 ? (this.pending[id] = values) : delete this.pending[id];
         this.done = false;
+        sheet.last = cellOf(id, key) ?? table.querySelector(`[data-record="${id}"]`) ?? sheet.last;
         this.draw(id, key);
       },
       /* A prose field is its own textarea: only its mark follows, and a discard puts
@@ -188,14 +197,17 @@ function mountSheet(root) {
         this.spine = null;
         chipOf(id)?.focus();
       },
-      /* A new record is pending like any value, and made by a `POST` when saved,
-         ahead of a grid's or the cards' last tile, which adds or uploads. */
-      add() {
+      /* A new record is pending like any value, and made by a `POST` when saved. From the tools' +
+         it is the first, where a view newest first holds it once saved. From the + at the rows' end
+         it is the last, beside that button: ahead of a grid's or the cards' last tile, which adds or
+         uploads, and in a timeline under No date yet. */
+      add(button) {
         const row = document.querySelector("[data-new-row]").content.firstElementChild.cloneNode(true);
         const id = "new-" + (made += 1);
         const holder = table.querySelector("[data-rows]");
+        const end = holder.querySelector(":scope > [data-rows-end]");
         row.dataset.record = id;
-        holder.insertBefore(row, holder.querySelector(":scope > [data-rows-end]"));
+        holder.insertBefore(row, button.closest(".collection-tools") ? holder.firstElementChild : end);
         document.querySelector("[data-sheet-empty]")?.remove();
         rows.set(id, { id, version: 0, locale: filtered ?? data.locale, label: this.words["sheet.new"], values: {} });
         const first = data.fields.find((field) => cellOf(id, field.key)?.querySelector("[data-edit]"));
@@ -227,12 +239,15 @@ function mountSheet(root) {
         this.$nextTick(() => this.count > 0 && !this.saving && this.conflicts.length === 0 && this.save());
       },
       /* A save or a discard takes the bar's buttons, and the focus on them, along:
-         it goes to what the bar still offers, else back to the cell last edited. */
+         it goes to what the bar still offers, else back to the cell or the record last
+         changed, a switch's and a spine's too. Where that is gone the table's first cell
+         takes it without the page scrolling there, since a save moves nothing. */
       keepFocus() {
         this.$nextTick(() => {
           if (document.activeElement !== document.body) return;
+          const last = sheet.last?.isConnected ? sheet.last : null;
           (document.querySelector(".save-bar button:not(:disabled)")
-            ?? (sheet.last?.isConnected ? sheet.last : table).querySelector("[data-edit]"))?.focus();
+            ?? (last ?? table).querySelector("[data-edit]"))?.focus({ preventScroll: last === null });
         });
       },
     },

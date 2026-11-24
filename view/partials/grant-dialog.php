@@ -10,8 +10,9 @@ declare(strict_types=1);
    The rules are named by the legend's words alone, since the legend holds that press too. Its secret is shown
    once, as the badge shows it, and the dialog then closes only by reloading the page. Revoking asks once more,
    the confirm standing where the press was, since nothing takes it back and only a new secret handed to the
-   integration replaces it; when the key was last used stands in the facts line. Handed `$entry`, `$until`,
-   `$csrf` and `$words`. */
+   integration replaces it; when the key was last used stands in the facts line. On a screen under 400
+   wide Cancel is not drawn, so the row fits: a press outside closes the dialog, as Escape does. Handed
+   `$entry`, `$until`, `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;

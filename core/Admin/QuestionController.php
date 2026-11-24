@@ -77,7 +77,7 @@ final readonly class QuestionController
     }
 
     return $figure === null ? null : new QuestionLine($question->id, $title, $figure, self::address($question),
-      SidebarEntry::glyphOf($collection->type), $collection->name);
+      SidebarEntry::glyphOf($collection->type));
   }
 
   public function save(Request $request): Response
@@ -88,12 +88,12 @@ final readonly class QuestionController
     $asked = explode(':', (string) $request->form('figure'), 2) + [1 => null];
     $figure = Figure::tryFrom($asked[0]) ?? throw MalformedValue::named('figure', $asked[0]);
     parse_str((string) $request->form('query'), $sent);
-    $query = Question::narrowing(array_filter($sent, is_string(...)));
-    $question = new Question($this->uuid->generate(), $collection->slug->value, $query, $figure,
-      $figure === Figure::Count ? null : $asked[1]);
+    $narrowing = array_filter($sent, is_string(...));
+    $question = new Question($this->uuid->generate(), $collection->slug->value, Question::narrowing($narrowing),
+      $figure, $figure === Figure::Count ? null : $asked[1]);
     $this->asked($account, $question, $collection);
     $others = array_filter($this->settings->questions(), fn (Question $each): bool
-      => $each->collection !== $question->collection || $each->query !== $question->query);
+      => !$each->asks($question->collection, $narrowing));
     $this->settings->setQuestions([...array_values($others), $question]);
     $this->session->keep('fielded', $this->words->get('question.saved'));
 

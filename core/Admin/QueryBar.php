@@ -31,8 +31,9 @@ use Support\Words;
 
 /* The collection's address read as a query, and what narrows it in words; the
    choices the bar offers are `QueryChoices`'. Beside the feed's parameters,
-   parsed by `Feed\FeedRequest` as for `/feed`, the admin reads its own: `status`
-   and `locale`, and on the record screen `in` and `words`. A filter without a
+   parsed by `Feed\FeedRequest` as for `/feed`, the admin reads its own: `status`,
+   any of several as a field's values are, and `locale`, and on the record screen
+   `in` and `words`. A filter without a
    status shows drafts too, since inside the holding filtering to what one is
    working on must not hide it. A collection of works lists each once, in the
    install's earliest locale it holds, unless `locale` asks for one or for each.
@@ -80,7 +81,8 @@ final readonly class QueryBar
     $filters = $locale !== null && $this->profile->byType($collection->type)->locale->forks()
       ? [...$parsed->filters, 'locale' => [$locale->tag]] : $parsed->filters;
     $status = $request->query('status');
-    $statuses = $status === null ? [] : [$this->status($collection, $status)];
+    $statuses = $status === null ? [] : array_map(fn (string $one): Status => $this->status($collection, $one),
+      explode(',', $status));
     $query = $this->addresses->filtered(new Query($parsed->type, $filters, $statuses, $parsed->locale,
       $parsed->sort, $parsed->descending, Search::bounded($parsed->search), $parsed->page, $parsed->perPage,
       $parsed->searchIn, grouped: $this->grouped($request, $collection)),
@@ -125,26 +127,65 @@ final readonly class QueryBar
     return array_diff_key($request->query, array_flip([...self::FEED, 'in', 'words', 'view']));
   }
 
-  /** Each narrowing parameter in words, the field's name and its values, a closed set's by
-      their word and any other as the address spells it.
+  /** Each value that narrows, a chip to take away by itself: under the word and the group of the choice
+      that offers it, a kind of file standing for its formats, else alone where it says what it is, its
+      field's name then the chip's tooltip, and behind that name where it does not, as a saved question's
+      title has it (`titled`).
       @param list<Column> $columns
+      @param list<Filter> $filters the choices the bar offers, unjoined
       @return list<Narrowed> */
-  public function narrowed(Request $request, array $columns): array
+  public function narrowed(Request $request, array $columns, array $filters): array
   {
     $narrowed = [];
-    foreach ($this->narrowing($request) as $parameter => $value) {
+    foreach (array_keys($this->narrowing($request)) as $parameter) {
       $column = array_find($columns, fn (Column $column): bool => $column->parameter === $parameter);
-      $values = array_map(fn (string $each): string => $this->valued($column?->field, $parameter, $each),
-        explode(',', $value));
-      $without = http_build_query(array_diff_key($request->query, [$parameter => true, 'page' => true]));
-      $narrowed[] = new Narrowed($this->words->get('query.narrowed', ['field' => match ($parameter) {
-        'status' => $this->words->get('query.status_group'),
-        'locale' => $this->words->get('query.locale_group'),
-        default => $column->label ?? $parameter,
-      }, 'values' => implode(', ', $values)]), $request->path . ($without === '' ? '' : '?' . $without));
+      $field = $this->fieldNamed($parameter, $column);
+      $left = $this->asked($request, $parameter);
+      foreach ($filters as $filter) {
+        $offered = explode(',', $filter->value);
+        if ($filter->parameter === $parameter && array_diff($offered, $left) === []) {
+          $narrowed[] = new Narrowed($filter->word, $this->without($request, $parameter, $offered),
+            $filter->group, true);
+          $left = array_diff($left, $offered);
+        }
+      }
+      foreach ($left as $one) {
+        $word = $this->valued($column?->field, $parameter, $one);
+        $narrowed[] = new Narrowed($word, $this->without($request, $parameter, [$one]), $field, $word !== $one);
+      }
     }
 
     return $narrowed;
+  }
+
+  /** @return list<string> the values a parameter is narrowed to, none where it is not asked */
+  private function asked(Request $request, string $parameter): array
+  {
+    $asked = (string) $request->query($parameter);
+
+    return $asked === '' ? [] : explode(',', $asked);
+  }
+
+  private function fieldNamed(string $parameter, ?Column $column): string
+  {
+    return match ($parameter) {
+      'status' => $this->words->get('query.status_group'),
+      'locale' => $this->words->get('query.locale_group'),
+      default => $column->label ?? $parameter,
+    };
+  }
+
+  /** The address without these values of a parameter, the others where they stood, from its first page.
+      @param list<string> $values */
+  private function without(Request $request, string $parameter, array $values): string
+  {
+    $kept = array_diff($this->asked($request, $parameter), $values);
+    $query = array_diff_key($request->query, ['page' => true, ...($kept === [] ? [$parameter => true] : [])]);
+    if ($kept !== []) {
+      $query[$parameter] = implode(',', $kept);
+    }
+
+    return $request->path . ($query === [] ? '' : '?' . http_build_query($query));
   }
 
   /** The narrowing as a saved question's title says it, each part in the reader's words: a value alone

@@ -32,19 +32,30 @@ final readonly class Question
     $this->collection = $collection; /* one of the release's slugs, which go into a path and a redirect */
   }
 
-  /** An address's parameters as a question keeps them, in one order, so two spellings of one narrowing are one.
+  /** An address's parameters as a question keeps them, in one order, each one's values too, since the query
+      bar joins them as they are chosen, so two spellings of one narrowing are one. A search stays as typed,
+      its comma being no list's.
       @param array<string, string> $parameters */
   public static function narrowing(array $parameters): string
   {
     $kept = array_diff_key($parameters, array_flip(self::UNSAVED));
     ksort($kept);
+    foreach (array_diff_key($kept, ['q' => true]) as $name => $values) {
+      $listed = explode(',', $values);
+      sort($listed);
+      $kept[$name] = implode(',', $listed);
+    }
 
     return http_build_query($kept);
   }
 
-  /** @param array<string, string> $parameters the address a collection's screen was asked at */
+  /** One saved before values were ordered is read in that order here, so its screen still knows it.
+      @param array<string, string> $parameters the address a collection's screen was asked at */
   public function asks(string $collection, array $parameters): bool
   {
-    return $this->collection === $collection && $this->query === self::narrowing($parameters);
+    parse_str($this->query, $saved);
+
+    return $this->collection === $collection
+      && self::narrowing(array_filter($saved, is_string(...))) === self::narrowing($parameters);
   }
 }

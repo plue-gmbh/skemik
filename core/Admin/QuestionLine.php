@@ -14,6 +14,5 @@ final readonly class QuestionLine
     public string $figure,
     public string $href,
     public string $glyph,
-    public string $collection,
   ) {}
 }

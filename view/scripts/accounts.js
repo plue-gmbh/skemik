@@ -103,8 +103,9 @@ function mountRemove(form) {
   });
 }
 
-/* The newest people first, before anything is typed; a person who holds an
-   account already is not offered, and a name typed may be a new person. */
+/* The newest people first, before anything is typed, five at most, since the
+   form stands under them; a person who holds an account already is not offered,
+   and a name typed may be a new person. */
 function mountPerson(person) {
   const form = person.closest("form");
   const search = person.querySelector("[data-person-search]");
@@ -145,7 +146,7 @@ async function paintPeople(person, choose) {
   if (typed !== search.value) return;
   const held = new Set(JSON.parse(person.dataset.held));
   const named = fill(person.dataset.newWord, { name: typed.trim() });
-  options.replaceChildren(...(answer.hits ?? []).filter((hit) => !held.has(hit.id))
+  options.replaceChildren(...(answer.hits ?? []).filter((hit) => !held.has(hit.id)).slice(0, 5)
     .map((hit) => personOption(hit.glyph, hit.label, () => choose(hit.id, "", hit.label))),
     ...(typed.trim() === "" ? [] : [personOption("new", named, () => choose("", typed.trim(), named))]));
 }

@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.1.0](https://img.shields.io/badge/version-1.1.0-1f6feb)
+![Version 1.1.1](https://img.shields.io/badge/version-1.1.1-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.0)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.1)
 
 The demo install's events, read with no key:
 
@@ -532,9 +532,9 @@ for the seconds of the swap.
   and installs nothing, so its update screen names the release that came out.
 
 - **A release may be held back until a day** the manifest names, so that it
-  reaches a few installs before all of them. An install switched to early on
-  its update screen, which is `'updates' => 'early'` in `config.php`, takes
-  the release the hour it goes up.
+  reaches a few installs before all of them. An install whose update screen is
+  switched to *Install new releases at once*, which is `'updates' => 'early'`
+  in `config.php`, takes the release the hour it goes up.
 
 - **The owner need not wait the hour.** *Check for a new release* on the
   update screen asks the manifest at once and installs what it finds, as the
@@ -936,8 +936,10 @@ is found anywhere inside a word too, since a name is often one compound word:
 matched from the start of its words. Case and accents do not count, `ca`
 finding *Café*, and *Müller* is found as `muller` and as `mueller`. A field
 holding a number or a date is a filter's, not a search's. A search holding no
-letter or digit, a stray quote, finds nothing rather than failing. The most
-matching words come first unless `?sort=` says otherwise. A search takes
+letter or digit, a stray quote, finds nothing rather than failing. A record
+whose name holds the words comes first, a name holding more of them before one
+holding fewer, and the shorter name before the longer. After them the most
+matching words come first. `?sort=` asks for another order. A search takes
 twenty words at most. Each word, like each value of a filter, is weighed
 against the records, so a question asking more is refused with `400` naming
 its parameter rather than costing more than a page of 200 does.

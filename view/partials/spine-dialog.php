@@ -6,7 +6,8 @@ declare(strict_types=1);
    the columns that are this install's custody of a record rather than its
    content, pending edits like any value, so one save bar and one `PATCH` carry
    them. A rename says that the old address then answers 404, since nothing
-   forwards. The window shows wherever it holds a value, since a leftover end
+   forwards. The window waits behind Plan visibility, since most records are
+   published with none, and shows wherever it holds a value, since a leftover end
    would otherwise take a record down unseen. Language is a work's alone, its
    translations being the record screen's Languages card.
    Handed `$spine`. */
@@ -43,10 +44,12 @@ if (!isset($template)) {
           </div>
           <p class="popover-hint" v-if="record.own">{{ record.own }}</p>
         </div>
-        <div class="spine-window">
+        <button v-if="current('status') === 'published' && !windowed" type="button" class="spine-plan"
+          @click="plan">{{ words['spine.plan'] }}</button>
+        <div v-else class="spine-window">
           <label class="spine-label"
             v-if="current('status') === 'published' || current('publish_from')">{{ words['spine.publish_from'] }}
-            <input class="popover-input" type="datetime-local" :value="current('publish_from')"
+            <input ref="from" class="popover-input" type="datetime-local" :value="current('publish_from')"
               @change="setWindow('publish_from', $event)"></label>
           <label class="spine-label"
             v-if="current('status') === 'published' || current('publish_to')">{{ words['spine.publish_to'] }}

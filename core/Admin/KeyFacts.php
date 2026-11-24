@@ -54,15 +54,8 @@ final readonly class KeyFacts
     if ($token->lastUsedAt === null) {
       return $this->words->get('grant.unused');
     }
-    $minutes = intdiv($this->clock->now()->getTimestamp()
-      - (new \DateTimeImmutable($token->lastUsedAt))->getTimestamp(), 60);
-    $when = match (true) {
-      $minutes < 60 => $this->words->get('ago.hour'),
-      $minutes < 1440 => $this->words->get('ago.hours', ['n' => (string) intdiv($minutes, 60)]),
-      default => $this->words->get('ago.days', ['n' => (string) intdiv($minutes, 1440)]),
-    };
 
-    return $this->words->get('grant.used', ['when' => $when]);
+    return $this->words->get('grant.used', ['when' => $this->moments->ago($token->lastUsedAt)]);
   }
 
   /* What a newer key of the name means for this one. */

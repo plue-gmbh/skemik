@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 /* One collection (`Admin\CollectionController`): its name and fields in the head, and under it the query bar,
    which changes only what is seen, with the bar for what is ticked beneath it, since both act on what is in
-   view. The tools are one group, + New record, the grant badge, the mark that saves the narrowing as a question of
-   the home screen or deletes the one it is, and the views, and stay in sight as the view
-   scrolls, edged while they stick (`view/scripts/sticks.js`). They are the page's own child, since a part
+   view. The tools are one group, + New record, the grant badge and the views, and stay in sight as the view
+   scrolls, edged while they stick (`view/scripts/sticks.js`). The mark that saves the narrowing as a question
+   of the home screen, or deletes the one it is, stands in the query bar beside what narrows; its delete is a
+   form of its own here, since a form holds no second one. They are the page's own child, since a part
    sticks no further than what holds it, and stand after the query bar, so Tab goes as a wide paper reads; a
    narrow one orders them up by the stylesheet. The shape line is no heading, since the schema.org address it
    leads with leaves the site. What a delete just trashed is offered back over the view, where the delete
@@ -104,8 +105,15 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
   <div class="collection-bar">
 <?= $template->render('partials/query-bar', ['words' => $words, 'collection' => $collection, 'columns' => $columns,
   'filters' => $filters, 'parameters' => $parameters, 'narrowed' => $narrowed, 'named' => $named,
-  'total' => $total, 'all' => $all, 'narrowing' => $narrowing, 'fixed' => $fixed]) ?>
+  'total' => $total, 'all' => $all, 'narrowing' => $narrowing, 'fixed' => $fixed, 'keeps' => $fields,
+  'question' => $question]) ?>
   </div>
+<?php if ($fields && $question !== null): ?>
+  <form id="question-remove" method="post"
+    action="/questions/<?= $template->escape(rawurlencode($question->id)) ?>/remove" hidden>
+    <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
+  </form>
+<?php endif ?>
 <?php if ($fields && $narrowed && $question === null): ?>
 <?= $template->render('partials/question-dialog', ['words' => $words, 'collection' => $collection,
   'columns' => $columns, 'parameters' => $parameters, 'csrf' => $csrf]) ?>
@@ -124,18 +132,6 @@ $current = $words->get('collection.view_menu', ['view' => $words->get('view.' . 
       array_keys(Profile\Seed\Media::FORMATS))) ?>" multiple></label>
 <?php endif ?>
     <?= $drawn ?>
-<?php if ($fields && $question !== null): $unkeep = $words->get('question.remove') ?>
-    <form method="post" action="/questions/<?= $template->escape(rawurlencode($question->id)) ?>/remove">
-      <input type="hidden" name="_csrf" value="<?= $template->escape($csrf) ?>">
-      <button type="submit" class="tool-button is-kept"
-        title="<?= $template->escape($unkeep) ?>"><?= $template->render('partials/icon', ['name' => 'kept']) ?><span
-        class="visually-hidden"><?= $template->escape($unkeep) ?></span></button>
-    </form>
-<?php elseif ($fields && $narrowed): $keep = $words->get('question.save') ?>
-    <button type="button" class="tool-button" data-dialog="question-save" aria-haspopup="dialog"
-      title="<?= $template->escape($keep) ?>"><?= $template->render('partials/icon', ['name' => 'keep']) ?><span
-      class="visually-hidden"><?= $template->escape($keep) ?></span></button>
-<?php endif ?>
     <button type="button" class="tool-button view-menu" aria-haspopup="dialog" data-view-menu
       title="<?= $template->escape($current) ?>"><?= $template->render('partials/icon',
       ['name' => $view->value]) ?><span class="visually-hidden"><?= $template->escape($current) ?></span></button>

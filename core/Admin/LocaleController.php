@@ -33,6 +33,9 @@ use Support\Words;
    returns to, as a field's addition is on its collection. */
 final readonly class LocaleController
 {
+  /* The records a sample must find a language in to say its size: of fewer, six were said as twelve. */
+  private const FEW = 100;
+
   public function __construct(
     private Authorizer $authorizer,
     private SettingStore $settings,
@@ -42,14 +45,23 @@ final readonly class LocaleController
     private ActivityLog $log,
   ) {}
 
-  /** @return list<LocaleRow> in order, the default first */
+  /** A grown install counts on one record in N and says about. A sample cannot
+      call a language empty or kept, nor size a small one, so one it finds few live records in has every
+      record asked.
+      @return list<LocaleRow> in order, the default first */
   public function rows(): array
   {
     $locales = $this->settings->locales();
-    $held = $this->settings->held();
+    $every = $this->settings->countedEvery();
+    $held = $this->settings->held($every);
+    $few = fn (Locale $locale): bool => ($held[$locale->tag] ?? 0) < self::FEW * $every;
+    if ($every > 1 && array_any($locales, $few)) {
+      $every = 1;
+      $held = $this->settings->held();
+    }
 
     return array_map(fn (Locale $locale): LocaleRow => new LocaleRow($locale->tag,
-      $this->counted($held[$locale->tag] ?? 0, isset($held[$locale->tag])),
+      $this->counted($held[$locale->tag] ?? 0, isset($held[$locale->tag]), $every > 1),
       $this->refusal($locale, $locales, array_keys($held))), $locales);
   }
 
@@ -139,11 +151,17 @@ final readonly class LocaleController
   /* The count is of live records written in the locale or holding words in it,
      so a record in two counts in both and says so, beside the install's total. A
      locale the refusal still finds held through the trash or an edge's words is
-     never called empty beside it. */
-  private function counted(int $n, bool $held): string
+     never called empty beside it. A rough count keeps two digits, which is what a sample knows. */
+  private function counted(int $n, bool $held, bool $rough): string
   {
-    return $n === 0 ? $this->words->get($held ? 'locale.kept' : 'locale.empty')
-      : $this->words->count('locale', 'records', $n);
+    $unit = 10 ** max(0, strlen((string) $n) - 2);
+    $about = $this->words->number((int) round($n / $unit) * $unit);
+
+    return match (true) {
+      $n === 0 => $this->words->get($held ? 'locale.kept' : 'locale.empty'),
+      $rough => $this->words->get('locale.about.records', ['n' => $about]),
+      default => $this->words->count('locale', 'records', $n),
+    };
   }
 
   private function refused(string $sentence): Response

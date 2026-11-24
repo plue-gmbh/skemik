@@ -66,22 +66,21 @@ final readonly class GrantRepository
     return array_map($this->grant(...), $statement->fetchAll(\PDO::FETCH_ASSOC));
   }
 
-  /** Who writes into each collection at `$now`, by the names of the live keys
-      holding a `create` or `set` rule there, in one query: what the sidebar marks.
+  /** Who holds a rule in each collection at `$now`, by the names of the live keys,
+      in one query: what the sidebar marks, as the collection's badge does.
       @return array<string, list<string>> by collection slug */
-  public function writers(string $now): array
+  public function holders(string $now): array
   {
     $statement = $this->db->prepare('select distinct g.collection, t.label from grant_rule g'
       . ' join token t on t.id = g.token_id'
-      . " where g.capability in ('create', 'set') and t.revoked_at is null and t.expires_at > :now"
-      . ' order by t.label');
+      . ' where t.revoked_at is null and t.expires_at > :now order by t.label');
     $statement->execute(['now' => $now]);
-    $writers = [];
+    $holders = [];
     foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-      $writers[(string) $row['collection']][] = (string) $row['label'];
+      $holders[(string) $row['collection']][] = (string) $row['label'];
     }
 
-    return $writers;
+    return $holders;
   }
 
   /** The live keys whose date falls between the two instants, each with the first

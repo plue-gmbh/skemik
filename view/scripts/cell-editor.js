@@ -64,7 +64,7 @@ const cellEditor = {
       return;
     }
     this.place = this.placed();
-    this.$nextTick(() => { this.unfollow = this.$refs.popover && following(this.editing.cell, this.$refs.popover,
+    this.$nextTick(() => { this.unfollow = this.$refs.popover && anchored(this.editing.cell, this.$refs.popover,
       (at) => { this.place = { ...this.place, ...at }; }); });
     /* Left by a press elsewhere, the cell takes the focus back where it stands: the press is about another place. */
     this.undismiss = dismissing((node) => this.$refs.popover?.contains(node), () => this.finish(this.mode === "select"

@@ -19,11 +19,12 @@ use Support\Words;
 
 /* The collection list on every admin screen. Empty collections sort below the
    filled ones, each group by name, so a new install's three working collections are
-   not pushed out of view by the empty ones. A mark that does not apply is absent
+   not pushed out of view by the empty ones; an empty one a live key holds a rule in
+   stands before the others, since it is set up and waits for its first record. A mark that does not apply is absent
    rather than drawn grey, so a list of thirty-one is read by what stands out. The
    serving mark is read from the clock, so a collection whose only record goes live
-   next week has none until then; the grant mark names who writes, the thing a
-   reader can act on, and only a live grant marks. Outside the read scope the count
+   next week has none until then; the grant mark names the keys that hold a rule
+   there, as the collection's badge does, and only a live key marks. Outside the read scope the count
    is what passes `Feed\PublicFilter`, and a type with no public state is not
    listed, since its reading there can never fill. Marks and counts are one grouped
    query each, not one per entry. */
@@ -40,29 +41,24 @@ final readonly class Sidebar
     private Words $words,
   ) {}
 
-  /** @return list<SidebarEntry> filled collections first, each group by name */
+  /** @return list<SidebarEntry> filled collections first, then the empty ones a key holds, each group by name */
   public function entries(Account $account): array
   {
     $counts = $this->counts->byType();
-    $writers = $this->grants->writers($this->clock->now()->format(Clock::STORED));
-    $filled = [];
-    $empty = [];
+    $holders = $this->grants->holders($this->clock->now()->format(Clock::STORED));
+    $entries = [];
     foreach ($this->collections->all() as $collection) {
-      $entry = $this->entry($account, $collection, $counts[$collection->type] ?? null)
-        ?->writtenBy($writers[$collection->slug->value] ?? []);
-      if ($entry !== null && $entry->count > 0) {
-        $filled[] = $entry;
-      } elseif ($entry !== null) {
-        $empty[] = $entry;
+      $entry = $this->entry($account, $collection, $counts[$collection->type] ?? null);
+      if ($entry !== null) {
+        $entries[] = $entry->heldBy($holders[$collection->slug->value] ?? []);
       }
     }
-
     $collator = new \Collator($this->words->language);
-    $byName = fn (SidebarEntry $one, SidebarEntry $other): int => (int) $collator->compare($one->name, $other->name);
-    usort($filled, $byName);
-    usort($empty, $byName);
+    $group = fn (SidebarEntry $entry): int => $entry->count > 0 ? 0 : ($entry->holders === [] ? 2 : 1);
+    usort($entries, fn (SidebarEntry $one, SidebarEntry $other): int
+      => $group($one) <=> $group($other) ?: (int) $collator->compare($one->name, $other->name));
 
-    return [...$filled, ...$empty];
+    return $entries;
   }
 
   /** The organisation's own sites, which the header draws where it has room and the drawer

@@ -14,7 +14,9 @@ function sending(sheet) {
     chipOf } = sheet;
   return {
     methods: {
-      /* A moved record screen is read afresh, and a timeline a date refiled. */
+      /* A moved record screen is read afresh, a timeline a date refiled, and a view a record was made in,
+         since where it stands, its language marks, the page and the counts are the server's drawing. The
+         page then loaded takes the focus and the word this one would have given (`keepSaved`). */
       async save() {
         this.saving = true;
         this.refusals = [];
@@ -24,7 +26,7 @@ function sending(sheet) {
         }
         this.saving = false;
         const clean = this.count === 0 && this.conflicts.length === 0;
-        if (clean && this.moved) return (keepScroll(), location.replace(this.moved));
+        if (clean && this.moved) return (keepSaved(sheet.last), location.replace(this.moved));
         this.done = clean;
         this.keepFocus();
         window.setTimeout(() => { this.done = false; }, 1800);
@@ -43,7 +45,7 @@ function sending(sheet) {
             "X-CSRF-Token": data.csrf, ...(isNew(id) ? {} : { "If-Match": `"${row.version}"` }) };
           const { ok, status, body: answer } = await answered(fetch(address,
             { method: isNew(id) ? "POST" : "PATCH", headers, body: JSON.stringify(body) }));
-          if (ok && (dated in sent || (dated === "" && isNew(id)))) this.moved = location.href;
+          if (ok && (isNew(id) || dated in sent)) this.moved = location.href;
           if (ok && isNew(id)) return this.made(id, answer);
           if (ok) return this.stored(id, answer, sent);
           if (status === 412) return this.conflicts.push({ id, body: answer });
@@ -93,10 +95,11 @@ function sending(sheet) {
          gives back would go to the table's first cell and scroll a long page to its top. */
       made(id, body) {
         const drawn = table.querySelector(`[data-record="${id}"]`);
-        const key = drawn.contains(sheet.last) ? sheet.last.closest("[data-field]").dataset.field : null;
+        const within = drawn.contains(sheet.last);
+        const key = within ? sheet.last.closest("[data-field]")?.dataset.field : null;
         drawn.insertAdjacentHTML("afterend", body.html);
         drawn.remove();
-        if (key) sheet.last = cellOf(body.id, key);
+        if (within) sheet.last = (key && cellOf(body.id, key)) || table.querySelector(`[data-record="${body.id}"]`);
         rows.delete(id);
         rows.set(body.id, { id: body.id, version: body.version, locale: filtered ?? data.locale, label: body.label,
           values: body.values });

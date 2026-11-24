@@ -1,7 +1,10 @@
 /* The popover every screen opens, under or over what it is about, and what keeps
-   it there: the place it takes, how it follows a scroll and a change of room, and
-   how a press outside closes it. Loaded before `app.js` and the islands, which call
-   these as they mount. */
+   it there: the place it takes, the arrow from it to what opened it, how it follows
+   a scroll and a change of room, and how a press outside closes it. Loaded before
+   `app.js` and the islands, which call these as they mount. */
+
+/* Between a popover and what opened it, which its arrow reaches across. */
+const ARROW_ROOM = 9;
 
 /* Popovers: one at a time, under the element that opened it, or over it where it
    does not fit under and more room is, covering what it is about only where that leaves it less room
@@ -20,12 +23,12 @@ function popover(anchor, content, wide = false) {
   element.append(...content);
   document.body.append(element);
   Object.assign(element.style, placement(anchor, element.getBoundingClientRect()));
-  const unfollow = following(anchor, element, (at) => Object.assign(element.style, at));
+  const unanchor = anchored(anchor, element, (at) => Object.assign(element.style, at));
   const locked = () => element.dataset.locked !== undefined;
   const escape = (event) => event.key === "Escape" && !locked() && (event.preventDefault(), close(), anchor.focus());
   const close = () => {
     element.remove();
-    unfollow();
+    unanchor();
     undismiss();
     document.removeEventListener("keydown", escape, true);
   };
@@ -34,6 +37,44 @@ function popover(anchor, content, wide = false) {
   element.addEventListener("keydown", (event) => cycle(event, element));
   document.addEventListener("keydown", escape, true);
   return { element, close };
+}
+
+/* The arrow from a popover to what opened it: a square on its corner, half of it over the popover's edge, and
+   beside the popover rather than in it, since the popover scrolls what it holds and would cut it off; a dialog
+   holds its own, being alone in the page's top layer. It points at the anchor's middle, or near its start
+   where the anchor is wide, a record's field, since the popover hangs from there; kept off the popover's
+   corners, and gone where the popover stands over its anchor. Returns what points it anew, once the
+   popover moved, and what removes it. */
+function arrowed(anchor, element) {
+  const arrow = Object.assign(document.createElement("span"), { className: "popover-arrow" });
+  const holder = element.matches("dialog") ? element : element.parentElement;
+  arrow.setAttribute("aria-hidden", "true");
+  holder === element ? element.append(arrow) : element.after(arrow);
+  const point = () => {
+    const at = anchor.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    const [x, y] = heldAt(holder);
+    const left = Math.max(box.left + 16, Math.min(at.left + Math.min(at.width / 2, 28), box.right - 16));
+    arrow.dataset.side = box.top >= at.bottom ? "under" : box.bottom <= at.top ? "over" : "";
+    arrow.style.left = x + left + "px";
+    arrow.style.top = y + (arrow.dataset.side === "over" ? box.bottom : box.top) + "px";
+  };
+  point();
+  return { point, remove: () => arrow.remove() };
+}
+
+/* A placed popover kept at its anchor, its arrow with it: pointed anew once each place is drawn, which an
+   island does a moment after it is told. Returns what ends both. */
+function anchored(anchor, element, apply) {
+  const arrow = arrowed(anchor, element);
+  const unfollow = following(anchor, element, (at) => {
+    apply(at);
+    Promise.resolve().then(arrow.point);
+  });
+  return () => {
+    arrow.remove();
+    unfollow();
+  };
 }
 
 function cycle(event, element) {
@@ -80,28 +121,34 @@ const SIDES = { under: "none", over: "translateY(-100%)", middle: "translateY(-5
 function placement(anchor, box = { width: 0, height: 0 }, side = null) {
   const at = anchor.getBoundingClientRect();
   const seen = window.visualViewport;
-  const under = seen.offsetTop + seen.height - at.bottom - 12;
-  const over = at.top - seen.offsetTop - 12;
+  const under = seen.offsetTop + seen.height - at.bottom - ARROW_ROOM - 8;
+  const over = at.top - seen.offsetTop - ARROW_ROOM - 8;
   const most = Math.max(under, over);
   side ??= box.height > most && at.height > most ? "middle"
     : box.height <= under || under >= over ? "under" : "over";
   const left = Math.max(8, Math.min(at.left, document.documentElement.clientWidth - box.width - 8));
-  const top = { under: at.bottom + 4, over: at.top - 4, middle: seen.offsetTop + seen.height / 2 }[side];
+  const top = { under: at.bottom + ARROW_ROOM, over: at.top - ARROW_ROOM,
+    middle: seen.offsetTop + seen.height / 2 }[side];
   const room = { under, over, middle: seen.height - 16 }[side];
   return { left: window.scrollX + left + "px", top: window.scrollY + top + "px",
     maxHeight: room + "px", transform: SIDES[side] };
 }
 
-/* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it: the
-   page's, as a popover is, or a dialog's, which is fixed and scrolls its own content. */
+/* What a place in the window lies at in what holds it: the page, as a popover is held, or a dialog, which
+   is fixed and scrolls its own content. */
+function heldAt(holder) {
+  if (holder === document.body) return [window.scrollX, window.scrollY];
+  const frame = holder.getBoundingClientRect();
+  return [holder.scrollLeft - frame.left - holder.clientLeft, holder.scrollTop - frame.top - holder.clientTop];
+}
+
+/* Over the middle of the anchor and inside the window's width, in the coordinates of what holds it. */
 function centred(anchor, element, holder) {
   const at = anchor.getBoundingClientRect();
   const box = element.getBoundingClientRect();
   const left = Math.max(8, Math.min(at.left + (at.width - box.width) / 2,
     document.documentElement.clientWidth - box.width - 8));
-  const frame = holder === document.body ? null : holder.getBoundingClientRect();
-  const [x, y] = frame === null ? [window.scrollX, window.scrollY]
-    : [holder.scrollLeft - frame.left - holder.clientLeft, holder.scrollTop - frame.top - holder.clientTop];
+  const [x, y] = heldAt(holder);
   return { left: x + left + "px", top: y + at.top + (at.height - box.height) / 2 + "px" };
 }
 

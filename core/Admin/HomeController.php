@@ -65,7 +65,7 @@ final readonly class HomeController
       'records' => $records, 'cards' => $this->cards($account)]);
 
     return $this->frame->around($account, $person, new Screen($this->words->get('home.title'), $main,
-      FeedPanel::at($request, '/feed/' . $this->settings->locales()[0]->tag), entries: $entries));
+      FeedPanel::at($request, '/feed'), entries: $entries));
   }
 
   /** @return array<string, array<string, list<Finding>|list<Change>|list<Colleague>|list<RegisterEntry>
@@ -194,7 +194,7 @@ final readonly class HomeController
     };
   }
 
-  /* The Settings card's backups row: when the last snapshot was taken. */
+  /* The Settings card's backups row: how long ago the last snapshot was taken, its hour being the backups screen's. */
   private function backups(): string
   {
     $latest = $this->backup->list()[0] ?? null;
@@ -202,7 +202,7 @@ final readonly class HomeController
       return $this->words->get($this->backup->daily ? 'home.backups_none' : 'home.backups_off');
     }
 
-    return $this->words->get('home.backups_last', ['when' => $this->moments->time($latest->at)]);
+    return $this->words->get('home.backups_last', ['when' => $this->moments->recent($latest->at)]);
   }
 
   /* The Settings card's error log row: when the last failure was logged, and its incident. */

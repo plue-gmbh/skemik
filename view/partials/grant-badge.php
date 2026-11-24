@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 /* The collection's grant badge, and a record's: its mark, violet while a live
    grant holds, and the popover of `partials/grant-panel`. A field's grants are
-   in its column's field popover instead (`partials/field-popover`). Where no key
+   in its column's field popover instead (`partials/field-popover`), and the
+   collection's mark names their keys too, as the sidebar's does. Where no key
    holds and the reader may not issue, the panel would be empty, so the badge is
    the mark alone, saying that keys exist.
    Handed `$badge`, `$collection`, `$back`, `$until`, `$csrf` and `$words`. */
@@ -14,7 +15,7 @@ if (!isset($template)) {
 }
 $id = 'grant-' . ($badge->field ?? 'collection');
 $names = $badge->names();
-$live = $badge->reviews === [] ? '' : ' is-live';
+$live = $names === '' ? '' : ' is-live';
 $opens = $badge->offers !== [] || $badge->reviews !== [];
 $title = match (true) {
   $names !== '' => $words->get('grant.here', ['names' => $names]),

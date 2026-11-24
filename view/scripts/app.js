@@ -211,5 +211,8 @@ const mounted = { current: mountIslands() };
 document.querySelectorAll("[data-query-bar]").forEach((form) => mountQueryBar(form, mounted));
 document.querySelectorAll("[data-record-screen]").forEach((screen) => mountRecord(screen, mounted));
 focusField(document.querySelector("[data-autofocus]"));
-refocus();
+/* The scroll first, so the focus kept of a save brings its cell into view where the scroll leaves it out. A
+   save no island took is dropped, or a later screen would say it. */
 restoreScroll();
+refocus();
+takeSaved();

@@ -180,8 +180,9 @@ const objectsPicker = {
 };
 
 /* A flattened key that refers: the record held as a chip, or the word typed
-   and the records it finds. A chip sent back keeps the record, `{id}` picks one,
-   a word is the word, and an empty word empties the field. */
+   and the records it finds, the newest before a word, as a reference offers
+   them. A chip sent back keeps the record, `{id}` picks one, a word is the word,
+   and an empty word empties the field. */
 const referPicker = {
   template: "#refer-picker-template",
   props: ["field", "value", "words", "collection", "locale"],
@@ -192,6 +193,7 @@ const referPicker = {
   },
   mounted() {
     this.$refs.word?.focus();
+    if (this.held === null) this.find(this.word);
   },
   methods: {
     result() {
@@ -203,7 +205,6 @@ const referPicker = {
       this.timer = window.setTimeout(() => this.find(this.word), 300);
     },
     async find(typed) {
-      if (typed.trim() === "") return (this.hits = []);
       const query = new URLSearchParams({
         q: typed, collection: this.collection, field: this.field.key, in: this.locale,
       });
@@ -218,7 +219,10 @@ const referPicker = {
     unrefer() {
       this.held = null;
       this.$emit("draft", null);
-      this.$nextTick(() => focusField(this.$refs.word, this.$el.closest(".popover")));
+      this.$nextTick(() => {
+        focusField(this.$refs.word, this.$el.closest(".popover"));
+        this.find(this.word);
+      });
     },
   },
 };

@@ -10,6 +10,7 @@ use Domain\Entity;
 use Domain\Locale;
 use Domain\Status;
 use Domain\TranslationGroup;
+use Feed\FeedRequest;
 use Http\Request;
 use Profile\Cardinality;
 use Profile\FieldKind;
@@ -32,7 +33,8 @@ use Support\Words;
    since a select of every customer is no select. Language leaves the labelled things, since one
    answers on every locale route, and on works first offers every record as its own row. Nothing says
    a group was left out: the address still filters, and the search reaches a target's name
-   (`Storage\Search`). A date offers the days around today that rows hold, each a count of its own. */
+   (`Storage\Search`). A date offers the days around today that rows hold, each a count of its own.
+   A choice adds to what narrows already (`offered`). */
 final readonly class QueryChoices
 {
   private const FEW = 20;
@@ -85,6 +87,27 @@ final readonly class QueryChoices
     }
 
     return $filters;
+  }
+
+  /** The choices still to make, each spelled with the values its field is narrowed to already, since a
+      second value of a field finds either, as the feed reads a comma, and another field narrows further. A
+      language stands alone, a collection being listed in one or in each. A choice made is not offered
+      again, nor one past the values an address takes.
+      @param list<Filter> $filters
+      @return list<Filter> */
+  public function offered(Request $request, array $filters): array
+  {
+    $offered = [];
+    foreach ($filters as $filter) {
+      $held = array_filter(explode(',', (string) $request->query($filter->parameter)), strlen(...));
+      $values = explode(',', $filter->value);
+      $joined = $filter->parameter === 'locale' ? $values : array_values(array_unique([...$held, ...$values]));
+      if (array_diff($values, $held) !== [] && count($joined) <= FeedRequest::VALUES) {
+        $offered[] = new Filter($filter->group, $filter->parameter, implode(',', $joined), $filter->word);
+      }
+    }
+
+    return $offered;
   }
 
   /** What the rows hold of the status, the language, each select column and the library's formats.

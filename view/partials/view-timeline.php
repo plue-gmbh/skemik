@@ -6,10 +6,11 @@ declare(strict_types=1);
    save bar and ticks, filed under months by the type's date (`Admin\Glance::date`),
    each row a day (`partials/timeline-row`), and what has no date last under No
    date yet. Ordered by that date alone, or by when each record was made where the
-   type has none (`Admin\Timeline`). + New record's pending row waits hidden under
-   No date yet, and a save that dates a row reads the page again, since that files
-   it. Where the page holds rows on both sides of the install's day, a line says
-   Today between them, so a calendar shows what comes next without a filter.
+   type has none (`Admin\Timeline`). The + below adds its pending row under No date
+   yet, a heading that waits hidden, and the tools' + adds it first, above the months.
+   A save that dates a row reads the page again, since that files it. Where the
+   page holds rows on both sides of the install's day, a line says Today between
+   them, so a calendar shows what comes next without a filter.
    Handed `$rows`, `$columns`, `$collection`, `$items`, `$glance`, `$firstLocale`, `$timeline`, `$creates`,
    `$add`, `$total`, `$narrowed`, `$all`, `$page`, `$perPage`, `$parameters`, `$data`, `$spine` and `$words`. */
 

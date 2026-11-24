@@ -4,7 +4,7 @@
    forms; this narrows the list as somebody types, sends a field's switch as it
    is flipped and its move as one `PATCH`, and shows the removal's confirmation
    only once it was asked for. A change redraws the page, since the columns are
-   the server's drawing of the collection, where it was scrolled. */
+   the server's drawing of the collection, where it was scrolled, a form's too. */
 
 /* A field opened from Fields hangs where Fields does, since opening it closes the list it was in. */
 function openFieldPopover(trigger) {
@@ -14,6 +14,7 @@ function openFieldPopover(trigger) {
   narrowFields(element);
   mountGrant(element);
   foldGrants(element);
+  element.addEventListener("submit", () => keepScroll());
   const form = element.querySelector("[data-field-edit]");
   const send = async (move) => {
     const feed = form.elements.feed;

@@ -62,18 +62,21 @@ final readonly class Export
 
   /* Said before the run, since the box is as large as its files and documents.
      The documents are weighed on a sample written in memory, never into the box,
-     so the figure follows what the serialisers write and no guess per record. */
+     so the figure follows what the serialisers write and no guess per record.
+     The serialisers are a language's here and no collection's: each set words
+     the whole profile anew, which was most of the screen's wait. */
   public function measure(): DumpSize
   {
     $records = 0;
     $bytes = 0;
     foreach ($this->settings->locales() as $locale) {
       $bytes += $this->weight($this->index($locale));
+      $formats = $this->serialisers($locale);
       foreach ($this->readable() as $held) {
         $query = $this->filter->query(new Query($held->type, locale: $locale), $held);
         $count = $query === null ? 0 : $this->entities->count($query);
         $records += $count;
-        $bytes += $this->weighed($held, $locale, $count);
+        $bytes += $this->weighed($held, $locale, $formats, $count);
       }
     }
     $files = $this->files();
@@ -84,18 +87,19 @@ final readonly class Export
     return new DumpSize($records, count($files), $bytes);
   }
 
-  /* A collection in one language, scaled from its sample: the records, their
-     manifest entries and their listing, since the pages of 200 hold what the
-     sample's listing holds for ten. An empty one still writes its listing. */
-  private function weighed(Collection $held, Locale $locale, int $count): int
+  /** A collection in one language, scaled from its sample: the records, their
+      manifest entries and their listing, since the pages of 200 hold what the
+      sample's listing holds for ten. An empty one still writes its listing and
+      is not read: for a language no record of a type is in, a read goes through the whole type.
+      @param array<string, JsonLd|Html|Csv|Markdown> $formats */
+  private function weighed(Collection $held, Locale $locale, array $formats, int $count): int
   {
     $query = $this->filter->query(new Query($held->type, locale: $locale, perPage: self::SAMPLE), $held);
     if ($query === null) {
       return 0;
     }
-    $members = $this->entities->list($query);
-    $formats = $this->serialisers($locale);
-    $bytes = $this->weight($this->listed($members, $held, $formats, $query)[0]);
+    $members = $count === 0 ? [] : $this->entities->list($query);
+    $bytes = $this->weight($this->listed($members, $held, $formats, $query, $count));
     foreach ($members as $member) {
       $documents = $this->documents($member, $held, $formats, $locale->tag . '/' . $held->slug->value);
       $bytes += $this->weight($documents) + strlen($this->json->encode($this->manifest->entry($member, $documents)));
@@ -138,26 +142,29 @@ final readonly class Export
 
   /** A page at a time, and the listing written per page as the address serves
       it: a collection of 27 000 articles is one walk and never one document, and
-      the serialisers are the page's, so what they remember leaves with it.
+      the serialisers are the page's, so what they remember leaves with it. The
+      collection is counted once: counted per page, it was read whole for each.
       @return list<array<string, mixed>> the manifest entries of this collection */
   private function collection(Collection $held, Locale $locale): array
   {
     $folder = $locale->tag . '/' . $held->slug->value;
     $entries = [];
+    $total = null;
     for ($page = 1; ; $page++) {
       $query = $this->filter->query(new Query($held->type, locale: $locale, page: $page,
         perPage: Query::MAX_PER_PAGE), $held);
       if ($query === null) {
         return $entries;
       }
+      $total ??= $this->entities->count($query);
       $formats = $this->serialisers($locale);
       $members = $this->entities->list($query);
       foreach ($members as $member) {
         $entries[] = $this->record($member, $held, $formats, $folder);
       }
-      [$listing, $more] = $this->listed($members, $held, $formats, $query);
-      $this->put($listing);
-      if (!$more) {
+      $this->put($this->listed($members, $held, $formats, $query, $total));
+      /* No empty page is written past the last. */
+      if ($page * Query::MAX_PER_PAGE >= $total) {
         return $entries;
       }
     }
@@ -191,22 +198,20 @@ final readonly class Export
       prefix swapped and a reader holding one file knows how many records there were.
       @param list<Entity> $members
       @param array<string, JsonLd|Html|Csv|Markdown> $formats
-      @return array{array<string, string>, bool} the page by its path in the box, and whether one
-        follows, so no empty one is written past the last */
-  private function listed(array $members, Collection $held, array $formats, Query $query): array
+      @return array<string, string> the page by its path in the box */
+  private function listed(array $members, Collection $held, array $formats, Query $query, int $total): array
   {
     $locale = $query->locale ?? $this->settings->locales()[0];
     $first = $query->page === 1;
     $asked = ['per_page' => $query->perPage, ...($first ? [] : ['page' => $query->page])];
     $address = $this->prefix($locale) . $held->slug->value . '?' . http_build_query($asked);
     $file = $locale->tag . '/' . $held->slug->value . '/' . ($first ? 'index' : 'page-' . $query->page);
-    $total = $this->entities->count($query);
     $documents = [];
     foreach ($formats as $format => $serialiser) {
       $documents[$format . '/' . $file . '.' . $format] = $serialiser->listing($members, $held, $total, $address);
     }
 
-    return [$documents, $query->page * $query->perPage < $total];
+    return $documents;
   }
 
   /** @return array<string, string> the path in the box to the file on disk */

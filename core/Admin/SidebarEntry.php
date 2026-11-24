@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Admin;
 
 /* One line of the sidebar, as `Sidebar` computed it for this account. `served`
-   is the serving mark and `writers` the grant mark's names; the page draws
+   is the serving mark and `holders` the grant mark's names; the page draws
    neither without them, since a mark that does not apply is absent rather than
    grey. */
 final readonly class SidebarEntry
@@ -16,19 +16,19 @@ final readonly class SidebarEntry
     return basename($type);
   }
 
-  /** @param list<string> $writers the live keys that write here, by name */
+  /** @param list<string> $holders the live keys that hold a rule here, by name */
   public function __construct(
     public string $glyph,
     public string $name,
     public string $slug,
     public int $count,
     public bool $served,
-    public array $writers = [],
+    public array $holders = [],
   ) {}
 
-  /** @param list<string> $writers */
-  public function writtenBy(array $writers): self
+  /** @param list<string> $holders */
+  public function heldBy(array $holders): self
   {
-    return new self($this->glyph, $this->name, $this->slug, $this->count, $this->served, $writers);
+    return new self($this->glyph, $this->name, $this->slug, $this->count, $this->served, $holders);
   }
 }

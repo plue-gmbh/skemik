@@ -1,8 +1,9 @@
 /* What this tab keeps for the page it loads next, since the server draws every
    page from its top: the focus a select that loads an address had, so the page it
-   loads gives it back, and where the page and the table were scrolled when a
-   screen is redrawn at its own address, after a field moved or a save. Each is
-   kept in the tab's session storage and read once, as `view/scripts/app.js` ends. */
+   loads gives it back, where the page and the table were scrolled when a
+   screen is redrawn at its own address, after a field moved or a save, and of a
+   save the cell it last changed and that it saved (`keepSaved`). Each is kept in
+   the tab's session storage and read once, as `view/scripts/app.js` ends. */
 
 /* A select that loads an address moves on a choice and not on a step: a closed
    select walked with the arrow keys reports each step as a change in some
@@ -59,4 +60,27 @@ function restoreScroll() {
   const [page, sheet] = scrollers();
   if (page) page.scrollTop = kept.page;
   if (sheet) sheet.scrollLeft = kept.sheet;
+}
+
+/* A save that reads its screen afresh would leave the focus at the page's top and its word unsaid: the
+   page it loads focuses the cell last changed, where it still lists the record, and its save bar says
+   Saved (`view/scripts/sheet.js`). */
+function keepSaved(last) {
+  const record = last?.closest("[data-record]")?.dataset.record;
+  const field = last?.closest("[data-field]")?.dataset.field;
+  const cell = `[data-record="${record}"] ` + (field ? `[data-field="${field}"] ` : "") + "[data-edit]";
+  keepScroll();
+  try {
+    sessionStorage.setItem("saved", "1");
+    if (record) sessionStorage.setItem("refocus", cell);
+  } catch { /* private window */ }
+}
+
+function takeSaved() {
+  let kept = null;
+  try {
+    kept = sessionStorage.getItem("saved");
+    sessionStorage.removeItem("saved");
+  } catch { kept = null; }
+  return kept !== null;
 }

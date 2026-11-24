@@ -39,7 +39,7 @@ final readonly class FeedRequest
   /* A text's every value is weighed against every record of the type, so a
      filter holding more would cost a stranger's one question more than a page of
      200 does; every other kind of filter is held to the same number. */
-  private const VALUES = 50;
+  public const VALUES = 50;
 
   public function __construct(private SchemaOrg $schema, private Profile $profile, private Clock $clock) {}
 

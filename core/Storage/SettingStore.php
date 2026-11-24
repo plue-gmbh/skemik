@@ -34,6 +34,12 @@ final readonly class SettingStore
   private const HOLDINGS_CURSOR = 'holdings_cursor';
   private const HOLDINGS_REPORT = 'holdings_report';
   private const QUESTIONS = 'questions';
+  /* The rows the Languages card reads at most; past them it reads one in N alone: those whose id ends at
+     or below `:last`, its last three digits being random (`Support\Uuid`). By `rowid`, holdings written in
+     a rhythm were read in that rhythm, and a count was wrong by the factor. */
+  private const COUNTED = 20000;
+  private const NTH = 'substr(%s, -3) <= :last';
+  private const ENDS = 4096;
 
   public function __construct(
     private \PDO $db,
@@ -94,18 +100,29 @@ final readonly class SettingStore
       trash written in it, one record counted once, for the Languages card: one
       pass, and a record's words read of the types that localise alone, through
       the type index, since only those carry `l10n` (`Profile\Validator`) and a
-      grown install is mostly orders.
+      grown install is mostly orders. Asked of one record in N, the counts are
+      scaled and rough, and a tag few records hold may be missing: a refusal asks every one.
       @return array<string, int> by tag */
-  public function held(): array
+  public function held(int $every = 1): array
   {
-    $statement = $this->db->prepare('select tag, count(distinct case when live then id end) from ('
-      . 'select id, locale as tag, deleted_at is null as live from entity'
+    $statement = $this->db->prepare('select tag, cast(:every as integer) * count(distinct case when live then id end)'
+      . ' from (select id, locale as tag, deleted_at is null as live from entity where ' . sprintf(self::NTH, 'id')
       . " union all select e.id, l.key, e.deleted_at is null from entity e, json_each(e.props, '$.l10n') l"
-      . ' where e.type in (select value from json_each(:localising))'
+      . ' where e.type in (select value from json_each(:localising)) and ' . sprintf(self::NTH, 'e.id')
       . " union all select null, l.key, 0 from relation r, json_each(r.props, '$.l10n') l) group by tag");
-    $statement->execute(['localising' => $this->json->encode($this->localising())]);
+    $statement->execute(['localising' => $this->json->encode($this->localising()), 'every' => $every,
+      'last' => sprintf('%03x', max(1, intdiv(self::ENDS, $every)) - 1)]);
 
     return array_map(intval(...), $statement->fetchAll(\PDO::FETCH_KEY_PAIR));
+  }
+
+  /* One in how many records the Languages card reads: unpacking the words of every
+     record was most of a grown install's home screen, 177 ms of 150 000 rows. */
+  public function countedEvery(): int
+  {
+    $rows = (int) $this->db->query('select max(rowid) from entity')->fetchColumn();
+
+    return max(1, intdiv($rows + self::COUNTED - 1, self::COUNTED));
   }
 
   /** @return list<string> the types whose records may hold words per language */

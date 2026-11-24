@@ -99,12 +99,14 @@ final readonly class Grants
     foreach ($columns as $column) {
       $anchors[$column->field->key] = $column->label;
     }
+    $fielded = array_map(fn (GrantReview $review): string => $review->token->label,
+      array_merge(...array_values(array_diff_key($reviews, ['' => true]))));
     $badges = [];
     foreach ($anchors as $key => $title) {
       $field = $key === '' ? null : (string) $key;
       if ($issues || $key === '' || isset($reviews[$key])) {
         $badges[$key] = new Badge($field, $title, $reviews[$key] ?? [],
-          $issues ? $this->offers($account, $collection, $field) : []);
+          $issues ? $this->offers($account, $collection, $field) : [], fielded: $key === '' ? $fielded : []);
       }
     }
 

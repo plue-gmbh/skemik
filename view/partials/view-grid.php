@@ -8,8 +8,8 @@ declare(strict_types=1);
    their bar, the one for the page above the tiles. Its last tile is + New
    record, which adds a pending tile as the table adds a row, and in the media
    library Upload, since an asset of this install is mostly made by its file, and
-   an empty library is that tile alone; the header's + File from elsewhere adds
-   its pending tile ahead of it.
+   an empty library is that tile alone; the tools' + File from elsewhere adds
+   its pending tile first, as the tools' + does in every view.
    Handed what `view-cards` is, and `$uses`, `$uploads` and `$limit` for the library. */
 
 if (!isset($template)) {

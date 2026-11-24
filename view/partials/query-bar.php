@@ -2,30 +2,27 @@
 
 declare(strict_types=1);
 
-/* Above the view (`Admin\QueryBar`), one form whose fields are the address, and
-   nothing that makes a record, since this changes only what is seen. A choice no
-   row holds is not offered, and a field called what the Status group is called
-   names its collection beside it. Search matches what the feed's `?q=` matches, so
-   its placeholder names the collection and not a field. A select at its default
-   reads as quietly as the placeholder, so what narrows stands out. n of total is
-   announced, since typing redraws where a screen reader does not look. A narrowing
-   the select cannot show stands in words, each taken away by its own link. Handed
-   `$columns`, `$collection`, `$filters`, `$named`, `$parameters`, `$narrowed`,
-   `$narrowing`, `$fixed`, `$all`, `$total` and `$words`. */
+/* Above the view (`Admin\QueryBar`), one form whose fields are the address, and nothing that makes a
+   record, since this changes only what is seen. A choice no row holds is not offered, and a field called
+   what the Status group is called names its collection beside it. A choice adds to what narrows, so the
+   select stays at its default, as quiet as the placeholder, and what narrows stands beside it as chips:
+   another value of one field finds either, another field narrows further, as the feed reads them. A chip's
+   link takes it away and names its field where the chip shows a value alone. Then the mark that saves the
+   narrowing as a question of the home screen, or deletes the one it is, for whoever arranges the collection.
+   Search matches what the feed's `?q=` matches, so its placeholder names the collection and not a field. n of
+   total is announced, since typing redraws where a screen reader does not look. Handed `$columns`,
+   `$collection`, `$filters`, `$named`, `$parameters`, `$narrowed`, `$narrowing`, `$fixed`, `$all`, `$total`,
+   `$keeps`, `$question`, the saved one this address is or null, and `$words`. */
 
 if (!isset($template)) {
   return;
 }
-$chosen = http_build_query(array_slice($narrowing, 0, 1, true));
 $sort = (string) ($parameters['sort'] ?? '');
 $sortField = ltrim($sort, '-');
 $groups = [];
 foreach ($filters as $filter) {
   $groups[$filter->group][] = $filter;
 }
-$offered = array_map(fn (Admin\Filter $filter): string => $filter->pair(), $filters);
-$single = count($narrowing) === 1 && in_array($chosen, $offered, true);
-$named = $single ? [] : $named;
 $search = $words->get('query.search', ['name' => $collection->name]);
 $descending = str_starts_with($sort, '-');
 /* A timeline's newest first is its default, as no sort is every other view's; a field chosen sorts descending
@@ -42,26 +39,39 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
   <input type="hidden" name="<?= $template->escape($name) ?>" value="<?= $template->escape($value) ?>"
     data-query-filter>
 <?php endforeach ?>
-<?php if ($named !== []): ?>
-  <ul class="query-narrowed">
-<?php foreach ($named as $each): ?>
-    <li><?= $template->escape($each->word) ?><a href="<?= $template->escape($each->without) ?>"
-      aria-label="<?= $template->escape($words->get('query.unnarrow', ['filter' => $each->word]))
-      ?>"><?= $template->render('partials/icon', ['name' => 'close']) ?></a></li>
-<?php endforeach ?>
-  </ul>
-<?php else: ?>
-  <select class="query-filter<?= $chosen === '' ? '' : ' is-on' ?>"
-    aria-label="<?= $template->escape($words->get('query.filter')) ?>" data-query-choose>
-    <?= $option('', $words->get('query.none'), $chosen === '') ?>
+<?php if ($groups !== [] || $named === []): ?>
+  <select class="query-filter" aria-label="<?= $template->escape($words->get('query.filter')) ?>"
+    data-query-choose>
+    <?= $option('', $words->get($named === [] ? 'query.none' : 'query.more'), true) ?>
 <?php foreach ($groups as $group => $members): ?>
     <optgroup label="<?= $template->escape($group) ?>">
 <?php foreach ($members as $filter): ?>
-      <?= $option($filter->pair(), $filter->word, $filter->pair() === $chosen) ?>
+      <?= $option($filter->pair(), $filter->word, false) ?>
 <?php endforeach ?>
     </optgroup>
 <?php endforeach ?>
   </select>
+<?php endif ?>
+<?php if ($named !== []): ?>
+  <ul class="query-narrowed">
+<?php foreach ($named as $each):
+  $whole = $words->get('query.narrowed', ['field' => $each->field, 'values' => $each->value]) ?>
+    <li<?= $each->worded ? ' title="' . $template->escape($each->field) . '"'
+      : '' ?>><?= $template->escape($each->worded ? $each->value : $whole) ?><a
+      href="<?= $template->escape($each->without) ?>"
+      aria-label="<?= $template->escape($words->get('query.unnarrow', ['filter' => $whole]))
+      ?>"><?= $template->render('partials/icon', ['name' => 'close']) ?></a></li>
+<?php endforeach ?>
+  </ul>
+<?php endif ?>
+<?php if ($keeps && $question !== null): $unkeep = $words->get('question.remove') ?>
+  <button type="submit" class="tool-button is-kept" form="question-remove"
+    title="<?= $template->escape($unkeep) ?>"><?= $template->render('partials/icon', ['name' => 'kept']) ?><span
+    class="visually-hidden"><?= $template->escape($unkeep) ?></span></button>
+<?php elseif ($keeps && $narrowed): $keep = $words->get('question.save') ?>
+  <button type="button" class="tool-button" data-dialog="question-save" aria-haspopup="dialog"
+    title="<?= $template->escape($keep) ?>"><?= $template->render('partials/icon', ['name' => 'keep']) ?><span
+    class="visually-hidden"><?= $template->escape($keep) ?></span></button>
 <?php endif ?>
   <input class="query-search" type="search" name="q" value="<?= $template->escape($parameters['q'] ?? '') ?>"
     placeholder="<?= $template->escape($search) ?>" aria-label="<?= $template->escape($search) ?>" autocomplete="off"

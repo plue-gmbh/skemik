@@ -44,7 +44,8 @@ final readonly class Query
   /**
    * @param array<string, list<string>> $filters a field key or a column to the values any of which matches
    * @param list<Status> $statuses none for every status
-   * @param ?string $sort a field or spine key; null is best match first under a search, else newest first
+   * @param ?string $sort a field or spine key; null is what the words name first under a search
+   *   (`Search::ORDER`), else newest first
    * @param list<string> $searchIn the field keys the reader reads, which alone a search is asked of
    * @param array<string, Query> $searchThrough by type, what the reader reads of each, as a search reaches edges
    * @param list<string> $grouped the install's locales in order, for one row per translation group; none for each
@@ -131,7 +132,7 @@ final readonly class Query
     $direction = $this->descending ? ' desc' : '';
     $primary = match (true) {
       $this->sort !== null => $this->sortExpression($type, $this->sort) . $direction . ' nulls last, ',
-      $this->search !== '' => 's.hits desc, ',
+      $this->search !== '' => 's.named desc, ' . Search::size() . ', s.hits desc, ',
       default => '',
     };
     $tie = $primary === '' ? ' desc' : $direction;

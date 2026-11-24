@@ -35,6 +35,9 @@ use Support\Json;
 final readonly class Search
 {
   public const LIMIT = 200;
+  /* What is named by the words comes first: the name holding more of the terms, the shorter name before the
+     longer, and only then the most matching words. Read over `hits()` and `size()`. */
+  public const ORDER = 'named desc, size, hits desc';
   /* Every word scans its own stretch of the word table, so a search of more would
      cost a stranger's one question more than a page of 200 does. */
   private const WORDS = 20;
@@ -45,9 +48,9 @@ final readonly class Search
 
   /* The records matching a question, the placeholder holding what `match()`
      answers and `:now` the clock: every term as a prefix in any of the reader's
-     fields, its tags or the names of what it points at, all of them met, the
-     most matching words first. `named` counts the terms its own name holds, for
-     `search()`. The terms lead by `cross join`,
+     fields, its tags or the names of what it points at, all of them met.
+     `hits` counts the matching words and `named` the terms its own name holds,
+     which `ORDER` reads. The terms lead by `cross join`,
      which SQLite never reorders: led by the word table, it scans every word of
      the install per search. `$type` is the placeholder of the one type asked
      where `search()` has read the words into `found`, so a type groups its own. */
@@ -121,8 +124,8 @@ final readonly class Search
   }
 
   /**
-   * A box and a picker are asked what a record is called and show eight: the name holding more of the terms
-   * comes first, the shorter name before the longer, and only then the most matching words.
+   * A box and a picker are asked what a record is called and show eight, in `ORDER`, as a list under
+   * a search stands (`Query::page`), a name as long as it was authored, since they name no locale.
    *
    * @param array<string, Query> $readings per type, what the reader reads of it, its fields among that
    * @return list<EntityId> best match first, trashed records left out
@@ -142,19 +145,29 @@ final readonly class Search
     }
     $statement = $this->db->prepare('with found as materialized (' . self::found('json_each(:terms)')
       . ') select id from (' . implode(' union all ', $arms)
-      . ') order by named desc, size, hits desc limit ' . self::LIMIT);
-    $statement->execute([...$bindings, 'terms' => $this->json->encode(self::tokens($typed))]);
+      . ') order by ' . self::ORDER . ' limit ' . self::LIMIT);
+    $statement->execute([...$bindings, 'locale' => null, 'terms' => $this->json->encode(self::tokens($typed))]);
 
     return array_map(fn (string $id): EntityId => new EntityId($id), $statement->fetchAll(\PDO::FETCH_COLUMN));
   }
 
-  /* One type's hits, each with the size of its name where the name holds a term: its words, as `words` holds them. */
+  /* One type's hits, each with the size of its name. */
   private static function arm(int $index): string
   {
-    return sprintf('select e.id, s.hits, s.named, case when s.named > 0 then json_array_length(e.words,'
-      . " '$.' || json_extract(:match%2\$d, '$.name')) else 0 end as size"
+    return sprintf('select e.id, s.hits, s.named, %3$s as size'
       . ' from (%1$s) s join entity e on e.id = s.entity_id where e.type = :type%2$d and e.deleted_at is null',
-      self::hits(":match$index", ":type$index"), $index);
+      self::hits(":match$index", ":type$index"), $index, self::size(":match$index"));
+  }
+
+  /* The size of a hit's name where the name holds a term, read of `s`, a hit, and `e`, its record: its sort
+     key in the words `:locale` shows, else the authored one, since `words` holds every translation's and a
+     name in three languages read as the longest. A name that keeps no key is as long as the slug it made. */
+  public static function size(string $placeholder = ':match'): string
+  {
+    $name = "json_extract($placeholder, '$.name')";
+
+    return "case when s.named > 0 then length(coalesce(json_extract(e.sort_keys, '$." . LocalisedText::KEY
+      . ".' || :locale || '.' || $name), json_extract(e.sort_keys, '$.' || $name), e.slug)) else 0 end";
   }
 
   /* Nothing typed that is a word, or nothing read that holds words, matches

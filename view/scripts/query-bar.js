@@ -1,14 +1,14 @@
 /* The query bar (`view/partials/query-bar.php`), whose fields are the address. A
-   choice loads it; typing redraws the view in place so focus stays in the field,
-   and the view switch's links and the feed panel's address, which carry the
-   query — unless edits are pending, which only a deliberate Enter may leave,
-   through the save bar's leaving guard, and typing says so. An answer with no
-   view to take, an update's waiting page or a login, is loaded as the address, so
-   it shows; a question saved takes the address as it then stands; a connection
-   lost leaves the view as it stood. The field is busy
-   while a redraw is out, and typing on stops it (`busy`). Loaded before
-   `view/scripts/app.js`, which mounts it and whose `chosen`, `busy` and
-   `mountIslands` it calls. */
+   choice loads it, spelled with what its field is narrowed to already, so it takes
+   that field's place in the address and no other's; typing redraws the view in place so focus stays in the field,
+   and with it what else the server drew of the address (`drawn`) — unless edits
+   are pending, which only a deliberate Enter may leave, through the save bar's
+   leaving guard, and typing says so. An answer with no view to take, an update's
+   waiting page or a login, is loaded as the address, so it shows; a question
+   saved takes the address as it then stands; a connection lost leaves the view
+   as it stood. The field is busy while a redraw is out, and typing on stops it
+   (`busy`). Loaded before `view/scripts/app.js`, which mounts it and whose
+   `chosen`, `busy`, `mountIslands` and `mountOutsideClose` it calls. */
 function mountQueryBar(form, mounted) {
   const search = form.querySelector("[data-query-search]");
   const sortValue = form.querySelector("[data-query-sort-value]");
@@ -18,6 +18,29 @@ function mountQueryBar(form, mounted) {
     return location.pathname + (params.toString() === "" ? "" : "?" + params);
   };
   const go = () => location.assign(address());
+  /* A question saved takes the address as it then stands, since typing moves it without drawing its dialog anew. */
+  const keeping = () => {
+    const saved = document.querySelector("[data-question-query]");
+    saved?.form.addEventListener("submit", () => { saved.value = address().split("?")[1] ?? ""; });
+  };
+  /* Beside the view: the view switch's links and the feed panel's address, which carry the query, each chip,
+     whose link takes its value away and keeps the search typed since, and the mark that saves or deletes the
+     question the address now is, with the dialog or the form after the bar it works through. */
+  const drawn = (page) => {
+    const links = page.querySelectorAll("[data-view-links]");
+    document.querySelectorAll("[data-view-links]").forEach((each, index) => each.replaceWith(links[index]));
+    const feed = page.querySelector("[data-feed-address]");
+    if (feed) {
+      document.querySelector("[data-feed-address]")?.replaceWith(feed);
+      document.dispatchEvent(new Event("feed-address"));
+    }
+    document.querySelectorAll(".query-narrowed, .query-bar > .tool-button, #question-save, #question-remove")
+      .forEach((each) => each.remove());
+    search.before(...page.querySelectorAll(".query-narrowed, .query-bar > .tool-button"));
+    form.parentElement.after(...page.querySelectorAll("#question-save, #question-remove"));
+    document.querySelectorAll("#question-save").forEach(mountOutsideClose);
+    keeping();
+  };
   let typing = 0;
   const redraw = async () => {
     if (mounted.current?.sheet.count > 0) return toast(mounted.current.sheet.words["sheet.search_held"], search);
@@ -31,22 +54,16 @@ function mountQueryBar(form, mounted) {
     if (!view) return go();
     mounted.current?.app.unmount();
     document.querySelector("[data-view]").replaceWith(view);
-    const links = page.querySelectorAll("[data-view-links]");
-    document.querySelectorAll("[data-view-links]").forEach((each, index) => each.replaceWith(links[index]));
     form.querySelector("[data-query-count]").textContent = count?.textContent ?? "";
-    const feed = page.querySelector("[data-feed-address]");
-    if (feed) {
-      document.querySelector("[data-feed-address]")?.replaceWith(feed);
-      document.dispatchEvent(new Event("feed-address"));
-    }
+    drawn(page);
     history.replaceState(null, "", url);
     mounted.current = mountIslands();
   };
   form.addEventListener("submit", (event) => { event.preventDefault(); go(); });
   const choose = form.querySelector("[data-query-choose]");
   if (choose) chosen(choose, "[data-query-choose]", (select) => {
-    form.querySelectorAll("[data-query-filter]").forEach((input) => input.remove());
     new URLSearchParams(select.value).forEach((value, name) => {
+      [...form.querySelectorAll("[data-query-filter]")].find((input) => input.name === name)?.remove();
       form.append(Object.assign(document.createElement("input"), { type: "hidden", name, value }));
     });
     go();
@@ -60,8 +77,7 @@ function mountQueryBar(form, mounted) {
     sortValue.value = sortValue.value.startsWith("-") ? sortValue.value.slice(1) : "-" + sortValue.value;
     go();
   });
-  const saved = document.querySelector("[data-question-query]");
-  saved?.form.addEventListener("submit", () => { saved.value = address().split("?")[1] ?? ""; });
+  keeping();
   search.addEventListener("input", () => {
     window.clearTimeout(typing);
     typing = window.setTimeout(redraw, 300);

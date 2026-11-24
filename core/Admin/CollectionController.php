@@ -135,6 +135,7 @@ final readonly class CollectionController
     $rows = $this->sheet->rows($account, $columns, $query === null ? [] : $this->entities->list($query));
     $library = basename($collection->type) === 'MediaObject'
       ? $this->media->library($account, $collection, $rows) : [];
+    $filters = $this->choices->filters($account, $collection, $columns);
 
     return [...$library, 'view' => $view, 'glance' => $glance,
       'timeline' => new Timeline($glance?->date(), $this->clock, $this->words->language),
@@ -146,8 +147,8 @@ final readonly class CollectionController
       'parameters' => $request->query, 'narrowing' => $this->bar->narrowing($request),
       ...$this->counted($account, $collection, $query),
       'narrowed' => $this->bar->narrowing($request) !== [] || (string) $request->query('q') !== '',
-      'filters' => $this->choices->filters($account, $collection, $columns),
-      'named' => $this->bar->narrowed($request, $columns),
+      'filters' => $this->choices->offered($request, $filters),
+      'named' => $this->bar->narrowed($request, $columns, $filters),
       'data' => $this->sheetData->data($collection, $columns, $rows, $this->csrf->token()),
       'spine' => $this->dialog->data($collection, $rows)];
   }

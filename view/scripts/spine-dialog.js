@@ -44,7 +44,7 @@ const spineDialog = {
   template: "#spine-dialog-template",
   props: ["opened", "pending"],
   emits: ["change", "close"],
-  data: () => ({ typed: null, wrongWindow: false }),
+  data: () => ({ typed: null, wrongWindow: false, planning: false }),
   computed: {
     record() { return this.opened.record; },
     common() { return this.opened.common; },
@@ -57,16 +57,24 @@ const spineDialog = {
     moved() {
       return slugShown(this.current("slug")) !== this.record.slug || this.current("locale") !== this.record.locale;
     },
+    windowed() {
+      return this.planning || Boolean(this.current("publish_from") || this.current("publish_to"));
+    },
   },
   mounted() {
     const dialog = this.$refs.dialog;
     dialog.showModal();
     const box = dialog.getBoundingClientRect();
     const at = this.opened.chip.getBoundingClientRect();
-    const below = at.bottom + 4 + box.height <= window.innerHeight - 8;
+    const below = at.bottom + ARROW_ROOM + box.height <= window.innerHeight - 8;
     dialog.style.left = Math.max(8, Math.min(at.left, window.innerWidth - box.width - 8)) + "px";
-    dialog.style.top = Math.max(8, below ? at.bottom + 4 : at.top - box.height - 4) + "px";
+    dialog.style.top = Math.max(8, below ? at.bottom + ARROW_ROOM : at.top - box.height - ARROW_ROOM) + "px";
+    this.arrow = arrowed(this.opened.chip, dialog);
     focusField(this.$refs.slug, dialog);
+  },
+  /* A dialog over its chip grows downwards as the window's fields open, and its arrow goes along. */
+  updated() {
+    this.arrow?.point();
   },
   methods: {
     fill: (text, values) => fill(text, values),
@@ -80,6 +88,11 @@ const spineDialog = {
     typeSlug(event) {
       this.typed = event.target.value;
       this.set("slug", ["", this.record.slug].includes(slugShown(this.typed)) ? this.record.slug : this.typed);
+    },
+    /* The link leaves as the window opens, so focus goes on to its first field. */
+    plan() {
+      this.planning = true;
+      this.$nextTick(() => focusField(this.$refs.from, this.$refs.dialog));
     },
     /* An end before the start is refused here and never made pending. */
     setWindow(key, event) {

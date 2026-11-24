@@ -153,8 +153,9 @@ final readonly class ExportController
   private function names(Account $account, array $entries, bool $outside): array
   {
     $names = [];
+    $all = $this->collections->all();
     foreach ($entries as $entry) {
-      $held = array_find($this->collections->all(), fn (Collection $each): bool => $each->slug->value === $entry->slug);
+      $held = array_find($all, fn (Collection $each): bool => $each->slug->value === $entry->slug);
       if ($entry->count > 0 && $held !== null && $this->authorizer->readsAsPublic($account, $held->type) === $outside) {
         $names[] = $entry->name;
       }
