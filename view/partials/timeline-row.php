@@ -5,11 +5,12 @@ declare(strict_types=1);
 /* One row of the timeline, drawn by the collection screen and by the answer to
    a new record's `POST`, as the list's are (`partials/list-row`): the tick where
    the account writes, its day as the install lives it, the label as the link to
-   the record with the spine chip beneath, then the collection's first fields
-   (`Admin\Glance`) as the table's cells, its date among them, since that is
-   where it is edited. The answer to a `POST` has no day to draw: a row saved
-   with a date is read again with the page. Without a record it is the blank
-   row + New record clones, its label a cell until it has an address.
+   the record with the spine chip beneath, then the list's own three cells
+   (`Admin\Glance`): the day says the date, so the date takes a place only where
+   the table's order gives it one. The answer to a `POST` has no day to draw: a
+   row saved with a date is read again with the page. Without a record it is the
+   blank row + New record clones, its label a cell until it has an address, and
+   its date a cell whatever the order, since a row made here is filed by it.
    Handed `$row`, null for the blank row, `$columns`, `$items`, `$glance`, `$firstLocale`, `$ticks` and `$words`;
    `$timeline` may be left out, and the row then shows no day. */
 
@@ -27,7 +28,8 @@ $label = $glance->label();
 $when = $timeline?->when($row);
 $day = $when === null ? null : $timeline->day($when);
 ?>
-<li class="list-row timeline-row" data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
+<li class="list-row timeline-row<?= $row === null ? ' is-new' : '' ?>"
+  data-record="<?= $row === null ? '' : $template->escape($row->entity->id->value) ?>">
 <?php if ($ticks): ?>
   <span class="item-tick"><?php if ($row !== null): ?><input type="checkbox" data-tick
     aria-label="<?= $template->escape($words->get('sheet.tick', ['label' => $row->label])) ?>"><?php endif ?></span>
@@ -48,7 +50,7 @@ $day = $when === null ? null : $timeline->day($when);
 <?php endif ?>
   </span>
   <span class="list-cells">
-<?php foreach ($glance->dated(3, $row === null) as $column): ?>
+<?php foreach ($row === null ? $glance->filed(3) : $glance->shown(3, false) as $column): ?>
     <?= $cell($column) ?>
 <?php endforeach ?>
   </span>

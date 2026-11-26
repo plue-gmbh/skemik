@@ -2,19 +2,17 @@
 
 declare(strict_types=1);
 
-/* A value displayed, by kind (`Admin\Cells`), the renderer every view reuses. A
-   select is a pill with its word, titled with the term where the two differ,
-   because the term is what the feed ships. A reference, or a key that refers,
-   links to its record except where the reader edits the field, whose picker links
-   each target. A list shows and numbers every member, since one behind a count
-   is one nobody checks; a gone one and one the reader may not see are both ⇢
-   missing. What an edge says of its target stands inside its chip, so in a list
-   it reads as that member's; a long name ends in an ellipsis and the chip's title holds it whole. A Markdown
-   field's links to records are counted here and drawn as chips on the record screen (`Admin\Prose`). A link,
-   and a row's name where the row holds one or names a record, leads where it points, as a chip does. Rows holding
-   a value beside their name show both, framed lighter than a chip, since a row is no record. Handed `$kind`, `$value`,
-   `$shown`, `$chips`, `$empty` and `$words`, and `$locale`, `$many`, `$linked`, `$links`, `$pairs` and `$says`,
-   which an empty cell leaves out. */
+/* A value displayed, by kind (`Admin\Cells`), the renderer every view reuses. A select's pill is titled with
+   its term where the word differs, the term being what the feed ships. A reference, or a key that refers, links
+   to its record except where the reader edits the field, whose picker links each target. A list shows every
+   member, since one behind a count is one nobody checks, each with its type's glyph, since a field may take
+   more than one type; a gone one and one the reader may not see are both ⇢ missing. What an edge says of its
+   target stands inside its chip, so in a list it reads as that member's, and the chip's title holds a long name
+   whole. A Markdown field's links to records are counted here and drawn on the record screen (`Admin\Prose`).
+   A row's value beside its name is framed lighter than a chip, since a row is no record. Handed `$kind`,
+   `$value`, `$shown`, `$chips`, `$empty` and `$words`, and `$locale`, `$many`, `$linked`, `$links`, `$pairs`
+   and `$says`, which an empty cell leaves out, and `$named`, which a blank row's empty cell shows where no
+   heading names it. */
 
 use Profile\FieldKind;
 
@@ -26,13 +24,13 @@ $links ??= [];
 $pairs ??= [];
 $many ??= false;
 $says ??= [];
-$chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, $words, $linked): string {
+/* A name in the dash's place is text to read, so `is-named` draws it at 4.5:1 on a required cell's tint too. */
+$named ??= null;
+$chip = function (Admin\Chip $chip, string $said) use ($template, $words, $linked): string {
   if ($chip->gone) {
     return '<span class="chip is-gone">' . $template->escape($words->get('cell.gone')) . '</span>';
   }
-  $mark = $number === null
-    ? '<span class="chip-mark">' . $template->render('partials/glyph', ['name' => $chip->glyph]) . '</span>'
-    : '<span class="chip-mark is-count" aria-hidden="true">' . $number . '</span>';
+  $mark = '<span class="chip-mark">' . $template->render('partials/glyph', ['name' => $chip->glyph]) . '</span>';
   $picture = $chip->preview === null ? ''
     : '<img class="chip-preview" src="' . $template->escape($chip->preview) . '" alt="" loading="lazy">';
   $noAlt = $chip->noAlt ? '<span class="no-alt">' . $template->escape($words->get('cell.no_alt')) . '</span>' : '';
@@ -48,7 +46,8 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
 };
 ?>
 <?php if ($empty): ?>
-<span class="cell-empty" aria-hidden="true">—</span><span
+<span class="cell-empty<?= $named === null ? '' : ' is-named' ?>"
+  aria-hidden="true"><?= $named === null ? '—' : $template->escape($named) ?></span><span
   class="visually-hidden"><?= $template->escape($words->get('cell.empty')) ?></span>
 <?php elseif ($pairs !== []): ?>
 <span class="pairs"><?php foreach ($pairs as $index => $each):
@@ -73,9 +72,9 @@ $chip = function (Admin\Chip $chip, ?int $number, string $said) use ($template, 
   . $template->escape($words->get('cell.term', ['term' => (string) $value]))
   . '"' : '' ?>><?= $template->escape($shown) ?></span>
 <?php elseif (($kind->isReference() || $chips !== []) && !$many): ?>
-<?= $chip($chips[0], null, $says[0] ?? '') ?>
+<?= $chip($chips[0], $says[0] ?? '') ?>
 <?php elseif ($kind->isReference()): ?>
-<span class="chips"><?php foreach ($chips as $index => $each): ?><?= $chip($each, $index + 1,
+<span class="chips"><?php foreach ($chips as $index => $each): ?><?= $chip($each,
   $says[$index] ?? '') ?><?php endforeach ?></span>
 <?php elseif ($kind === FieldKind::Markdown):
   $plain = trim((string) preg_replace('/\s+/u', ' ', (string) preg_replace('/[#*_>`]/u', '', $shown)));

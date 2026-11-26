@@ -25,8 +25,9 @@ $icon = fn (string $name): string => trim($template->render('partials/icon', ['n
         <div class="picker-item">
           <component :is="item.href ? 'a' : 'span'" :href="item.href || null" class="chip"
             :class="{ 'is-gone': item.gone }">
-            <span class="chip-mark is-count" aria-hidden="true">{{ index + 1 }}</span><img v-if="item.preview"
-              class="chip-preview" :src="item.preview" alt="">{{ item.gone ? words['cell.gone'] : item.label }}
+            <span v-if="!item.gone" class="chip-mark"><svg class="glyph" aria-hidden="true"><use
+              :href="'#glyph-' + item.glyph"></use></svg></span><img v-if="item.preview" class="chip-preview"
+              :src="item.preview" alt="">{{ item.gone ? words['cell.gone'] : item.label }}
           </component>
           <span class="picker-tools" v-if="!fixed">
             <button v-if="speaks(item)" type="button" class="picker-tool" :class="{ 'is-said': saying(item) }"

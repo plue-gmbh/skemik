@@ -5,8 +5,9 @@ declare(strict_types=1);
 /* A notification mail as a page (`Admin\Notices`), laid out as the login code's
    (`pages/login-mail.php`), whose reasons hold here: inline styles, tables, no
    mark, no font or image fetched. The link is the whole of what it offers, a
-   button and its address beneath, for a client that shows no button.
-   Handed `$greeting`, `$lead`, `$open`, `$link`, `$subject` and `$words`. */
+   button and its address beneath, for a client that shows no button. The lead
+   names the install in bold, as the login code's does, its `{host}` left in for that.
+   Handed `$greeting`, `$lead`, `$host`, `$open`, `$link`, `$subject` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -35,7 +36,8 @@ $links = ['<a href="https://plue.tech" style="color: #9BA79F; text-decoration: u
             <p style="margin: 0 0 24px; font-size: 19px; font-weight: 700; letter-spacing: -.02em;">Skemik<span
               style="margin-left: .5px; font-size: .7em; font-weight: 500; vertical-align: .48em;">™</span></p>
             <p style="margin: 0 0 12px;"><?= $template->escape($greeting) ?></p>
-            <p style="margin: 0 0 24px;"><?= $template->escape($lead) ?></p>
+            <p style="margin: 0 0 24px;"><?= str_replace('{host}', '<b>' . $template->escape($host) . '</b>',
+              $template->escape($lead)) ?></p>
             <p style="margin: 0 0 16px;"><a href="<?= $template->escape($link) ?>" style="display: inline-block;
               padding: 10px 18px; background: #131714; border-radius: 10px; color: #FFFFFF; font-weight: 600;
               text-decoration: none;"><?= $template->escape($open) ?></a></p>

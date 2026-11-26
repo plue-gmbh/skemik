@@ -6,18 +6,21 @@ declare(strict_types=1);
    save bar, the cell editor and the ticks find it by its record and its field
    wherever it stands: a button the editor opens where the account writes the
    field, else the value alone. A reference's chips are links only where the
-   field is not edited, so a button never holds a link. An uploaded
-   file's address and type are shown and never edited (`Domain\Entity::keeps`).
-   Outside the table no heading names it, so its name is spoken before the
-   value and titles it. Handed `$column`, `$row`, null for the blank row, `$element` and `$words`;
-   `$named` and `$cell` may be left out, and with no cell it draws the empty one + New record clones. */
+   field is not edited, so a button never holds a link. An uploaded file's
+   address and type are shown and never edited (`Domain\Entity::keeps`). Outside
+   the table no heading names it, so its name is spoken before the value, titles
+   it, and stands in a blank row's empty cell, a phone having no hover, except
+   where the view shows the name beside it (`$headed`). Handed `$column`, `$row`,
+   null for the blank row, `$element` and `$words`; `$named`, `$headed` and `$cell`
+   may be left out, and with no cell it draws the empty one + New record clones. */
 
 if (!isset($template)) {
   return;
 }
 $named ??= null;
+$headed ??= false;
 $cell ??= $template->render('partials/cell', ['words' => $words, 'kind' => Profile\FieldKind::Text,
-  'value' => null, 'chips' => [], 'empty' => true, 'shown' => '']);
+  'value' => null, 'chips' => [], 'empty' => true, 'shown' => '', 'named' => $headed ? null : $named]);
 $key = $column->field->key;
 $required = $row === null && $column->field->required;
 $edits = $column->editable && !($row?->entity->keeps($key) ?? false);

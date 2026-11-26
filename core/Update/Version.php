@@ -17,6 +17,6 @@ namespace Update;
    its `Expires` from it. */
 final readonly class Version
 {
-  public const APP = '1.1.1';
-  public const RELEASED = '2026-11-24';
+  public const APP = '1.1.2';
+  public const RELEASED = '2026-11-26';
 }

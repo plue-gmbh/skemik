@@ -24,8 +24,8 @@ function mountQueryBar(form, mounted) {
     saved?.form.addEventListener("submit", () => { saved.value = address().split("?")[1] ?? ""; });
   };
   /* Beside the view: the view switch's links and the feed panel's address, which carry the query, each chip,
-     whose link takes its value away and keeps the search typed since, and the mark that saves or deletes the
-     question the address now is, with the dialog or the form after the bar it works through. */
+     whose link takes its value away and keeps the search typed since, and the mark before them that saves or
+     deletes the question the address now is, with the dialog or the form after the bar it works through. */
   const drawn = (page) => {
     const links = page.querySelectorAll("[data-view-links]");
     document.querySelectorAll("[data-view-links]").forEach((each, index) => each.replaceWith(links[index]));
@@ -34,9 +34,8 @@ function mountQueryBar(form, mounted) {
       document.querySelector("[data-feed-address]")?.replaceWith(feed);
       document.dispatchEvent(new Event("feed-address"));
     }
-    document.querySelectorAll(".query-narrowed, .query-bar > .tool-button, #question-save, #question-remove")
-      .forEach((each) => each.remove());
-    search.before(...page.querySelectorAll(".query-narrowed, .query-bar > .tool-button"));
+    document.querySelectorAll(".query-narrowed, #question-save, #question-remove").forEach((each) => each.remove());
+    form.append(...page.querySelectorAll(".query-narrowed"));
     form.parentElement.after(...page.querySelectorAll("#question-save, #question-remove"));
     document.querySelectorAll("#question-save").forEach(mountOutsideClose);
     keeping();
@@ -82,10 +81,17 @@ function mountQueryBar(form, mounted) {
     window.clearTimeout(typing);
     typing = window.setTimeout(redraw, 300);
   });
+  const clear = () => {
+    search.value = "";
+    redraw();
+  };
   search.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || search.value === "") return;
     event.preventDefault();
-    search.value = "";
-    redraw();
+    clear();
+  });
+  form.querySelector("[data-query-clear]").addEventListener("click", () => {
+    clear();
+    search.focus();
   });
 }

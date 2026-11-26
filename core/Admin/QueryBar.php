@@ -128,13 +128,14 @@ final readonly class QueryBar
   }
 
   /** Each value that narrows, a chip to take away by itself: under the word and the group of the choice
-      that offers it, a kind of file standing for its formats, else alone where it says what it is, its
-      field's name then the chip's tooltip, and behind that name where it does not, as a saved question's
-      title has it (`titled`).
+      that offers it, a kind of file standing for its formats, else alone where it says what it is, a
+      record by its name among them, its field's name then the chip's tooltip, and behind that name where
+      it does not, as a saved question's title has it (`titled`). A record this reader may not read stays
+      the address it was asked by.
       @param list<Column> $columns
       @param list<Filter> $filters the choices the bar offers, unjoined
       @return list<Narrowed> */
-  public function narrowed(Request $request, array $columns, array $filters): array
+  public function narrowed(Account $account, Request $request, array $columns, array $filters): array
   {
     $narrowed = [];
     foreach (array_keys($this->narrowing($request)) as $parameter) {
@@ -150,7 +151,7 @@ final readonly class QueryBar
         }
       }
       foreach ($left as $one) {
-        $word = $this->valued($column?->field, $parameter, $one);
+        $word = $this->recorded($account, $column?->field, $one) ?? $this->valued($column?->field, $parameter, $one);
         $narrowed[] = new Narrowed($word, $this->without($request, $parameter, [$one]), $field, $word !== $one);
       }
     }
@@ -222,10 +223,14 @@ final readonly class QueryBar
   }
 
   /* A record the address names, a term by its code, by what its chip calls it; null where this reader may
-     not read it. One that no longer stands is said as the address spells it, so a question on it is seen and
-     deleted, and only to whoever reads the type its collection names, a slug being a name. */
-  private function recorded(Account $account, FieldDefinition $field, string $value): ?string
+     not read it, and where the field names no record. One that no longer stands is said as the address spells
+     it, so a question on it is seen and deleted, and only to whoever reads the type its collection names, a
+     slug being a name. */
+  private function recorded(Account $account, ?FieldDefinition $field, string $value): ?string
   {
+    if ($field === null || !$field->cardinality->isEdge()) {
+      return null;
+    }
     $locales = $this->settings->locales();
     $record = $field->cardinality === Cardinality::T ? $this->addresses->coded($value)[0] ?? null
       : array_find(array_map(fn (Locale $locale): ?Entity => $this->addresses->at($value, $locale), $locales),

@@ -36,8 +36,8 @@ final readonly class Export
   public const FORMATS = ['jsonld', 'html', 'csv', 'md'];
   public const FILES = 'media/';
   public const AUTHORITATIVE = 'jsonld';
-  /* The records a collection is weighed on before the run, per language: few
-     enough that the screen opens at once, and the first page as the feed lists it. */
+  /* The records a collection is weighed on before the run, per language: the
+     first page as the feed lists it. */
   private const SAMPLE = 10;
 
   public function __construct(
@@ -60,31 +60,32 @@ final readonly class Export
     private Json $json = new Json(),
   ) {}
 
-  /* Said before the run, since the box is as large as its files and documents.
-     The documents are weighed on a sample written in memory, never into the box,
-     so the figure follows what the serialisers write and no guess per record.
-     The serialisers are a language's here and no collection's: each set words
-     the whole profile anew, which was most of the screen's wait. */
-  public function measure(): DumpSize
+  /* Said before the run, since the box is as large as its files and documents;
+     counted at once, and weighed only where asked, since weighing is most of the
+     screen's wait. The documents are weighed on a sample written in memory, never
+     into the box, so the figure follows what the serialisers write and no guess
+     per record. The serialisers are a language's here and no collection's: each
+     set words the whole profile anew. */
+  public function measure(bool $weighed): DumpSize
   {
     $records = 0;
     $bytes = 0;
     foreach ($this->settings->locales() as $locale) {
-      $bytes += $this->weight($this->index($locale));
-      $formats = $this->serialisers($locale);
+      $formats = $weighed ? $this->serialisers($locale) : null;
+      $bytes += $formats === null ? 0 : $this->weight($this->index($locale));
       foreach ($this->readable() as $held) {
         $query = $this->filter->query(new Query($held->type, locale: $locale), $held);
         $count = $query === null ? 0 : $this->entities->count($query);
         $records += $count;
-        $bytes += $this->weighed($held, $locale, $formats, $count);
+        $bytes += $formats === null ? 0 : $this->weighed($held, $locale, $formats, $count);
       }
     }
     $files = $this->files();
-    foreach ($files as $path => $file) {
+    foreach ($weighed ? $files : [] as $path => $file) {
       $bytes += Zip::weight($path, (int) filesize($file));
     }
 
-    return new DumpSize($records, count($files), $bytes);
+    return new DumpSize($records, count($files), $weighed ? $bytes : null);
   }
 
   /** A collection in one language, scaled from its sample: the records, their

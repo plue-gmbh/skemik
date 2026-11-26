@@ -29,18 +29,14 @@ use Support\Words;
 use Support\Zip;
 use Support\ZipFailed;
 
-/* `GET /export` and `POST` to take one, `exportHoldings`, from the sidebar's
-   foot for every role, since a dump is the reader's own screen serialised
-   (`Feed\Export`). The screen says before the run which types come out
-   complete and which as the public reads them, because a scoped colleague
-   pressing Export has every reason to assume it means all of it, and how large
-   the box will be, since it holds the uploads and an install with 4 GB of
-   photographs should learn that from the button. It is built into `staging/`
-   and streamed, so the data folder has to hold it, which is where a cheap
-   webspace's quota is met head-on: a run that cannot fit is refused before it
-   writes, and a failed one leaves nothing behind. Backup is a row of the
-   Settings card and this is not: Backup is the holdings, Export a reading of
-   them, and the manifest keeps the second from being mistaken for the first. */
+/* `GET /export` and `POST` to take one, `exportHoldings`, from the sidebar's foot for every role, since a
+   dump is the reader's own screen serialised (`Feed\Export`). The screen says which types come out complete
+   and which as the public reads them, since a scoped colleague assumes Export means all of it. Asked at
+   `?size`, it says how large the box will be, uploads included; weighing is most of its wait, so it opens
+   without. The box is built in `staging/` and streamed, so the data folder must hold it: a run that cannot
+   fit is refused before it writes, and a failed one leaves nothing behind. Backup is a row of the Settings
+   card and this is not: Backup is the holdings, Export a reading of them, and the manifest keeps the second
+   from being mistaken for the first. */
 final readonly class ExportController
 {
   private const STALE_SECONDS = 3600;
@@ -67,11 +63,12 @@ final readonly class ExportController
   public function show(Account $account, Entity $person, Request $request): Response
   {
     $this->authorizer->requireHuman(Capability::ExportHoldings);
-    $size = $this->export->measure();
+    $size = $this->export->measure($request->query('size') !== null);
     $entries = $this->sidebar->entries($account);
     $main = $this->template->render('pages/export', ['words' => $this->words, 'size' => $size,
-      'about' => Intake::size($size->bytes), 'complete' => $this->names($account, $entries, false),
-      'public' => $this->names($account, $entries, true), 'unfit' => $this->unfit($size),
+      'about' => $size->bytes === null ? null : Intake::size($size->bytes),
+      'complete' => $this->names($account, $entries, false), 'public' => $this->names($account, $entries, true),
+      'unfit' => $this->unfit($size),
       'notice' => $this->session->take('export'), 'csrf' => $this->csrf->token()]);
 
     return $this->frame->around($account, $person, new Screen($this->words->get('export.title'), $main,
@@ -117,7 +114,7 @@ final readonly class ExportController
   private function built(Account $account, Entity $person): Response
   {
     $this->sweep();
-    $size = $this->export->measure();
+    $size = $this->export->measure(true);
     $unfit = $this->unfit($size);
     if ($unfit !== null) {
       return $this->refused($unfit);
@@ -165,11 +162,12 @@ final readonly class ExportController
   }
 
   /* Said with the hundred megabytes every screen warns of kept free, so a dump
-     never makes the install unable to save. */
+     never makes the install unable to save; a dump not weighed is not said to fit
+     or not, and its run is weighed before it writes. */
   private function unfit(DumpSize $size): ?string
   {
     $free = DataLayout::free($this->data);
-    if ($free === null || $free - DataLayout::FREE_BYTES >= $size->bytes) {
+    if ($size->bytes === null || $free === null || $free - DataLayout::FREE_BYTES >= $size->bytes) {
       return null;
     }
 

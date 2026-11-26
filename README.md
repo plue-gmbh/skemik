@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.1.1](https://img.shields.io/badge/version-1.1.1-1f6feb)
+![Version 1.1.2](https://img.shields.io/badge/version-1.1.2-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,7 +10,7 @@ before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.1)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.2)
 
 The demo install's events, read with no key:
 
@@ -28,14 +28,15 @@ curl https://demo.skemik.org/feed/en-GB/events
 **Start:** [Quickstart](#quickstart) · [What it is](#what-it-is)
 
 **For whoever runs it:** [Requirements](#requirements) · [Install](#install) ·
-[Running it](#running-it) · [Updating](#updating) · [Security](#security)
+[Running it](#running-it) · [Accounts and keys](#accounts-and-keys) ·
+[Updating](#updating) · [Security](#security)
 
 **For whoever builds on the address:** [Addresses](#addresses) ·
 [Collections](#collections) · [Reading the feed](#reading-the-feed) ·
 [Writing through the feed](#writing-through-the-feed) ·
 [Working with it in PHP](#working-with-it-in-php)
 
-**Why:** [Decisions](#decisions) · [Contributing](#contributing) ·
+**The terms:** [Contributing](#contributing) ·
 [Licence and trademark](#licence-and-trademark)
 
 ---
@@ -182,7 +183,13 @@ Ask the host for these before you copy anything.
 
 - **PHP 8.5 or newer** with `pdo_sqlite`, `intl`, `dom` and `mbstring`.
   `pdo_sqlite` must be built against SQLite 3.38 or newer, which `/install`
-  checks.
+  checks. An install on an older PHP is refused on the first request, naming
+  what it found and what it needs, down to 8.2. Below that the page naming them
+  cannot be parsed either, and the host's own 500 is the whole answer. The app
+  is written for PHP 8.5 and runs on each version after it, 8.6 and 9 as they
+  ship. No release asks for more, since an install updates itself, and a
+  release that did would refuse every address of an install whose hosting
+  provider had not moved.
 
 - **A web server that sends every request to `index.php`.** Apache reads the
   shipped `.htaccess` when it has `mod_rewrite` and an `AllowOverride` of at
@@ -354,25 +361,38 @@ stands what is derived or must not survive a restore: `backups/`, `staging/`,
 and it is also how the install moves to another host. The rest is rebuilt, or,
 for a login code and a session, rightly gone.
 
-**The owner's general screen** opens from the first row of the home screen's
-Settings card. It saves two kinds of setting and says which is which. The
-timezone and the admin's language are kept in the database, and so in every
-snapshot. The relay, the security contact, the line under the login form and
-the public name are written into `config.php`, which belongs to the machine, so
-a restore on another host arrives without them. The public name stands under
-the icon when a colleague installs the admin as an app on a phone, so two
-installs on one phone are told apart. It ends the title of the login page and of
-every admin screen too, so two installs' tabs are told apart. When empty the app
-is called Skemik. The install's address is shown on the screen and never changed
-there, since a slip would send every login mail to another domain. Whoever moves
-the domain changes it in `config.php`. Where PHP may not write the domain root,
-the screen shows what `config.php` holds and changes none of it, and the switches
-on the backups and update screens are disabled. Beside the settings the screen
-names what the host sets, which nothing on the screen changes: the largest
-upload the host takes, and each of the three settings *Requirements* names as
-costing time or giving something away. These are asked again on every visit,
-since a host changes them under a running install. While one of them costs time
-or gives something away, the Settings card's row for the screen is marked.
+**The owner's general screen** saves two kinds of setting and says which is
+which. The timezone and the admin's language are kept in the database, and so
+in every snapshot. The relay, the security contact, the line under the login
+form and the public name are written into `config.php`, which belongs to the
+machine, so a restore on another host arrives without them. The public name
+stands under the icon when a colleague installs the admin as an app on a phone,
+so two installs on one phone are told apart. It ends the title of the login
+page and of every admin screen too, so two installs' tabs are told apart. When
+empty the app is called Skemik. The install's address is shown on the screen
+and never changed there, since a slip would send every login mail to another
+domain. Whoever moves the domain changes it in `config.php`. Where PHP may not
+write the domain root, the screen shows what `config.php` holds and changes
+none of it, and the switches on the backups and update screens are disabled.
+Beside the settings the screen names what the host sets, which nothing on the
+screen changes: the largest upload the host takes, and each of the three
+settings *Requirements* names as costing time or giving something away. These
+are asked again on every visit, since a host changes them under a running
+install.
+
+**The admin speaks its reader's language.** The browser's language decides, and
+the one chosen at `/install` stands where the browser names none a file ships
+for. It is no content language. An organisation publishing German and English
+may be edited in French, and none of the admin's own words reaches a document.
+The one crossing is the first run, since an install set up in English should
+not write its first record as German. German, French, Spanish, Italian, Polish
+and Dutch ship beside English. Swiss German ships as a region's file,
+`de-CH.php` beside `de.php`, holding only the words its spelling differs in. It
+is read first, word by word, in the admin and in the profile's field names, so
+a browser asking for `de-CH`, and the profile of a `de-CH` route, read
+*Strasse* and German everywhere else. The region is the reader's too. It writes
+the admin's dates and numbers whether or not it spells differently,
+*€ 1.234,50* in `de-AT` and *16 Jan 2026, 14:05* in `en-GB`.
 
 **One snapshot a day is taken automatically**, on the first request of the day
 in the install's timezone, with no daemon and no cron to set up. A snapshot is
@@ -391,9 +411,8 @@ that backs up properly switches the daily snapshots off on the backups screen,
 which writes `'daily_backups' => false` into `config.php`, since that belongs
 to the machine.
 
-**The owner's backups screen** opens from a row on the home screen's Settings
-card, and that row says when the last snapshot was taken. The screen takes a
-snapshot now, and lists each snapshot with its path and its download. A
+**The owner's backups screen** takes a snapshot now, and lists each snapshot
+with its path and its download. A
 download is one zip, and unpacked into `backups/` it is that snapshot again.
 The screen also restores a snapshot whole. What was written since is kept as a
 snapshot named *before the restore*, and everybody is logged out. Who may get
@@ -406,6 +425,28 @@ keys come back with it, a key revoked or an account removed since among them.
 The `data.sqlite-wal` of the database it replaces must go with that database.
 And it is moved to the running release, as *Updating* describes, only once
 `version.txt` is deleted from the data folder.
+
+**An upload is an allowlist and a rename.** The stored name is generated and
+the original name is content, so `invoice.pdf.php` is a harmless string in a
+column. The type is sniffed and the browser's claim discarded. The list of
+formats is part of the profile and not a setting. An SVG passes or is refused
+whole and is never repaired, because a sanitiser owns its parser's output
+forever. It is served under a policy that lets it run and fetch nothing, since
+the check will one day be behind the format.
+
+**Deleting is deleting.** A record purged from its collection's trash leaves
+the holdings with its edges and its search words. Purging the target of a
+required edge is refused, naming the records that need it. Every other record
+losing an edge to a purge counts a version and a line in its log, as it would
+had a save taken the edge out. The purged record's lines in the log stay,
+naming it by its type alone. Two things in the log can still name a person, and
+the owner takes each out: the name a colleague signed their lines with, when
+their record is purged and the box is ticked, and a former address on its line,
+since a slug can be a name. An order, an invoice and a reservation warn before
+they are purged, since they usually fall under a retention duty. Anything else
+about a person is found under *Points here* on their record and dealt with by
+hand. A snapshot still holds all of it until it ages out, after about thirty
+days.
 
 **What `/install` proved is asked again once an hour**, and at once after an
 update or when another PHP runs the install: that the data folder and its
@@ -424,79 +465,109 @@ dropped, or a value under a field a release made an edge, stays reachable
 everywhere. The holdings check names both, and the record's next save drops
 them.
 
-**A view acts on the records ticked in it together**: a status, one value or
-the trash is set across them, each logged per record. The table edits all of
-its fields in place. The trash's rows are ticked the same way and restored or
-purged together, with one dialog counting the references over the lot. If one
-record in the lot is named by a required edge, the whole lot stays as it was,
-and the dialog names that record.
-
-**Needs a look, a card on the home screen, finds what somebody should take up
-or mend.** Each line counts one kind of thing and opens where the work starts.
-A line counting one record opens that record. One counting more opens their
-collection, narrowed to them where a filter names them, or the first of them
-where the collection cannot show which they are. The lines: a message a contact
-form wrote, until somebody marks it read; an order a till wrote and a reservation
-a booking service wrote, while they stand open by their own status, and never one
-that arrived delivered or confirmed; a record waiting in review, and one pointing
-at a record in the trash; a draft begun over a week ago of a type meant to be
-published, but never a person, since an organisation holds a person as a draft on
-purpose; and an image in review or published without alt text, which opens the
-library's pictures where it counts more than one. For whoever issues keys it
-counts a key running out within 30 days, until a new one is issued under its
-name. A colleague is told only of what they read. Each line leaves once what it
-counts is taken up or mended.
-
-**Saved questions, a card on the home screen, hold the organisation's own
-figures.** Each line is a collection as its query bar narrowed it, with one
-figure over every record it narrows to: how many there are, a number field
-summed, or that field on the latest record by the collection's first date. Its
-title says the collection, the narrowing and the figure in the reader's
-language. A line opens its collection narrowed the same way. Whoever arranges a
-collection's fields saves a line on the collection's screen once it is
-narrowed, and deletes it there, narrowed the same way. In the admin's address a
-date may be relative, `today`, `today-1` or `month`, so a question keeps its day
-or its month. The feed refuses a relative date: a frontend computes its own. A
-colleague sees a line only where they read what it asks and every record it
-names. It is counted as they read it, drafts among it.
-
 **What would wait on the home screen is mailed as well**, so nobody has to open
 the home screen to learn of it. When a key posts a message, an order or a
-reservation that stands on one of its lines, the line is mailed to every
-colleague who reads its type: how many stand on it, and a link to their
-collection. One that arrives read, delivered or confirmed is mailed to nobody.
-A line is mailed once an hour at most, so a burst of orders is one mail. What
-arrives within that hour is mailed with the first request after it. A failure
-logged while answering a request is mailed to whoever reads the error log, once
-an hour at most, so a burst of failures is one mail. An update installed or
-refused is mailed to whoever runs updates, a refusal only the first time. A
-mail holds a count or a version and links a screen, never a record's value or
-its address, so what a message says stays in the install. It leaves through the
-relay or the host's `mail()`, as a login code does, and a mail that fails is a
-line of the error log, never a mail about it.
+reservation, every colleague who reads its type is mailed how many wait, with a
+link to their collection. One that arrives read, delivered or confirmed is
+mailed to nobody. Each kind is mailed once an hour at most, so a burst of
+orders is one mail. What arrives within that hour is mailed with the first
+request after it. A failure logged while answering a request is mailed to
+whoever reads the error log, once an hour at most, so a burst of failures is
+one mail. An update installed or refused is mailed to whoever runs updates, a
+refusal only the first time. A mail holds a count or a version and links a
+screen, never a record's value or its address, so what a message says stays in
+the install. It leaves through the relay or the host's `mail()`, as a login
+code does, and a mail that fails is a line of the error log, never a mail about
+it.
 
 **The release's files are compared with its `SHA256SUMS` once a day**, and at
 once after an update. A file changed, a file missing, or a file added where
 only the release puts files, that is `core/`, `view/`, `language/`,
-`migrations/` and a `.php` beside `index.php`, each stands on a row of the home
-screen's Settings card and as a line of Needs a look. While the files match,
-the row says so. While one differs, the files are compared every hour, so a
-tree put right, by a hand edit undone or a copy by hand finished, turns green
-by itself within the hour. A copy with no `SHA256SUMS` beside it is not
+`migrations/` and a `.php` beside `index.php`, each is a line of Needs a look.
+While one differs, the files are compared every hour. So once the tree is put
+right, by a hand edit undone or a copy by hand finished, the line leaves by
+itself within the hour. A copy with no `SHA256SUMS` beside it is not
 compared. Whoever can change the code can change the list too. So this finds a
 release half copied, a hand edit or a careless intruder, never a careful one.
 
 **A failure is logged under the incident id its page or answer shows**, six
 characters that can be read out over the phone. The log is `log/app.log`,
-rotated at 8 MB, with the five files before it kept. The owner's error log,
-opened from a row on the home screen's Settings card, lists the last 200
-entries newest first and finds an entry by its id. So answering *there's an
-error* needs no shell.
+rotated at 8 MB, with the five files before it kept. The owner's error log
+lists the last 200 entries newest first and finds an entry by its id. So
+answering *there's an error* needs no shell.
 
 **No address answers with a failure.** Every address the install answers to a
 `GET`, the admin's screens and the feed's documents alike, gives a stranger, an
 editor and the owner what it owes them: the page, a login or a refusal, and
 never a failure.
+
+## Accounts and keys
+
+**There are three roles, owner, editor and viewer.** An owner does everything.
+An editor writes, publishes, and adds or takes out the fields of what it
+writes. A viewer reads. Only an owner issues keys, manages accounts, purges the
+trash, reads the log, updates and backs up. Every role takes a dump of what it
+reads. An account may be narrowed to the types it writes and the types it reads
+internally. A read scope cannot reach below the public. For a type outside the
+scope the account sees what a stranger sees, through the same filter the feed
+uses and never a second one, counts and findings included. Reading everything
+is the recommendation. A half-visible graph is a broken graph, and the usual
+need is that the person who keeps the calendar does not edit the membership
+file, not that they cannot see it. Rights per field or per record are for
+machines, not sliced between colleagues. Two departments sharing one type are
+two installs.
+
+**An account is held by a person and is not one.** A colleague is an ordinary
+`Person` record. The account beside it holds what this install knows of its
+relationship to them: the login address, the role and the scopes. So who wrote
+an article and who may write it are one record of one human. The login address
+is the account's, and the person's `email` stays content, so correcting
+somebody's contact details cannot redirect their login. A person holding an
+account cannot be deleted, and the refusal names the account.
+
+**Nobody has a password.** A login is a code typed back into the browser that
+asked for it: single use, ten minutes, burned by five wrong tries. A login
+lasts two idle days and fourteen in all, and is ended on the server. The
+account menu ends it in every other browser at once, for a laptop left behind.
+An account saved under another address, or disabled, loses its logins and the
+codes on their way, so neither outlives the mailbox it was proven for. The last
+owner cannot be demoted, disabled or deleted. The Accounts screen says when
+each account last logged in, so an account nobody uses is seen.
+
+**A login answers the same to everybody.** The answer is one sentence whether
+or not the address holds an account, and it takes as long either way, since the
+code is issued and sent once the answer has left. The exception is where PHP
+cannot end an answer before its work, as *Requirements* says. The limits are
+ten codes an hour per login address and client together, five tries a quarter
+hour per browser, and twenty codes an hour per login address whatever the
+client. Past the last, the code is still written to `login/` and no mail
+leaves. So one client spends half of a mailbox's twenty, and a colleague's mail
+is withheld only while several clients ask for their login address.
+
+**There is no second factor, and the holdings are not encrypted.** Encrypting
+the holdings with a key the hosting provider cannot use defends the door while
+the walls are glass. The server filters, sorts and indexes the holdings in
+plaintext, so whoever has the machine needs no login. A second factor hardens
+one case, the mailbox being taken, and sells a lockout to an owner who is one
+person.
+
+**Machines get keys, never accounts.** A key's grant is a set of rules. Each
+names a collection, optionally one field and one record, and one of *create*,
+*modify*, *read* and *configure*, the last on the collection whole. A customer
+reading what is theirs is such a key, not a fourth role. Every key expires, two
+years after its issue at the latest. A key's grant is narrowed and never
+widened. To renew a key or give it more, a new one is issued under the same
+name, holding the old one's rules and what is added, and the admin says so
+before it is issued. Where the new key gives more, every older key of the name
+stops at once unless the owner unticks that. Where it only renews, the old one
+runs to its date unless the owner ticks that. Taking back a key's last rule
+revokes it. In one collection a key reads one way, the whole collection or some
+of its records, each with the same fields, since its filter, sort and search
+there are the collection's. Reading the collection a second way takes a second
+key under its own name. The name is required because the log signs every write
+with it. The key's screen says when it was last used, to the hour, so a key
+nothing uses any more is seen and revoked. A key is issued where it applies, on
+the collection, the field or the record.
 
 ## Updating
 
@@ -543,11 +614,10 @@ for the seconds of the swap.
 
 - **Where an update cannot run**, because PHP may not write the tree on a host
   where the files belong to the FTP account, an extension is missing, the data
-  folder is short of room, or a release was refused, the Settings card's
-  updates row on the home screen is marked for the owner, and Needs a look
-  says the copy by hand is theirs. The update screen behind that row says when
-  the install last checked, what it installed and whether that was a security
-  release, or what it could not install and why.
+  folder is short of room, or a release was refused, Needs a look says the
+  copy by hand is the owner's. The update screen says when the install last
+  checked, what it installed and whether that was a security release, or what
+  it could not install and why.
 
 **By hand, updating is copying the next release over the last**, with
 `config.php` left alone and the data folder untouched. Take a snapshot on the
@@ -621,15 +691,16 @@ locales, the collections and the profile are JSON-LD only. Every reading
 carries an `ETag`, and a request sending it as `If-None-Match` is answered
 `304` while nothing changed. An asset's file at its `contentUrl`, and the
 preview at `/thumb` behind it, carry the file's name as their tag, since that
-address names bytes that never change. The file comes through the install's
-PHP, one worker per file per visitor, so a site that shows many serves copies
-of its own. They answer `304` only to whoever may
-read the file: a stranger revalidating a draft is refused and never told it is
-there. A refusal is JSON whatever was asked. `error` says what went wrong. A
-`422` on a write adds `violations`, with a `field` and a `reason` for each
-property, spelt as the document spells it. A `500` gives an `incident` to
-quote to the organisation. A list takes these parameters and refuses any
-other, as *Reading the feed* says in full:
+address names bytes that never change. The preview is one size, made on first
+view, and takes no parameter. Photographs only. The file comes through the
+install's PHP, one worker per file per visitor, so a site that shows many
+serves copies of its own. They answer `304` only to whoever may read the file:
+a stranger revalidating a draft is refused and never told it is there. A
+refusal is JSON whatever was asked. `error` says what went wrong. A `422` on a
+write adds `violations`, with a `field` and a `reason` for each property, spelt
+as the document spells it. A `500` gives an `incident` to quote to the
+organisation. A list takes these parameters and refuses any other, as *Reading
+the feed* says in full:
 
 | Parameter | Asks for |
 |---|---|
@@ -693,6 +764,15 @@ public and answer a key alone.
 | [Question](https://schema.org/Question) | `questions` | a record per language | can be |
 | [Action](https://schema.org/Action) | `actions` | no translation | can be |
 | [Observation](https://schema.org/Observation) | `observations` | no translation | never |
+
+**A field's name is ours, in every language.** The fields are named before you
+start, and that holds for their words too. A file per language says what the
+thirty-one types' fields are called. The admin shows them in the editor's
+language, and the feed's catalogue in the language of the content. An
+organisation cannot rename one. A renamed field would say *Monthly fee* on the
+screen and `price` at the address, one word for every content language, and the
+next agency would read two vocabularies. The word a page shows is the page's
+own.
 
 ## Reading the feed
 
@@ -828,6 +908,14 @@ shows the English one on an English route, and the German one while the
 English is a draft, whichever of the two it points at. What is not a work is
 one record under an `@id` per locale: `/feed/de-DE/people/mara` and
 `/feed/en-GB/people/mara` are one person.
+
+*Replace file* on an asset's screen stores the new file under a new name and
+repoints the record, with its other fields and its edges kept. The old bytes
+leave with the last record holding them. That is how a translated asset gets
+its own file, since a translation starts on the original's file. A name ending
+in the file's extension, `photo.jpg`, counts as the upload's and follows the
+new file, its address with it, even where it was typed by hand. Any other name
+stays, and a download is saved under it with the extension it lacks.
 
 A list points at what its cards display. Where every card shows a site's
 screenshot and link, the list's members are the `WebSite`s and not their
@@ -1043,6 +1131,14 @@ The events, cut to five of their fields, as `/feed/en-GB/profile` answers:
 }
 ```
 
+**Two words of the feed stand off their domain.** They are
+`isAccessibleForFree` on a field's entry and the profile's `inLanguage`.
+schema.org declares both on `CreativeWork` and `Event`, and neither on a
+`PropertyValue`, which has no word for whether a field is public or whether its
+words differ by language. They stand there because a property of our own would
+be the second vocabulary they are there to avoid. Only a key that configures
+the collection reads the flag, or the dump of a colleague who may configure it.
+
 ### The dump
 
 A dump is taken in the admin by any account, of what that account reads. It
@@ -1062,6 +1158,10 @@ so the folder opens in a browser with no server and nothing installed. The
 JSON-LD files are byte for byte what the address serves, a listing's page under
 the `?per_page=200` it names. What answers on every locale is a file in each
 locale's tree.
+
+A dump is not a backup. It restores nothing, and posted back it gives equal
+content without its history. Each dump is a line of the owner's log: who took
+it, how much and under which types.
 
 ## Writing through the feed
 
@@ -1147,16 +1247,17 @@ way, from its `orderNumber`, `identifier` and `reservationId`.
   are posted the same way, as `downloads`, `videoPlays`, `audioPlays`, `likes`
   and `shares`. Each is summed into a counter of its own, of `DownloadAction`,
   `WatchAction`, `ListenAction`, `LikeAction` and `ShareAction`. A like taken
-  back is a minus in its day. A record with two counters states them as a
-  list, and the address sorts by one under its class, `?sort=-DownloadAction`.
-  A work states every counter where the collection publishes it. An
-  organisation and a person state their views, likes, shares and comments.
-  Members, and visitors at the door or to a site's `WebSite`, are posted as
-  `members` and `visitors` and never summed.
-  A reading taken at a moment, a fridge's in the morning and in the evening,
-  gives `observationDate` a date and time, `2026-11-18T07:15:00Z`, where a
-  day's count gives the day. `?observationDate=2026-11-18` finds both: the day,
-  and every moment of that day in the install's timezone.
+  back is a minus in its day. A record with two counters states them as a list,
+  and the address sorts by one under its class, `?sort=-DownloadAction`. A work
+  states every counter where the collection publishes it. An organisation and a
+  person state their views, likes, shares and comments. Members, and visitors
+  at the door or to a site's `WebSite`, are posted as `members` and `visitors`
+  and never summed. A reading taken at a moment, a fridge's in the morning and
+  in the evening, gives `observationDate` a date and time,
+  `2026-11-18T07:15:00Z`, where a day's count gives the day.
+  `?observationDate=2026-11-18` finds both: the day, and every moment of that
+  day in the install's timezone. A hundred pages read are some thirty-six
+  thousand rows a year, which nothing prunes, in the backup and the dump too.
 
 - **A field of rows is written inline**, on any record, and its rows are no
   records. A button is a label and a link, so `potentialAction` is rows of
@@ -1280,283 +1381,6 @@ foreach ($skemik->members($skemik->read('/articles?sort=-datePublished&render=ht
   the record whose page stands at an address: the home page, a page by its
   slug whatever query string follows, a record at its place, and none where
   nothing stands.
-
-## Decisions
-
-Look a choice up here before proposing another. Each says what it bought and
-what it spends.
-
-### The model
-
-- **Thirty types and one address, tried on paper before any server code was
-  written**, since both are cheaper to refute on paper than in a product. *Do
-  thirty types carry real cases?* Five small German organisations, one of each
-  kind, were mapped onto the profile item by item, and no snag asked for a
-  thirty-first type. More than half the snags were ours: properties schema.org
-  publishes and the profile had left out. They were found by reading the
-  vocabulary and not by walking a sixth organisation, which is why the
-  reconciliation is a check that runs. Two snags stand, recorded and not
-  solved: a title two people hold jointly, and a membership that makes you a
-  member of a third body. We drew the types and also sorted the items, which
-  only an independent evaluation can close. *Does the address carry a page?*
-  Three organisations' real pages were rebuilt with `fetch` and nothing else,
-  while changes were still edits and not migrations. A card's *from €129*, two
-  records away and a request per date, became a price range computed when the
-  document is written. What must not leave the install went through one filter
-  at every depth. No `expand` parameter was wanted.
-
-- **Page views are counted by the frontend, and the install counts nothing.**
-  The feed sees a frontend's refetches and never its visitors, so the site
-  decides what it counts and posts a day's count per page through a key. The
-  thirty-first type holds it, since a number about a record on a date is no
-  other type, and the type came from that case and not from the paper. A hit
-  counted by the install would be a write per visit, where a frontend's day is
-  one write per page. What it spends: a hundred pages read are some thirty-six
-  thousand rows a year, which nothing prunes, in the backup and the dump too.
-  The count is the frontend's word.
-
-### The stack
-
-- **The toolchain is the maintenance cost, not the language.** Anything that
-  must be built, resolved or locked before the code runs is a liability that
-  outlives whatever it bought.
-
-- **PHP, from 8.5 on.** Running it yourself means copying files to cheap
-  webspace, where Node or Go would mean a process to supervise. The app is
-  written for PHP 8.5 and runs on each version after it, 8.6 and 9 as they
-  ship. No release asks for more, since an install updates itself, and a
-  release that did would refuse every address of an install whose hosting
-  provider had not moved. What this spends is a second version kept straight,
-  the oldest beside the newest, and whatever a later PHP adds, which the code
-  does without. It also spends reach at the cheap end. An organisation on
-  shared webspace can only ask its hosting provider for the version. An
-  install on an older PHP is refused on the first request, naming what it
-  found and what it needs, down to 8.2. Below that the page naming them cannot
-  be parsed either, and the host's own 500 is the whole answer.
-
-- **Pages from the server, Vue as islands.** A page that is not reactive cannot
-  break. Vue normally arrives with npm, a bundler and a lockfile, and that
-  toolchain is what makes a codebase expensive to return to after a year. So
-  Vue is one committed file loaded with a `<script>` tag, used for the
-  editor's parts and never as an application shell. The cost is doing without
-  single-file components, and `unsafe-eval` in the admin's policy, since Vue
-  compiles its templates in the browser. No record's text is ever compiled as
-  a template. Upgrading is replacing one file, and declining to upgrade is a
-  valid position.
-
-- **The admin and the feed say their framing and referrer policy twice**, in
-  the policy header and in the page, where a browser reads it first, since a
-  host's front may add or replace headers of its own.
-
-- **Plain CSS with custom properties.** A CSS framework would bring back the
-  build step avoided everywhere else.
-
-- **SQLite, and a folder of files beside it.** A folder of JSON files cannot
-  answer what changed last across all types, or what points at a record,
-  without loading everything. The way out of that is an index, then
-  invalidation, then locking: a database written by accident, badly. Two
-  backends behind one interface is worse, with every query written and tested
-  twice for a setup question nobody asked. SQLite keeps the folder's appeal,
-  no server and no credentials, and answers real queries. What it spends is
-  the second machine. Its write-ahead log is memory its processes share, which
-  a file system mounted by several web servers does not carry. Uploads stay
-  files. In the database they would cost byte ranges, `Content-Length` and a
-  copy that moves gigabytes for a few thousand records, and a JPEG on disk is
-  still a JPEG in twenty years. So the unit of state is one directory. Backing
-  up is copying it, and restoring is copying it back. An uploaded file is
-  never changed in place, which is what lets a copy be taken while the site
-  runs.
-
-### Files
-
-- **An upload is an allowlist and a rename.** The stored name is generated and
-  the original name is content, so `invoice.pdf.php` is a harmless string in a
-  column. The type is sniffed and the browser's claim discarded. The list of
-  formats is part of the profile and not a setting. An SVG passes or is
-  refused whole and is never repaired, because a sanitiser owns its parser's
-  output forever. It is served under a policy that lets it run and fetch
-  nothing, since the check will one day be behind the format. *Replace file*
-  on an asset's screen stores the new file under a new name and repoints the
-  record, with its other fields and its edges kept. The old bytes leave with
-  the last record holding them. That is how a translated asset gets its own
-  file, since a translation starts on the original's file. A name ending in
-  the file's extension, `photo.jpg`, counts as the upload's and follows the
-  new file, its address with it, even where it was typed by hand. Any other
-  name stays, and a download is saved under it with the extension it lacks.
-
-- **One preview size, made on first view.** With one size and no parameter,
-  the work a stranger can provoke is the library, once. Photographs only.
-  Rendering a PDF means Ghostscript, whose own hardening advice is not to do
-  that, on a server whose configuration is not ours. So a PDF gets a glyph.
-
-- **Files are the export, all four formats.** The claim a dump makes is *you
-  can leave*. It is strongest when the box holds the graph for a machine, a
-  table for a spreadsheet, prose for a reader or an assistant, and pages that
-  open by double-clicking. A dump is not a backup. It restores nothing, and
-  posted back it gives equal content without its history. Each dump is a line
-  of the owner's log: who took it, how much and under which types.
-
-### People and keys
-
-- **Three roles, and the one refinement is the type list.** Owner, editor and
-  viewer are fixed, as the types are. An owner does everything. An editor
-  writes, publishes, and adds or takes out the fields of what it writes. A
-  viewer reads. Only an owner issues keys, manages accounts, purges the trash,
-  reads the log, updates and backs up. Every role takes a dump of what it
-  reads. An account may be narrowed to the types it writes and the types it
-  reads internally: two sets of thirty-one checkboxes and no capability matrix,
-  since the list of things to tick is fixed by the release. A read scope
-  cannot reach below the public. For a type outside the scope the account sees
-  what a stranger sees, through the same filter the feed uses and never a
-  second one, counts and findings included. Reading everything is the
-  recommendation. A half-visible graph is a broken graph, and the usual need
-  is that the person who keeps the calendar does not edit the membership file,
-  not that they cannot see it. Writing includes publishing. A separate release
-  right covers only a first publication, unless a live record may not be
-  edited either, and the honest form of that is a draft beside the published
-  record, which is a second product. Rights per field or per record are for
-  machines, not sliced between colleagues. Two departments sharing one type
-  are two installs.
-
-- **An account is held by a person and is not one.** A colleague is an ordinary
-  `Person` record. The account beside it holds what this install knows of its
-  relationship to them: the login address, the role and the scopes. So who
-  wrote an article and who may write it are one record of one human. The login
-  address is the account's, and the person's `email` stays content, so
-  correcting somebody's contact details cannot redirect their login. A person
-  holding an account cannot be deleted, and the refusal names the account.
-
-- **Nobody has a password.** A login is a code typed back into the browser that
-  asked for it: single use, ten minutes, burned by five wrong tries. A login
-  lasts two idle days and fourteen in all, and is ended on the server. The
-  account menu ends it in every other browser at once, for a laptop left
-  behind. An account saved under another address, or disabled, loses its
-  logins and the codes on their way, so neither outlives the mailbox it was
-  proven for. The reset is the login. So there is nothing to reuse from
-  another site's breach, and no forgotten-owner dead end in an install with
-  one owner and nobody to reset them. The last owner cannot be demoted,
-  disabled or deleted. The Accounts screen says when each account last logged
-  in, so an account nobody uses is seen.
-
-- **A login answers the same to everybody.** The answer is one sentence whether
-  or not the address holds an account, and it takes as long either way, since
-  the code is issued and sent once the answer has left. The exception is where
-  PHP cannot end an answer before its work, as *Requirements* says. The limits
-  are ten codes an hour per login address and client together, five tries a
-  quarter hour per browser, and twenty codes an hour per login address
-  whatever the client. Past the last, the code is still written to `login/`
-  and no mail leaves. So one client spends half of a mailbox's twenty, and a
-  colleague's mail is withheld only while several clients ask for their login
-  address.
-
-- **A code is written down as well as mailed**, because `mail()` answers true
-  for a message the host drops, and whoever reads `login/` reads the holdings
-  beside it anyway. An install cannot lock out its own operator. SMTP is built
-  in, some hundred and fifty lines and no library, because good hosting is
-  increasingly hosting with `mail()` switched off. The relay's password is in
-  `config.php` and not in the holdings, so a copy handed to a client carries
-  no credential, and a restore onto another host loses the relay, as it
-  should.
-
-- **Refused, because both will be proposed again.** Encrypting the holdings
-  with a key the hosting provider cannot use defends the door while the walls
-  are glass. The server filters, sorts and indexes the holdings in plaintext,
-  so whoever has the machine needs no login. A second factor hardens one case,
-  the mailbox being taken, and sells a lockout to an owner who is one person.
-
-- **Machines get keys, never accounts.** A key's grant is a set of rules. Each
-  names a collection, optionally one field and one record, and one of
-  *create*, *modify*, *read* and *configure*, the last on the collection
-  whole. A customer reading what is theirs is such a key, not a fourth role.
-  Every key expires, two years after its issue at the latest. *Never* cannot
-  be said, not even as 2099: the integration that breaks on a known date is
-  the one somebody renews on purpose. A key's grant is narrowed and never
-  widened. To renew a key or give it more, a new one is issued under the same
-  name, holding the old one's rules and what is added, and the admin says so
-  before it is issued. Where the new key gives more, every older key of the
-  name stops at once unless the owner unticks that. Where it only renews, the
-  old one runs to its date unless the owner ticks that. Taking back a key's
-  last rule revokes it. In one collection a key reads one way, the whole
-  collection or some of its records, each with the same fields, since its
-  filter, sort and search there are the collection's. Reading the collection
-  a second way takes a second key under its own name. The name is required
-  because the log signs every write with it. The key's screen says when it was
-  last used, to the hour, so a key nothing uses any more is seen and revoked.
-  A key is issued where it applies, on the collection, the field or the
-  record, since *let this one thing be written from outside* is a thought
-  somebody has while looking at it.
-
-### Records
-
-- **Two words of the feed stand off their domain.** They are
-  `isAccessibleForFree` on a field's entry and the profile's `inLanguage`.
-  schema.org declares both on `CreativeWork` and `Event`, and neither on a
-  `PropertyValue`, which has no word for whether a field is public or whether
-  its words differ by language. They stand there because a property of our own
-  would be the second vocabulary they are there to avoid. Only a key that
-  configures the collection reads the flag, or the dump of a colleague who may
-  configure it.
-
-- **A relation is typed at one end.** A part names its whole, an offer its
-  item, and a review what it reviews. The whole's list of them is no field,
-  since the inverse is the same fact a second time, and nothing would keep the
-  two agreeing. The whole's screen shows what points at it. What this spends
-  is one request: a page asks for an article's comments where it could have
-  read them nested. The exception is a list, whose members are its own, in its
-  order. Purging the target of a required edge is refused, naming the records
-  that need it. Every other record losing an edge to a purge counts a version
-  and a line in its log, as it would had a save taken the edge out.
-
-- **Deleting is deleting.** A record purged from its collection's trash leaves
-  the holdings with its edges and its search words. Its lines in the log stay,
-  naming it by its type alone. Two things in the log can still name a person,
-  and the owner takes each out: the name a colleague signed their lines with,
-  when their record is purged and the box is ticked, and a former address on
-  its line, since a slug can be a name. An order, an invoice and a reservation
-  warn before they are purged, since they usually fall under a retention duty.
-  Anything else about a person is found under *Points here* on their record
-  and dealt with by hand. A snapshot still holds all of it until it ages out,
-  after about thirty days.
-
-- **Writes are conditional, and that is not a new verb.** A record's version
-  goes out as its `ETag` and comes back as `If-Match`. There is no
-  `decrement`, no reservation of stock and no fourth capability. The same
-  carrier stops two colleagues with one record open from discarding each
-  other's work.
-
-### Words
-
-- **The words come in files per language, English the source.** A word missing
-  from a translation falls back to English. So another language is three
-  files, its words, its field names and what a select's options are called,
-  and no code. English rather than German, although the first organisations
-  are German, because every later language would otherwise be translated out
-  of a language most translators do not have. German, French, Spanish,
-  Italian, Polish and Dutch ship beside English. Swiss German ships as a
-  region's file, `de-CH.php` beside `de.php`, holding only the words its
-  spelling differs in. It is read first, word by word, in the admin and in the
-  profile's field names, so a browser asking for `de-CH`, and the profile of a
-  `de-CH` route, read *Strasse* and German everywhere else. A region ships as
-  its chrome file, with its field names beside it. The language is the
-  reader's and not the organisation's, since a bookkeeper and an editor need
-  not share one. The browser's language decides, and the one chosen at
-  `/install` stands where the browser names none a file ships for. It is no
-  content language. An organisation publishing German and English may be
-  edited in French, and none of the admin's own words reaches a document. The
-  one crossing is the first run, since an install set up in English should not
-  write its first record as German. The region is the reader's too. It writes
-  the admin's dates and numbers whether or not it spells differently,
-  *€ 1.234,50* in `de-AT` and *16 Jan 2026, 14:05* in `en-GB`. A spelling is a
-  file somebody keeps, while every region's formats come with PHP's `intl`.
-
-- **A field's name is ours, in every language.** The fields are named before
-  you start, and that holds for their words too. A file per language says what
-  the thirty-one types' fields are called. The admin shows them in the editor's
-  language, and the feed's catalogue in the language of the content. An
-  organisation cannot rename one. A renamed field would say *Monthly fee* on
-  the screen and `price` at the address, one word for every content language,
-  and the next agency would read two vocabularies. The word a page shows is
-  the page's own.
 
 ## Contributing
 

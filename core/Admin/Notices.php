@@ -174,15 +174,15 @@ final readonly class Notices
     $lines = [
       'greeting' => $name === '' ? $words->get('login.mail.greeting_unnamed')
         : $words->get('login.mail.greeting', ['name' => $name]),
-      'lead' => $words->get($kind . '.lead', $values),
       'open' => $words->get('notice.open'),
     ];
     $copyright = $words->get('footer.copyright', ['company' => 'plue GmbH', 'product' => 'Skemik™']);
-    $text = sprintf("%s\n\n%s\n\n%s:\n%s\n\n-- \n%s\nhttps://skemik.org\n", $lines['greeting'], $lines['lead'],
-      $lines['open'], $link, $copyright);
+    $text = sprintf("%s\n\n%s\n\n%s:\n%s\n\n-- \n%s\nhttps://skemik.org\n", $lines['greeting'],
+      $words->get($kind . '.lead', $values), $lines['open'], $link, $copyright);
     $subject = $words->get($kind . '.subject', $values);
-    $html = $this->template->render('pages/notice-mail',
-      [...$lines, 'words' => $words, 'subject' => $subject, 'link' => $link]);
+    $html = $this->template->render('pages/notice-mail', [...$lines, 'words' => $words, 'subject' => $subject,
+      'link' => $link, 'host' => $values['host'],
+      'lead' => $words->get($kind . '.lead', [...$values, 'host' => '{host}'])]);
 
     return new Mail($name, $subject, $text, $html);
   }

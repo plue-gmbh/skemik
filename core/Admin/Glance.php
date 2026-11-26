@@ -51,7 +51,7 @@ final readonly class Glance
     return array_find($this->columns, fn (Column $column): bool => $column->field->kind === FieldKind::Image);
   }
 
-  /* The date a row shows first, and the one a timeline is ordered and filed by. */
+  /* The date a timeline is ordered and filed by, and says as each row's day. */
   public function date(): ?Column
   {
     return array_find($this->columns, fn (Column $column): bool
@@ -68,32 +68,29 @@ final readonly class Glance
   /** @return list<Column> in the collection's order */
   public function shown(int $count, bool $new): array
   {
-    return $this->drawn($this->chosen(), $count, $new);
+    return $this->drawn($count, $new, null);
   }
 
-  /** A timeline row's, its date among them wherever it stands, since that is where it is edited.
+  /** A timeline's blank row: what a new record shows and its date, since a row made there is filed by it,
+      and one with no cell for it stays under No date yet. An asset is made by its upload, which dates it.
       @return list<Column> in the collection's order */
-  public function dated(int $count, bool $new): array
+  public function filed(int $count): array
   {
     $date = $this->date();
 
-    return $this->drawn($date === null ? $this->chosen()
-      : [$date, ...array_filter($this->chosen(), fn (Column $column): bool => $column !== $date)], $count, $new);
+    return $this->drawn($count, true, $date?->editable === true && !$this->media() ? $date : null);
   }
 
-  /**
-   * @param list<Column> $chosen
-   * @return list<Column>
-   */
-  private function drawn(array $chosen, int $count, bool $new): array
+  /** @return list<Column> */
+  private function drawn(int $count, bool $new, ?Column $dated): array
   {
     $picked = $this->media() ? array_filter($this->columns, fn (Column $column): bool
-      => $column->field->key === 'description') : array_slice($chosen, 0, $count);
+      => $column->field->key === 'description') : array_slice($this->chosen(), 0, $count);
     $required = fn (Column $column): bool => $new && $column->editable && $column->field->required
       && $column !== $this->label();
 
     return array_values(array_filter($this->columns, fn (Column $column): bool
-      => in_array($column, $picked, true) || $required($column)));
+      => in_array($column, $picked, true) || $required($column) || $column === $dated));
   }
 
   /** @return list<Column> */

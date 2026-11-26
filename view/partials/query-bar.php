@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 /* Above the view (`Admin\QueryBar`), one form whose fields are the address, and nothing that makes a
-   record, since this changes only what is seen. A choice no row holds is not offered, and a field called
-   what the Status group is called names its collection beside it. A choice adds to what narrows, so the
-   select stays at its default, as quiet as the placeholder, and what narrows stands beside it as chips:
-   another value of one field finds either, another field narrows further, as the feed reads them. A chip's
-   link takes it away and names its field where the chip shows a value alone. Then the mark that saves the
-   narrowing as a question of the home screen, or deletes the one it is, for whoever arranges the collection.
-   Search matches what the feed's `?q=` matches, so its placeholder names the collection and not a field. n of
-   total is announced, since typing redraws where a screen reader does not look. Handed `$columns`,
-   `$collection`, `$filters`, `$named`, `$parameters`, `$narrowed`, `$narrowing`, `$fixed`, `$all`, `$total`,
-   `$keeps`, `$question`, the saved one this address is or null, and `$words`. */
+   record, since this changes only what is seen; what it offers is `Admin\QueryChoices`'. A choice adds to
+   what narrows, so the select stays at its default, and what narrows stands as chips in a row of their own,
+   last, so the controls keep their places however many narrow: values of one field find either, fields
+   narrow further, as the feed reads them. A chip's link takes it away and names its field where the chip
+   shows a value alone. First in that row stands the mark that saves the narrowing as a question or deletes
+   the one it is, for whoever arranges the collection, so a search alone draws the row too. Search matches
+   what the feed's `?q=` matches, so its placeholder names the collection and no field; its × empties it
+   where a phone has no Escape. n of total is announced, since typing redraws where a screen reader does not
+   look. Handed `$columns`, `$collection`, `$filters`, `$named`, `$parameters`, `$narrowed`, `$narrowing`,
+   `$fixed`, `$all`, `$total`, `$keeps`, `$question`, the saved one this address is or null, and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -24,14 +24,22 @@ foreach ($filters as $filter) {
   $groups[$filter->group][] = $filter;
 }
 $search = $words->get('query.search', ['name' => $collection->name]);
+$clear = $words->get('query.clear');
+$marked = $keeps && ($question !== null || $narrowed);
 $descending = str_starts_with($sort, '-');
 /* A timeline's newest first is its default, as no sort is every other view's; a field chosen sorts descending
    first, so its direction stands out once turned. */
 $sorted = $sortField !== '' && !($fixed && $descending);
 $direction = $words->get($descending ? 'query.descending' : 'query.ascending');
 $dated = $fixed ? array_find($columns, fn (Admin\Column $column): bool => $column->parameter === $sortField) : null;
-$option = fn (string $value, string $word, bool $on): string => sprintf('<option value="%s"%s>%s</option>',
-  $template->escape($value), $on ? ' selected' : '', $template->escape($word));
+/* A choice's word is cut where a record's name or a long field would widen the open list past the paper; cut,
+   its title holds it whole. */
+$option = function (string $value, string $word, bool $on) use ($template): string {
+  $shown = mb_strimwidth($word, 0, 40, '…');
+
+  return sprintf('<option value="%s"%s%s>%s</option>', $template->escape($value), $on ? ' selected' : '',
+    $shown === $word ? '' : ' title="' . $template->escape($word) . '"', $template->escape($shown));
+};
 ?>
 <form class="query-bar" method="get" role="search" aria-label="<?= $template->escape($words->get('query.label')) ?>"
   data-query-bar>
@@ -52,30 +60,14 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
 <?php endforeach ?>
   </select>
 <?php endif ?>
-<?php if ($named !== []): ?>
-  <ul class="query-narrowed">
-<?php foreach ($named as $each):
-  $whole = $words->get('query.narrowed', ['field' => $each->field, 'values' => $each->value]) ?>
-    <li<?= $each->worded ? ' title="' . $template->escape($each->field) . '"'
-      : '' ?>><?= $template->escape($each->worded ? $each->value : $whole) ?><a
-      href="<?= $template->escape($each->without) ?>"
-      aria-label="<?= $template->escape($words->get('query.unnarrow', ['filter' => $whole]))
-      ?>"><?= $template->render('partials/icon', ['name' => 'close']) ?></a></li>
-<?php endforeach ?>
-  </ul>
-<?php endif ?>
-<?php if ($keeps && $question !== null): $unkeep = $words->get('question.remove') ?>
-  <button type="submit" class="tool-button is-kept" form="question-remove"
-    title="<?= $template->escape($unkeep) ?>"><?= $template->render('partials/icon', ['name' => 'kept']) ?><span
-    class="visually-hidden"><?= $template->escape($unkeep) ?></span></button>
-<?php elseif ($keeps && $narrowed): $keep = $words->get('question.save') ?>
-  <button type="button" class="tool-button" data-dialog="question-save" aria-haspopup="dialog"
-    title="<?= $template->escape($keep) ?>"><?= $template->render('partials/icon', ['name' => 'keep']) ?><span
-    class="visually-hidden"><?= $template->escape($keep) ?></span></button>
-<?php endif ?>
-  <input class="query-search" type="search" name="q" value="<?= $template->escape($parameters['q'] ?? '') ?>"
-    placeholder="<?= $template->escape($search) ?>" aria-label="<?= $template->escape($search) ?>" autocomplete="off"
-    data-query-search>
+  <span class="query-find">
+    <input class="query-search" type="search" name="q" value="<?= $template->escape($parameters['q'] ?? '') ?>"
+      placeholder="<?= $template->escape($search) ?>" aria-label="<?= $template->escape($search) ?>"
+      autocomplete="off" data-query-search>
+    <button type="button" class="query-clear" aria-label="<?= $template->escape($clear) ?>"
+      title="<?= $template->escape($clear) ?>" data-query-clear><?= $template->render('partials/icon',
+      ['name' => 'close']) ?></button>
+  </span>
   <span class="query-sort"<?= $fixed ? ' title="' . $template->escape($words->get('query.dated')) . '"' : '' ?>>
     <?= $template->render('partials/icon', ['name' => 'sort']) ?>
     <select<?= $sorted ? ' class="is-on"' : '' ?>
@@ -103,4 +95,29 @@ $option = fn (string $value, string $word, bool $on): string => sprintf('<option
   </span>
   <span class="query-count" role="status" data-query-count><?= $narrowed ? $template->escape($words->get('query.count',
     ['n' => $words->number($total), 'total' => $words->number($all)])) : '' ?></span>
+<?php if ($named !== [] || $marked): ?>
+  <div class="query-narrowed">
+<?php if ($keeps && $question !== null): $unkeep = $words->get('question.remove') ?>
+    <button type="submit" class="tool-button is-kept" form="question-remove"
+      title="<?= $template->escape($unkeep) ?>"><?= $template->render('partials/icon', ['name' => 'kept']) ?><span
+      class="visually-hidden"><?= $template->escape($unkeep) ?></span></button>
+<?php elseif ($marked): $keep = $words->get('question.save') ?>
+    <button type="button" class="tool-button" data-dialog="question-save" aria-haspopup="dialog"
+      title="<?= $template->escape($keep) ?>"><?= $template->render('partials/icon', ['name' => 'keep']) ?><span
+      class="visually-hidden"><?= $template->escape($keep) ?></span></button>
+<?php endif ?>
+<?php if ($named !== []): ?>
+    <ul>
+<?php foreach ($named as $each):
+  $whole = $words->get('query.narrowed', ['field' => $each->field, 'values' => $each->value]) ?>
+      <li<?= $each->worded ? ' title="' . $template->escape($each->field) . '"'
+        : '' ?>><?= $template->escape($each->worded ? $each->value : $whole) ?><a
+        href="<?= $template->escape($each->without) ?>"
+        aria-label="<?= $template->escape($words->get('query.unnarrow', ['filter' => $whole]))
+        ?>"><?= $template->render('partials/icon', ['name' => 'close']) ?></a></li>
+<?php endforeach ?>
+    </ul>
+<?php endif ?>
+  </div>
+<?php endif ?>
 </form>

@@ -9,7 +9,7 @@ declare(strict_types=1);
    long text, and the collection's first fields (`Admin\Glance`) as the table's
    cells, each named on the card, since a card has room for the name a list row
    only titles. Without a record it is the blank card + New record clones, its
-   label a cell until it has an address.
+   label a cell until it has an address, its fields keeping their dash beside their name.
    Handed `$row`, null for the blank row, `$columns`, `$items`, `$glance`, `$collection`, `$firstLocale`, `$ticks`
    and `$words`. */
 
@@ -17,9 +17,9 @@ if (!isset($template)) {
   return;
 }
 $entity = $row?->entity;
-$cell = fn (Admin\Column $column, string $named): string => $template->render('partials/sheet-cell', [
-  'words' => $words, 'column' => $column, 'row' => $row, 'element' => 'span', 'named' => $named,
-  'cell' => $row?->cells[$column->field->key]]);
+$cell = fn (Admin\Column $column, string $named, bool $headed = false): string
+  => $template->render('partials/sheet-cell', ['words' => $words, 'column' => $column, 'row' => $row,
+  'element' => 'span', 'named' => $named, 'headed' => $headed, 'cell' => $row?->cells[$column->field->key]]);
 $opens = array_any($columns, fn (Admin\Column $column): bool => $column->editable);
 $own = $items->own($row);
 $label = $glance->label();
@@ -61,7 +61,7 @@ $address = $items->address($row);
 <?php foreach ($fields as $column): $named = $alt && $column->field->key === 'description' ? $words->get('media.alt')
   : $column->label ?>
     <span class="card-name" aria-hidden="true"><?= $template->escape($named) ?></span>
-    <?= $cell($column, $named) ?>
+    <?= $cell($column, $named, true) ?>
 <?php endforeach ?>
   </span>
 <?php endif ?>

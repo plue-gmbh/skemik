@@ -6,10 +6,11 @@ declare(strict_types=1);
    above as on the backups screen, or the sentence why it cannot be made, then
    which types come out complete and which as the public reads them, how many
    records it will hold, once per language each answers in and so more than the
-   overview's total, how many files and about how large it is. The numbers carry
-   their name as data, so a check can read them where the words change with the
-   language.
-   Handed `$size`, `$about`, `$complete`, `$public`, `$unfit`, `$notice`, `$csrf` and `$words`. */
+   overview's total, how many files and, asked, about how large it is, since the
+   weighing is most of the screen's wait. The numbers carry their name as data, so
+   a check can read them where the words change with the language.
+   Handed `$size`, `$about`, null where it was not weighed, `$complete`, `$public`, `$unfit`, `$notice`,
+   `$csrf` and `$words`. */
 
 if (!isset($template)) {
   return;
@@ -56,8 +57,9 @@ if (!isset($template)) {
     </li>
     <li class="record-row">
       <span class="record-row-name"><?= $template->escape($words->get('export.size')) ?></span>
-      <span class="record-row-note" data-export="size"><?= $template->escape($words->get('export.about',
-        ['size' => $about])) ?></span>
+      <span class="record-row-note" data-export="size"><?php if ($about === null): ?><a
+        href="/export?size"><?= $template->escape($words->get('export.measure')) ?></a><?php else: ?><?=
+        $template->escape($words->get('export.about', ['size' => $about])) ?><?php endif ?></span>
     </li>
   </ul>
 </div>

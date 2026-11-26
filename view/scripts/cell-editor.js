@@ -199,7 +199,7 @@ function listShown(field, value, terms, language, words) {
   const span = document.createElement("span");
   if (field.edge) {
     span.className = "chips";
-    value.forEach((item, index) => span.append(chipShown(item, field.many ? index + 1 : null, language, words)));
+    value.forEach((item) => span.append(chipShown(item, language, words)));
     return span;
   }
   const word = (each) => (field.kind === "select" ? terms[each] ?? each : String(each));
@@ -258,8 +258,8 @@ function rowName(row, field, words, read) {
   return name?.label !== undefined ? (name.gone ? words["cell.gone"] : name.label) : "";
 }
 
-/* One target as `partials/cell` draws it: a list numbers its chips. */
-function chipShown(item, number, language, words) {
+/* One target as `partials/cell` draws it. */
+function chipShown(item, language, words) {
   const chip = document.createElement("span");
   if (item.gone) {
     chip.className = "chip is-gone";
@@ -267,9 +267,7 @@ function chipShown(item, number, language, words) {
     return chip;
   }
   chip.className = "chip";
-  const mark = number ? Object.assign(document.createElement("span"), { className: "chip-mark is-count",
-    textContent: number }) : glyphMark(item.glyph);
-  if (number) mark.setAttribute("aria-hidden", "true");
+  const mark = glyphMark(item.glyph);
   const label = Object.assign(document.createElement("span"), { className: "chip-label", textContent: item.label });
   chip.append(mark, label);
   if (item.preview) {
