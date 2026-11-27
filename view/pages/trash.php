@@ -23,7 +23,7 @@ $held = $rows !== [] && $rows[0]->held;
     <div class="collection-title">
       <h1><?= $template->escape($title) ?></h1>
       <p class="page-shape"><?= $template->escape($words->get('trash.explain')) ?></p>
-      <a class="tool-button is-wide trash-back"
+      <a class="tool-button is-wide page-back"
         href="<?= $template->escape($address) ?>"><?= $template->escape($words->get('trash.back',
         ['collection' => $collection->name])) ?></a>
     </div>

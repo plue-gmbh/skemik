@@ -146,17 +146,19 @@ final readonly class Request
       $this->headers, $this->cookies, $this->body, $this->https, $this->client, $this->upload, $this->repeated);
   }
 
-  /* The part holding bytes that are not UTF-8, or null. Past the door such text
-     fails the save that encodes it and prints as nothing where it is shown, so
-     it is refused here. Only what can be stored or shown is asked: a file's
-     bytes are not text and its name is. */
+  /* The part that is not UTF-8 or holds a NUL byte, or null. Past the door text
+     that is not UTF-8 fails the save that encodes it and prints as nothing where
+     it is shown, so it is refused here. Only what can be stored or shown is asked:
+     a file's bytes are not text and its name is. A NUL is refused because PHP 8.6
+     throws where a query string or a file's path holds one, and no text needs it. */
   public function unreadable(): ?string
   {
     $parts = ['the address' => [$this->path, ...array_keys($this->query), ...$this->query],
       'the form' => [...array_keys($this->form), ...$this->form], 'the body' => [$this->body],
       'the file name' => [$this->upload->name ?? '']];
     foreach ($parts as $part => $texts) {
-      if (!mb_check_encoding(implode("\n", $texts), 'UTF-8')) {
+      $text = implode("\n", $texts);
+      if (!mb_check_encoding($text, 'UTF-8') || str_contains($text, "\0")) {
         return $part;
       }
     }

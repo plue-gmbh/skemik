@@ -1,6 +1,6 @@
 # Skemik
 
-![Version 1.1.2](https://img.shields.io/badge/version-1.1.2-1f6feb)
+![Version 1.1.3](https://img.shields.io/badge/version-1.1.3-1f6feb)
 ![Licence BUSL-1.1](https://img.shields.io/badge/licence-BUSL--1.1-6e7781)
 ![PHP 8.5 or newer](https://img.shields.io/badge/PHP-8.5%2B-777bb4)
 
@@ -10,13 +10,21 @@ before you start. There is no empty tool to design first and no column called
 `Date2`. What an organisation keeps is stored once. Everything that works with
 it reads it there and writes it back there, at one address.
 
-![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.2)
+![Skemik's admin](https://releases.skemik.org/screenshot.jpg?1.1.3)
 
 The demo install's events, read with no key:
 
 ```sh
 curl https://demo.skemik.org/feed/en-GB/events
 ```
+
+Get the [newest release](https://github.com/plue-gmbh/skemik/releases):
+
+```sh
+wget https://releases.skemik.org/skemik-1.1.3.zip
+```
+
+Copy its folder's contents into your domain root and open `/install`.
 
 [skemik.de](https://skemik.de) in German,
 [skemik.com](https://skemik.com) in English,
@@ -27,11 +35,11 @@ curl https://demo.skemik.org/feed/en-GB/events
 
 **Start:** [Quickstart](#quickstart) · [What it is](#what-it-is)
 
-**For whoever runs it:** [Requirements](#requirements) · [Install](#install) ·
+**To run it:** [Requirements](#requirements) · [Install](#install) ·
 [Running it](#running-it) · [Accounts and keys](#accounts-and-keys) ·
 [Updating](#updating) · [Security](#security)
 
-**For whoever builds on the address:** [Addresses](#addresses) ·
+**To build on it:** [Addresses](#addresses) ·
 [Collections](#collections) · [Reading the feed](#reading-the-feed) ·
 [Writing through the feed](#writing-through-the-feed) ·
 [Working with it in PHP](#working-with-it-in-php)

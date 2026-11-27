@@ -23,6 +23,11 @@ final readonly class Kinds
 
   public function fits(FieldKind $kind, mixed $value): bool
   {
+    /* No text needs a NUL, a reader's database may take none, and no address can ask for a value holding one. */
+    if (is_string($value) && str_contains($value, "\0")) {
+      return false;
+    }
+
     return match ($kind) {
       /* No bound until a case names one: a negative amount is a refund somewhere.
          JSON's `1e999` decodes to infinity, which no document can say back. */

@@ -123,7 +123,7 @@ final readonly class EdgeValidator
   {
     return is_array($translations) && array_all($translations, fn (mixed $words): bool => is_array($words)
       && array_all($words, fn (mixed $value, int|string $key): bool
-        => Qualifier::tryFrom((string) $key)?->holdsWords() === true && is_string($value)));
+        => Qualifier::tryFrom((string) $key)?->holdsWords() === true && $this->kinds->fits(FieldKind::Text, $value)));
   }
 
   /** @return list<Violation> */

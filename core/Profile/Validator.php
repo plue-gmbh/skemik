@@ -240,7 +240,8 @@ final readonly class Validator
     if (isset($object->options[$key])) {
       return in_array($held, $object->options[$key], true) ? null : $fails(Reason::KeyNotAChoice);
     }
-    $kind = $object->kinds[$key] ?? null;
+    /* A key with no kind of its own is text, and is asked as text where it holds a string. */
+    $kind = $object->kinds[$key] ?? (is_string($held) ? FieldKind::Text : null);
     if ($kind !== null && !$this->kinds->fits($kind, $held)) {
       return $fails(Reason::KeyNotAKind, ['kind' => $kind->value]);
     }
@@ -255,7 +256,7 @@ final readonly class Validator
 
   private function refers(mixed $held): bool
   {
-    return is_string($held) || (is_array($held) && array_keys($held) === ['@id']
+    return $this->kinds->fits(FieldKind::Text, $held) || (is_array($held) && array_keys($held) === ['@id']
       && is_string($held['@id']) && preg_match(Uuid::SHAPE, $held['@id']) === 1);
   }
 

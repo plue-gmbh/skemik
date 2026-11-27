@@ -95,7 +95,8 @@ function mountRecord(screen, mounted) {
     }
     read.hidden = mode !== "read";
     edit.hidden = mode === "read";
-    modes.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.recordMode === mode)));
+    atOnce(modes[0].parentElement, () => modes.forEach((button) => button.setAttribute("aria-pressed",
+      String(button.dataset.recordMode === mode))));
     edit.querySelectorAll("[data-prose]").forEach(grow);
   };
   modes.forEach((button) => button.addEventListener("click", () => show(button.dataset.recordMode)));
@@ -109,6 +110,15 @@ function mountRecord(screen, mounted) {
       ? "#edit" : "")));
   }
   edit?.addEventListener("input", (event) => event.target.matches("[data-prose]") && grow(event.target));
+}
+
+/* A change a press makes is drawn at once: a mode's word slides as the tools stick, where the eye follows the
+   scroll, and a press is answered where it lands. The box is read between, so the change is drawn unslid. */
+function atOnce(group, change) {
+  group.classList.add("is-instant");
+  change();
+  group.getBoundingClientRect();
+  group.classList.remove("is-instant");
 }
 
 function grow(area) {

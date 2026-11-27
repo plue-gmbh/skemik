@@ -26,13 +26,15 @@ spl_autoload_register(function (string $class): void {
 });
 
 /* Settings no `php.ini` is trusted for: a warning or a trace's argument shows a stranger a path
-   or a code, and a host's precision of 17 writes 19.9 as 19.899999999999999. */
-header_remove('X-Powered-By');
+   or a code, and a host's precision of 17 writes 19.9 as 19.899999999999999. Display goes off
+   before the first header call: where PHP has printed a warning of its own before this file ran,
+   for a body past `post_max_size`, that call warns too, and its warning names this file's path. */
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 ini_set('zend.exception_ignore_args', '1');
 ini_set('serialize_precision', '-1');
 ini_set('precision', '-1');
+header_remove('X-Powered-By');
 $request = Http\Request::from($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 if (PHP_SAPI === 'cli-server'
   && preg_match('#^/view/[\w/.-]+\.(css|js|woff2|ico|png)$#', $request->path) === 1) {
